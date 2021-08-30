@@ -1,0 +1,162 @@
+name: CI
+on: [push, pull_request]
+env:
+  GRADLE_OPTS: "-Dorg.gradle.internal.launcher.welcomeMessageEnabled=false"
+
+jobs:
+  validate-gradle-wrapper:
+    name: "Validate Gradle wrapper"
+    runs-on: ubuntu-20.04
+
+    steps:
+      - name: Check out code
+        uses: actions/checkout@v2.3.4
+        with:
+          fetch-depth: 0
+      - name: Validate Gradle wrapper
+        uses: gradle/wrapper-validation-action@v1.0.4
+
+  build-linux:
+    name: "Build (Linux)"
+    runs-on: ubuntu-20.04
+    steps:
+      - name: Check out code
+        uses: actions/checkout@v2.3.4
+        with:
+          fetch-depth: 0
+
+      - name: Set up JDK
+        uses: actions/setup-java@v2.3.0
+        with:
+          java-version: 11
+          distribution: adopt
+
+      - name: Cache packages
+        id: cache-packages
+        uses: actions/cache@v2.1.6
+        with:
+          path: ~/.gradle/caches
+          key: gradle-packages-${{ runner.os }}-${{ hashFiles('**/*.gradle') }}
+          restore-keys: gradle-packages-${{ runner.os }}
+
+      - name: Build and test
+        run: ./gradlew --parallel check
+
+      - name: Stop Gradle daemon
+        run: ./gradlew --stop
+
+      - name: Clean up dependencies before caching
+        if: steps.cache-packages.outputs.cache-hit != 'true'
+        run: |
+          rm -f  $HOME/.gradle/caches/modules-2/modules-2.lock
+          rm -fr $HOME/.gradle/caches/*/plugin-resolution/
+          rm -fr $HOME/.gradle/caches/*/scripts/
+          rm -fr $HOME/.gradle/caches/*/scripts-remapped/
+          rm -fr $HOME/.gradle/caches/*/fileHashes/
+          rm -f  $HOME/.gradle/caches/*/fileContent/*.lock
+          rm -f  $HOME/.gradle/caches/*/javaCompile/*.lock
+          rm -f  $HOME/.gradle/caches/*/executionHistory/*.lock
+          rm -f  $HOME/.gradle/caches/*/generated-gradle-jars/*.lock
+          rm -f  $HOME/.gradle/caches/jars-3/*.lock
+          rm -f  $HOME/.gradle/caches/jars-8/*.lock
+          rm -f  $HOME/.gradle/caches/transforms-1/transforms-1.lock
+          rm -f  $HOME/.gradle/caches/journal-1/file-access.bin
+          rm -f  $HOME/.gradle/caches/journal-1/*.lock
+
+
+  build-mac:
+    name: "Build (macOS)"
+    runs-on: macos-11
+    steps:
+      - name: Check out code
+        uses: actions/checkout@v2.3.4
+        with:
+          fetch-depth: 0
+
+      - name: Set up JDK
+        uses: actions/setup-java@v2.3.0
+        with:
+          java-version: 11
+          distribution: adopt
+
+      - name: Cache packages
+        id: cache-packages
+        uses: actions/cache@v2.1.6
+        with:
+          path: ~/.gradle/caches
+          key: gradle-packages-${{ runner.os }}-${{ hashFiles('**/*.gradle') }}
+          restore-keys: gradle-packages-${{ runner.os }}
+
+      - name: Build and test
+        run: ./gradlew --parallel check
+
+      - name: Stop Gradle daemon
+        run: ./gradlew --stop
+
+      - name: Clean up dependencies before caching
+        if: steps.cache-packages.outputs.cache-hit != 'true'
+        run: |
+          rm -f  $HOME/.gradle/caches/modules-2/modules-2.lock
+          rm -fr $HOME/.gradle/caches/*/plugin-resolution/
+          rm -fr $HOME/.gradle/caches/*/scripts/
+          rm -fr $HOME/.gradle/caches/*/scripts-remapped/
+          rm -fr $HOME/.gradle/caches/*/fileHashes/
+          rm -f  $HOME/.gradle/caches/*/fileContent/*.lock
+          rm -f  $HOME/.gradle/caches/*/javaCompile/*.lock
+          rm -f  $HOME/.gradle/caches/*/executionHistory/*.lock
+          rm -f  $HOME/.gradle/caches/*/generated-gradle-jars/*.lock
+          rm -f  $HOME/.gradle/caches/jars-3/*.lock
+          rm -f  $HOME/.gradle/caches/jars-8/*.lock
+          rm -f  $HOME/.gradle/caches/transforms-1/transforms-1.lock
+          rm -f  $HOME/.gradle/caches/journal-1/file-access.bin
+          rm -f  $HOME/.gradle/caches/journal-1/*.lock
+
+  build-windows:
+    name: "Build (Windows)"
+    runs-on: windows-2019
+    env:
+      # This is required because WSL installs a 'bash.exe' in C:\Windows\System32 that always takes precedence over anything in PATH
+      # See https://github.com/actions/virtual-environments/pull/1081#issuecomment-661220718.
+      BASH_PATH: C:\Program Files\Git\bin\bash.exe
+
+    steps:
+      - name: Check out code
+        uses: actions/checkout@v2.3.4
+        with:
+          fetch-depth: 0
+
+      - name: Set up JDK
+        uses: actions/setup-java@v2.3.0
+        with:
+          java-version: 11
+          distribution: adopt
+
+      - name: Cache packages
+        id: cache-packages
+        uses: actions/cache@v2.1.6
+        with:
+          path: ~/.gradle/caches
+          key: gradle-packages-${{ runner.os }}-${{ hashFiles('**/*.gradle') }}
+          restore-keys: gradle-packages-${{ runner.os }}
+
+      - name: Build and test
+        run: ./gradlew --parallel check
+
+      - name: Stop Gradle daemon
+        run: ./gradlew --stop
+
+      - name: Clean up dependencies before caching
+        if: steps.cache-packages.outputs.cache-hit != 'true'
+        run: |
+          Remove-Item -ErrorAction SilentlyContinue          ~/.gradle/caches/modules-2/modules-2.lock
+          Remove-Item -ErrorAction SilentlyContinue -Recurse ~/.gradle/caches/*/plugin-resolution/
+          Remove-Item -ErrorAction SilentlyContinue -Recurse ~/.gradle/caches/*/scripts/
+          Remove-Item -ErrorAction SilentlyContinue -Recurse ~/.gradle/caches/*/scripts-remapped/
+          Remove-Item -ErrorAction SilentlyContinue -Recurse ~/.gradle/caches/*/fileHashes/
+          Remove-Item -ErrorAction SilentlyContinue          ~/.gradle/caches/*/fileContent/*.lock
+          Remove-Item -ErrorAction SilentlyContinue          ~/.gradle/caches/*/javaCompile/*.lock
+          Remove-Item -ErrorAction SilentlyContinue          ~/.gradle/caches/*/executionHistory/*.lock
+          Remove-Item -ErrorAction SilentlyContinue          ~/.gradle/caches/*/generated-gradle-jars/*.lock
+          Remove-Item -ErrorAction SilentlyContinue          ~/.gradle/caches/jars-*/*.lock
+          Remove-Item -ErrorAction SilentlyContinue          ~/.gradle/caches/journal-1/file-access.bin
+          Remove-Item -ErrorAction SilentlyContinue          ~/.gradle/caches/journal-1/*.lock
