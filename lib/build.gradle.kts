@@ -4,6 +4,7 @@ import org.gradle.api.tasks.testing.logging.TestLogEvent
 plugins {
     kotlin("multiplatform") version "1.5.30"
     id("io.kotest.multiplatform") version "5.0.0.5"
+    id("com.diffplug.spotless")
 }
 
 repositories {
