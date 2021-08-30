@@ -1,0 +1,20 @@
+*                text=auto
+
+*.editorconfig   text       eol=lf
+*.kt             text       eol=lf
+*.kts            text       eol=lf
+*.md             text       eol=lf
+*.sh             text       eol=lf
+*.json           text       eol=lf
+Dockerfile       text       eol=lf
+LICENSE          text       eol=lf
+gradlew          text       eol=lf
+
+*.bat            text       eol=crlf
+*.cmd            text       eol=crlf
+*.ps1            text       eol=crlf
+
+*.jar            binary
+
+*.gitignore      text=auto
+*.gitattributes  text=auto
