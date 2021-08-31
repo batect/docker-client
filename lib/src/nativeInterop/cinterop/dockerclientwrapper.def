@@ -1,0 +1,4 @@
+headers = types.h libdockerclientwrapper.h
+package = batect.dockerclient.native
+staticLibraries = libdockerclientwrapper.a
+linkerOpts = -framework Security

@@ -16,11 +16,22 @@
 
 package batect.dockerclient
 
+import io.kotest.assertions.asClue
 import io.kotest.core.spec.style.ShouldSpec
 import io.kotest.matchers.shouldBe
+import io.kotest.matchers.string.shouldMatch
 
-class HelloWorldTest : ShouldSpec({
-    should("be able to do arithmetic") {
-        (1 + 2) shouldBe 3
+class DockerClientSpec : ShouldSpec({
+    val client = closeAfterTest(DockerClient())
+
+    should("be able to ping the daemon") {
+        val response = client.ping()
+
+        response.asClue {
+            it.apiVersion shouldMatch """^\d+\.\d+$""".toRegex()
+            it.osType shouldBe "linux"
+            it.experimental shouldBe false
+            it.builderVersion shouldBe "2"
+        }
     }
 })

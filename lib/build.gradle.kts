@@ -16,6 +16,12 @@
 
 import org.gradle.api.tasks.testing.logging.TestExceptionFormat
 import org.gradle.api.tasks.testing.logging.TestLogEvent
+import org.jetbrains.kotlin.gradle.dsl.ExplicitApiMode
+import org.jetbrains.kotlin.gradle.plugin.KotlinPlatformType
+import org.jetbrains.kotlin.gradle.plugin.mpp.KotlinNativeCompilation
+import org.jetbrains.kotlin.konan.target.Architecture
+import org.jetbrains.kotlin.konan.target.Family
+import org.jetbrains.kotlin.konan.target.KonanTarget
 
 plugins {
     kotlin("multiplatform") version "1.5.30"
@@ -32,15 +38,39 @@ val kotestVersion = "5.0.0.419-SNAPSHOT"
 
 kotlin {
     jvm()
-//    linuxArm64()
-    linuxX64()
+//    linuxX64()
     macosX64()
-//    macosArm64()
-    mingwX64()
+//    mingwX64()
+
+    // These are currently not supported by kotest:
+    //  linuxArm64()
+    //  macosArm64()
 
     sourceSets {
+        val commonMain by getting {
+            dependencies {
+            }
+        }
+
+        val nativeMain by creating {
+            dependsOn(commonMain)
+        }
+
+//        val linuxX64Main by getting {
+//            dependsOn(nativeMain)
+//        }
+
+        val macosX64Main by getting {
+            dependsOn(nativeMain)
+        }
+
+//        val mingwX64Main by getting {
+//            dependsOn(nativeMain)
+//        }
+
         val commonTest by getting {
             dependencies {
+                implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.5.1")
                 implementation("io.kotest:kotest-assertions-core:$kotestVersion")
                 implementation("io.kotest:kotest-framework-api:$kotestVersion")
                 implementation("io.kotest:kotest-framework-engine:$kotestVersion")
@@ -53,13 +83,66 @@ kotlin {
             }
         }
 
+        val nativeTest by creating {
+            dependsOn(commonTest)
+        }
+
+        val macosX64Test by getting {
+            dependsOn(nativeTest)
+        }
+
+//        val mingwX64Test by getting {
+//            dependsOn(nativeTest)
+//        }
+
         all {
             languageSettings {
                 progressiveMode = true
+                explicitApi = ExplicitApiMode.Strict
+            }
+        }
+    }
+
+    targets.all {
+        val target = this
+
+        if (target.platformType == KotlinPlatformType.native) {
+            target.compilations.getByName<KotlinNativeCompilation>("main") {
+                val dockerClientWrapperProject = project(":docker-client-wrapper")
+
+                val libraryPath = dockerClientWrapperProject.buildDir
+                    .resolve("libs")
+                    .resolve(konanTarget.golangOSName)
+                    .resolve(konanTarget.golangArchitectureName)
+                    .resolve("archive")
+
+                cinterops.register("dockerClientWrapper") {
+                    includeDirs(dockerClientWrapperProject.projectDir.resolve("src"), libraryPath)
+                    extraOpts("-libraryPath", libraryPath)
+                }
+
+                tasks.named("cinteropDockerClientWrapper${target.name.capitalize()}") {
+                    dependsOn(dockerClientWrapperProject.tasks.named("buildArchiveLib${konanTarget.golangOSName.capitalize()}${konanTarget.golangArchitectureName.capitalize()}"))
+                }
             }
         }
     }
 }
+
+val KonanTarget.golangOSName: String
+    get() = when (family) {
+        Family.OSX -> "darwin"
+        Family.LINUX -> "linux"
+        Family.MINGW -> "windows"
+        else -> throw UnsupportedOperationException("Unknown target family: $family")
+    }
+
+val KonanTarget.golangArchitectureName: String
+    get() = when (architecture) {
+        Architecture.X64 -> "amd64"
+        Architecture.ARM64 -> "arm64"
+        else -> throw UnsupportedOperationException("Unknown target architecture: $architecture")
+    }
 
 tasks.named<Test>("jvmTest") {
     useJUnitPlatform()
