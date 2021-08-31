@@ -22,4 +22,5 @@ pluginManagement {
     }
 }
 
+include("docker-client-wrapper")
 include("lib")
