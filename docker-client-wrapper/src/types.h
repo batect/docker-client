@@ -4,7 +4,7 @@
 #ifndef TYPES_H
 #define TYPES_H
 
-typedef uintptr_t DockerClient;
+typedef uint64_t DockerClient;
 
 typedef struct {
     char* APIVersion;
@@ -13,31 +13,31 @@ typedef struct {
     char* BuilderVersion;
 } PingResponse;
 
-PingResponse* allocPingResponse();
-void freePingResponse(PingResponse* value);
+PingResponse* AllocPingResponse();
+void FreePingResponse(PingResponse* value);
 
 typedef struct {
     char* Type;
     char* Message;
 } Error;
 
-Error* allocError();
-void freeError(Error* value);
+Error* AllocError();
+void FreeError(Error* value);
 
 typedef struct {
     PingResponse* Response;
     Error* Error;
 } PingReturn;
 
-PingReturn* allocPingReturn();
-void freePingReturn(PingReturn* value);
+PingReturn* AllocPingReturn();
+void FreePingReturn(PingReturn* value);
 
 typedef struct {
     DockerClient Client;
     Error* Error;
 } CreateClientReturn;
 
-CreateClientReturn* allocCreateClientReturn();
-void freeCreateClientReturn(CreateClientReturn* value);
+CreateClientReturn* AllocCreateClientReturn();
+void FreeCreateClientReturn(CreateClientReturn* value);
 
 #endif

@@ -18,9 +18,9 @@ package batect.dockerclient
 
 import batect.dockerclient.native.CreateClient
 import batect.dockerclient.native.DisposeClient
+import batect.dockerclient.native.FreeCreateClientReturn
+import batect.dockerclient.native.FreePingReturn
 import batect.dockerclient.native.Ping
-import batect.dockerclient.native.freeCreateClientReturn
-import batect.dockerclient.native.freePingReturn
 import kotlinx.cinterop.pointed
 import kotlinx.cinterop.toKString
 
@@ -39,7 +39,7 @@ public actual class DockerClient : AutoCloseable {
 
             return ret.pointed.Client
         } finally {
-            freeCreateClientReturn(ret)
+            FreeCreateClientReturn(ret)
         }
     }
 
@@ -60,7 +60,7 @@ public actual class DockerClient : AutoCloseable {
                 response.BuilderVersion!!.toKString()
             )
         } finally {
-            freePingReturn(ret)
+            FreePingReturn(ret)
         }
     }
 

@@ -14,12 +14,13 @@
     limitations under the License.
 */
 
+import org.apache.tools.ant.taskdefs.condition.Os
 import org.gradle.api.tasks.testing.logging.TestExceptionFormat
 import org.gradle.api.tasks.testing.logging.TestLogEvent
+import org.gradle.internal.os.OperatingSystem
 import org.jetbrains.kotlin.gradle.dsl.ExplicitApiMode
 import org.jetbrains.kotlin.gradle.plugin.KotlinPlatformType
 import org.jetbrains.kotlin.gradle.plugin.mpp.KotlinNativeCompilation
-import org.jetbrains.kotlin.konan.target.Architecture
 import org.jetbrains.kotlin.konan.target.Family
 import org.jetbrains.kotlin.konan.target.KonanTarget
 
@@ -38,13 +39,14 @@ val kotestVersion = "5.0.0.419-SNAPSHOT"
 
 kotlin {
     jvm()
-//    linuxX64()
+    linuxX64()
     macosX64()
-//    mingwX64()
+    mingwX64()
 
     // These are currently not supported by kotest:
     //  linuxArm64()
     //  macosArm64()
+    //  mingwX86()
 
     sourceSets {
         val commonMain by getting {
@@ -56,17 +58,23 @@ kotlin {
             dependsOn(commonMain)
         }
 
-//        val linuxX64Main by getting {
-//            dependsOn(nativeMain)
-//        }
+        val linuxX64Main by getting {
+            dependsOn(nativeMain)
+        }
 
         val macosX64Main by getting {
             dependsOn(nativeMain)
         }
 
-//        val mingwX64Main by getting {
-//            dependsOn(nativeMain)
-//        }
+        val mingwX64Main by getting {
+            dependsOn(nativeMain)
+        }
+
+        val jvmMain by getting {
+            dependencies {
+                implementation("com.github.jnr:jnr-ffi:2.2.4")
+            }
+        }
 
         val commonTest by getting {
             dependencies {
@@ -87,13 +95,17 @@ kotlin {
             dependsOn(commonTest)
         }
 
+        val linuxX64Test by getting {
+            dependsOn(nativeTest)
+        }
+
         val macosX64Test by getting {
             dependsOn(nativeTest)
         }
 
-//        val mingwX64Test by getting {
-//            dependsOn(nativeTest)
-//        }
+        val mingwX64Test by getting {
+            dependsOn(nativeTest)
+        }
 
         all {
             languageSettings {
@@ -113,7 +125,7 @@ kotlin {
                 val libraryPath = dockerClientWrapperProject.buildDir
                     .resolve("libs")
                     .resolve(konanTarget.golangOSName)
-                    .resolve(konanTarget.golangArchitectureName)
+                    .resolve(konanTarget.architecture.name.toLowerCase())
                     .resolve("archive")
 
                 cinterops.register("dockerClientWrapper") {
@@ -122,7 +134,7 @@ kotlin {
                 }
 
                 tasks.named("cinteropDockerClientWrapper${target.name.capitalize()}") {
-                    dependsOn(dockerClientWrapperProject.tasks.named("buildArchiveLib${konanTarget.golangOSName.capitalize()}${konanTarget.golangArchitectureName.capitalize()}"))
+                    dependsOn(dockerClientWrapperProject.tasks.named("buildArchiveLib${konanTarget.golangOSName.capitalize()}${konanTarget.architecture.name.capitalize()}"))
                 }
             }
         }
@@ -135,13 +147,6 @@ val KonanTarget.golangOSName: String
         Family.LINUX -> "linux"
         Family.MINGW -> "windows"
         else -> throw UnsupportedOperationException("Unknown target family: $family")
-    }
-
-val KonanTarget.golangArchitectureName: String
-    get() = when (architecture) {
-        Architecture.X64 -> "amd64"
-        Architecture.ARM64 -> "arm64"
-        else -> throw UnsupportedOperationException("Unknown target architecture: $architecture")
     }
 
 tasks.named<Test>("jvmTest") {

@@ -11,9 +11,9 @@ type DockerClient C.DockerClient
 type CreateClientReturn *C.CreateClientReturn
 
 func newCreateClientReturn(client DockerClient, err error) CreateClientReturn {
-	value := C.allocCreateClientReturn()
+	value := C.AllocCreateClientReturn()
 	value.Error = newError(err)
-	value.Client = C.uintptr_t(client)
+	value.Client = C.uint64_t(client)
 
 	return value
 }
@@ -21,7 +21,7 @@ func newCreateClientReturn(client DockerClient, err error) CreateClientReturn {
 type PingResponse *C.PingResponse
 
 func newPingResponse(apiVersion string, osType string, experimental bool, builderVersion string) PingResponse {
-	value := C.allocPingResponse()
+	value := C.AllocPingResponse()
 	value.APIVersion = C.CString(apiVersion)
 	value.OSType = C.CString(osType)
 	value.Experimental = C.bool(experimental)
@@ -33,7 +33,7 @@ func newPingResponse(apiVersion string, osType string, experimental bool, builde
 type PingReturn *C.PingReturn
 
 func newPingReturn(response PingResponse, err error) PingReturn {
-	value := C.allocPingReturn()
+	value := C.AllocPingReturn()
 	value.Error = newError(err)
 	value.Response = response
 
@@ -47,7 +47,7 @@ func newError(err error) Error {
 		return nil
 	}
 
-	value := C.allocError()
+	value := C.AllocError()
 
 	value.Message = C.CString(err.Error())
 	value.Type = C.CString(fmt.Sprintf("%T", err))

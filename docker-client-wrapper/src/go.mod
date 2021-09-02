@@ -1,6 +1,6 @@
 module github.com/batect/docker-client/docker-client-wrapper
 
-go 1.17
+go 1.16
 
 require (
 	github.com/Microsoft/go-winio v0.4.17 // indirect
