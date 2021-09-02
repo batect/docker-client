@@ -14,6 +14,7 @@
     limitations under the License.
 */
 
+import batect.dockerclient.buildtools.GolangBuild
 import org.gradle.api.tasks.testing.logging.TestExceptionFormat
 import org.gradle.api.tasks.testing.logging.TestLogEvent
 import org.jetbrains.kotlin.gradle.dsl.ExplicitApiMode
@@ -34,6 +35,10 @@ repositories {
 }
 
 val kotestVersion = "5.0.0.419-SNAPSHOT"
+
+val dockerClientWrapperProject = project(":docker-client-wrapper")
+val jvmLibsDir = buildDir.resolve("resources").resolve("jvm")
+
 val buildIsRunningOnLinux = org.gradle.internal.os.OperatingSystem.current().isLinux
 
 kotlin {
@@ -73,6 +78,8 @@ kotlin {
             dependencies {
                 implementation("com.github.jnr:jnr-ffi:2.2.5")
             }
+
+            resources.srcDir(jvmLibsDir)
         }
 
         val commonTest by getting {
@@ -119,8 +126,6 @@ kotlin {
 
         if (target.platformType == KotlinPlatformType.native) {
             target.compilations.getByName<KotlinNativeCompilation>("main") {
-                val dockerClientWrapperProject = project(":docker-client-wrapper")
-
                 val libraryPath = dockerClientWrapperProject.buildDir
                     .resolve("libs")
                     .resolve(konanTarget.golangOSName)
@@ -173,4 +178,25 @@ tasks.named<Test>("jvmTest") {
         events = setOf(TestLogEvent.FAILED, TestLogEvent.SKIPPED)
         exceptionFormat = TestExceptionFormat.FULL
     }
+}
+
+val copyJvmLibs = tasks.register<Copy>("copyJvmLibs") {
+    val prefix = "buildSharedLib"
+    val taskNames = dockerClientWrapperProject.tasks.names.filter { it.startsWith(prefix) && it != "buildSharedLibs" }
+
+    taskNames.forEach { taskName ->
+        val task = dockerClientWrapperProject.tasks.getByName<GolangBuild>(taskName)
+
+        from(task.outputLibraryFile) {
+            into("batect/dockerclient/libs/${task.targetOperatingSystem.get().name}/${task.targetArchitecture.get().jnrName}".toLowerCase())
+        }
+    }
+
+    into(jvmLibsDir)
+
+    duplicatesStrategy = DuplicatesStrategy.FAIL
+}
+
+tasks.named("jvmProcessResources") {
+    dependsOn(copyJvmLibs)
 }
