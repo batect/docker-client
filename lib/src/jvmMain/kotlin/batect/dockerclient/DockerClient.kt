@@ -65,7 +65,7 @@ internal val nativeAPI: NativeAPI by lazy {
         .create(NativeAPI::class.java)
         .option(LibraryOption.LoadNow, true)
         .option(LibraryOption.IgnoreError, true)
-        .search("../docker-client-wrapper/build/libs/darwin/amd64/shared")
+        .search("../docker-client-wrapper/build/libs/darwin/x64/shared")
         .library("dockerclientwrapper")
         .failImmediately()
         .load()
