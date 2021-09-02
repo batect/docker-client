@@ -14,8 +14,11 @@
     limitations under the License.
 */
 
+import java.nio.file.Files
+
 plugins {
     kotlin("jvm") version "1.5.30"
+    id("com.diffplug.spotless") version "5.14.3"
 }
 
 repositories {
@@ -30,4 +33,23 @@ dependencies {
 
 java {
     targetCompatibility = JavaVersion.VERSION_1_8
+}
+
+val licenseText = Files.readString(project.projectDir.resolve("..").resolve("gradle").resolve("license.txt").toPath())!!
+val kotlinLicenseHeader = "/*\n${licenseText.lines().joinToString("\n") { "    $it".trimEnd() }}*/\n\n"
+
+spotless {
+    encoding("UTF-8")
+
+    kotlinGradle {
+        ktlint()
+        licenseHeader(kotlinLicenseHeader, "plugins|rootProject|import")
+    }
+
+    kotlin {
+        target(fileTree("src").include("**/*.kt"))
+
+        ktlint()
+        licenseHeader(kotlinLicenseHeader)
+    }
 }

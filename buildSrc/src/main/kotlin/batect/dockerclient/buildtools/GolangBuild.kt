@@ -1,3 +1,19 @@
+/*
+    Copyright 2017-2021 Charles Korn.
+
+    Licensed under the Apache License, Version 2.0 (the "License");
+    you may not use this file except in compliance with the License.
+    You may obtain a copy of the License at
+
+        http://www.apache.org/licenses/LICENSE-2.0
+
+    Unless required by applicable law or agreed to in writing, software
+    distributed under the License is distributed on an "AS IS" BASIS,
+    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    See the License for the specific language governing permissions and
+    limitations under the License.
+*/
+
 package batect.dockerclient.buildtools
 
 import org.gradle.api.DefaultTask
@@ -54,54 +70,62 @@ abstract class GolangBuild @Inject constructor(private val execActionFactory: Ex
 
         sourceDirectory.convention(project.layout.projectDirectory.dir("src"))
 
-        outputDirectory.convention(project.provider {
-            project.layout.buildDirectory
-                .dir("libs").get()
-                .dir(targetOperatingSystem.get().name.lowercase())
-                .dir(targetArchitecture.get().name.lowercase())
-                .dir(targetBinaryType.get().name.lowercase())
-        })
-
-        baseOutputName.convention(project.provider {
-            when (targetOperatingSystem.get()) {
-                OperatingSystem.Windows -> libraryName.get()
-                OperatingSystem.Linux, OperatingSystem.Darwin -> "lib${libraryName.get()}"
-                else -> throw IllegalArgumentException("Unknown operating system: ${targetOperatingSystem.get()}")
+        outputDirectory.convention(
+            project.provider {
+                project.layout.buildDirectory
+                    .dir("libs").get()
+                    .dir(targetOperatingSystem.get().name.lowercase())
+                    .dir(targetArchitecture.get().name.lowercase())
+                    .dir(targetBinaryType.get().name.lowercase())
             }
-        })
+        )
 
-        outputLibraryFile.convention(project.provider {
-            val libraryFileName = when (targetBinaryType.get()) {
-                BinaryType.Shared -> when (targetOperatingSystem.get()) {
-                    OperatingSystem.Windows -> "${baseOutputName.get()}.dll"
-                    OperatingSystem.Linux -> "${baseOutputName.get()}.so"
-                    OperatingSystem.Darwin -> "${baseOutputName.get()}.dylib"
+        baseOutputName.convention(
+            project.provider {
+                when (targetOperatingSystem.get()) {
+                    OperatingSystem.Windows -> libraryName.get()
+                    OperatingSystem.Linux, OperatingSystem.Darwin -> "lib${libraryName.get()}"
                     else -> throw IllegalArgumentException("Unknown operating system: ${targetOperatingSystem.get()}")
                 }
-                BinaryType.Archive -> when (targetOperatingSystem.get()) {
-                    OperatingSystem.Windows -> "${baseOutputName.get()}.lib"
-                    OperatingSystem.Linux, OperatingSystem.Darwin -> "${baseOutputName.get()}.a"
-                    else -> throw IllegalArgumentException("Unknown operating system: ${targetOperatingSystem.get()}")
-                }
-                else -> throw IllegalArgumentException("Unknown binary type: ${targetBinaryType.get()}")
             }
+        )
 
-            outputDirectory.file(libraryFileName).get()
-        })
+        outputLibraryFile.convention(
+            project.provider {
+                val libraryFileName = when (targetBinaryType.get()) {
+                    BinaryType.Shared -> when (targetOperatingSystem.get()) {
+                        OperatingSystem.Windows -> "${baseOutputName.get()}.dll"
+                        OperatingSystem.Linux -> "${baseOutputName.get()}.so"
+                        OperatingSystem.Darwin -> "${baseOutputName.get()}.dylib"
+                        else -> throw IllegalArgumentException("Unknown operating system: ${targetOperatingSystem.get()}")
+                    }
+                    BinaryType.Archive -> when (targetOperatingSystem.get()) {
+                        OperatingSystem.Windows -> "${baseOutputName.get()}.lib"
+                        OperatingSystem.Linux, OperatingSystem.Darwin -> "${baseOutputName.get()}.a"
+                        else -> throw IllegalArgumentException("Unknown operating system: ${targetOperatingSystem.get()}")
+                    }
+                    else -> throw IllegalArgumentException("Unknown binary type: ${targetBinaryType.get()}")
+                }
+
+                outputDirectory.file(libraryFileName).get()
+            }
+        )
 
         outputHeaderFile.convention(project.provider { outputDirectory.file("${baseOutputName.get()}.h").get() })
 
-        dockerImage.convention(project.provider {
-            if (targetOperatingSystem.get() == OperatingSystem.Linux) {
-                when (targetArchitecture.get()) {
-                    Architecture.X86, Architecture.X64 -> "docker.elastic.co/beats-dev/golang-crossbuild:1.16.4-main-debian10"
-                    Architecture.Arm64 -> "docker.elastic.co/beats-dev/golang-crossbuild:1.16.4-arm-debian10"
-                    else -> throw IllegalArgumentException("Cannot get Docker image for architecture ${targetArchitecture.get().name}")
+        dockerImage.convention(
+            project.provider {
+                if (targetOperatingSystem.get() == OperatingSystem.Linux) {
+                    when (targetArchitecture.get()) {
+                        Architecture.X86, Architecture.X64 -> "docker.elastic.co/beats-dev/golang-crossbuild:1.16.4-main-debian10"
+                        Architecture.Arm64 -> "docker.elastic.co/beats-dev/golang-crossbuild:1.16.4-arm-debian10"
+                        else -> throw IllegalArgumentException("Cannot get Docker image for architecture ${targetArchitecture.get().name}")
+                    }
+                } else {
+                    null
                 }
-            } else {
-                null
             }
-        })
+        )
 
         onlyIf {
             when (targetOperatingSystem.get()) {
@@ -110,7 +134,6 @@ abstract class GolangBuild @Inject constructor(private val execActionFactory: Ex
                 OperatingSystem.Linux -> org.gradle.internal.os.OperatingSystem.current().isLinux
                 else -> throw UnsupportedOperationException("Unknown target operating system ${targetOperatingSystem.get()}")
             }
-
         }
     }
 
@@ -161,4 +184,3 @@ abstract class GolangBuild @Inject constructor(private val execActionFactory: Ex
         action.execute().assertNormalExitValue()
     }
 }
-
