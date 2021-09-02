@@ -18,9 +18,9 @@ package batect.dockerclient
 
 import jnr.ffi.LibraryLoader
 import jnr.ffi.LibraryOption
-import jnr.ffi.Runtime
-import jnr.ffi.Struct
-import jnr.ffi.annotations.In
+import jnr.ffi.Platform
+import java.nio.file.Files
+import java.nio.file.Path
 import java.nio.file.Paths
 
 public actual class DockerClient : AutoCloseable {
@@ -59,68 +59,35 @@ public actual class DockerClient : AutoCloseable {
 }
 
 internal val nativeAPI: NativeAPI by lazy {
-    println(Paths.get("").toAbsolutePath())
+    val libraryDirectory = extractNativeLibrary()
 
     LibraryLoader
         .create(NativeAPI::class.java)
         .option(LibraryOption.LoadNow, true)
         .option(LibraryOption.IgnoreError, true)
-        .search("../docker-client-wrapper/build/libs/darwin/x64/shared")
+        .search(libraryDirectory.toString())
         .library("dockerclientwrapper")
         .failImmediately()
         .load()
 }
 
-@Suppress("FunctionName")
-internal interface NativeAPI {
-    fun Ping(@In handle: DockerClientHandle): PingReturn
-    fun CreateClient(): CreateClientReturn
-    fun DisposeClient(@In handle: DockerClientHandle)
+private fun extractNativeLibrary(): Path {
+    val classLoader = DockerClient::class.java.classLoader
+    val platform = "${Platform.getNativePlatform().os.name.lowercase()}/${Platform.getNativePlatform().cpu.name.lowercase()}"
+    val libraryFileName = Platform.getNativePlatform().mapLibraryName("dockerclientwrapper")
+    val resourcePath = "batect/dockerclient/libs/$platform/$libraryFileName"
+    val stream = classLoader.getResourceAsStream(resourcePath) ?: throw UnsupportedOperationException("Platform '$platform' is not supported.")
 
-    fun FreeCreateClientReturn(@In value: CreateClientReturn)
-    fun FreePingReturn(@In value: PingReturn)
-}
+    stream.use {
+        val outputDirectory = Files.createTempDirectory("batect-docker-client")
+        outputDirectory.toFile().deleteOnExit()
 
-internal typealias DockerClientHandle = Long
+        val outputFile = outputDirectory.resolve(libraryFileName)
+        Files.copy(it, outputFile)
+        outputFile.toFile().deleteOnExit()
 
-internal class PingReturn(runtime: Runtime) : Struct(runtime), AutoCloseable {
-    val responsePointer = Pointer()
-    val response: NativePingResponse? by lazy { if (responsePointer.intValue() == 0) null else { NativePingResponse(responsePointer) } }
+        println(outputFile)
 
-    val errorPointer = Pointer()
-    val error: Error? by lazy { if (errorPointer.intValue() == 0) null else { Error(errorPointer) } }
-
-    override fun close() {
-        nativeAPI.FreePingReturn(this)
-    }
-}
-
-internal class NativePingResponse(runtime: Runtime) : Struct(runtime) {
-    constructor(pointer: Pointer) : this (pointer.memory.runtime) {
-        this.useMemory(pointer.get())
-    }
-
-    val apiVersion = UTF8StringRef()
-    val osType = UTF8StringRef()
-    val experimental = Boolean()
-    val builderVersion = UTF8StringRef()
-}
-
-internal class Error(runtime: Runtime) : Struct(runtime) {
-    constructor(pointer: Pointer) : this (pointer.memory.runtime) {
-        this.useMemory(pointer.get())
-    }
-
-    val type = UTF8StringRef()
-    val message = UTF8StringRef()
-}
-
-internal class CreateClientReturn(runtime: Runtime) : Struct(runtime), AutoCloseable {
-    val client = u_int64_t()
-    val errorPointer = Pointer()
-    val error: Error? by lazy { if (errorPointer.intValue() == 0) null else { Error(errorPointer) } }
-
-    override fun close() {
-        nativeAPI.FreeCreateClientReturn(this)
+        return outputDirectory
     }
 }
