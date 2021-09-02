@@ -83,7 +83,7 @@ kotlin {
 
         val commonTest by getting {
             dependencies {
-                implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.5.1")
+                implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.5.2")
                 implementation("io.kotest:kotest-assertions-core:$kotestVersion")
                 implementation("io.kotest:kotest-framework-api:$kotestVersion")
                 implementation("io.kotest:kotest-framework-engine:$kotestVersion")
