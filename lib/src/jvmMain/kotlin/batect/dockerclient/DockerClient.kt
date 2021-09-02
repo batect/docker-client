@@ -21,7 +21,6 @@ import jnr.ffi.LibraryOption
 import jnr.ffi.Platform
 import java.nio.file.Files
 import java.nio.file.Path
-import java.nio.file.Paths
 
 public actual class DockerClient : AutoCloseable {
     private val clientHandle: DockerClientHandle = createClient()
