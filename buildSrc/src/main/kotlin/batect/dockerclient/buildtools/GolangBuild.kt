@@ -107,7 +107,7 @@ abstract class GolangBuild @Inject constructor(private val execActionFactory: Ex
             when (targetOperatingSystem.get()) {
                 OperatingSystem.Darwin -> org.gradle.internal.os.OperatingSystem.current().isMacOsX
                 OperatingSystem.Windows -> org.gradle.internal.os.OperatingSystem.current().isWindows
-                OperatingSystem.Linux -> true
+                OperatingSystem.Linux -> org.gradle.internal.os.OperatingSystem.current().isLinux
                 else -> throw UnsupportedOperationException("Unknown target operating system ${targetOperatingSystem.get()}")
             }
 

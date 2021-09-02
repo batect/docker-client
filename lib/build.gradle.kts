@@ -34,6 +34,7 @@ repositories {
 }
 
 val kotestVersion = "5.0.0.419-SNAPSHOT"
+val buildIsRunningOnLinux = org.gradle.internal.os.OperatingSystem.current().isLinux
 
 kotlin {
     jvm()
@@ -133,9 +134,25 @@ kotlin {
 
                 tasks.named("cinteropDockerClientWrapper${target.name.capitalize()}") {
                     dependsOn(dockerClientWrapperProject.tasks.named("buildArchiveLib${konanTarget.golangOSName.capitalize()}${konanTarget.architecture.name.capitalize()}"))
+
+                    if (konanTarget.family == Family.LINUX) {
+                        onlyIf { buildIsRunningOnLinux }
+                    }
                 }
             }
         }
+    }
+}
+
+setOf(
+    "compileKotlinLinuxX64",
+    "compileTestKotlinLinuxX64",
+    "linuxX64MainKlibrary",
+    "linuxX64TestKlibrary",
+    "linkDebugTestLinuxX64",
+).forEach { taskName ->
+    tasks.named(taskName) {
+        onlyIf { buildIsRunningOnLinux }
     }
 }
 
