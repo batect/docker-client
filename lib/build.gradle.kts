@@ -71,7 +71,7 @@ kotlin {
 
         val jvmMain by getting {
             dependencies {
-                implementation("com.github.jnr:jnr-ffi:2.2.4")
+                implementation("com.github.jnr:jnr-ffi:2.2.5")
             }
         }
 
