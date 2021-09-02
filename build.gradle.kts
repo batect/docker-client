@@ -37,7 +37,7 @@ allprojects {
         }
 
         val isKotlinProject = plugins.hasPlugin("org.jetbrains.kotlin.multiplatform")
-        val kotlinLicenseHeader = "/*\n${licenseText.lines().joinToString("\n") { "    $it".trimEnd() }}\n*/\n\n"
+        val kotlinLicenseHeader = "/*\n${licenseText.trimEnd().lines().joinToString("\n") { "    $it".trimEnd() }}\n*/\n\n"
 
         spotless {
             encoding("UTF-8")

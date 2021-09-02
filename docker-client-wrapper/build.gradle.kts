@@ -17,7 +17,9 @@
 import batect.dockerclient.buildtools.Architecture
 import batect.dockerclient.buildtools.BinaryType
 import batect.dockerclient.buildtools.GolangBuild
+import batect.dockerclient.buildtools.GolangLint
 import batect.dockerclient.buildtools.OperatingSystem
+import java.nio.file.Files
 
 plugins {
     id("com.diffplug.spotless")
@@ -72,4 +74,32 @@ targets.forEach { target ->
 tasks.named("assemble") {
     dependsOn(buildSharedLibs)
     dependsOn(buildArchiveLibs)
+}
+
+val licenseText = Files.readString(rootProject.projectDir.resolve("gradle").resolve("license.txt").toPath())!!
+
+spotless {
+    format("golang") {
+        target("**/*.go")
+
+        val golangLicenseHeader = "${licenseText.trimEnd().lines().joinToString("\n") { "// $it".trimEnd() }}\n\n"
+
+        licenseHeader(golangLicenseHeader, "^package")
+    }
+
+    format("c") {
+        target("**/*.c", "**/*.h")
+
+        val cLicenseHeader = "${licenseText.trimEnd().lines().joinToString("\n") { "// $it".trimEnd() }}\n\n"
+
+        licenseHeader(cLicenseHeader, "^#include")
+    }
+}
+
+val lint = tasks.register<GolangLint>("lint") {
+    golangCILintVersion.set("v1.42.0")
+}
+
+tasks.named("check") {
+    dependsOn(lint)
 }

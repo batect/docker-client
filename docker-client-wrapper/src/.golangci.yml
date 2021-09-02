@@ -1,0 +1,82 @@
+linters:
+  enable:
+    - asciicheck
+    - bodyclose
+    # Disabled: - cyclop
+    - deadcode
+    - depguard
+    - dogsled
+    - dupl
+    - durationcheck
+    - errcheck
+    - errorlint
+    - exhaustive
+    # Disabled: - exhaustivestruct
+    - exportloopref
+    - forbidigo
+    - forcetypeassert
+    - funlen
+    - gci
+    - gochecknoglobals
+    - gochecknoinits
+    - gocognit
+    - goconst
+    - gocritic
+    - gocyclo
+    - godot
+    # Disabled: - godox
+    - goerr113
+    - gofmt
+    # Disabled: - gofumpt (would be good to turn this on if the "No empty lines before a simple error check" rule could be disabled
+    - goheader
+    - goimports
+    # Deprecated: - golint
+    # Disabled: - gomnd
+    # Disabled: - gomodguard
+    - goprintffuncname
+    - gosec
+    - gosimple
+    - govet
+    - ifshort
+    - importas
+    - ineffassign
+    # Deprecated: - interfacer
+    - lll
+    - makezero
+    # Deprecated: - maligned
+    - misspell
+    - nakedret
+    - nestif
+    - nilerr
+    # Disabled: - nlreturn
+    - noctx
+    - nolintlint
+    # Disabled: - paralleltest
+    - prealloc
+    - predeclared
+    - promlinter
+    - revive
+    - rowserrcheck
+    - sqlclosecheck
+    - staticcheck
+    - structcheck
+    - stylecheck
+    - testpackage
+    - thelper
+    - tparallel
+    - typecheck
+    - unconvert
+    - unparam
+    - unused
+    - varcheck
+    - wastedassign
+    - whitespace
+    # Disabled: - wrapcheck
+    - wsl
+
+linters-settings:
+  lll:
+    line-length: 180
+
+  wsl:
+    allow-cuddle-declarations: true
