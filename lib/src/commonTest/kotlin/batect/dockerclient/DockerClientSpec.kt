@@ -18,6 +18,7 @@ package batect.dockerclient
 
 import io.kotest.assertions.asClue
 import io.kotest.core.spec.style.ShouldSpec
+import io.kotest.matchers.collections.shouldBeIn
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.string.shouldMatch
 
@@ -28,10 +29,10 @@ class DockerClientSpec : ShouldSpec({
         val response = client.ping()
 
         response.asClue {
-            it.apiVersion shouldMatch """^\d+\.\d+$""".toRegex()
-            it.osType shouldBe "linux"
+            it.apiVersion shouldMatch """^\d\.\d+$""".toRegex()
+            it.osType shouldBeIn setOf("linux", "windows")
             it.experimental shouldBe false
-            it.builderVersion shouldBe "2"
+            it.builderVersion shouldBeIn setOf("1", "2")
         }
     }
 })
