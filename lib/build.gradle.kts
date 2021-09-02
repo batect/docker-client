@@ -50,7 +50,6 @@ kotlin {
     // These are currently not supported by kotest:
     //  linuxArm64()
     //  macosArm64()
-    //  mingwX86()
 
     sourceSets {
         val commonMain by getting {
