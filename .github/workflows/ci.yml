@@ -109,7 +109,7 @@ jobs:
           restore-keys: kotlin-native-${{ runner.os }}
 
       - name: Build and test
-        run: ./gradlew --parallel check
+        run: ./gradlew --parallel check --exclude-task :docker-client-wrapper:lint
 
       - name: Stop Gradle daemon
         run: ./gradlew --stop
@@ -170,7 +170,7 @@ jobs:
           restore-keys: kotlin-native-${{ runner.os }}
 
       - name: Build and test
-        run: ./gradlew --parallel check
+        run: ./gradlew --parallel check --exclude-task :docker-client-wrapper:lint
 
       - name: Stop Gradle daemon
         run: ./gradlew --stop
