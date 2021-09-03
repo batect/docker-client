@@ -30,6 +30,7 @@ import org.gradle.api.tasks.PathSensitive
 import org.gradle.api.tasks.PathSensitivity
 import org.gradle.api.tasks.TaskAction
 import org.gradle.process.internal.ExecActionFactory
+import java.nio.file.Files
 import javax.inject.Inject
 
 abstract class GolangBuild @Inject constructor(private val execActionFactory: ExecActionFactory) : DefaultTask() {
@@ -111,7 +112,7 @@ abstract class GolangBuild @Inject constructor(private val execActionFactory: Ex
             }
         )
 
-        outputHeaderFile.convention(project.provider { outputDirectory.file("${baseOutputName.get()}.h").get() })
+        outputHeaderFile.convention(project.provider { outputDirectory.file("${libraryName.get()}.h").get() })
 
         dockerImage.convention(
             project.provider {
@@ -137,24 +138,23 @@ abstract class GolangBuild @Inject constructor(private val execActionFactory: Ex
         }
     }
 
+    private val goBuildCommand: List<String>
+        get() = listOf("go", "build", "-buildmode=c-${targetBinaryType.get().name.lowercase()}", "-o", outputLibraryPathInBuildEnvironment)
+
     @TaskAction
     fun run() {
-        val environment = mapOf(
-            "CGO_ENABLED" to "1",
-            "GOOS" to targetOperatingSystem.get().name.lowercase(),
-            "GOARCH" to targetArchitecture.get().golangName
-        )
+        cleanOutputDirectory()
+        runBuild()
+        moveHeaderFileToExpectedLocation()
+    }
 
-        val useDocker = targetOperatingSystem.get() == OperatingSystem.Linux
-
-        val outputPathInBuildEnvironment = if (useDocker) {
-            "/code/" + project.projectDir.toPath().relativize(outputLibraryFile.get().asFile.toPath()).toString()
-        } else {
-            outputLibraryFile.get().toString()
+    private fun cleanOutputDirectory() {
+        if (!outputDirectory.get().asFile.deleteRecursively()) {
+            throw RuntimeException("Could not remove directory ${outputDirectory.get()}")
         }
+    }
 
-        val goBuildCommand = listOf("go", "build", "-buildmode=c-${targetBinaryType.get().name.lowercase()}", "-o", outputPathInBuildEnvironment)
-
+    private fun runBuild() {
         val action = execActionFactory.newExecAction()
         action.workingDir = sourceDirectory.asFile.get()
         action.environment(environment)
@@ -183,4 +183,34 @@ abstract class GolangBuild @Inject constructor(private val execActionFactory: Ex
 
         action.execute().assertNormalExitValue()
     }
+
+    private fun moveHeaderFileToExpectedLocation() {
+        val outputLibraryPath = outputLibraryFile.get().asFile
+        val outputHeaderPath = outputHeaderFile.get().asFile.toPath()
+        val headerFileGeneratedByGolangCompiler = outputLibraryPath.parentFile.resolve(outputLibraryPath.nameWithoutExtension + ".h").toPath()
+
+        if (headerFileGeneratedByGolangCompiler == outputHeaderPath) {
+            // Header file already has expected name, nothing to do.
+            return
+        }
+
+        Files.move(headerFileGeneratedByGolangCompiler, outputHeaderPath)
+    }
+
+    private val environment: Map<String, String>
+        get() = mapOf(
+            "CGO_ENABLED" to "1",
+            "GOOS" to targetOperatingSystem.get().name.lowercase(),
+            "GOARCH" to targetArchitecture.get().golangName
+        )
+
+    private val useDocker: Boolean
+        get() = targetOperatingSystem.get() == OperatingSystem.Linux
+
+    private val outputLibraryPathInBuildEnvironment: String
+        get() = if (useDocker) {
+            "/code/" + project.projectDir.toPath().relativize(outputLibraryFile.get().asFile.toPath()).toString()
+        } else {
+            outputLibraryFile.get().toString()
+        }
 }
