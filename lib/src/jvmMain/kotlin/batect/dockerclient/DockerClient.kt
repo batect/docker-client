@@ -85,8 +85,6 @@ private fun extractNativeLibrary(): Path {
         Files.copy(it, outputFile)
         outputFile.toFile().deleteOnExit()
 
-        println(outputFile)
-
         return outputDirectory
     }
 }

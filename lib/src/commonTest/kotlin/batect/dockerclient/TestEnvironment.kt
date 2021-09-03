@@ -16,25 +16,12 @@
 
 package batect.dockerclient
 
-import io.kotest.assertions.asClue
-import io.kotest.core.spec.style.ShouldSpec
-import io.kotest.matchers.collections.shouldBeIn
-import io.kotest.matchers.shouldBe
-import io.kotest.matchers.string.shouldMatch
+import io.kotest.core.spec.style.scopes.RootTestWithConfigBuilder
+import io.kotest.core.test.TestContext
 import kotlin.time.ExperimentalTime
 
 @ExperimentalTime
-class DockerClientSpec : ShouldSpec({
-    val client = closeAfterTest(DockerClient())
+internal fun RootTestWithConfigBuilder.onlyIfDockerDaemonPresent(test: suspend TestContext.() -> Unit) =
+    this.config(enabledIf = { getEnvironmentVariable("DISABLE_DOCKER_DAEMON_TESTS") != "1" }, test = test)
 
-    should("be able to ping the daemon").onlyIfDockerDaemonPresent {
-        val response = client.ping()
-
-        response.asClue {
-            it.apiVersion shouldMatch """^\d\.\d+$""".toRegex()
-            it.osType shouldBeIn setOf("linux", "windows")
-            it.experimental shouldBe false
-            it.builderVersion shouldBeIn setOf("1", "2", "")
-        }
-    }
-})
+expect fun getEnvironmentVariable(name: String): String?

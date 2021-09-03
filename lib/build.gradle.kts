@@ -20,6 +20,7 @@ import org.gradle.api.tasks.testing.logging.TestLogEvent
 import org.jetbrains.kotlin.gradle.dsl.ExplicitApiMode
 import org.jetbrains.kotlin.gradle.plugin.KotlinPlatformType
 import org.jetbrains.kotlin.gradle.plugin.mpp.KotlinNativeCompilation
+import org.jetbrains.kotlin.gradle.targets.native.tasks.KotlinNativeHostTest
 import org.jetbrains.kotlin.konan.target.Family
 import org.jetbrains.kotlin.konan.target.KonanTarget
 
@@ -168,6 +169,9 @@ val KonanTarget.golangOSName: String
         else -> throw UnsupportedOperationException("Unknown target family: $family")
     }
 
+val disableDockerDaemonTestsEnvironmentVariableName = "DISABLE_DOCKER_DAEMON_TESTS"
+val disableDockerDaemonTestsEnvironmentVariableValue = System.getenv(disableDockerDaemonTestsEnvironmentVariableName) ?: ""
+
 tasks.named<Test>("jvmTest") {
     useJUnitPlatform()
 
@@ -177,6 +181,14 @@ tasks.named<Test>("jvmTest") {
         events = setOf(TestLogEvent.FAILED, TestLogEvent.SKIPPED)
         exceptionFormat = TestExceptionFormat.FULL
     }
+
+    inputs.property("disableDockerDaemonTests", disableDockerDaemonTestsEnvironmentVariableValue)
+
+    environment(disableDockerDaemonTestsEnvironmentVariableName, disableDockerDaemonTestsEnvironmentVariableValue)
+}
+
+tasks.withType<KotlinNativeHostTest>().configureEach {
+    environment(disableDockerDaemonTestsEnvironmentVariableName, disableDockerDaemonTestsEnvironmentVariableValue)
 }
 
 val copyJvmLibs = tasks.register<Copy>("copyJvmLibs") {

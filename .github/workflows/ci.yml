@@ -110,6 +110,9 @@ jobs:
 
       - name: Build and test
         run: ./gradlew --parallel check --exclude-task :docker-client-wrapper:lint
+        env:
+          # The macOS build runners on GitHub Actions don't support running Docker in any form.
+          DISABLE_DOCKER_DAEMON_TESTS: 1
 
       - name: Stop Gradle daemon
         run: ./gradlew --stop
