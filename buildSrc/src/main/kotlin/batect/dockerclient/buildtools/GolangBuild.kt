@@ -16,6 +16,7 @@
 
 package batect.dockerclient.buildtools
 
+import jnr.posix.POSIXFactory
 import org.gradle.api.DefaultTask
 import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.file.RegularFileProperty
@@ -162,6 +163,8 @@ abstract class GolangBuild @Inject constructor(private val execActionFactory: Ex
         action.commandLine = if (useDocker) {
             val sourceDirectoryInBuildEnvironment = "/code/" + project.projectDir.toPath().relativize(sourceDirectory.get().asFile.toPath())
             val environmentArgs = environment.flatMap { listOf("-e", "${it.key}=${it.value}") }
+            val uid = POSIXFactory.getNativePOSIX().getuid()
+            val gid = POSIXFactory.getNativePOSIX().getgid()
 
             listOf(
                 "docker",
@@ -172,6 +175,7 @@ abstract class GolangBuild @Inject constructor(private val execActionFactory: Ex
                 "-v", "docker-client-cache-${targetOperatingSystem.get().name}-${targetArchitecture.get().name}:/go",
                 "-e", "GOCACHE=/go/cache",
                 "-w", sourceDirectoryInBuildEnvironment,
+                "-u", "$uid:$gid"
             ) + environmentArgs + listOf(
                 dockerImage.get(),
                 "--build-cmd", goBuildCommand.joinToString(" "),
