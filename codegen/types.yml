@@ -1,0 +1,29 @@
+- name: DockerClient
+  type: alias
+  nativeType: uint64_t
+
+- name: PingResponse
+  type: struct
+  fields:
+    APIVersion: string
+    OSType: string
+    Experimental: boolean
+    BuilderVersion: string
+
+- name: Error
+  type: struct
+  fields:
+    Type: string
+    Message: string
+
+- name: PingReturn
+  type: struct
+  fields:
+    Response: PingResponse
+    Error: Error
+
+- name: CreateClientReturn
+  type: struct
+  fields:
+    Client: DockerClient
+    Error: Error

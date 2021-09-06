@@ -18,6 +18,7 @@ import java.nio.file.Files
 
 plugins {
     kotlin("jvm") version "1.5.30"
+    kotlin("plugin.serialization") version "1.5.30"
     id("com.diffplug.spotless") version "5.15.0"
 }
 
@@ -27,9 +28,11 @@ repositories {
 
 dependencies {
     implementation(platform("org.jetbrains.kotlin:kotlin-bom"))
+    implementation("org.jetbrains.kotlinx:kotlinx-serialization-core:1.2.2")
     implementation(gradleApi())
     implementation(gradleKotlinDsl())
     implementation("com.github.jnr:jnr-posix:3.1.8")
+    implementation("com.charleskorn.kaml:kaml:0.35.3")
 }
 
 java {

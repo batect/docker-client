@@ -19,6 +19,7 @@ import batect.dockerclient.buildtools.BinaryType
 import batect.dockerclient.buildtools.GolangBuild
 import batect.dockerclient.buildtools.GolangLint
 import batect.dockerclient.buildtools.OperatingSystem
+import batect.dockerclient.buildtools.codegen.GenerateGolangTypes
 import java.nio.file.Files
 
 plugins {
@@ -43,6 +44,8 @@ val targets = setOf(
 val srcDir = projectDir.resolve("src")
 val libsDir = buildDir.resolve("libs")
 
+val generateTypes = tasks.register<GenerateGolangTypes>("generateTypes")
+
 val buildSharedLibs = tasks.register("buildSharedLibs") {
     group = "build"
 }
@@ -57,6 +60,8 @@ targets.forEach { target ->
         targetOperatingSystem.set(target.operatingSystem)
         targetBinaryType.set(BinaryType.Shared)
         libraryName.set(baseName)
+
+        dependsOn(generateTypes)
     }
 
     buildSharedLibs.configure { dependsOn(buildSharedLib) }
@@ -66,6 +71,8 @@ targets.forEach { target ->
         targetOperatingSystem.set(target.operatingSystem)
         targetBinaryType.set(BinaryType.Archive)
         libraryName.set(baseName)
+
+        dependsOn(generateTypes)
     }
 
     buildArchiveLibs.configure { dependsOn(buildArchiveLib) }
