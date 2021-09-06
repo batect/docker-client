@@ -16,7 +16,7 @@ If you require an API not provided here, please [open a new issue](https://githu
 
 Supported environments for both JVM and Native:
 * macOS: x64 and ARM64 (aka Apple Silicon)
-* Linux: x64 and ARM64
+* Linux: x64
 * Windows: x64
 
 ## How is this different to other Docker client libraries?

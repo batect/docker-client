@@ -19,6 +19,7 @@ import org.gradle.api.tasks.testing.logging.TestExceptionFormat
 import org.gradle.api.tasks.testing.logging.TestLogEvent
 import org.jetbrains.kotlin.gradle.dsl.ExplicitApiMode
 import org.jetbrains.kotlin.gradle.plugin.KotlinPlatformType
+import org.jetbrains.kotlin.gradle.plugin.KotlinTarget
 import org.jetbrains.kotlin.gradle.plugin.mpp.KotlinNativeCompilation
 import org.jetbrains.kotlin.gradle.targets.native.tasks.KotlinNativeHostTest
 import org.jetbrains.kotlin.konan.target.Family
@@ -46,32 +47,17 @@ kotlin {
     jvm()
     linuxX64()
     macosX64()
+    macosArm64()
     mingwX64()
 
-    // These are currently not supported by kotest:
+    // This is currently not supported by kotest:
     //  linuxArm64()
-    //  macosArm64()
 
     sourceSets {
-        val commonMain by getting {
-            dependencies {
-            }
-        }
+        val commonMain by getting
 
         val nativeMain by creating {
             dependsOn(commonMain)
-        }
-
-        val linuxX64Main by getting {
-            dependsOn(nativeMain)
-        }
-
-        val macosX64Main by getting {
-            dependsOn(nativeMain)
-        }
-
-        val mingwX64Main by getting {
-            dependsOn(nativeMain)
         }
 
         val jvmMain by getting {
@@ -100,18 +86,6 @@ kotlin {
             dependsOn(commonTest)
         }
 
-        val linuxX64Test by getting {
-            dependsOn(nativeTest)
-        }
-
-        val macosX64Test by getting {
-            dependsOn(nativeTest)
-        }
-
-        val mingwX64Test by getting {
-            dependsOn(nativeTest)
-        }
-
         all {
             languageSettings {
                 progressiveMode = true
@@ -124,27 +98,46 @@ kotlin {
         val target = this
 
         if (target.platformType == KotlinPlatformType.native) {
+            addNativeCommonSourceSetDependencies()
+
             target.compilations.getByName<KotlinNativeCompilation>("main") {
-                val libraryPath = dockerClientWrapperProject.buildDir
-                    .resolve("libs")
-                    .resolve(konanTarget.golangOSName)
-                    .resolve(konanTarget.architecture.name.toLowerCase())
-                    .resolve("archive")
-
-                cinterops.register("dockerClientWrapper") {
-                    includeDirs(dockerClientWrapperProject.projectDir.resolve("src"), libraryPath)
-                    extraOpts("-libraryPath", libraryPath)
-                }
-
-                tasks.named("cinteropDockerClientWrapper${target.name.capitalize()}") {
-                    dependsOn(dockerClientWrapperProject.tasks.named("buildArchiveLib${konanTarget.golangOSName.capitalize()}${konanTarget.architecture.name.capitalize()}"))
-
-                    if (konanTarget.family == Family.LINUX) {
-                        onlyIf { buildIsRunningOnLinux }
-                    }
-                }
+                addDockerClientWrapperCinterop()
             }
         }
+    }
+}
+
+fun KotlinNativeCompilation.addDockerClientWrapperCinterop() {
+    val libraryPath = dockerClientWrapperProject.buildDir
+        .resolve("libs")
+        .resolve(konanTarget.golangOSName)
+        .resolve(konanTarget.architecture.name.toLowerCase())
+        .resolve("archive")
+
+    cinterops.register("dockerClientWrapper") {
+        includeDirs(dockerClientWrapperProject.projectDir.resolve("src"), libraryPath)
+        extraOpts("-libraryPath", libraryPath)
+    }
+
+    tasks.named("cinteropDockerClientWrapper${target.name.capitalize()}") {
+        dependsOn(dockerClientWrapperProject.tasks.named("buildArchiveLib${konanTarget.golangOSName.capitalize()}${konanTarget.architecture.name.toLowerCase().capitalize()}"))
+
+        if (konanTarget.family == Family.LINUX) {
+            onlyIf { buildIsRunningOnLinux }
+        }
+    }
+}
+
+fun KotlinTarget.addNativeCommonSourceSetDependencies() {
+    val nativeMain = kotlin.sourceSets.getByName("nativeMain")
+    val nativeTest = kotlin.sourceSets.getByName("nativeTest")
+
+    kotlin.sourceSets.getByName("${this.name}Main") {
+        dependsOn(nativeMain)
+    }
+
+    kotlin.sourceSets.getByName("${this.name}Test") {
+        dependsOn(nativeTest)
     }
 }
 
