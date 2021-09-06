@@ -64,26 +64,25 @@ abstract class GenerateGolangTypes : DefaultTask() {
 
     @TaskAction
     fun run() {
-        val configuration = loadConfiguration()
-        generateHeaderFile(configuration)
-        generateCFile(configuration)
+        val types = loadTypes()
+        generateHeaderFile(types)
+        generateCFile(types)
     }
 
-    private fun loadConfiguration(): Map<String, Type> {
+    private fun loadTypes(): List<Type> {
         val path = sourceFile.get()
         val content = Files.readString(path.asFile.toPath())
         val yaml = Yaml(configuration = YamlConfiguration(polymorphismStyle = PolymorphismStyle.Property))
 
         val types = yaml.decodeFromString(ListSerializer(Type.serializer()), content)
 
-        return types.associateBy { it.yamlName }
+        return types
     }
 
-    private fun generateHeaderFile(configuration: Map<String, Type>) {
+    private fun generateHeaderFile(types: List<Type>) {
         val builder = StringBuilder()
 
         builder.appendLine(fileHeader)
-        builder.appendLine()
 
         builder.appendLine(
             """
@@ -102,8 +101,8 @@ abstract class GenerateGolangTypes : DefaultTask() {
             """.trimIndent()
         )
 
-        configuration.values.forEach { type ->
-            generateHeaderFileContentForType(builder, type, configuration)
+        types.forEach { type ->
+            generateHeaderFileContentForType(builder, type, types)
         }
 
         builder.appendLine(
@@ -115,7 +114,7 @@ abstract class GenerateGolangTypes : DefaultTask() {
         Files.writeString(headerFile.get().asFile.toPath(), builder, Charsets.UTF_8)
     }
 
-    private fun generateHeaderFileContentForType(builder: StringBuilder, type: Type, configuration: Map<String, Type>) {
+    private fun generateHeaderFileContentForType(builder: StringBuilder, type: Type, types: List<Type>) {
         when (type) {
             is AliasType -> {
                 builder.appendLine("typedef ${type.nativeType} ${type.name};")
@@ -125,7 +124,7 @@ abstract class GenerateGolangTypes : DefaultTask() {
                 builder.appendLine("typedef struct {")
 
                 type.fields.forEach { (fieldName, fieldType) ->
-                    builder.appendLine(generateHeaderFileContentForStructField(type, fieldName, fieldType, configuration))
+                    builder.appendLine(generateHeaderFileContentForStructField(type, fieldName, fieldType, types))
                 }
 
                 builder.appendLine("} ${type.name};")
@@ -137,15 +136,17 @@ abstract class GenerateGolangTypes : DefaultTask() {
         }
     }
 
-    private fun generateHeaderFileContentForStructField(parentType: StructType, fieldName: String, fieldType: String, configuration: Map<String, Type>): String {
-        val resolvedType = resolveTypeReference(fieldType, configuration, "for field '$fieldName' in struct '${parentType.name}'")
+    private fun generateHeaderFileContentForStructField(parentType: StructType, fieldName: String, fieldType: String, types: List<Type>): String {
+        val resolvedType = resolveTypeReference(fieldType, types, "for field '$fieldName' in struct '${parentType.name}'")
 
         return "    ${resolvedType.cName} $fieldName;"
     }
 
-    private fun resolveTypeReference(typeName: String, configuration: Map<String, Type>, errorContext: String): TypeInformation {
-        if (configuration.containsKey(typeName)) {
-            return configuration[typeName]!!
+    private fun resolveTypeReference(typeName: String, types: List<Type>, errorContext: String): TypeInformation {
+        val userDefinedType = types.singleOrNull { it.name == typeName }
+
+        if (userDefinedType != null) {
+            return userDefinedType
         }
 
         if (PrimitiveType.yamlNamesToValues.containsKey(typeName)) {
@@ -155,11 +156,10 @@ abstract class GenerateGolangTypes : DefaultTask() {
         throw IllegalArgumentException("Unknown type '$typeName' $errorContext.")
     }
 
-    private fun generateCFile(configuration: Map<String, Type>) {
+    private fun generateCFile(types: List<Type>) {
         val builder = StringBuilder()
 
         builder.appendLine(fileHeader)
-        builder.appendLine()
         builder.appendLine(
             """
                 #include <stdlib.h>
@@ -168,18 +168,18 @@ abstract class GenerateGolangTypes : DefaultTask() {
             """.trimIndent()
         )
 
-        val structTypes = configuration.values.filterIsInstance<StructType>()
+        val structTypes = types.filterIsInstance<StructType>()
 
         structTypes.forEach { structType ->
-            generateStructAllocAndFree(builder, structType, configuration)
+            generateStructAllocAndFree(builder, structType, types)
         }
 
         Files.writeString(cFile.get().asFile.toPath(), builder, Charsets.UTF_8)
     }
 
-    private fun generateStructAllocAndFree(builder: StringBuilder, type: StructType, configuration: Map<String, Type>) {
+    private fun generateStructAllocAndFree(builder: StringBuilder, type: StructType, types: List<Type>) {
         val pointerFields = type.fields
-            .mapValues { (fieldName, fieldType) -> resolveTypeReference(fieldType, configuration, "for field '$fieldName' in struct '${type.name}'") }
+            .mapValues { (fieldName, fieldType) -> resolveTypeReference(fieldType, types, "for field '$fieldName' in struct '${type.name}'") }
             .filterValues { it.isPointer }
 
         builder.appendLine(
@@ -247,5 +247,6 @@ abstract class GenerateGolangTypes : DefaultTask() {
             // AUTOGENERATED
             // This file is autogenerated by the ${this.path} Gradle task.
             // Do not edit this file, as it will be regenerated automatically next time this project is built.
+
             """.trimIndent()
 }

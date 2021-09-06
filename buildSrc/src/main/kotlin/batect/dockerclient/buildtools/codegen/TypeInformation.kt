@@ -22,6 +22,7 @@ import kotlinx.serialization.Serializable
 interface TypeInformation {
     val yamlName: String
     val cName: String
+    val golangName: String
     val isPointer: Boolean
 }
 
@@ -30,6 +31,9 @@ sealed class Type() : TypeInformation {
     abstract val name: String
 
     override val yamlName: String
+        get() = name
+
+    override val golangName: String
         get() = name
 }
 
@@ -55,7 +59,7 @@ data class StructType(
 
 enum class PrimitiveType(
     override val yamlName: String,
-    val golangName: String,
+    override val golangName: String,
     override val cName: String,
     override val isPointer: Boolean = false
 ) : TypeInformation {
