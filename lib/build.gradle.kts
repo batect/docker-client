@@ -35,7 +35,7 @@ repositories {
     maven("https://oss.sonatype.org/content/repositories/snapshots")
 }
 
-val kotestVersion = "5.0.0.419-SNAPSHOT"
+val kotestVersion = "5.0.0.460-SNAPSHOT"
 
 val dockerClientWrapperProject = project(":docker-client-wrapper")
 val jvmLibsDir = buildDir.resolve("resources").resolve("jvm")
@@ -174,20 +174,22 @@ val disableDockerDaemonTestsEnvironmentVariableValue = System.getenv(disableDock
 tasks.named<Test>("jvmTest") {
     useJUnitPlatform()
 
+    inputs.property("disableDockerDaemonTests", disableDockerDaemonTestsEnvironmentVariableValue)
+    environment(disableDockerDaemonTestsEnvironmentVariableName, disableDockerDaemonTestsEnvironmentVariableValue)
+}
+
+tasks.withType<KotlinNativeHostTest>().configureEach {
+    inputs.property("disableDockerDaemonTests", disableDockerDaemonTestsEnvironmentVariableValue)
+    environment(disableDockerDaemonTestsEnvironmentVariableName, disableDockerDaemonTestsEnvironmentVariableValue)
+}
+
+tasks.withType<AbstractTestTask>().configureEach {
     testLogging {
         showExceptions = true
         showStandardStreams = true
         events = setOf(TestLogEvent.FAILED, TestLogEvent.SKIPPED)
         exceptionFormat = TestExceptionFormat.FULL
     }
-
-    inputs.property("disableDockerDaemonTests", disableDockerDaemonTestsEnvironmentVariableValue)
-
-    environment(disableDockerDaemonTestsEnvironmentVariableName, disableDockerDaemonTestsEnvironmentVariableValue)
-}
-
-tasks.withType<KotlinNativeHostTest>().configureEach {
-    environment(disableDockerDaemonTestsEnvironmentVariableName, disableDockerDaemonTestsEnvironmentVariableValue)
 }
 
 val copyJvmLibs = tasks.register<Copy>("copyJvmLibs") {
