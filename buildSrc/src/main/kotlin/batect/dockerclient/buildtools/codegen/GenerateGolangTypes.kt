@@ -40,6 +40,9 @@ abstract class GenerateGolangTypes : DefaultTask() {
     @get:OutputFile
     abstract val cFile: RegularFileProperty
 
+    @get:OutputFile
+    abstract val goFile: RegularFileProperty
+
     init {
         group = "code generation"
 
@@ -60,6 +63,12 @@ abstract class GenerateGolangTypes : DefaultTask() {
                 project.layout.projectDirectory.file("src/types.c")
             }
         )
+
+        goFile.convention(
+            project.provider {
+                project.layout.projectDirectory.file("src/types.go")
+            }
+        )
     }
 
     @TaskAction
@@ -67,6 +76,7 @@ abstract class GenerateGolangTypes : DefaultTask() {
         val types = loadTypes()
         generateHeaderFile(types)
         generateCFile(types)
+        generateGoFile(types)
     }
 
     private fun loadTypes(): List<TypeInformation> {
@@ -102,7 +112,7 @@ abstract class GenerateGolangTypes : DefaultTask() {
         )
 
         types.forEach { type ->
-            generateHeaderFileContentForType(builder, type, types)
+            generateHeaderFileContentForType(builder, type)
         }
 
         builder.appendLine(
@@ -114,7 +124,7 @@ abstract class GenerateGolangTypes : DefaultTask() {
         Files.writeString(headerFile.get().asFile.toPath(), builder, Charsets.UTF_8)
     }
 
-    private fun generateHeaderFileContentForType(builder: StringBuilder, type: TypeInformation, types: List<TypeInformation>) {
+    private fun generateHeaderFileContentForType(builder: StringBuilder, type: TypeInformation) {
         when (type) {
             is AliasType -> {
                 builder.appendLine("typedef ${type.nativeType} ${type.name};")
@@ -203,6 +213,69 @@ abstract class GenerateGolangTypes : DefaultTask() {
 
             """.trimIndent()
         )
+    }
+
+    private fun generateGoFile(types: List<TypeInformation>) {
+        val builder = StringBuilder()
+
+        builder.appendLine(fileHeader)
+        builder.appendLine(
+            """
+            package main
+
+            /*
+                #cgo windows CFLAGS: -DWINDOWS=1
+                #include "types.h"
+            */
+            import "C"
+
+            """.trimIndent()
+        )
+
+        types.forEach { type ->
+            builder.appendLine("type ${type.golangName} ${type.cgoTypeName}")
+        }
+
+        builder.appendLine()
+
+        types
+            .filterIsInstance<StructType>()
+            .forEach { type -> generateConstructor(builder, type) }
+
+        Files.writeString(goFile.get().asFile.toPath(), builder, Charsets.UTF_8)
+    }
+
+    private fun generateConstructor(builder: StringBuilder, type: StructType) {
+        builder.appendLine("func new${type.golangName}(")
+
+        type.fields.forEach { (fieldName, fieldType) -> builder.appendLine("    $fieldName ${fieldType.golangName},") }
+
+        builder.appendLine(
+            """
+            ) ${type.golangName} {
+                value := C.Alloc${type.name}()
+            """.trimIndent()
+        )
+
+        type.fields.forEach { (fieldName, fieldType) -> builder.appendLine(generateConstructorSetter(fieldName, fieldType)) }
+
+        builder.appendLine(
+            """
+
+                return value
+            }
+            """.trimIndent()
+        )
+
+        builder.appendLine()
+    }
+
+    private fun generateConstructorSetter(fieldName: String, fieldType: TypeInformation): String {
+        return when (fieldType) {
+            is StructType -> "    value.$fieldName = $fieldName"
+            is AliasType -> "    value.$fieldName = ${fieldType.cgoConversionFunctionName}($fieldName)"
+            is PrimitiveType -> "    value.$fieldName = ${fieldType.cgoConversionFunctionName}($fieldName)"
+        }
     }
 
     private val fileHeader: String

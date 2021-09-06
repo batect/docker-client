@@ -23,6 +23,7 @@ sealed interface TypeInformation {
     val yamlName: String
     val cName: String
     val golangName: String
+    val cgoTypeName: String
     val isPointer: Boolean
 }
 
@@ -40,9 +41,11 @@ data class AliasType(
     val nativeType: String,
     override val isPointer: Boolean = false
 ) : TypeFromConfigFile(), TypeInformation {
-    override val cName: String = name
     override val yamlName: String = name
+    override val cName: String = name
     override val golangName: String = name
+    override val cgoTypeName: String = "C.$name"
+    val cgoConversionFunctionName: String = "C.$nativeType"
 
     override fun resolve(userDefinedTypes: Map<String, TypeFromConfigFile>): TypeInformation = this
 }
@@ -81,6 +84,7 @@ data class StructType(
 ) : TypeInformation {
     override val isPointer: Boolean = true
     override val cName: String = "$name*"
+    override val cgoTypeName: String = "*C.$name"
     override val yamlName: String = name
     override val golangName: String = name
 }
@@ -89,9 +93,11 @@ enum class PrimitiveType(
     override val yamlName: String,
     override val golangName: String,
     override val cName: String,
-    override val isPointer: Boolean = false
+    override val isPointer: Boolean = false,
+    override val cgoTypeName: String = "C.$golangName",
+    val cgoConversionFunctionName: String = "C.$golangName"
 ) : TypeInformation {
-    StringType("string", "string", "char*", isPointer = true),
+    StringType("string", "string", "char*", isPointer = true, cgoConversionFunctionName = "C.CString"),
     BooleanType("boolean", "bool", "bool");
 
     companion object {

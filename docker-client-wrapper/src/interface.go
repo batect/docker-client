@@ -20,6 +20,7 @@ import (
 	*/
 	"C"
 	"context"
+	"fmt"
 	"sync"
 
 	"github.com/docker/docker/client"
@@ -37,7 +38,7 @@ func CreateClient() CreateClientReturn {
 	c, err := client.NewClientWithOpts()
 
 	if err != nil {
-		return newCreateClientReturn(0, err)
+		return newCreateClientReturn(0, toError(err))
 	}
 
 	clientsLock.Lock()
@@ -65,7 +66,7 @@ func Ping(clientHandle DockerClient) PingReturn {
 	dockerResponse, err := docker.Ping(context.Background())
 
 	if err != nil {
-		return newPingReturn(nil, err)
+		return newPingReturn(nil, toError(err))
 	}
 
 	response := newPingResponse(
@@ -83,4 +84,15 @@ func getClient(clientHandle DockerClient) *client.Client {
 	defer clientsLock.RUnlock()
 
 	return clients[uint64(clientHandle)]
+}
+
+func toError(err error) Error {
+	if err == nil {
+		return nil
+	}
+
+	return newError(
+		fmt.Sprintf("%T", err),
+		err.Error(),
+	)
 }
