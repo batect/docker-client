@@ -1,11 +1,17 @@
 *                text=auto
 
+*.c              text       eol=lf
+*.def            text       eol=lf
 *.editorconfig   text       eol=lf
+*.go             text       eol=lf
+*.h              text       eol=lf
+*.json           text       eol=lf
 *.kt             text       eol=lf
 *.kts            text       eol=lf
 *.md             text       eol=lf
+*.mod            text       eol=lf
 *.sh             text       eol=lf
-*.json           text       eol=lf
+*.yml            text       eol=lf
 Dockerfile       text       eol=lf
 LICENSE          text       eol=lf
 gradlew          text       eol=lf
