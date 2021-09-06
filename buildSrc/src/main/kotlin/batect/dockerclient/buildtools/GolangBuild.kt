@@ -101,11 +101,7 @@ abstract class GolangBuild @Inject constructor(private val execActionFactory: Ex
                         OperatingSystem.Darwin -> "${baseOutputName.get()}.dylib"
                         else -> throw IllegalArgumentException("Unknown operating system: ${targetOperatingSystem.get()}")
                     }
-                    BinaryType.Archive -> when (targetOperatingSystem.get()) {
-                        OperatingSystem.Windows -> "${baseOutputName.get()}.lib"
-                        OperatingSystem.Linux, OperatingSystem.Darwin -> "${baseOutputName.get()}.a"
-                        else -> throw IllegalArgumentException("Unknown operating system: ${targetOperatingSystem.get()}")
-                    }
+                    BinaryType.Archive -> "${libraryName.get()}.a" // Yes, this should be .lib on Windows, but having everything with .a makes the cinterop configuration for Kotlin much easier.
                     else -> throw IllegalArgumentException("Unknown binary type: ${targetBinaryType.get()}")
                 }
 
