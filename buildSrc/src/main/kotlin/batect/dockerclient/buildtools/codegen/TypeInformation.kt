@@ -19,7 +19,7 @@ package batect.dockerclient.buildtools.codegen
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
-interface TypeInformation {
+sealed interface TypeInformation {
     val yamlName: String
     val cName: String
     val golangName: String
@@ -27,14 +27,10 @@ interface TypeInformation {
 }
 
 @Serializable
-sealed class Type() : TypeInformation {
+sealed class TypeFromConfigFile() {
     abstract val name: String
 
-    override val yamlName: String
-        get() = name
-
-    override val golangName: String
-        get() = name
+    abstract fun resolve(userDefinedTypes: Map<String, TypeFromConfigFile>): TypeInformation
 }
 
 @Serializable
@@ -43,18 +39,50 @@ data class AliasType(
     override val name: String,
     val nativeType: String,
     override val isPointer: Boolean = false
-) : Type() {
+) : TypeFromConfigFile(), TypeInformation {
     override val cName: String = name
+    override val yamlName: String = name
+    override val golangName: String = name
+
+    override fun resolve(userDefinedTypes: Map<String, TypeFromConfigFile>): TypeInformation = this
 }
 
 @Serializable
 @SerialName("struct")
-data class StructType(
+data class StructTypeFromConfigFile(
     override val name: String,
     val fields: Map<String, String>
-) : Type() {
+) : TypeFromConfigFile() {
+    override fun resolve(userDefinedTypes: Map<String, TypeFromConfigFile>): TypeInformation {
+        return StructType(
+            name,
+            fields.mapValues { (fieldName, fieldValue) -> resolveTypeReference(fieldName, fieldValue, userDefinedTypes) }
+        )
+    }
+
+    private fun resolveTypeReference(fieldName: String, typeName: String, allDefinedTypes: Map<String, TypeFromConfigFile>): TypeInformation {
+        val userDefinedType = allDefinedTypes[typeName]
+
+        if (userDefinedType != null) {
+            return userDefinedType.resolve(allDefinedTypes)
+        }
+
+        if (PrimitiveType.yamlNamesToValues.containsKey(typeName)) {
+            return PrimitiveType.yamlNamesToValues[typeName]!!
+        }
+
+        throw IllegalArgumentException("Unknown type '$typeName' for field '$fieldName' in struct '${this.name}'")
+    }
+}
+
+data class StructType(
+    val name: String,
+    val fields: Map<String, TypeInformation>
+) : TypeInformation {
     override val isPointer: Boolean = true
     override val cName: String = "$name*"
+    override val yamlName: String = name
+    override val golangName: String = name
 }
 
 enum class PrimitiveType(

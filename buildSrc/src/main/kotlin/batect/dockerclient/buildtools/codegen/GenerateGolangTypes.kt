@@ -69,17 +69,17 @@ abstract class GenerateGolangTypes : DefaultTask() {
         generateCFile(types)
     }
 
-    private fun loadTypes(): List<Type> {
+    private fun loadTypes(): List<TypeInformation> {
         val path = sourceFile.get()
         val content = Files.readString(path.asFile.toPath())
         val yaml = Yaml(configuration = YamlConfiguration(polymorphismStyle = PolymorphismStyle.Property))
 
-        val types = yaml.decodeFromString(ListSerializer(Type.serializer()), content)
+        val types = yaml.decodeFromString(ListSerializer(TypeFromConfigFile.serializer()), content)
 
-        return types
+        return types.map { it.resolve(types.associateBy { it.name }) }
     }
 
-    private fun generateHeaderFile(types: List<Type>) {
+    private fun generateHeaderFile(types: List<TypeInformation>) {
         val builder = StringBuilder()
 
         builder.appendLine(fileHeader)
@@ -114,7 +114,7 @@ abstract class GenerateGolangTypes : DefaultTask() {
         Files.writeString(headerFile.get().asFile.toPath(), builder, Charsets.UTF_8)
     }
 
-    private fun generateHeaderFileContentForType(builder: StringBuilder, type: Type, types: List<Type>) {
+    private fun generateHeaderFileContentForType(builder: StringBuilder, type: TypeInformation, types: List<TypeInformation>) {
         when (type) {
             is AliasType -> {
                 builder.appendLine("typedef ${type.nativeType} ${type.name};")
@@ -124,7 +124,7 @@ abstract class GenerateGolangTypes : DefaultTask() {
                 builder.appendLine("typedef struct {")
 
                 type.fields.forEach { (fieldName, fieldType) ->
-                    builder.appendLine(generateHeaderFileContentForStructField(type, fieldName, fieldType, types))
+                    builder.appendLine("    ${fieldType.cName} $fieldName;")
                 }
 
                 builder.appendLine("} ${type.name};")
@@ -136,27 +136,7 @@ abstract class GenerateGolangTypes : DefaultTask() {
         }
     }
 
-    private fun generateHeaderFileContentForStructField(parentType: StructType, fieldName: String, fieldType: String, types: List<Type>): String {
-        val resolvedType = resolveTypeReference(fieldType, types, "for field '$fieldName' in struct '${parentType.name}'")
-
-        return "    ${resolvedType.cName} $fieldName;"
-    }
-
-    private fun resolveTypeReference(typeName: String, types: List<Type>, errorContext: String): TypeInformation {
-        val userDefinedType = types.singleOrNull { it.name == typeName }
-
-        if (userDefinedType != null) {
-            return userDefinedType
-        }
-
-        if (PrimitiveType.yamlNamesToValues.containsKey(typeName)) {
-            return PrimitiveType.yamlNamesToValues[typeName]!!
-        }
-
-        throw IllegalArgumentException("Unknown type '$typeName' $errorContext.")
-    }
-
-    private fun generateCFile(types: List<Type>) {
+    private fun generateCFile(types: List<TypeInformation>) {
         val builder = StringBuilder()
 
         builder.appendLine(fileHeader)
@@ -171,16 +151,14 @@ abstract class GenerateGolangTypes : DefaultTask() {
         val structTypes = types.filterIsInstance<StructType>()
 
         structTypes.forEach { structType ->
-            generateStructAllocAndFree(builder, structType, types)
+            generateStructAllocAndFree(builder, structType)
         }
 
         Files.writeString(cFile.get().asFile.toPath(), builder, Charsets.UTF_8)
     }
 
-    private fun generateStructAllocAndFree(builder: StringBuilder, type: StructType, types: List<Type>) {
-        val pointerFields = type.fields
-            .mapValues { (fieldName, fieldType) -> resolveTypeReference(fieldType, types, "for field '$fieldName' in struct '${type.name}'") }
-            .filterValues { it.isPointer }
+    private fun generateStructAllocAndFree(builder: StringBuilder, type: StructType) {
+        val pointerFields = type.fields.filterValues { it.isPointer }
 
         builder.appendLine(
             """
