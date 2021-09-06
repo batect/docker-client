@@ -36,8 +36,6 @@ repositories {
     maven("https://oss.sonatype.org/content/repositories/snapshots")
 }
 
-val kotestVersion = "5.0.0.460-SNAPSHOT"
-
 val dockerClientWrapperProject = project(":docker-client-wrapper")
 val jvmLibsDir = buildDir.resolve("resources").resolve("jvm")
 
@@ -70,15 +68,17 @@ kotlin {
 
         val commonTest by getting {
             dependencies {
-                implementation("io.kotest:kotest-assertions-core:$kotestVersion")
-                implementation("io.kotest:kotest-framework-api:$kotestVersion")
-                implementation("io.kotest:kotest-framework-engine:$kotestVersion")
+                // This slightly unusual syntax (project.depedencies.platform) is required until https://youtrack.jetbrains.com/issue/KT-40489 is fixed.
+                implementation(project.dependencies.platform("io.kotest:kotest-bom:5.0.0.460-SNAPSHOT"))
+                implementation("io.kotest:kotest-assertions-core")
+                implementation("io.kotest:kotest-framework-api")
+                implementation("io.kotest:kotest-framework-engine")
             }
         }
 
         val jvmTest by getting {
             dependencies {
-                implementation("io.kotest:kotest-runner-junit5:$kotestVersion")
+                implementation("io.kotest:kotest-runner-junit5")
             }
         }
 
