@@ -15,6 +15,7 @@
 package main
 
 /*
+    #cgo windows CFLAGS: -DWINDOWS=1
 	#include "types.h"
 */
 import "C"
