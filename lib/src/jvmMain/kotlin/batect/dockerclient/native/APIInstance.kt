@@ -20,27 +20,14 @@ import batect.dockerclient.DockerClient
 import jnr.ffi.LibraryLoader
 import jnr.ffi.LibraryOption
 import jnr.ffi.Platform
-import jnr.ffi.annotations.In
 import java.nio.file.Files
 import java.nio.file.Path
 
-@Suppress("FunctionName")
-internal interface NativeAPI {
-    fun Ping(@In handle: DockerClientHandle): PingReturn
-    fun CreateClient(): CreateClientReturn
-    fun DisposeClient(@In handle: DockerClientHandle)
-
-    fun FreeCreateClientReturn(@In value: CreateClientReturn)
-    fun FreePingReturn(@In value: PingReturn)
-    fun FreeError(@In value: Error)
-    fun FreePingResponse(@In value: PingResponse)
-}
-
-internal val nativeAPI: NativeAPI by lazy {
+internal val nativeAPI: API by lazy {
     val libraryDirectory = extractNativeLibrary()
 
     LibraryLoader
-        .create(NativeAPI::class.java)
+        .create(API::class.java)
         .option(LibraryOption.LoadNow, true)
         .option(LibraryOption.IgnoreError, true)
         .option(LibraryOption.PreferCustomPaths, true)
