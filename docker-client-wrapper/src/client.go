@@ -19,7 +19,6 @@ import (
 		#include "types.h"
 	*/
 	"C"
-	"context"
 	"fmt"
 	"sync"
 
@@ -57,26 +56,6 @@ func DisposeClient(clientHandle DockerClientHandle) {
 	defer clientsLock.Unlock()
 
 	delete(clients, uint64(clientHandle))
-}
-
-//export Ping
-func Ping(clientHandle DockerClientHandle) PingReturn {
-	docker := getClient(clientHandle)
-
-	dockerResponse, err := docker.Ping(context.Background())
-
-	if err != nil {
-		return newPingReturn(nil, toError(err))
-	}
-
-	response := newPingResponse(
-		dockerResponse.APIVersion,
-		dockerResponse.OSType,
-		dockerResponse.Experimental,
-		string(dockerResponse.BuilderVersion),
-	)
-
-	return newPingReturn(response, nil)
 }
 
 func getClient(clientHandle DockerClientHandle) *client.Client {
