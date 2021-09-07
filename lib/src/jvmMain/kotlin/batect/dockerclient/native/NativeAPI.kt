@@ -43,6 +43,7 @@ internal val nativeAPI: NativeAPI by lazy {
         .create(NativeAPI::class.java)
         .option(LibraryOption.LoadNow, true)
         .option(LibraryOption.IgnoreError, true)
+        .option(LibraryOption.PreferCustomPaths, true)
         .search(libraryDirectory.toString())
         .library("dockerclientwrapper")
         .failImmediately()
