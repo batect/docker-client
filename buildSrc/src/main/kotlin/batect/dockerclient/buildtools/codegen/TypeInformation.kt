@@ -112,6 +112,7 @@ enum class PrimitiveType(
 
     companion object {
         val yamlNamesToValues: Map<String, PrimitiveType> = values().associateBy { it.yamlName }
+        val cNamesToValues: Map<String, PrimitiveType> = values().associateBy { it.cName }
     }
 }
 

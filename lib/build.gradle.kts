@@ -15,6 +15,7 @@
 */
 
 import batect.dockerclient.buildtools.GolangBuild
+import batect.dockerclient.buildtools.codegen.GenerateKotlinJVMMethods
 import batect.dockerclient.buildtools.codegen.GenerateKotlinJVMTypes
 import org.gradle.api.tasks.testing.logging.TestExceptionFormat
 import org.gradle.api.tasks.testing.logging.TestLogEvent
@@ -186,11 +187,10 @@ tasks.withType<AbstractTestTask>().configureEach {
     }
 }
 
-val copyJvmLibs = tasks.register<Copy>("copyJvmLibs") {
-    val prefix = "buildSharedLib"
-    val taskNames = dockerClientWrapperProject.tasks.names.filter { it.startsWith(prefix) && it != "buildSharedLibs" }
+val buildSharedLibTasks = dockerClientWrapperProject.tasks.names.filter { it.startsWith("buildSharedLib") && it != "buildSharedLibs" }
 
-    taskNames.forEach { taskName ->
+val copyJvmLibs = tasks.register<Copy>("copyJvmLibs") {
+    buildSharedLibTasks.forEach { taskName ->
         val task = dockerClientWrapperProject.tasks.getByName<GolangBuild>(taskName)
 
         from(task.outputLibraryFile) {
@@ -207,8 +207,23 @@ tasks.named("jvmProcessResources") {
     dependsOn(copyJvmLibs)
 }
 
-val generateJvm = tasks.register<GenerateKotlinJVMTypes>("generateJvm") {
+val generateJvmTypes = tasks.register<GenerateKotlinJVMTypes>("generateJvmTypes") {
     kotlinFile.set(kotlin.sourceSets.getByName("jvmMain").kotlin.sourceDirectories.singleFile.resolve("batect/dockerclient/native/Types.kt"))
+}
+
+val generateJvmMethods = tasks.register<GenerateKotlinJVMMethods>("generateJvmMethods") {
+    buildSharedLibTasks.forEach { taskName ->
+        val task = dockerClientWrapperProject.tasks.getByName<GolangBuild>(taskName)
+
+        sourceHeaderFiles.from(task.outputHeaderFile)
+    }
+
+    kotlinFile.set(kotlin.sourceSets.getByName("jvmMain").kotlin.sourceDirectories.singleFile.resolve("batect/dockerclient/native/API.kt"))
+}
+
+val generateJvm = tasks.register("generateJvm") {
+    dependsOn(generateJvmTypes)
+    dependsOn(generateJvmMethods)
 }
 
 tasks.named("compileKotlinJvm") {
