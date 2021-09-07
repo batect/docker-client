@@ -107,6 +107,11 @@ val lint = tasks.register<GolangLint>("lint") {
     golangCILintVersion.set("v1.42.0")
 
     dependsOn(generateTypes)
+
+    mustRunAfter(buildSharedLibs)
+    mustRunAfter(buildSharedLibs.map { it.taskDependencies })
+    mustRunAfter(buildArchiveLibs)
+    mustRunAfter(buildArchiveLibs.map { it.taskDependencies })
 }
 
 tasks.named("check") {
