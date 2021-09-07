@@ -24,7 +24,7 @@ import io.kotest.matchers.string.shouldMatch
 import kotlin.time.ExperimentalTime
 
 @ExperimentalTime
-class DockerClientSpec : ShouldSpec({
+class DockerClientDaemonInformationSpec : ShouldSpec({
     val client = closeAfterTest(DockerClient())
 
     should("be able to ping the daemon").onlyIfDockerDaemonPresent {
