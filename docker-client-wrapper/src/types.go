@@ -25,10 +25,34 @@ package main
 import "C"
 
 type DockerClientHandle C.DockerClientHandle
-type PingResponse *C.PingResponse
 type Error *C.Error
-type PingReturn *C.PingReturn
 type CreateClientReturn *C.CreateClientReturn
+type PingResponse *C.PingResponse
+type PingReturn *C.PingReturn
+type DaemonVersionInformation *C.DaemonVersionInformation
+type GetDaemonVersionInformationReturn *C.GetDaemonVersionInformationReturn
+
+func newError(
+    Type string,
+    Message string,
+) Error {
+    value := C.AllocError()
+    value.Type = C.CString(Type)
+    value.Message = C.CString(Message)
+
+    return value
+}
+
+func newCreateClientReturn(
+    Client DockerClientHandle,
+    Error Error,
+) CreateClientReturn {
+    value := C.AllocCreateClientReturn()
+    value.Client = C.uint64_t(Client)
+    value.Error = Error
+
+    return value
+}
 
 func newPingResponse(
     APIVersion string,
@@ -45,17 +69,6 @@ func newPingResponse(
     return value
 }
 
-func newError(
-    Type string,
-    Message string,
-) Error {
-    value := C.AllocError()
-    value.Type = C.CString(Type)
-    value.Message = C.CString(Message)
-
-    return value
-}
-
 func newPingReturn(
     Response PingResponse,
     Error Error,
@@ -67,12 +80,33 @@ func newPingReturn(
     return value
 }
 
-func newCreateClientReturn(
-    Client DockerClientHandle,
+func newDaemonVersionInformation(
+    Version string,
+    APIVersion string,
+    MinAPIVersion string,
+    GitCommit string,
+    OperatingSystem string,
+    Architecture string,
+    Experimental bool,
+) DaemonVersionInformation {
+    value := C.AllocDaemonVersionInformation()
+    value.Version = C.CString(Version)
+    value.APIVersion = C.CString(APIVersion)
+    value.MinAPIVersion = C.CString(MinAPIVersion)
+    value.GitCommit = C.CString(GitCommit)
+    value.OperatingSystem = C.CString(OperatingSystem)
+    value.Architecture = C.CString(Architecture)
+    value.Experimental = C.bool(Experimental)
+
+    return value
+}
+
+func newGetDaemonVersionInformationReturn(
+    Response DaemonVersionInformation,
     Error Error,
-) CreateClientReturn {
-    value := C.AllocCreateClientReturn()
-    value.Client = C.uint64_t(Client)
+) GetDaemonVersionInformationReturn {
+    value := C.AllocGetDaemonVersionInformationReturn()
+    value.Response = Response
     value.Error = Error
 
     return value

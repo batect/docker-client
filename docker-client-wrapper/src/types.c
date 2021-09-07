@@ -19,6 +19,40 @@
 #include <stdlib.h>
 #include "types.h"
 
+Error* AllocError() {
+    Error* value = malloc(sizeof(Error));
+    value->Type = NULL;
+    value->Message = NULL;
+
+    return value;
+}
+
+void FreeError(Error* value) {
+    if (value == NULL) {
+        return;
+    }
+
+    free(value->Type);
+    free(value->Message);
+    free(value);
+}
+
+CreateClientReturn* AllocCreateClientReturn() {
+    CreateClientReturn* value = malloc(sizeof(CreateClientReturn));
+    value->Error = NULL;
+
+    return value;
+}
+
+void FreeCreateClientReturn(CreateClientReturn* value) {
+    if (value == NULL) {
+        return;
+    }
+
+    FreeError(value->Error);
+    free(value);
+}
+
 PingResponse* AllocPingResponse() {
     PingResponse* value = malloc(sizeof(PingResponse));
     value->APIVersion = NULL;
@@ -36,24 +70,6 @@ void FreePingResponse(PingResponse* value) {
     free(value->APIVersion);
     free(value->OSType);
     free(value->BuilderVersion);
-    free(value);
-}
-
-Error* AllocError() {
-    Error* value = malloc(sizeof(Error));
-    value->Type = NULL;
-    value->Message = NULL;
-
-    return value;
-}
-
-void FreeError(Error* value) {
-    if (value == NULL) {
-        return;
-    }
-
-    free(value->Type);
-    free(value->Message);
     free(value);
 }
 
@@ -75,18 +91,46 @@ void FreePingReturn(PingReturn* value) {
     free(value);
 }
 
-CreateClientReturn* AllocCreateClientReturn() {
-    CreateClientReturn* value = malloc(sizeof(CreateClientReturn));
+DaemonVersionInformation* AllocDaemonVersionInformation() {
+    DaemonVersionInformation* value = malloc(sizeof(DaemonVersionInformation));
+    value->Version = NULL;
+    value->APIVersion = NULL;
+    value->MinAPIVersion = NULL;
+    value->GitCommit = NULL;
+    value->OperatingSystem = NULL;
+    value->Architecture = NULL;
+
+    return value;
+}
+
+void FreeDaemonVersionInformation(DaemonVersionInformation* value) {
+    if (value == NULL) {
+        return;
+    }
+
+    free(value->Version);
+    free(value->APIVersion);
+    free(value->MinAPIVersion);
+    free(value->GitCommit);
+    free(value->OperatingSystem);
+    free(value->Architecture);
+    free(value);
+}
+
+GetDaemonVersionInformationReturn* AllocGetDaemonVersionInformationReturn() {
+    GetDaemonVersionInformationReturn* value = malloc(sizeof(GetDaemonVersionInformationReturn));
+    value->Response = NULL;
     value->Error = NULL;
 
     return value;
 }
 
-void FreeCreateClientReturn(CreateClientReturn* value) {
+void FreeGetDaemonVersionInformationReturn(GetDaemonVersionInformationReturn* value) {
     if (value == NULL) {
         return;
     }
 
+    FreeDaemonVersionInformation(value->Response);
     FreeError(value->Error);
     free(value);
 }

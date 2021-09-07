@@ -16,9 +16,12 @@
 
 package batect.dockerclient
 
-public expect class DockerClient() : AutoCloseable {
-    public fun ping(): PingResponse
-    public fun getDaemonVersionInformation(): DaemonVersionInformation
-
-    override fun close()
-}
+public data class DaemonVersionInformation(
+    val version: String,
+    val apiVersion: String,
+    val minAPIVersion: String,
+    val gitCommit: String,
+    val operatingSystem: String,
+    val architecture: String,
+    val experimental: Boolean
+)

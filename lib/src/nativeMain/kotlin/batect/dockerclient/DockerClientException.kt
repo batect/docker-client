@@ -27,7 +27,15 @@ public actual open class DockerClientException actual constructor(
     internal constructor(error: Error) : this(error.Message!!.toKString(), golangErrorType = error.Type!!.toKString())
 }
 
-public actual class PingException actual constructor(
+public actual class PingFailedException actual constructor(
+    message: String,
+    cause: Throwable?,
+    golangErrorType: String?
+) : DockerClientException(message, cause) {
+    internal constructor(error: Error) : this(error.Message!!.toKString(), golangErrorType = error.Type!!.toKString())
+}
+
+public actual class GetDaemonVersionInformationFailedException actual constructor(
     message: String,
     cause: Throwable?,
     golangErrorType: String?

@@ -31,6 +31,22 @@
 typedef uint64_t DockerClientHandle;
 
 typedef struct {
+    char* Type;
+    char* Message;
+} Error;
+
+EXPORTED_FUNCTION Error* AllocError();
+EXPORTED_FUNCTION void FreeError(Error* value);
+
+typedef struct {
+    DockerClientHandle Client;
+    Error* Error;
+} CreateClientReturn;
+
+EXPORTED_FUNCTION CreateClientReturn* AllocCreateClientReturn();
+EXPORTED_FUNCTION void FreeCreateClientReturn(CreateClientReturn* value);
+
+typedef struct {
     char* APIVersion;
     char* OSType;
     bool Experimental;
@@ -41,14 +57,6 @@ EXPORTED_FUNCTION PingResponse* AllocPingResponse();
 EXPORTED_FUNCTION void FreePingResponse(PingResponse* value);
 
 typedef struct {
-    char* Type;
-    char* Message;
-} Error;
-
-EXPORTED_FUNCTION Error* AllocError();
-EXPORTED_FUNCTION void FreeError(Error* value);
-
-typedef struct {
     PingResponse* Response;
     Error* Error;
 } PingReturn;
@@ -57,11 +65,24 @@ EXPORTED_FUNCTION PingReturn* AllocPingReturn();
 EXPORTED_FUNCTION void FreePingReturn(PingReturn* value);
 
 typedef struct {
-    DockerClientHandle Client;
-    Error* Error;
-} CreateClientReturn;
+    char* Version;
+    char* APIVersion;
+    char* MinAPIVersion;
+    char* GitCommit;
+    char* OperatingSystem;
+    char* Architecture;
+    bool Experimental;
+} DaemonVersionInformation;
 
-EXPORTED_FUNCTION CreateClientReturn* AllocCreateClientReturn();
-EXPORTED_FUNCTION void FreeCreateClientReturn(CreateClientReturn* value);
+EXPORTED_FUNCTION DaemonVersionInformation* AllocDaemonVersionInformation();
+EXPORTED_FUNCTION void FreeDaemonVersionInformation(DaemonVersionInformation* value);
+
+typedef struct {
+    DaemonVersionInformation* Response;
+    Error* Error;
+} GetDaemonVersionInformationReturn;
+
+EXPORTED_FUNCTION GetDaemonVersionInformationReturn* AllocGetDaemonVersionInformationReturn();
+EXPORTED_FUNCTION void FreeGetDaemonVersionInformationReturn(GetDaemonVersionInformationReturn* value);
 
 #endif

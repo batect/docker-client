@@ -41,3 +41,26 @@ func Ping(clientHandle DockerClientHandle) PingReturn {
 
 	return newPingReturn(response, nil)
 }
+
+//export GetDaemonVersionInformation
+func GetDaemonVersionInformation(clientHandle DockerClientHandle) GetDaemonVersionInformationReturn {
+	docker := getClient(clientHandle)
+
+	dockerResponse, err := docker.ServerVersion(context.Background())
+
+	if err != nil {
+		return newGetDaemonVersionInformationReturn(nil, toError(err))
+	}
+
+	response := newDaemonVersionInformation(
+		dockerResponse.Version,
+		dockerResponse.APIVersion,
+		dockerResponse.MinAPIVersion,
+		dockerResponse.GitCommit,
+		dockerResponse.Os,
+		dockerResponse.Arch,
+		dockerResponse.Experimental,
+	)
+
+	return newGetDaemonVersionInformationReturn(response, nil)
+}

@@ -27,12 +27,17 @@ internal interface API {
     fun CreateClient(): CreateClientReturn
     fun DisposeClient(@In clientHandle: DockerClientHandle)
     fun Ping(@In clientHandle: DockerClientHandle): PingReturn
-    fun FreePingResponse(@In value: PingResponse)
-    fun AllocPingResponse(): PingResponse
+    fun GetDaemonVersionInformation(@In clientHandle: DockerClientHandle): GetDaemonVersionInformationReturn
     fun FreeError(@In value: Error)
     fun AllocError(): Error
-    fun FreePingReturn(@In value: PingReturn)
-    fun AllocPingReturn(): PingReturn
     fun FreeCreateClientReturn(@In value: CreateClientReturn)
     fun AllocCreateClientReturn(): CreateClientReturn
+    fun FreePingResponse(@In value: PingResponse)
+    fun AllocPingResponse(): PingResponse
+    fun FreePingReturn(@In value: PingReturn)
+    fun AllocPingReturn(): PingReturn
+    fun FreeDaemonVersionInformation(@In value: DaemonVersionInformation)
+    fun AllocDaemonVersionInformation(): DaemonVersionInformation
+    fun FreeGetDaemonVersionInformationReturn(@In value: GetDaemonVersionInformationReturn)
+    fun AllocGetDaemonVersionInformationReturn(): GetDaemonVersionInformationReturn
 }

@@ -20,7 +20,9 @@ import batect.dockerclient.native.CreateClient
 import batect.dockerclient.native.DisposeClient
 import batect.dockerclient.native.DockerClientHandle
 import batect.dockerclient.native.FreeCreateClientReturn
+import batect.dockerclient.native.FreeGetDaemonVersionInformationReturn
 import batect.dockerclient.native.FreePingReturn
+import batect.dockerclient.native.GetDaemonVersionInformation
 import batect.dockerclient.native.Ping
 import kotlinx.cinterop.pointed
 import kotlinx.cinterop.toKString
@@ -47,7 +49,7 @@ public actual class DockerClient : AutoCloseable {
 
         try {
             if (ret.pointed.Error != null) {
-                throw PingException(ret.pointed.Error!!.pointed)
+                throw PingFailedException(ret.pointed.Error!!.pointed)
             }
 
             val response = ret.pointed.Response!!.pointed
@@ -60,6 +62,30 @@ public actual class DockerClient : AutoCloseable {
             )
         } finally {
             FreePingReturn(ret)
+        }
+    }
+
+    public actual fun getDaemonVersionInformation(): DaemonVersionInformation {
+        val ret = GetDaemonVersionInformation(clientHandle)!!
+
+        try {
+            if (ret.pointed.Error != null) {
+                throw GetDaemonVersionInformationFailedException(ret.pointed.Error!!.pointed)
+            }
+
+            val response = ret.pointed.Response!!.pointed
+
+            return DaemonVersionInformation(
+                response.Version!!.toKString(),
+                response.APIVersion!!.toKString(),
+                response.MinAPIVersion!!.toKString(),
+                response.GitCommit!!.toKString(),
+                response.OperatingSystem!!.toKString(),
+                response.Architecture!!.toKString(),
+                response.Experimental
+            )
+        } finally {
+            FreeGetDaemonVersionInformationReturn(ret)
         }
     }
 

@@ -31,10 +31,26 @@ class DockerClientSpec : ShouldSpec({
         val response = client.ping()
 
         response.asClue {
-            it.apiVersion shouldMatch """^\d\.\d+$""".toRegex()
+            it.apiVersion.shouldMatchAPIVersionPattern()
             it.osType shouldBeIn setOf("linux", "windows")
             it.experimental shouldBe false
             it.builderVersion shouldBeIn BuilderVersion.values()
         }
     }
+
+    should("be able to get daemon information").onlyIfDockerDaemonPresent {
+        val daemonInfo = client.getDaemonVersionInformation()
+
+        daemonInfo.asClue {
+            it.version shouldMatch """^\d+\.\d+\.\d+$""".toRegex()
+            it.apiVersion.shouldMatchAPIVersionPattern()
+            it.minAPIVersion.shouldMatchAPIVersionPattern()
+            it.operatingSystem shouldBeIn setOf("linux", "windows")
+            it.experimental shouldBe false
+            it.gitCommit shouldMatch """^[0-9a-fA-F]{7,}$""".toRegex()
+            it.architecture shouldBe "amd64"
+        }
+    }
 })
+
+private fun CharSequence.shouldMatchAPIVersionPattern() = this shouldMatch """^\d\.\d+$""".toRegex()

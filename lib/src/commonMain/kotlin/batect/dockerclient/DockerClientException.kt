@@ -24,7 +24,13 @@ public expect open class DockerClientException(
     public val golangErrorType: String?
 }
 
-public expect class PingException(
+public expect class PingFailedException(
+    message: String,
+    cause: Throwable? = null,
+    golangErrorType: String? = null
+) : DockerClientException
+
+public expect class GetDaemonVersionInformationFailedException(
     message: String,
     cause: Throwable? = null,
     golangErrorType: String? = null

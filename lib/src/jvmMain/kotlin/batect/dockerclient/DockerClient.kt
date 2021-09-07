@@ -35,7 +35,7 @@ public actual class DockerClient : AutoCloseable {
     public actual fun ping(): PingResponse {
         nativeAPI.Ping(clientHandle).use { ret ->
             if (ret.error != null) {
-                throw PingException(ret.error!!)
+                throw PingFailedException(ret.error!!)
             }
 
             val response = ret.response!!
@@ -45,6 +45,26 @@ public actual class DockerClient : AutoCloseable {
                 response.osType.get(),
                 response.experimental.get(),
                 BuilderVersion.fromAPI(response.builderVersion.get())
+            )
+        }
+    }
+
+    public actual fun getDaemonVersionInformation(): DaemonVersionInformation {
+        nativeAPI.GetDaemonVersionInformation(clientHandle).use { ret ->
+            if (ret.error != null) {
+                throw GetDaemonVersionInformationFailedException(ret.error!!)
+            }
+
+            val response = ret.response!!
+
+            return DaemonVersionInformation(
+                response.version.get(),
+                response.apiVersion.get(),
+                response.minAPIVersion.get(),
+                response.gitCommit.get(),
+                response.operatingSystem.get(),
+                response.architecture.get(),
+                response.experimental.get()
             )
         }
     }

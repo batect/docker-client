@@ -4,6 +4,18 @@
   jvmType: Long
   jnrType: u_int64_t
 
+- name: Error
+  type: struct
+  fields:
+    Type: string
+    Message: string
+
+- name: CreateClientReturn
+  type: struct
+  fields:
+    Client: DockerClientHandle
+    Error: Error
+
 - name: PingResponse
   type: struct
   fields:
@@ -12,20 +24,25 @@
     Experimental: boolean
     BuilderVersion: string
 
-- name: Error
-  type: struct
-  fields:
-    Type: string
-    Message: string
-
 - name: PingReturn
   type: struct
   fields:
     Response: PingResponse
     Error: Error
 
-- name: CreateClientReturn
+- name: DaemonVersionInformation
   type: struct
   fields:
-    Client: DockerClientHandle
+    Version: string
+    APIVersion: string
+    MinAPIVersion: string
+    GitCommit: string
+    OperatingSystem: string
+    Architecture: string
+    Experimental: boolean
+
+- name: GetDaemonVersionInformationReturn
+  type: struct
+  fields:
+    Response: DaemonVersionInformation
     Error: Error
