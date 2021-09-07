@@ -31,7 +31,7 @@ dependencies {
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-core:1.2.2")
     implementation(gradleApi())
     implementation(gradleKotlinDsl())
-    implementation("com.github.jnr:jnr-posix:3.1.8")
+    implementation("com.github.jnr:jnr-posix:3.1.9")
     implementation("com.charleskorn.kaml:kaml:0.35.3")
 }
 
