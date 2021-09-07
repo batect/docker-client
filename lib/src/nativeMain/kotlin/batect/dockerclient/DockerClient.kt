@@ -18,18 +18,17 @@ package batect.dockerclient
 
 import batect.dockerclient.native.CreateClient
 import batect.dockerclient.native.DisposeClient
+import batect.dockerclient.native.DockerClientHandle
 import batect.dockerclient.native.FreeCreateClientReturn
 import batect.dockerclient.native.FreePingReturn
 import batect.dockerclient.native.Ping
 import kotlinx.cinterop.pointed
 import kotlinx.cinterop.toKString
 
-private typealias NativeDockerClient = batect.dockerclient.native.DockerClient
-
 public actual class DockerClient : AutoCloseable {
-    private val clientHandle: NativeDockerClient = createClient()
+    private val clientHandle: DockerClientHandle = createClient()
 
-    private fun createClient(): NativeDockerClient {
+    private fun createClient(): DockerClientHandle {
         val ret = CreateClient()!!
 
         try {

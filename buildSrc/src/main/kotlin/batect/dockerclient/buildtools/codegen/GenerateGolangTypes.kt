@@ -16,10 +16,6 @@
 
 package batect.dockerclient.buildtools.codegen
 
-import com.charleskorn.kaml.PolymorphismStyle
-import com.charleskorn.kaml.Yaml
-import com.charleskorn.kaml.YamlConfiguration
-import kotlinx.serialization.builtins.ListSerializer
 import org.gradle.api.DefaultTask
 import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.tasks.InputFile
@@ -73,20 +69,10 @@ abstract class GenerateGolangTypes : DefaultTask() {
 
     @TaskAction
     fun run() {
-        val types = loadTypes()
+        val types = loadTypeConfigurationFile(sourceFile.get().asFile.toPath())
         generateHeaderFile(types)
         generateCFile(types)
         generateGoFile(types)
-    }
-
-    private fun loadTypes(): List<TypeInformation> {
-        val path = sourceFile.get()
-        val content = Files.readString(path.asFile.toPath())
-        val yaml = Yaml(configuration = YamlConfiguration(polymorphismStyle = PolymorphismStyle.Property))
-
-        val types = yaml.decodeFromString(ListSerializer(TypeFromConfigFile.serializer()), content)
-
-        return types.map { it.resolve(types.associateBy { it.name }) }
     }
 
     private fun generateHeaderFile(types: List<TypeInformation>) {

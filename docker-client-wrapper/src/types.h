@@ -28,7 +28,7 @@
 #define EXPORTED_FUNCTION
 #endif
 
-typedef uint64_t DockerClient;
+typedef uint64_t DockerClientHandle;
 
 typedef struct {
     char* APIVersion;
@@ -57,7 +57,7 @@ EXPORTED_FUNCTION PingReturn* AllocPingReturn();
 EXPORTED_FUNCTION void FreePingReturn(PingReturn* value);
 
 typedef struct {
-    DockerClient Client;
+    DockerClientHandle Client;
     Error* Error;
 } CreateClientReturn;
 

@@ -15,6 +15,7 @@
 */
 
 import batect.dockerclient.buildtools.GolangBuild
+import batect.dockerclient.buildtools.codegen.GenerateKotlinJVMTypes
 import org.gradle.api.tasks.testing.logging.TestExceptionFormat
 import org.gradle.api.tasks.testing.logging.TestLogEvent
 import org.jetbrains.kotlin.gradle.dsl.ExplicitApiMode
@@ -204,4 +205,18 @@ val copyJvmLibs = tasks.register<Copy>("copyJvmLibs") {
 
 tasks.named("jvmProcessResources") {
     dependsOn(copyJvmLibs)
+}
+
+val generateJvm = tasks.register<GenerateKotlinJVMTypes>("generateJvm") {
+    kotlinFile.set(kotlin.sourceSets.getByName("jvmMain").kotlin.sourceDirectories.singleFile.resolve("batect/dockerclient/native/Types.kt"))
+}
+
+tasks.named("compileKotlinJvm") {
+    dependsOn(generateJvm)
+}
+
+afterEvaluate {
+    tasks.named("spotlessKotlin") {
+        dependsOn(generateJvm)
+    }
 }

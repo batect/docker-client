@@ -1,6 +1,8 @@
-- name: DockerClient
+- name: DockerClientHandle
   type: alias
   nativeType: uint64_t
+  jvmType: Long
+  jnrType: u_int64_t
 
 - name: PingResponse
   type: struct
@@ -25,5 +27,5 @@
 - name: CreateClientReturn
   type: struct
   fields:
-    Client: DockerClient
+    Client: DockerClientHandle
     Error: Error

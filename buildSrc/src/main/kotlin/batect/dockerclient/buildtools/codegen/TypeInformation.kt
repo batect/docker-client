@@ -16,8 +16,15 @@
 
 package batect.dockerclient.buildtools.codegen
 
+import com.charleskorn.kaml.PolymorphismStyle
+import com.charleskorn.kaml.Yaml
+import com.charleskorn.kaml.YamlConfiguration
+import com.charleskorn.kaml.YamlException
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
+import kotlinx.serialization.builtins.ListSerializer
+import java.nio.file.Files
+import java.nio.file.Path
 
 sealed interface TypeInformation {
     val yamlName: String
@@ -39,6 +46,8 @@ sealed class TypeFromConfigFile() {
 data class AliasType(
     override val name: String,
     val nativeType: String,
+    val jvmType: String,
+    val jnrType: String = nativeType,
     override val isPointer: Boolean = false
 ) : TypeFromConfigFile(), TypeInformation {
     override val yamlName: String = name
@@ -93,14 +102,28 @@ enum class PrimitiveType(
     override val yamlName: String,
     override val golangName: String,
     override val cName: String,
+    val jvmName: String,
     override val isPointer: Boolean = false,
     override val cgoTypeName: String = "C.$golangName",
     val cgoConversionFunctionName: String = "C.$golangName"
 ) : TypeInformation {
-    StringType("string", "string", "char*", isPointer = true, cgoConversionFunctionName = "C.CString"),
-    BooleanType("boolean", "bool", "bool");
+    StringType("string", "string", "char*", "UTF8StringRef", isPointer = true, cgoConversionFunctionName = "C.CString"),
+    BooleanType("boolean", "bool", "bool", "Boolean");
 
     companion object {
         val yamlNamesToValues: Map<String, PrimitiveType> = values().associateBy { it.yamlName }
+    }
+}
+
+internal fun loadTypeConfigurationFile(path: Path): List<TypeInformation> {
+    val content = Files.readString(path)
+    val yaml = Yaml(configuration = YamlConfiguration(polymorphismStyle = PolymorphismStyle.Property))
+
+    try {
+        val types = yaml.decodeFromString(ListSerializer(TypeFromConfigFile.serializer()), content)
+
+        return types.map { it.resolve(types.associateBy { it.name }) }
+    } catch (e: YamlException) {
+        throw RuntimeException("Could not load types from $path: $e", e)
     }
 }

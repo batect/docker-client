@@ -24,7 +24,7 @@ package main
 */
 import "C"
 
-type DockerClient C.DockerClient
+type DockerClientHandle C.DockerClientHandle
 type PingResponse *C.PingResponse
 type Error *C.Error
 type PingReturn *C.PingReturn
@@ -68,7 +68,7 @@ func newPingReturn(
 }
 
 func newCreateClientReturn(
-    Client DockerClient,
+    Client DockerClientHandle,
     Error Error,
 ) CreateClientReturn {
     value := C.AllocCreateClientReturn()

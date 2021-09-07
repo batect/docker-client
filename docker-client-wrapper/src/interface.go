@@ -48,11 +48,11 @@ func CreateClient() CreateClientReturn {
 	clients[clientIndex] = c
 	nextClientIndex++
 
-	return newCreateClientReturn(DockerClient(clientIndex) , nil)
+	return newCreateClientReturn(DockerClientHandle(clientIndex) , nil)
 }
 
 //export DisposeClient
-func DisposeClient(clientHandle DockerClient) {
+func DisposeClient(clientHandle DockerClientHandle) {
 	clientsLock.Lock()
 	defer clientsLock.Unlock()
 
@@ -60,7 +60,7 @@ func DisposeClient(clientHandle DockerClient) {
 }
 
 //export Ping
-func Ping(clientHandle DockerClient) PingReturn {
+func Ping(clientHandle DockerClientHandle) PingReturn {
 	docker := getClient(clientHandle)
 
 	dockerResponse, err := docker.Ping(context.Background())
@@ -79,7 +79,7 @@ func Ping(clientHandle DockerClient) PingReturn {
 	return newPingReturn(response, nil)
 }
 
-func getClient(clientHandle DockerClient) *client.Client {
+func getClient(clientHandle DockerClientHandle) *client.Client {
 	clientsLock.RLock()
 	defer clientsLock.RUnlock()
 

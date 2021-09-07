@@ -16,11 +16,8 @@
 
 package batect.dockerclient
 
-import jnr.ffi.LibraryLoader
-import jnr.ffi.LibraryOption
-import jnr.ffi.Platform
-import java.nio.file.Files
-import java.nio.file.Path
+import batect.dockerclient.native.DockerClientHandle
+import batect.dockerclient.native.nativeAPI
 
 public actual class DockerClient : AutoCloseable {
     private val clientHandle: DockerClientHandle = createClient()
@@ -54,37 +51,5 @@ public actual class DockerClient : AutoCloseable {
 
     actual override fun close() {
         nativeAPI.DisposeClient(clientHandle)
-    }
-}
-
-internal val nativeAPI: NativeAPI by lazy {
-    val libraryDirectory = extractNativeLibrary()
-
-    LibraryLoader
-        .create(NativeAPI::class.java)
-        .option(LibraryOption.LoadNow, true)
-        .option(LibraryOption.IgnoreError, true)
-        .search(libraryDirectory.toString())
-        .library("dockerclientwrapper")
-        .failImmediately()
-        .load()
-}
-
-private fun extractNativeLibrary(): Path {
-    val classLoader = DockerClient::class.java.classLoader
-    val platform = "${Platform.getNativePlatform().os.name.lowercase()}/${Platform.getNativePlatform().cpu.name.lowercase()}"
-    val libraryFileName = Platform.getNativePlatform().mapLibraryName("dockerclientwrapper")
-    val resourcePath = "batect/dockerclient/libs/$platform/$libraryFileName"
-    val stream = classLoader.getResourceAsStream(resourcePath) ?: throw UnsupportedOperationException("Platform '$platform' is not supported.")
-
-    stream.use {
-        val outputDirectory = Files.createTempDirectory("batect-docker-client")
-        outputDirectory.toFile().deleteOnExit()
-
-        val outputFile = outputDirectory.resolve(libraryFileName)
-        Files.copy(it, outputFile)
-        outputFile.toFile().deleteOnExit()
-
-        return outputDirectory
     }
 }
