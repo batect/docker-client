@@ -70,17 +70,15 @@ kotlin {
 
         val commonTest by getting {
             dependencies {
-                // This slightly unusual syntax (project.depedencies.platform) is required until https://youtrack.jetbrains.com/issue/KT-40489 is fixed.
-                implementation(project.dependencies.platform("io.kotest:kotest-bom:5.0.0.460-SNAPSHOT"))
-                implementation("io.kotest:kotest-assertions-core")
-                implementation("io.kotest:kotest-framework-api")
-                implementation("io.kotest:kotest-framework-engine")
+                implementation("io.kotest:kotest-assertions-core:5.0.0.460-SNAPSHOT")
+                implementation("io.kotest:kotest-framework-api:5.0.0.460-SNAPSHOT")
+                implementation("io.kotest:kotest-framework-engine:5.0.0.460-SNAPSHOT")
             }
         }
 
         val jvmTest by getting {
             dependencies {
-                implementation("io.kotest:kotest-runner-junit5")
+                implementation("io.kotest:kotest-runner-junit5:5.0.0.460-SNAPSHOT")
             }
         }
 
