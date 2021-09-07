@@ -34,7 +34,7 @@ class DockerClientSpec : ShouldSpec({
             it.apiVersion shouldMatch """^\d\.\d+$""".toRegex()
             it.osType shouldBeIn setOf("linux", "windows")
             it.experimental shouldBe false
-            it.builderVersion shouldBeIn setOf("1", "2", "")
+            it.builderVersion shouldBeIn BuilderVersion.values()
         }
     }
 })

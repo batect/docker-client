@@ -16,20 +16,23 @@
 
 package batect.dockerclient
 
-import batect.dockerclient.native.Error
+public data class PingResponse(
+    val apiVersion: String,
+    val osType: String,
+    val experimental: Boolean,
+    val builderVersion: BuilderVersion
+)
 
-public actual open class DockerClientException actual constructor(
-    message: String,
-    cause: Throwable?,
-    public actual val golangErrorType: String?
-) : RuntimeException(message, cause) {
-    internal constructor(error: Error) : this(error.message.get(), golangErrorType = error.type.get())
-}
+public enum class BuilderVersion {
+    Legacy,
+    BuildKit;
 
-public actual class PingException actual constructor(
-    message: String,
-    cause: Throwable?,
-    golangErrorType: String?
-) : DockerClientException(message, cause, golangErrorType) {
-    internal constructor(error: Error) : this(error.message.get(), golangErrorType = error.type.get())
+    internal companion object {
+        internal fun fromAPI(value: String): BuilderVersion =
+            when (value) {
+                "", "1" -> Legacy
+                "2" -> BuildKit
+                else -> throw IllegalArgumentException("Unknown builder version value '$value'")
+            }
+    }
 }

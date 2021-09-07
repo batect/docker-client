@@ -35,7 +35,7 @@ public actual class DockerClient : AutoCloseable {
     public actual fun ping(): PingResponse {
         nativeAPI.Ping(clientHandle).use { ret ->
             if (ret.error != null) {
-                throw DockerClientException(ret.error!!.message.get())
+                throw PingException(ret.error!!)
             }
 
             val response = ret.response!!
@@ -44,7 +44,7 @@ public actual class DockerClient : AutoCloseable {
                 response.apiVersion.get(),
                 response.osType.get(),
                 response.experimental.get(),
-                response.builderVersion.get()
+                BuilderVersion.fromAPI(response.builderVersion.get())
             )
         }
     }

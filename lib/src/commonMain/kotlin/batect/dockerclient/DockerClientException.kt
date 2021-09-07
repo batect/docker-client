@@ -16,4 +16,16 @@
 
 package batect.dockerclient
 
-public expect class DockerClientException : RuntimeException
+public expect open class DockerClientException(
+    message: String,
+    cause: Throwable? = null,
+    golangErrorType: String? = null
+) : RuntimeException {
+    public val golangErrorType: String?
+}
+
+public expect class PingException(
+    message: String,
+    cause: Throwable? = null,
+    golangErrorType: String? = null
+) : DockerClientException

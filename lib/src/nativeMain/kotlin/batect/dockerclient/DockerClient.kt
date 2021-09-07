@@ -47,7 +47,7 @@ public actual class DockerClient : AutoCloseable {
 
         try {
             if (ret.pointed.Error != null) {
-                throw DockerClientException(ret.pointed.Error!!.pointed)
+                throw PingException(ret.pointed.Error!!.pointed)
             }
 
             val response = ret.pointed.Response!!.pointed
@@ -56,7 +56,7 @@ public actual class DockerClient : AutoCloseable {
                 response.APIVersion!!.toKString(),
                 response.OSType!!.toKString(),
                 response.Experimental,
-                response.BuilderVersion!!.toKString()
+                BuilderVersion.fromAPI(response.BuilderVersion!!.toKString())
             )
         } finally {
             FreePingReturn(ret)

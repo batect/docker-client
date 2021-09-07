@@ -19,6 +19,18 @@ package batect.dockerclient
 import batect.dockerclient.native.Error
 import kotlinx.cinterop.toKString
 
-public actual class DockerClientException(message: String, cause: Throwable? = null) : RuntimeException(message, cause) {
-    internal constructor(error: Error) : this(error.Message!!.toKString())
+public actual open class DockerClientException actual constructor(
+    message: String,
+    cause: Throwable?,
+    public actual val golangErrorType: String?
+) : RuntimeException(message, cause) {
+    internal constructor(error: Error) : this(error.Message!!.toKString(), golangErrorType = error.Type!!.toKString())
+}
+
+public actual class PingException actual constructor(
+    message: String,
+    cause: Throwable?,
+    golangErrorType: String?
+) : DockerClientException(message, cause) {
+    internal constructor(error: Error) : this(error.Message!!.toKString(), golangErrorType = error.Type!!.toKString())
 }
