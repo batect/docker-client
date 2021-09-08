@@ -26,8 +26,8 @@ import jnr.ffi.Struct
 internal typealias DockerClientHandle = Long
 
 internal class Error(runtime: Runtime) : Struct(runtime), AutoCloseable {
-    constructor(pointer: Pointer) : this (pointer.memory.runtime) {
-        this.useMemory(pointer.get())
+    constructor(pointer: jnr.ffi.Pointer) : this(pointer.runtime) {
+        this.useMemory(pointer)
     }
 
     val type = UTF8StringRef()
@@ -39,13 +39,13 @@ internal class Error(runtime: Runtime) : Struct(runtime), AutoCloseable {
 }
 
 internal class CreateClientReturn(runtime: Runtime) : Struct(runtime), AutoCloseable {
-    constructor(pointer: Pointer) : this (pointer.memory.runtime) {
-        this.useMemory(pointer.get())
+    constructor(pointer: jnr.ffi.Pointer) : this(pointer.runtime) {
+        this.useMemory(pointer)
     }
 
     val client = u_int64_t()
     private val errorPointer = Pointer()
-    val error: Error? by lazy { if (errorPointer.intValue() == 0) null else Error(errorPointer) }
+    val error: Error? by lazy { if (errorPointer.intValue() == 0) null else Error(errorPointer.get()) }
 
     override fun close() {
         nativeAPI.FreeCreateClientReturn(this)
@@ -53,8 +53,8 @@ internal class CreateClientReturn(runtime: Runtime) : Struct(runtime), AutoClose
 }
 
 internal class PingResponse(runtime: Runtime) : Struct(runtime), AutoCloseable {
-    constructor(pointer: Pointer) : this (pointer.memory.runtime) {
-        this.useMemory(pointer.get())
+    constructor(pointer: jnr.ffi.Pointer) : this(pointer.runtime) {
+        this.useMemory(pointer)
     }
 
     val apiVersion = UTF8StringRef()
@@ -68,14 +68,14 @@ internal class PingResponse(runtime: Runtime) : Struct(runtime), AutoCloseable {
 }
 
 internal class PingReturn(runtime: Runtime) : Struct(runtime), AutoCloseable {
-    constructor(pointer: Pointer) : this (pointer.memory.runtime) {
-        this.useMemory(pointer.get())
+    constructor(pointer: jnr.ffi.Pointer) : this(pointer.runtime) {
+        this.useMemory(pointer)
     }
 
     private val responsePointer = Pointer()
-    val response: PingResponse? by lazy { if (responsePointer.intValue() == 0) null else PingResponse(responsePointer) }
+    val response: PingResponse? by lazy { if (responsePointer.intValue() == 0) null else PingResponse(responsePointer.get()) }
     private val errorPointer = Pointer()
-    val error: Error? by lazy { if (errorPointer.intValue() == 0) null else Error(errorPointer) }
+    val error: Error? by lazy { if (errorPointer.intValue() == 0) null else Error(errorPointer.get()) }
 
     override fun close() {
         nativeAPI.FreePingReturn(this)
@@ -83,8 +83,8 @@ internal class PingReturn(runtime: Runtime) : Struct(runtime), AutoCloseable {
 }
 
 internal class DaemonVersionInformation(runtime: Runtime) : Struct(runtime), AutoCloseable {
-    constructor(pointer: Pointer) : this (pointer.memory.runtime) {
-        this.useMemory(pointer.get())
+    constructor(pointer: jnr.ffi.Pointer) : this(pointer.runtime) {
+        this.useMemory(pointer)
     }
 
     val version = UTF8StringRef()
@@ -101,16 +101,69 @@ internal class DaemonVersionInformation(runtime: Runtime) : Struct(runtime), Aut
 }
 
 internal class GetDaemonVersionInformationReturn(runtime: Runtime) : Struct(runtime), AutoCloseable {
-    constructor(pointer: Pointer) : this (pointer.memory.runtime) {
-        this.useMemory(pointer.get())
+    constructor(pointer: jnr.ffi.Pointer) : this(pointer.runtime) {
+        this.useMemory(pointer)
     }
 
     private val responsePointer = Pointer()
-    val response: DaemonVersionInformation? by lazy { if (responsePointer.intValue() == 0) null else DaemonVersionInformation(responsePointer) }
+    val response: DaemonVersionInformation? by lazy { if (responsePointer.intValue() == 0) null else DaemonVersionInformation(responsePointer.get()) }
     private val errorPointer = Pointer()
-    val error: Error? by lazy { if (errorPointer.intValue() == 0) null else Error(errorPointer) }
+    val error: Error? by lazy { if (errorPointer.intValue() == 0) null else Error(errorPointer.get()) }
 
     override fun close() {
         nativeAPI.FreeGetDaemonVersionInformationReturn(this)
+    }
+}
+
+internal class VolumeReference(runtime: Runtime) : Struct(runtime), AutoCloseable {
+    constructor(pointer: jnr.ffi.Pointer) : this(pointer.runtime) {
+        this.useMemory(pointer)
+    }
+
+    val name = UTF8StringRef()
+
+    override fun close() {
+        nativeAPI.FreeVolumeReference(this)
+    }
+}
+
+internal class CreateVolumeReturn(runtime: Runtime) : Struct(runtime), AutoCloseable {
+    constructor(pointer: jnr.ffi.Pointer) : this(pointer.runtime) {
+        this.useMemory(pointer)
+    }
+
+    private val responsePointer = Pointer()
+    val response: VolumeReference? by lazy { if (responsePointer.intValue() == 0) null else VolumeReference(responsePointer.get()) }
+    private val errorPointer = Pointer()
+    val error: Error? by lazy { if (errorPointer.intValue() == 0) null else Error(errorPointer.get()) }
+
+    override fun close() {
+        nativeAPI.FreeCreateVolumeReturn(this)
+    }
+}
+
+internal class ListAllVolumesReturn(runtime: Runtime) : Struct(runtime), AutoCloseable {
+    constructor(pointer: jnr.ffi.Pointer) : this(pointer.runtime) {
+        this.useMemory(pointer)
+    }
+
+    private val volumesCount = u_int64_t()
+    private val volumesPointer = Pointer()
+    val volumes: List<VolumeReference> by lazy {
+        if (volumesPointer.intValue() == 0) {
+            throw IllegalArgumentException("volumes is null")
+        } else {
+            val count = volumesCount.get()
+            val pointer = volumesPointer.get()
+            val elementSize = runtime.addressSize()
+
+            (0..(count - 1)).map { i -> VolumeReference(pointer.getPointer(elementSize * i)) }
+        }
+    }
+    private val errorPointer = Pointer()
+    val error: Error? by lazy { if (errorPointer.intValue() == 0) null else Error(errorPointer.get()) }
+
+    override fun close() {
+        nativeAPI.FreeListAllVolumesReturn(this)
     }
 }

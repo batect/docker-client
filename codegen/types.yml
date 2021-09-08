@@ -1,7 +1,7 @@
 - name: DockerClientHandle
   type: alias
   nativeType: uint64_t
-  jvmType: Long
+  jvmName: Long
   jnrType: u_int64_t
 
 - name: Error
@@ -45,4 +45,21 @@
   type: struct
   fields:
     Response: DaemonVersionInformation
+    Error: Error
+
+- name: VolumeReference
+  type: struct
+  fields:
+    Name: string
+
+- name: CreateVolumeReturn
+  type: struct
+  fields:
+    Response: VolumeReference
+    Error: Error
+
+- name: ListAllVolumesReturn
+  type: struct
+  fields:
+    Volumes: VolumeReference[]
     Error: Error

@@ -24,20 +24,29 @@ import jnr.ffi.annotations.In
 
 @Suppress("FunctionName")
 internal interface API {
-    fun CreateClient(): CreateClientReturn
-    fun DisposeClient(@In clientHandle: DockerClientHandle)
-    fun Ping(@In clientHandle: DockerClientHandle): PingReturn
-    fun GetDaemonVersionInformation(@In clientHandle: DockerClientHandle): GetDaemonVersionInformationReturn
+    fun CreateClient(): CreateClientReturn?
+    fun DisposeClient(@In clientHandle: Long)
+    fun Ping(@In clientHandle: Long): PingReturn?
+    fun GetDaemonVersionInformation(@In clientHandle: Long): GetDaemonVersionInformationReturn?
+    fun CreateVolume(@In clientHandle: Long, @In name: String): CreateVolumeReturn?
+    fun DeleteVolume(@In clientHandle: Long, @In name: String): Error?
+    fun ListAllVolumes(@In clientHandle: Long): ListAllVolumesReturn?
     fun FreeError(@In value: Error)
-    fun AllocError(): Error
+    fun AllocError(): Error?
     fun FreeCreateClientReturn(@In value: CreateClientReturn)
-    fun AllocCreateClientReturn(): CreateClientReturn
+    fun AllocCreateClientReturn(): CreateClientReturn?
     fun FreePingResponse(@In value: PingResponse)
-    fun AllocPingResponse(): PingResponse
+    fun AllocPingResponse(): PingResponse?
     fun FreePingReturn(@In value: PingReturn)
-    fun AllocPingReturn(): PingReturn
+    fun AllocPingReturn(): PingReturn?
     fun FreeDaemonVersionInformation(@In value: DaemonVersionInformation)
-    fun AllocDaemonVersionInformation(): DaemonVersionInformation
+    fun AllocDaemonVersionInformation(): DaemonVersionInformation?
     fun FreeGetDaemonVersionInformationReturn(@In value: GetDaemonVersionInformationReturn)
-    fun AllocGetDaemonVersionInformationReturn(): GetDaemonVersionInformationReturn
+    fun AllocGetDaemonVersionInformationReturn(): GetDaemonVersionInformationReturn?
+    fun FreeVolumeReference(@In value: VolumeReference)
+    fun AllocVolumeReference(): VolumeReference?
+    fun FreeCreateVolumeReturn(@In value: CreateVolumeReturn)
+    fun AllocCreateVolumeReturn(): CreateVolumeReturn?
+    fun FreeListAllVolumesReturn(@In value: ListAllVolumesReturn)
+    fun AllocListAllVolumesReturn(): ListAllVolumesReturn?
 }

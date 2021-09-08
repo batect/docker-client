@@ -24,7 +24,7 @@ public actual open class DockerClientException actual constructor(
     cause: Throwable?,
     public actual val golangErrorType: String?
 ) : RuntimeException(message, cause) {
-    internal constructor(error: Error) : this(error.Message!!.toKString(), golangErrorType = error.Type!!.toKString())
+    internal constructor(error: Error) : this(error.cleanErrorMessage, golangErrorType = error.Type!!.toKString())
 }
 
 public actual class PingFailedException actual constructor(
@@ -32,7 +32,7 @@ public actual class PingFailedException actual constructor(
     cause: Throwable?,
     golangErrorType: String?
 ) : DockerClientException(message, cause) {
-    internal constructor(error: Error) : this(error.Message!!.toKString(), golangErrorType = error.Type!!.toKString())
+    internal constructor(error: Error) : this(error.cleanErrorMessage, golangErrorType = error.Type!!.toKString())
 }
 
 public actual class GetDaemonVersionInformationFailedException actual constructor(
@@ -40,5 +40,32 @@ public actual class GetDaemonVersionInformationFailedException actual constructo
     cause: Throwable?,
     golangErrorType: String?
 ) : DockerClientException(message, cause) {
-    internal constructor(error: Error) : this(error.Message!!.toKString(), golangErrorType = error.Type!!.toKString())
+    internal constructor(error: Error) : this(error.cleanErrorMessage, golangErrorType = error.Type!!.toKString())
 }
+
+public actual class VolumeCreationFailedException actual constructor(
+    message: String,
+    cause: Throwable?,
+    golangErrorType: String?
+) : DockerClientException(message, cause) {
+    internal constructor(error: Error) : this(error.cleanErrorMessage, golangErrorType = error.Type!!.toKString())
+}
+
+public actual class VolumeDeletionFailedException actual constructor(
+    message: String,
+    cause: Throwable?,
+    golangErrorType: String?
+) : DockerClientException(message, cause) {
+    internal constructor(error: Error) : this(error.cleanErrorMessage, golangErrorType = error.Type!!.toKString())
+}
+
+public actual class ListAllVolumesFailedException actual constructor(
+    message: String,
+    cause: Throwable?,
+    golangErrorType: String?
+) : DockerClientException(message, cause) {
+    internal constructor(error: Error) : this(error.cleanErrorMessage, golangErrorType = error.Type!!.toKString())
+}
+
+private val Error.cleanErrorMessage: String
+    get() = this.Message!!.toKString().removePrefix("Error: ")

@@ -16,13 +16,4 @@
 
 package batect.dockerclient
 
-public expect class DockerClient() : AutoCloseable {
-    public fun ping(): PingResponse
-    public fun getDaemonVersionInformation(): DaemonVersionInformation
-
-    public fun listAllVolumes(): Set<VolumeReference>
-    public fun createVolume(name: String): VolumeReference
-    public fun deleteVolume(volume: VolumeReference)
-
-    override fun close()
-}
+public data class VolumeReference(val name: String)

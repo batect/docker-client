@@ -35,3 +35,21 @@ public expect class GetDaemonVersionInformationFailedException(
     cause: Throwable? = null,
     golangErrorType: String? = null
 ) : DockerClientException
+
+public expect class VolumeCreationFailedException(
+    message: String,
+    cause: Throwable? = null,
+    golangErrorType: String? = null
+) : DockerClientException
+
+public expect class VolumeDeletionFailedException(
+    message: String,
+    cause: Throwable? = null,
+    golangErrorType: String? = null
+) : DockerClientException
+
+public expect class ListAllVolumesFailedException(
+    message: String,
+    cause: Throwable? = null,
+    golangErrorType: String? = null
+) : DockerClientException

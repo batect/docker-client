@@ -23,9 +23,9 @@ public actual class DockerClient : AutoCloseable {
     private val clientHandle: DockerClientHandle = createClient()
 
     private fun createClient(): DockerClientHandle {
-        nativeAPI.CreateClient().use { ret ->
+        nativeAPI.CreateClient()!!.use { ret ->
             if (ret.error != null) {
-                throw DockerClientException(ret.error!!.message.get())
+                throw DockerClientException(ret.error!!)
             }
 
             return ret.client.get()
@@ -33,7 +33,7 @@ public actual class DockerClient : AutoCloseable {
     }
 
     public actual fun ping(): PingResponse {
-        nativeAPI.Ping(clientHandle).use { ret ->
+        nativeAPI.Ping(clientHandle)!!.use { ret ->
             if (ret.error != null) {
                 throw PingFailedException(ret.error!!)
             }
@@ -50,7 +50,7 @@ public actual class DockerClient : AutoCloseable {
     }
 
     public actual fun getDaemonVersionInformation(): DaemonVersionInformation {
-        nativeAPI.GetDaemonVersionInformation(clientHandle).use { ret ->
+        nativeAPI.GetDaemonVersionInformation(clientHandle)!!.use { ret ->
             if (ret.error != null) {
                 throw GetDaemonVersionInformationFailedException(ret.error!!)
             }
@@ -69,7 +69,37 @@ public actual class DockerClient : AutoCloseable {
         }
     }
 
+    public actual fun listAllVolumes(): Set<VolumeReference> {
+        nativeAPI.ListAllVolumes(clientHandle)!!.use { ret ->
+            if (ret.error != null) {
+                throw ListAllVolumesFailedException(ret.error!!)
+            }
+
+            return ret.volumes.map { VolumeReference(it) }.toSet()
+        }
+    }
+
+    public actual fun createVolume(name: String): VolumeReference {
+        nativeAPI.CreateVolume(clientHandle, name)!!.use { ret ->
+            if (ret.error != null) {
+                throw VolumeCreationFailedException(ret.error!!)
+            }
+
+            return VolumeReference(ret.response!!)
+        }
+    }
+
+    public actual fun deleteVolume(volume: VolumeReference) {
+        nativeAPI.DeleteVolume(clientHandle, volume.name).use { ret ->
+            if (ret != null) {
+                throw VolumeDeletionFailedException(ret)
+            }
+        }
+    }
+
     actual override fun close() {
         nativeAPI.DisposeClient(clientHandle)
     }
+
+    private fun VolumeReference(native: batect.dockerclient.native.VolumeReference): VolumeReference = VolumeReference(native.name.get())
 }

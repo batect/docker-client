@@ -31,6 +31,7 @@ sealed interface TypeInformation {
     val cName: String
     val golangName: String
     val cgoTypeName: String
+    val jvmName: String
     val isPointer: Boolean
 }
 
@@ -46,7 +47,7 @@ sealed class TypeFromConfigFile() {
 data class AliasType(
     override val name: String,
     val nativeType: String,
-    val jvmType: String,
+    override val jvmName: String,
     val jnrType: String = nativeType,
     override val isPointer: Boolean = false
 ) : TypeFromConfigFile(), TypeInformation {
@@ -73,6 +74,11 @@ data class StructTypeFromConfigFile(
     }
 
     private fun resolveTypeReference(fieldName: String, typeName: String, allDefinedTypes: Map<String, TypeFromConfigFile>): TypeInformation {
+        if (typeName.endsWith("[]")) {
+            val elementType = resolveTypeReference(fieldName, typeName.removeSuffix("[]"), allDefinedTypes)
+            return ArrayType(elementType)
+        }
+
         val userDefinedType = allDefinedTypes[typeName]
 
         if (userDefinedType != null) {
@@ -96,24 +102,37 @@ data class StructType(
     override val cgoTypeName: String = "*C.$name"
     override val yamlName: String = name
     override val golangName: String = name
+    override val jvmName: String = name
 }
 
 enum class PrimitiveType(
     override val yamlName: String,
     override val golangName: String,
     override val cName: String,
-    val jvmName: String,
+    override val jvmName: String,
+    val jvmNameInStruct: String = jvmName,
     override val isPointer: Boolean = false,
     override val cgoTypeName: String = "C.$golangName",
     val cgoConversionFunctionName: String = "C.$golangName"
 ) : TypeInformation {
-    StringType("string", "string", "char*", "UTF8StringRef", isPointer = true, cgoConversionFunctionName = "C.CString"),
+    StringType("string", "string", "char*", "String", jvmNameInStruct = "UTF8StringRef", isPointer = true, cgoConversionFunctionName = "C.CString"),
     BooleanType("boolean", "bool", "bool", "Boolean");
 
     companion object {
         val yamlNamesToValues: Map<String, PrimitiveType> = values().associateBy { it.yamlName }
         val cNamesToValues: Map<String, PrimitiveType> = values().associateBy { it.cName }
     }
+}
+
+data class ArrayType(
+    val elementType: TypeInformation
+) : TypeInformation {
+    override val yamlName: String = "${elementType.yamlName}[]"
+    override val cName: String = "${elementType.cName}*"
+    override val golangName: String = "[]${elementType.golangName}"
+    override val isPointer: Boolean = true
+    override val cgoTypeName: String = "*${elementType.cgoTypeName}"
+    override val jvmName: String = "Array<${elementType.jvmName}>"
 }
 
 internal fun loadTypeConfigurationFile(path: Path): List<TypeInformation> {

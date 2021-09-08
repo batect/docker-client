@@ -135,3 +135,67 @@ void FreeGetDaemonVersionInformationReturn(GetDaemonVersionInformationReturn* va
     free(value);
 }
 
+VolumeReference* AllocVolumeReference() {
+    VolumeReference* value = malloc(sizeof(VolumeReference));
+    value->Name = NULL;
+
+    return value;
+}
+
+void FreeVolumeReference(VolumeReference* value) {
+    if (value == NULL) {
+        return;
+    }
+
+    free(value->Name);
+    free(value);
+}
+
+CreateVolumeReturn* AllocCreateVolumeReturn() {
+    CreateVolumeReturn* value = malloc(sizeof(CreateVolumeReturn));
+    value->Response = NULL;
+    value->Error = NULL;
+
+    return value;
+}
+
+void FreeCreateVolumeReturn(CreateVolumeReturn* value) {
+    if (value == NULL) {
+        return;
+    }
+
+    FreeVolumeReference(value->Response);
+    FreeError(value->Error);
+    free(value);
+}
+
+ListAllVolumesReturn* AllocListAllVolumesReturn() {
+    ListAllVolumesReturn* value = malloc(sizeof(ListAllVolumesReturn));
+    value->Volumes = NULL;
+    value->Error = NULL;
+    value->VolumesCount = 0;
+
+    return value;
+}
+
+void FreeListAllVolumesReturn(ListAllVolumesReturn* value) {
+    if (value == NULL) {
+        return;
+    }
+
+    for (uint64_t i = 0; i < value->VolumesCount; i++) {
+        FreeVolumeReference(value->Volumes[i]);
+    }
+    
+    free(value->Volumes);
+    FreeError(value->Error);
+    free(value);
+}
+
+VolumeReference** CreateVolumeReferenceArray(uint64_t size) {
+    return malloc(size * sizeof(VolumeReference*));
+}
+
+void SetVolumeReferenceArrayElement(VolumeReference** array, uint64_t index, VolumeReference* value) {
+    array[index] = value;
+}

@@ -85,4 +85,31 @@ typedef struct {
 EXPORTED_FUNCTION GetDaemonVersionInformationReturn* AllocGetDaemonVersionInformationReturn();
 EXPORTED_FUNCTION void FreeGetDaemonVersionInformationReturn(GetDaemonVersionInformationReturn* value);
 
+typedef struct {
+    char* Name;
+} VolumeReference;
+
+EXPORTED_FUNCTION VolumeReference* AllocVolumeReference();
+EXPORTED_FUNCTION void FreeVolumeReference(VolumeReference* value);
+
+typedef struct {
+    VolumeReference* Response;
+    Error* Error;
+} CreateVolumeReturn;
+
+EXPORTED_FUNCTION CreateVolumeReturn* AllocCreateVolumeReturn();
+EXPORTED_FUNCTION void FreeCreateVolumeReturn(CreateVolumeReturn* value);
+
+typedef struct {
+    uint64_t VolumesCount;
+    VolumeReference** Volumes;
+    Error* Error;
+} ListAllVolumesReturn;
+
+EXPORTED_FUNCTION ListAllVolumesReturn* AllocListAllVolumesReturn();
+EXPORTED_FUNCTION void FreeListAllVolumesReturn(ListAllVolumesReturn* value);
+
+EXPORTED_FUNCTION VolumeReference** CreateVolumeReferenceArray(uint64_t size);
+EXPORTED_FUNCTION void SetVolumeReferenceArrayElement(VolumeReference** array, uint64_t index, VolumeReference* value);
+
 #endif

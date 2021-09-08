@@ -97,9 +97,11 @@ abstract class GenerateGolangTypes : DefaultTask() {
             """.trimIndent()
         )
 
-        types.forEach { type ->
-            generateHeaderFileContentForType(builder, type)
-        }
+        types.forEach { type -> generateHeaderFileContentForType(builder, type) }
+
+        types
+            .findAllTypesUsedAsArrayElements()
+            .forEach { elementType -> generateHeaderFileContentForTypeUsedAsArrayElement(builder, elementType) }
 
         builder.appendLine(
             """
@@ -109,6 +111,13 @@ abstract class GenerateGolangTypes : DefaultTask() {
 
         Files.writeString(headerFile.get().asFile.toPath(), builder, Charsets.UTF_8)
     }
+
+    private fun List<TypeInformation>.findAllTypesUsedAsArrayElements(): Set<TypeInformation> = this
+        .filterIsInstance<StructType>()
+        .flatMap { it.fields.values }
+        .filterIsInstance<ArrayType>()
+        .map { it.elementType }
+        .toSet()
 
     private fun generateHeaderFileContentForType(builder: StringBuilder, type: TypeInformation) {
         when (type) {
@@ -120,6 +129,10 @@ abstract class GenerateGolangTypes : DefaultTask() {
                 builder.appendLine("typedef struct {")
 
                 type.fields.forEach { (fieldName, fieldType) ->
+                    if (fieldType is ArrayType) {
+                        builder.appendLine("    uint64_t ${fieldName}Count;")
+                    }
+
                     builder.appendLine("    ${fieldType.cName} $fieldName;")
                 }
 
@@ -130,6 +143,16 @@ abstract class GenerateGolangTypes : DefaultTask() {
                 builder.appendLine()
             }
         }
+    }
+
+    private fun generateHeaderFileContentForTypeUsedAsArrayElement(builder: StringBuilder, elementType: TypeInformation) {
+        builder.appendLine(
+            """
+                EXPORTED_FUNCTION ${elementType.cName}* Create${elementType.yamlName}Array(uint64_t size);
+                EXPORTED_FUNCTION void Set${elementType.yamlName}ArrayElement(${elementType.cName}* array, uint64_t index, ${elementType.cName} value);
+
+            """.trimIndent()
+        )
     }
 
     private fun generateCFile(types: List<TypeInformation>) {
@@ -144,11 +167,15 @@ abstract class GenerateGolangTypes : DefaultTask() {
             """.trimIndent()
         )
 
-        val structTypes = types.filterIsInstance<StructType>()
+        types
+            .filterIsInstance<StructType>()
+            .forEach { structType ->
+                generateStructAllocAndFree(builder, structType)
+            }
 
-        structTypes.forEach { structType ->
-            generateStructAllocAndFree(builder, structType)
-        }
+        types
+            .findAllTypesUsedAsArrayElements()
+            .forEach { elementType -> generateArrayCreatorAndSetter(builder, elementType) }
 
         Files.writeString(cFile.get().asFile.toPath(), builder, Charsets.UTF_8)
     }
@@ -164,6 +191,10 @@ abstract class GenerateGolangTypes : DefaultTask() {
         )
 
         pointerFields.forEach { builder.appendLine("    value->${it.key} = NULL;") }
+
+        type.fields
+            .filterValues { it is ArrayType }
+            .forEach { (fieldName, _) -> builder.appendLine("    value->${fieldName}Count = 0;") }
 
         builder.appendLine(
             """
@@ -185,11 +216,7 @@ abstract class GenerateGolangTypes : DefaultTask() {
         )
 
         pointerFields.forEach { (fieldName, fieldType) ->
-            when (fieldType) {
-                is PrimitiveType -> builder.appendLine("    free(value->$fieldName);")
-                is StructType -> builder.appendLine("    Free${fieldType.name}(value->$fieldName);")
-                else -> throw UnsupportedOperationException("Don't know how to clean up pointer type of ${fieldType::class.simpleName!!}")
-            }
+            builder.appendLine(pointerMemberCleanupFunction("value->$fieldName", fieldType).prependIndent("    "))
         }
 
         builder.appendLine(
@@ -199,6 +226,36 @@ abstract class GenerateGolangTypes : DefaultTask() {
 
             """.trimIndent()
         )
+    }
+
+    private fun generateArrayCreatorAndSetter(builder: StringBuilder, elementType: TypeInformation) {
+        builder.appendLine(
+            """
+                ${elementType.cName}* Create${elementType.yamlName}Array(uint64_t size) {
+                    return malloc(size * sizeof(${elementType.cName}));
+                }
+
+                void Set${elementType.yamlName}ArrayElement(${elementType.cName}* array, uint64_t index, ${elementType.cName} value) {
+                    array[index] = value;
+                }
+            """.trimIndent()
+        )
+    }
+
+    private fun pointerMemberCleanupFunction(expression: String, type: TypeInformation): String {
+        return when (type) {
+            is PrimitiveType -> "free($expression);"
+            is StructType -> "Free${type.name}($expression);"
+            is ArrayType ->
+                """
+                for (uint64_t i = 0; i < ${expression}Count; i++) {
+                ${pointerMemberCleanupFunction("$expression[i]", type.elementType).prependIndent("    ")}
+                }
+
+                free($expression);
+                """.trimIndent()
+            else -> throw UnsupportedOperationException("Don't know how to clean up pointer type of ${type::class.simpleName!!}")
+        }
     }
 
     private fun generateGoFile(types: List<TypeInformation>) {
@@ -261,6 +318,17 @@ abstract class GenerateGolangTypes : DefaultTask() {
             is StructType -> "    value.$fieldName = $fieldName"
             is AliasType -> "    value.$fieldName = ${fieldType.cgoConversionFunctionName}($fieldName)"
             is PrimitiveType -> "    value.$fieldName = ${fieldType.cgoConversionFunctionName}($fieldName)"
+            is ArrayType ->
+                """
+                |
+                |    value.${fieldName}Count = C.uint64_t(len($fieldName))
+                |    value.$fieldName = C.Create${fieldType.elementType.yamlName}Array(value.${fieldName}Count)
+                |
+                |    for i, v := range $fieldName {
+                |        C.Set${fieldType.elementType.yamlName}ArrayElement(value.$fieldName, C.uint64_t(i), v)
+	            |    }
+                |
+                """.trimMargin()
         }
     }
 

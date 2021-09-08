@@ -31,6 +31,9 @@ type PingResponse *C.PingResponse
 type PingReturn *C.PingReturn
 type DaemonVersionInformation *C.DaemonVersionInformation
 type GetDaemonVersionInformationReturn *C.GetDaemonVersionInformationReturn
+type VolumeReference *C.VolumeReference
+type CreateVolumeReturn *C.CreateVolumeReturn
+type ListAllVolumesReturn *C.ListAllVolumesReturn
 
 func newError(
     Type string,
@@ -107,6 +110,44 @@ func newGetDaemonVersionInformationReturn(
 ) GetDaemonVersionInformationReturn {
     value := C.AllocGetDaemonVersionInformationReturn()
     value.Response = Response
+    value.Error = Error
+
+    return value
+}
+
+func newVolumeReference(
+    Name string,
+) VolumeReference {
+    value := C.AllocVolumeReference()
+    value.Name = C.CString(Name)
+
+    return value
+}
+
+func newCreateVolumeReturn(
+    Response VolumeReference,
+    Error Error,
+) CreateVolumeReturn {
+    value := C.AllocCreateVolumeReturn()
+    value.Response = Response
+    value.Error = Error
+
+    return value
+}
+
+func newListAllVolumesReturn(
+    Volumes []VolumeReference,
+    Error Error,
+) ListAllVolumesReturn {
+    value := C.AllocListAllVolumesReturn()
+
+    value.VolumesCount = C.uint64_t(len(Volumes))
+    value.Volumes = C.CreateVolumeReferenceArray(value.VolumesCount)
+
+    for i, v := range Volumes {
+        C.SetVolumeReferenceArrayElement(value.Volumes, C.uint64_t(i), v)
+    }
+
     value.Error = Error
 
     return value

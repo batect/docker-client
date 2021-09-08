@@ -15,6 +15,7 @@
 */
 
 import batect.dockerclient.buildtools.GolangBuild
+import batect.dockerclient.buildtools.codegen.GenerateGolangTypes
 import batect.dockerclient.buildtools.codegen.GenerateKotlinJVMMethods
 import batect.dockerclient.buildtools.codegen.GenerateKotlinJVMTypes
 import org.gradle.api.tasks.testing.logging.TestExceptionFormat
@@ -108,19 +109,22 @@ kotlin {
 }
 
 fun KotlinNativeCompilation.addDockerClientWrapperCinterop() {
-    val libraryPath = dockerClientWrapperProject.buildDir
-        .resolve("libs")
-        .resolve(konanTarget.golangOSName)
-        .resolve(konanTarget.architecture.name.toLowerCase())
-        .resolve("archive")
+    val generationTask = dockerClientWrapperProject.tasks.named<GenerateGolangTypes>("generateTypes")
+    val sourceTask = dockerClientWrapperProject.tasks.named<GolangBuild>("buildArchiveLib${konanTarget.golangOSName.capitalize()}${konanTarget.architecture.name.toLowerCase().capitalize()}")
 
     cinterops.register("dockerClientWrapper") {
-        includeDirs(dockerClientWrapperProject.projectDir.resolve("src"), libraryPath)
-        extraOpts("-libraryPath", libraryPath)
+        extraOpts("-libraryPath", sourceTask.get().outputDirectory.get())
+
+        includeDirs(generationTask.map { it.headerFile.get().asFile.parentFile })
+
+        headers(sourceTask.map { it.outputHeaderFile })
+        headers(generationTask.map { it.headerFile })
     }
 
     tasks.named("cinteropDockerClientWrapper${target.name.capitalize()}") {
-        dependsOn(dockerClientWrapperProject.tasks.named("buildArchiveLib${konanTarget.golangOSName.capitalize()}${konanTarget.architecture.name.toLowerCase().capitalize()}"))
+        dependsOn(sourceTask)
+
+        inputs.file(sourceTask.map { it.outputLibraryFile })
 
         if (konanTarget.family == Family.LINUX) {
             onlyIf { buildIsRunningOnLinux }

@@ -74,8 +74,8 @@ abstract class GenerateKotlinJVMTypes : DefaultTask() {
             """
 
             internal class ${type.name}(runtime: Runtime) : Struct(runtime), AutoCloseable {
-                constructor(pointer: Pointer) : this (pointer.memory.runtime) {
-                    this.useMemory(pointer.get())
+                constructor(pointer: jnr.ffi.Pointer) : this(pointer.runtime) {
+                    this.useMemory(pointer)
                 }
 
             """.trimIndent()
@@ -98,19 +98,40 @@ abstract class GenerateKotlinJVMTypes : DefaultTask() {
 
     private fun generateStructField(fieldName: String, fieldType: TypeInformation): String {
         return when (fieldType) {
-            is PrimitiveType -> "    val $fieldName = ${fieldType.jvmName}()"
+            is PrimitiveType -> "    val $fieldName = ${fieldType.jvmNameInStruct}()"
             is AliasType -> "    val $fieldName = ${fieldType.jnrType}()"
             is StructType ->
                 """
                 |    private val ${fieldName}Pointer = Pointer()
-                |    val $fieldName: ${fieldType.name}? by lazy { if (${fieldName}Pointer.intValue() == 0) null else ${fieldType.name}(${fieldName}Pointer) }
+                |    val $fieldName: ${fieldType.name}? by lazy { if (${fieldName}Pointer.intValue() == 0) null else ${fieldType.name}(${fieldName}Pointer.get()) }
                 """.trimMargin()
+            is ArrayType -> {
+                if (!fieldType.elementType.isPointer) {
+                    throw UnsupportedOperationException("This method doesn't correctly calculate array element sizes for non-pointer fields.")
+                }
+
+                """
+                |    private val ${fieldName}Count = u_int64_t()
+                |    private val ${fieldName}Pointer = Pointer()
+                |    val $fieldName: List<${fieldType.elementType.yamlName}> by lazy {
+                |        if (${fieldName}Pointer.intValue() == 0) {
+                |            throw IllegalArgumentException("$fieldName is null")
+                |        } else {
+                |            val count = ${fieldName}Count.get()
+                |            val pointer = ${fieldName}Pointer.get()
+                |            val elementSize = runtime.addressSize()
+                |
+                |            (0..(count - 1)).map { i -> ${fieldType.elementType.yamlName}(pointer.getPointer(elementSize * i)) }
+                |        }
+                |    }
+                """.trimMargin()
+            }
         }
     }
 
     private fun generateAlias(builder: StringBuilder, type: AliasType) {
         builder.appendLine()
-        builder.appendLine("internal typealias ${type.name} = ${type.jvmType}")
+        builder.appendLine("internal typealias ${type.name} = ${type.jvmName}")
     }
 
     private fun convertFieldNameToKotlinConvention(fieldName: String): String {

@@ -107,6 +107,7 @@ abstract class GenerateKotlinJVMMethods : DefaultTask() {
     private fun parseFunctionParameters(parametersSource: String, types: List<TypeInformation>, functionName: String): List<FunctionParameter> {
         return parametersSource
             .split(",")
+            .map { it.trim() }
             .map { parameterSource ->
                 val parsedParameter = parameterDefinitionRegex.matchEntire(parameterSource) ?: throw RuntimeException("Cannot parse parameter definition in function '$functionName': $parameterSource")
                 val parameterName = parsedParameter.groups["parameterName"]!!.value
@@ -223,6 +224,10 @@ abstract class GenerateKotlinJVMMethods : DefaultTask() {
                 if (returnType != null) {
                     builder.append(": ")
                     builder.append(returnType.yamlName)
+
+                    if (returnType.isPointer) {
+                        builder.append("?")
+                    }
                 }
 
                 return builder.toString()
@@ -233,7 +238,7 @@ abstract class GenerateKotlinJVMMethods : DefaultTask() {
         val name: String,
         val type: TypeInformation
     ) {
-        val kotlinDefinition: String = "@In $name: ${type.yamlName}"
+        val kotlinDefinition: String = "@In $name: ${type.jvmName}"
     }
 
     private fun <K, V> Map<K, V>.groupByValues(): Map<V, Set<K>> {
@@ -288,7 +293,7 @@ abstract class GenerateKotlinJVMMethods : DefaultTask() {
             #endif
         """.trimIndent()
 
-        private val functionDefinitionRegex: Regex = """extern(?: __declspec\(dllexport\))? (?<returnType>[a-zA-Z]+\*?) (?<functionName>[a-zA-Z]+)\((?<parameters>[a-zA-z, ]+)?\);""".toRegex()
+        private val functionDefinitionRegex: Regex = """extern(?: __declspec\(dllexport\))? (?<returnType>[a-zA-Z]+\*?) (?<functionName>[a-zA-Z]+)\((?<parameters>[a-zA-z,* ]+)?\);""".toRegex()
         private val parameterDefinitionRegex: Regex = """(?<parameterType>[a-zA-Z]+\*?) (?<parameterName>[a-zA-Z]+)""".toRegex()
     }
 }
