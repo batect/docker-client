@@ -32,14 +32,12 @@ jobs:
           - name: Windows
             os: windows-2019
             artefactName: windows
-            extraGradleArgs: --exclude-task :docker-client-wrapper:lint
 
           - name: macOS
             os: macos-11
             artefactName: macos
-            extraGradleArgs: --exclude-task :docker-client-wrapper:lint
 
-    name: "Build wrapper (${{ matrix.name }})"
+    name: "Build wrapper libraries for JVM (${{ matrix.name }})"
     runs-on: ${{ matrix.os }}
     steps:
       - name: Check out code
@@ -76,7 +74,7 @@ jobs:
           restore-keys: kotlin-native-${{ runner.os }}
 
       - name: Build and test
-        run: ./gradlew --parallel docker-client-wrapper:check ${{ matrix.extraGradleArgs }}
+        run: ./gradlew --parallel docker-client-wrapper:buildSharedLibs
 
       - name: Stop Gradle daemon
         run: ./gradlew --stop
@@ -106,7 +104,7 @@ jobs:
           path: docker-client-wrapper/build/libs
           if-no-files-found: error
 
-  build-kotlin:
+  build-and-test:
     strategy:
       fail-fast: false
       matrix:
@@ -125,7 +123,7 @@ jobs:
     needs:
       - build-wrapper
 
-    name: "Build Kotlin libraries (${{ matrix.name }})"
+    name: "Build and test (${{ matrix.name }})"
     runs-on: ${{ matrix.os }}
     steps:
       - name: Check out code
