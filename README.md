@@ -14,10 +14,23 @@ If you require an API not provided here, please [open a new issue](https://githu
 
 ## Requirements
 
-Supported environments for both JVM and Native:
-* macOS: x64 and ARM64 (aka Apple Silicon)
-* Linux: x64
-* Windows: x64
+### Operating system and architecture
+
+This library supports the following:
+
+| Operating system | Architecture    | Kotlin/JVM         | Kotlin/Native      |
+| ---------------- | --------------- | ------------------ | ------------------ |
+| macOS            | x64 (Intel)     | :white_check_mark: | :white_check_mark: |
+| macOS            | ARM64 (Silicon) | :white_check_mark: | :white_check_mark: |
+| Linux            | x64             | :white_check_mark: | :white_check_mark: |
+| Linux            | ARM64           | :white_check_mark: | :x:                |
+| Windows          | x64             | :white_check_mark: | :white_check_mark: |
+
+Support for ARM64 Linux with Kotlin/Native will be added once kotlinx.coroutines supports it (see https://github.com/Kotlin/kotlinx.coroutines/issues/855).
+
+### Docker daemon
+
+This library supports Docker 18.03.1 or later. Using a more recent version of Docker is highly recommended.
 
 ## How is this different to other Docker client libraries?
 
