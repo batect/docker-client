@@ -78,7 +78,7 @@ targets.forEach { target ->
     buildArchiveLibs.configure { dependsOn(buildArchiveLib) }
 }
 
-tasks.named("assemble") {
+val assemble = tasks.named("assemble") {
     dependsOn(buildSharedLibs)
     dependsOn(buildArchiveLibs)
 }
@@ -115,6 +115,7 @@ val lint = tasks.register<GolangLint>("lint") {
 }
 
 tasks.named("check") {
+    dependsOn(assemble)
     dependsOn(lint)
 }
 

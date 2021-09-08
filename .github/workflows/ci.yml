@@ -3,6 +3,10 @@ on: [push, pull_request]
 env:
   GRADLE_OPTS: "-Dorg.gradle.internal.launcher.welcomeMessageEnabled=false"
 
+defaults:
+  run:
+    shell: bash
+
 jobs:
   validate-gradle-wrapper:
     name: "Validate Gradle wrapper"
@@ -16,9 +20,25 @@ jobs:
       - name: Validate Gradle wrapper
         uses: gradle/wrapper-validation-action@v1.0.4
 
-  build-linux:
-    name: "Build (Linux)"
-    runs-on: ubuntu-20.04
+  build-wrapper:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: Linux
+            os: ubuntu-20.04
+            artefactName: linux
+
+          - name: Windows
+            os: windows-2019
+            artefactName: windows
+
+          - name: macOS
+            os: macos-11
+            artefactName: macos
+
+    name: "Build wrapper (${{ matrix.name }})"
+    runs-on: ${{ matrix.os }}
     steps:
       - name: Check out code
         uses: actions/checkout@v2.3.4
@@ -31,13 +51,92 @@ jobs:
           java-version: 11
           distribution: adopt
 
+      - name: Set up Golang
+        uses: actions/setup-go@v2.1.4
+        with:
+          go-version: 1.16.4
+
       - name: Cache packages
         id: cache-packages
         uses: actions/cache@v2.1.6
         with:
           path: ~/.gradle/caches
-          key: gradle-packages-${{ runner.os }}-${{ hashFiles('**/*.gradle.kts') }}
-          restore-keys: gradle-packages-${{ runner.os }}
+          key: gradle-wrapper-packages-${{ runner.os }}-${{ hashFiles('**/*.gradle.kts') }}
+          restore-keys: gradle-wrapper-packages-${{ runner.os }}
+
+      - name: Build and test
+        run: ./gradlew --parallel docker-client-wrapper:check
+
+      - name: Stop Gradle daemon
+        run: ./gradlew --stop
+
+      - name: Clean up dependencies before caching
+        if: steps.cache-packages.outputs.cache-hit != 'true'
+        run: |
+          rm -f  $HOME/.gradle/caches/modules-2/modules-2.lock
+          rm -fr $HOME/.gradle/caches/*/plugin-resolution/
+          rm -fr $HOME/.gradle/caches/*/scripts/
+          rm -fr $HOME/.gradle/caches/*/scripts-remapped/
+          rm -fr $HOME/.gradle/caches/*/fileHashes/
+          rm -f  $HOME/.gradle/caches/*/fileContent/*.lock
+          rm -f  $HOME/.gradle/caches/*/javaCompile/*.lock
+          rm -f  $HOME/.gradle/caches/*/executionHistory/*.lock
+          rm -f  $HOME/.gradle/caches/*/generated-gradle-jars/*.lock
+          rm -f  $HOME/.gradle/caches/jars-3/*.lock
+          rm -f  $HOME/.gradle/caches/jars-8/*.lock
+          rm -f  $HOME/.gradle/caches/transforms-1/transforms-1.lock
+          rm -f  $HOME/.gradle/caches/journal-1/file-access.bin
+          rm -f  $HOME/.gradle/caches/journal-1/*.lock
+
+      - name: Upload Golang wrapper libraries
+        uses: actions/upload-artifact@v2.2.4
+        with:
+          name: wrapper-libs-${{ matrix.artefactName }}
+          path: docker-client-wrapper/build/libs
+          if-no-files-found: error
+
+  build-kotlin:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: Linux
+            os: ubuntu-20.04
+          - name: Windows
+            os: windows-2019
+          - name: macOS
+            os: macos-11
+            disableDockerDaemonTests: 1
+
+    needs:
+      - build-wrapper
+
+    name: "Build Kotlin libraries (${{ matrix.name }})"
+    runs-on: ${{ matrix.os }}
+    steps:
+      - name: Check out code
+        uses: actions/checkout@v2.3.4
+        with:
+          fetch-depth: 0
+
+      - name: Set up JDK
+        uses: actions/setup-java@v2.3.0
+        with:
+          java-version: 11
+          distribution: adopt
+
+      - name: Set up Golang
+        uses: actions/setup-go@v2.1.4
+        with:
+          go-version: 1.16.4
+
+      - name: Cache packages
+        id: cache-packages
+        uses: actions/cache@v2.1.6
+        with:
+          path: ~/.gradle/caches
+          key: gradle-kotlin-packages-${{ runner.os }}-${{ hashFiles('**/*.gradle.kts') }}
+          restore-keys: gradle-kotlin-packages-${{ runner.os }}
 
       - name: Cache Kotlin/Native dependencies
         id: cache-kotlin-native
@@ -46,79 +145,35 @@ jobs:
           path: ~/.konan
           key: kotlin-native-${{ runner.os }}-${{ hashFiles('**/*.gradle.kts') }}
           restore-keys: kotlin-native-${{ runner.os }}
+
+      # Why do we get all libraries for all operating systems? This is to ensure that we embed the libraries
+      # for all operating systems in the .jar produced for the JVM, regardless of the system that the .jar is
+      # built on.
+      - name: Fetch Linux wrapper libraries
+        uses: actions/download-artifact@v2.0.10
+        with:
+          name: wrapper-libs-linux
+          path: docker-client-wrapper/build/libs
+
+      - name: Fetch macOS wrapper libraries
+        uses: actions/download-artifact@v2.0.10
+        with:
+          name: wrapper-libs-macos
+          path: docker-client-wrapper/build/libs
+
+      - name: Fetch Windows wrapper libraries
+        uses: actions/download-artifact@v2.0.10
+        with:
+          name: wrapper-libs-windows
+          path: docker-client-wrapper/build/libs
+
+      - name: Check all files are in the correct location
+        run: tree docker-client-wrapper/build/libs
 
       - name: Build and test
         run: ./gradlew --parallel check
-
-      - name: Stop Gradle daemon
-        run: ./gradlew --stop
-
-      - name: Clean up dependencies before caching
-        if: steps.cache-packages.outputs.cache-hit != 'true'
-        run: |
-          rm -f  $HOME/.gradle/caches/modules-2/modules-2.lock
-          rm -fr $HOME/.gradle/caches/*/plugin-resolution/
-          rm -fr $HOME/.gradle/caches/*/scripts/
-          rm -fr $HOME/.gradle/caches/*/scripts-remapped/
-          rm -fr $HOME/.gradle/caches/*/fileHashes/
-          rm -f  $HOME/.gradle/caches/*/fileContent/*.lock
-          rm -f  $HOME/.gradle/caches/*/javaCompile/*.lock
-          rm -f  $HOME/.gradle/caches/*/executionHistory/*.lock
-          rm -f  $HOME/.gradle/caches/*/generated-gradle-jars/*.lock
-          rm -f  $HOME/.gradle/caches/jars-3/*.lock
-          rm -f  $HOME/.gradle/caches/jars-8/*.lock
-          rm -f  $HOME/.gradle/caches/transforms-1/transforms-1.lock
-          rm -f  $HOME/.gradle/caches/journal-1/file-access.bin
-          rm -f  $HOME/.gradle/caches/journal-1/*.lock
-
-      - name: Upload Golang wrapper libraries
-        uses: actions/upload-artifact@v2.2.4
-        with:
-          name: wrapper-libs-${{ runner.os }}
-          path: docker-client-wrapper/build/libs
-          if-no-files-found: error
-
-  build-mac:
-    name: "Build (macOS)"
-    runs-on: macos-11
-    steps:
-      - name: Check out code
-        uses: actions/checkout@v2.3.4
-        with:
-          fetch-depth: 0
-
-      - name: Set up JDK
-        uses: actions/setup-java@v2.3.0
-        with:
-          java-version: 11
-          distribution: adopt
-
-      - name: Set up Golang
-        uses: actions/setup-go@v2.1.4
-        with:
-          go-version: 1.16.4
-
-      - name: Cache packages
-        id: cache-packages
-        uses: actions/cache@v2.1.6
-        with:
-          path: ~/.gradle/caches
-          key: gradle-packages-${{ runner.os }}-${{ hashFiles('**/*.gradle.kts') }}
-          restore-keys: gradle-packages-${{ runner.os }}
-
-      - name: Cache Kotlin/Native dependencies
-        id: cache-kotlin-native
-        uses: actions/cache@v2.1.6
-        with:
-          path: ~/.konan
-          key: kotlin-native-${{ runner.os }}-${{ hashFiles('**/*.gradle.kts') }}
-          restore-keys: kotlin-native-${{ runner.os }}
-
-      - name: Build and test
-        run: ./gradlew --parallel check --exclude-task :docker-client-wrapper:lint
         env:
-          # The macOS build runners on GitHub Actions don't support running Docker in any form.
-          DISABLE_DOCKER_DAEMON_TESTS: 1
+          DISABLE_DOCKER_DAEMON_TESTS: ${{ matrix.disableDockerDaemonTests }}
 
       - name: Stop Gradle daemon
         run: ./gradlew --stop
@@ -140,76 +195,3 @@ jobs:
           rm -f  $HOME/.gradle/caches/transforms-1/transforms-1.lock
           rm -f  $HOME/.gradle/caches/journal-1/file-access.bin
           rm -f  $HOME/.gradle/caches/journal-1/*.lock
-
-      - name: Upload Golang wrapper libraries
-        uses: actions/upload-artifact@v2.2.4
-        with:
-          name: wrapper-libs-${{ runner.os }}
-          path: docker-client-wrapper/build/libs
-          if-no-files-found: error
-
-  build-windows:
-    name: "Build (Windows)"
-    runs-on: windows-2019
-
-    steps:
-      - name: Check out code
-        uses: actions/checkout@v2.3.4
-        with:
-          fetch-depth: 0
-
-      - name: Set up JDK
-        uses: actions/setup-java@v2.3.0
-        with:
-          java-version: 11
-          distribution: adopt
-
-      - name: Set up Golang
-        uses: actions/setup-go@v2.1.4
-        with:
-          go-version: 1.16.4
-
-      - name: Cache packages
-        id: cache-packages
-        uses: actions/cache@v2.1.6
-        with:
-          path: ~/.gradle/caches
-          key: gradle-packages-${{ runner.os }}-${{ hashFiles('**/*.gradle.kts') }}
-          restore-keys: gradle-packages-${{ runner.os }}
-
-      - name: Cache Kotlin/Native dependencies
-        id: cache-kotlin-native
-        uses: actions/cache@v2.1.6
-        with:
-          path: ~/.konan
-          key: kotlin-native-${{ runner.os }}-${{ hashFiles('**/*.gradle.kts') }}
-          restore-keys: kotlin-native-${{ runner.os }}
-
-      - name: Build and test
-        run: ./gradlew --parallel check --exclude-task :docker-client-wrapper:lint
-
-      - name: Stop Gradle daemon
-        run: ./gradlew --stop
-
-      - name: Clean up dependencies before caching
-        if: steps.cache-packages.outputs.cache-hit != 'true'
-        run: |
-          Remove-Item -ErrorAction SilentlyContinue          ~/.gradle/caches/modules-2/modules-2.lock
-          Remove-Item -ErrorAction SilentlyContinue -Recurse ~/.gradle/caches/*/plugin-resolution/
-          Remove-Item -ErrorAction SilentlyContinue -Recurse ~/.gradle/caches/*/scripts/
-          Remove-Item -ErrorAction SilentlyContinue -Recurse ~/.gradle/caches/*/scripts-remapped/
-          Remove-Item -ErrorAction SilentlyContinue -Recurse ~/.gradle/caches/*/fileHashes/
-          Remove-Item -ErrorAction SilentlyContinue          ~/.gradle/caches/*/fileContent/*.lock
-          Remove-Item -ErrorAction SilentlyContinue          ~/.gradle/caches/*/javaCompile/*.lock
-          Remove-Item -ErrorAction SilentlyContinue          ~/.gradle/caches/*/executionHistory/*.lock
-          Remove-Item -ErrorAction SilentlyContinue          ~/.gradle/caches/*/generated-gradle-jars/*.lock
-          Remove-Item -ErrorAction SilentlyContinue          ~/.gradle/caches/jars-*/*.lock
-          Remove-Item -ErrorAction SilentlyContinue          ~/.gradle/caches/journal-1/file-access.bin
-          Remove-Item -ErrorAction SilentlyContinue          ~/.gradle/caches/journal-1/*.lock
-
-      - name: Upload Golang wrapper libraries
-        uses: actions/upload-artifact@v2.2.4
-        with:
-          name: wrapper-libs-${{ runner.os }}
-          path: docker-client-wrapper/build/libs
-          if-no-files-found: error
