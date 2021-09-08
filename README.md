@@ -43,5 +43,5 @@ There are two major differences compared to other client libraries:
 * This library embeds the official Golang Docker client libraries, rather than invoking the `docker` executable or
   calling the Docker API itself.
 
-  This makes it much easier to add support for new Docker features, or use features that require a lot of client logic
+  This makes it much easier to add support for new Docker features and easier to provide features that require a lot of client logic
   (eg. BuildKit) without sacrificing performance.
