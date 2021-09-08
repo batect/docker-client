@@ -212,6 +212,6 @@ jobs:
       - name: Upload JVM .jar
         uses: actions/upload-artifact@v2.2.4
         with:
-          name: jar-${{ matrix.artefactName }}
+          name: jar-${{ runner.os }}
           path: lib/build/libs/lib-jvm.jar
           if-no-files-found: error
