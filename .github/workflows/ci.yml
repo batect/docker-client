@@ -54,6 +54,7 @@ jobs:
           distribution: adopt
 
       - name: Set up Golang
+        if: ${{ runner.os != 'Linux' }} # We use a container on Linux.
         uses: actions/setup-go@v2.1.4
         with:
           go-version: 1.16.4
@@ -139,6 +140,7 @@ jobs:
           distribution: adopt
 
       - name: Set up Golang
+        if: ${{ runner.os != 'Linux' }} # We use a container on Linux.
         uses: actions/setup-go@v2.1.4
         with:
           go-version: 1.16.4
@@ -180,11 +182,8 @@ jobs:
           name: wrapper-libs-windows
           path: docker-client-wrapper/build/libs
 
-      - name: Check all files are in the correct location
-        run: tree docker-client-wrapper/build/libs
-
-      - name: Build and test
-        run: ./gradlew --parallel check
+      - name: Build, test and package
+        run: ./gradlew --parallel lib:check lib:jvmJar
         env:
           DISABLE_DOCKER_DAEMON_TESTS: ${{ matrix.disableDockerDaemonTests }}
           DOCKER_CONTAINER_OPERATING_SYSTEM: ${{ matrix.containerOperatingSystem }}
@@ -209,3 +208,10 @@ jobs:
           rm -f  $HOME/.gradle/caches/transforms-1/transforms-1.lock
           rm -f  $HOME/.gradle/caches/journal-1/file-access.bin
           rm -f  $HOME/.gradle/caches/journal-1/*.lock
+
+      - name: Upload JVM .jar
+        uses: actions/upload-artifact@v2.2.4
+        with:
+          name: jar-${{ matrix.artefactName }}
+          path: lib/build/libs/lib-jvm.jar
+          if-no-files-found: error
