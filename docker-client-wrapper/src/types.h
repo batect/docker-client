@@ -109,6 +109,29 @@ typedef struct {
 EXPORTED_FUNCTION ListAllVolumesReturn* AllocListAllVolumesReturn();
 EXPORTED_FUNCTION void FreeListAllVolumesReturn(ListAllVolumesReturn* value);
 
+typedef struct {
+    char* ID;
+} NetworkReference;
+
+EXPORTED_FUNCTION NetworkReference* AllocNetworkReference();
+EXPORTED_FUNCTION void FreeNetworkReference(NetworkReference* value);
+
+typedef struct {
+    NetworkReference* Response;
+    Error* Error;
+} CreateNetworkReturn;
+
+EXPORTED_FUNCTION CreateNetworkReturn* AllocCreateNetworkReturn();
+EXPORTED_FUNCTION void FreeCreateNetworkReturn(CreateNetworkReturn* value);
+
+typedef struct {
+    NetworkReference* Response;
+    Error* Error;
+} GetNetworkByNameOrIDReturn;
+
+EXPORTED_FUNCTION GetNetworkByNameOrIDReturn* AllocGetNetworkByNameOrIDReturn();
+EXPORTED_FUNCTION void FreeGetNetworkByNameOrIDReturn(GetNetworkByNameOrIDReturn* value);
+
 EXPORTED_FUNCTION VolumeReference** CreateVolumeReferenceArray(uint64_t size);
 EXPORTED_FUNCTION void SetVolumeReferenceArrayElement(VolumeReference** array, uint64_t index, VolumeReference* value);
 

@@ -34,6 +34,9 @@ type GetDaemonVersionInformationReturn *C.GetDaemonVersionInformationReturn
 type VolumeReference *C.VolumeReference
 type CreateVolumeReturn *C.CreateVolumeReturn
 type ListAllVolumesReturn *C.ListAllVolumesReturn
+type NetworkReference *C.NetworkReference
+type CreateNetworkReturn *C.CreateNetworkReturn
+type GetNetworkByNameOrIDReturn *C.GetNetworkByNameOrIDReturn
 
 func newError(
     Type string,
@@ -148,6 +151,37 @@ func newListAllVolumesReturn(
         C.SetVolumeReferenceArrayElement(value.Volumes, C.uint64_t(i), v)
     }
 
+    value.Error = Error
+
+    return value
+}
+
+func newNetworkReference(
+    ID string,
+) NetworkReference {
+    value := C.AllocNetworkReference()
+    value.ID = C.CString(ID)
+
+    return value
+}
+
+func newCreateNetworkReturn(
+    Response NetworkReference,
+    Error Error,
+) CreateNetworkReturn {
+    value := C.AllocCreateNetworkReturn()
+    value.Response = Response
+    value.Error = Error
+
+    return value
+}
+
+func newGetNetworkByNameOrIDReturn(
+    Response NetworkReference,
+    Error Error,
+) GetNetworkByNameOrIDReturn {
+    value := C.AllocGetNetworkByNameOrIDReturn()
+    value.Response = Response
     value.Error = Error
 
     return value

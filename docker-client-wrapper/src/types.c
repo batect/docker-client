@@ -192,6 +192,58 @@ void FreeListAllVolumesReturn(ListAllVolumesReturn* value) {
     free(value);
 }
 
+NetworkReference* AllocNetworkReference() {
+    NetworkReference* value = malloc(sizeof(NetworkReference));
+    value->ID = NULL;
+
+    return value;
+}
+
+void FreeNetworkReference(NetworkReference* value) {
+    if (value == NULL) {
+        return;
+    }
+
+    free(value->ID);
+    free(value);
+}
+
+CreateNetworkReturn* AllocCreateNetworkReturn() {
+    CreateNetworkReturn* value = malloc(sizeof(CreateNetworkReturn));
+    value->Response = NULL;
+    value->Error = NULL;
+
+    return value;
+}
+
+void FreeCreateNetworkReturn(CreateNetworkReturn* value) {
+    if (value == NULL) {
+        return;
+    }
+
+    FreeNetworkReference(value->Response);
+    FreeError(value->Error);
+    free(value);
+}
+
+GetNetworkByNameOrIDReturn* AllocGetNetworkByNameOrIDReturn() {
+    GetNetworkByNameOrIDReturn* value = malloc(sizeof(GetNetworkByNameOrIDReturn));
+    value->Response = NULL;
+    value->Error = NULL;
+
+    return value;
+}
+
+void FreeGetNetworkByNameOrIDReturn(GetNetworkByNameOrIDReturn* value) {
+    if (value == NULL) {
+        return;
+    }
+
+    FreeNetworkReference(value->Response);
+    FreeError(value->Error);
+    free(value);
+}
+
 VolumeReference** CreateVolumeReferenceArray(uint64_t size) {
     return malloc(size * sizeof(VolumeReference*));
 }

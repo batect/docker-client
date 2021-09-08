@@ -23,7 +23,7 @@ public actual open class DockerClientException actual constructor(
     cause: Throwable?,
     public actual val golangErrorType: String?
 ) : RuntimeException(message, cause) {
-    internal constructor(error: Error) : this(error.message.get(), golangErrorType = error.type.get())
+    internal constructor(error: Error) : this(error.message.get(), null, golangErrorType = error.type.get())
 }
 
 public actual class PingFailedException actual constructor(
@@ -31,7 +31,7 @@ public actual class PingFailedException actual constructor(
     cause: Throwable?,
     golangErrorType: String?
 ) : DockerClientException(message, cause, golangErrorType) {
-    internal constructor(error: Error) : this(error.cleanErrorMessage, golangErrorType = error.type.get())
+    internal constructor(error: Error) : this(error.cleanErrorMessage, null, golangErrorType = error.type.get())
 }
 
 public actual class GetDaemonVersionInformationFailedException actual constructor(
@@ -39,7 +39,7 @@ public actual class GetDaemonVersionInformationFailedException actual constructo
     cause: Throwable?,
     golangErrorType: String?
 ) : DockerClientException(message, cause, golangErrorType) {
-    internal constructor(error: Error) : this(error.cleanErrorMessage, golangErrorType = error.type.get())
+    internal constructor(error: Error) : this(error.cleanErrorMessage, null, golangErrorType = error.type.get())
 }
 
 public actual class VolumeCreationFailedException actual constructor(
@@ -47,7 +47,7 @@ public actual class VolumeCreationFailedException actual constructor(
     cause: Throwable?,
     golangErrorType: String?
 ) : DockerClientException(message, cause, golangErrorType) {
-    internal constructor(error: Error) : this(error.cleanErrorMessage, golangErrorType = error.type.get())
+    internal constructor(error: Error) : this(error.cleanErrorMessage, null, golangErrorType = error.type.get())
 }
 
 public actual class VolumeDeletionFailedException actual constructor(
@@ -55,7 +55,7 @@ public actual class VolumeDeletionFailedException actual constructor(
     cause: Throwable?,
     golangErrorType: String?
 ) : DockerClientException(message, cause, golangErrorType) {
-    internal constructor(error: Error) : this(error.cleanErrorMessage, golangErrorType = error.type.get())
+    internal constructor(error: Error) : this(error.cleanErrorMessage, null, golangErrorType = error.type.get())
 }
 
 public actual class ListAllVolumesFailedException actual constructor(
@@ -63,7 +63,31 @@ public actual class ListAllVolumesFailedException actual constructor(
     cause: Throwable?,
     golangErrorType: String?
 ) : DockerClientException(message, cause, golangErrorType) {
-    internal constructor(error: Error) : this(error.cleanErrorMessage, golangErrorType = error.type.get())
+    internal constructor(error: Error) : this(error.cleanErrorMessage, null, golangErrorType = error.type.get())
+}
+
+public actual class NetworkCreationFailedException actual constructor(
+    message: String,
+    cause: Throwable?,
+    golangErrorType: String?
+) : DockerClientException(message, cause, golangErrorType) {
+    internal constructor(error: Error) : this(error.cleanErrorMessage, null, golangErrorType = error.type.get())
+}
+
+public actual class NetworkDeletionFailedException actual constructor(
+    message: String,
+    cause: Throwable?,
+    golangErrorType: String?
+) : DockerClientException(message, cause, golangErrorType) {
+    internal constructor(error: Error) : this(error.cleanErrorMessage, null, golangErrorType = error.type.get())
+}
+
+public actual class NetworkRetrievalFailedException actual constructor(
+    message: String,
+    cause: Throwable?,
+    golangErrorType: String?
+) : DockerClientException(message, cause, golangErrorType) {
+    internal constructor(error: Error) : this(error.cleanErrorMessage, null, golangErrorType = error.type.get())
 }
 
 private val Error.cleanErrorMessage: String

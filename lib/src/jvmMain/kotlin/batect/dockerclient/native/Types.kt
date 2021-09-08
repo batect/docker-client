@@ -167,3 +167,45 @@ internal class ListAllVolumesReturn(runtime: Runtime) : Struct(runtime), AutoClo
         nativeAPI.FreeListAllVolumesReturn(this)
     }
 }
+
+internal class NetworkReference(runtime: Runtime) : Struct(runtime), AutoCloseable {
+    constructor(pointer: jnr.ffi.Pointer) : this(pointer.runtime) {
+        this.useMemory(pointer)
+    }
+
+    val id = UTF8StringRef()
+
+    override fun close() {
+        nativeAPI.FreeNetworkReference(this)
+    }
+}
+
+internal class CreateNetworkReturn(runtime: Runtime) : Struct(runtime), AutoCloseable {
+    constructor(pointer: jnr.ffi.Pointer) : this(pointer.runtime) {
+        this.useMemory(pointer)
+    }
+
+    private val responsePointer = Pointer()
+    val response: NetworkReference? by lazy { if (responsePointer.intValue() == 0) null else NetworkReference(responsePointer.get()) }
+    private val errorPointer = Pointer()
+    val error: Error? by lazy { if (errorPointer.intValue() == 0) null else Error(errorPointer.get()) }
+
+    override fun close() {
+        nativeAPI.FreeCreateNetworkReturn(this)
+    }
+}
+
+internal class GetNetworkByNameOrIDReturn(runtime: Runtime) : Struct(runtime), AutoCloseable {
+    constructor(pointer: jnr.ffi.Pointer) : this(pointer.runtime) {
+        this.useMemory(pointer)
+    }
+
+    private val responsePointer = Pointer()
+    val response: NetworkReference? by lazy { if (responsePointer.intValue() == 0) null else NetworkReference(responsePointer.get()) }
+    private val errorPointer = Pointer()
+    val error: Error? by lazy { if (errorPointer.intValue() == 0) null else Error(errorPointer.get()) }
+
+    override fun close() {
+        nativeAPI.FreeGetNetworkByNameOrIDReturn(this)
+    }
+}

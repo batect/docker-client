@@ -28,6 +28,9 @@ internal interface API {
     fun DisposeClient(@In clientHandle: Long)
     fun Ping(@In clientHandle: Long): PingReturn?
     fun GetDaemonVersionInformation(@In clientHandle: Long): GetDaemonVersionInformationReturn?
+    fun CreateNetwork(@In clientHandle: Long, @In name: String, @In driver: String): CreateNetworkReturn?
+    fun DeleteNetwork(@In clientHandle: Long, @In id: String): Error?
+    fun GetNetworkByNameOrID(@In clientHandle: Long, @In searchFor: String): GetNetworkByNameOrIDReturn?
     fun CreateVolume(@In clientHandle: Long, @In name: String): CreateVolumeReturn?
     fun DeleteVolume(@In clientHandle: Long, @In name: String): Error?
     fun ListAllVolumes(@In clientHandle: Long): ListAllVolumesReturn?
@@ -49,4 +52,10 @@ internal interface API {
     fun AllocCreateVolumeReturn(): CreateVolumeReturn?
     fun FreeListAllVolumesReturn(@In value: ListAllVolumesReturn)
     fun AllocListAllVolumesReturn(): ListAllVolumesReturn?
+    fun FreeNetworkReference(@In value: NetworkReference)
+    fun AllocNetworkReference(): NetworkReference?
+    fun FreeCreateNetworkReturn(@In value: CreateNetworkReturn)
+    fun AllocCreateNetworkReturn(): CreateNetworkReturn?
+    fun FreeGetNetworkByNameOrIDReturn(@In value: GetNetworkByNameOrIDReturn)
+    fun AllocGetNetworkByNameOrIDReturn(): GetNetworkByNameOrIDReturn?
 }

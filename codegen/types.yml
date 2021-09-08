@@ -63,3 +63,20 @@
   fields:
     Volumes: VolumeReference[]
     Error: Error
+
+- name: NetworkReference
+  type: struct
+  fields:
+    ID: string
+
+- name: CreateNetworkReturn
+  type: struct
+  fields:
+    Response: NetworkReference
+    Error: Error
+
+- name: GetNetworkByNameOrIDReturn
+  type: struct
+  fields:
+    Response: NetworkReference
+    Error: Error

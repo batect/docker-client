@@ -16,17 +16,8 @@
 
 package batect.dockerclient
 
-public expect class DockerClient() : AutoCloseable {
-    public fun ping(): PingResponse
-    public fun getDaemonVersionInformation(): DaemonVersionInformation
+public data class NetworkReference(val id: String)
 
-    public fun listAllVolumes(): Set<VolumeReference>
-    public fun createVolume(name: String): VolumeReference
-    public fun deleteVolume(volume: VolumeReference)
-
-    public fun createNetwork(name: String, driver: String): NetworkReference
-    public fun deleteNetwork(network: NetworkReference)
-    public fun getNetworkByNameOrID(searchFor: String): NetworkReference?
-
-    override fun close()
+public object NetworkDrivers {
+    public const val bridge: String = "bridge"
 }

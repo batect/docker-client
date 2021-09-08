@@ -17,17 +17,22 @@
 package batect.dockerclient
 
 import batect.dockerclient.native.CreateClient
+import batect.dockerclient.native.CreateNetwork
 import batect.dockerclient.native.CreateVolume
+import batect.dockerclient.native.DeleteNetwork
 import batect.dockerclient.native.DeleteVolume
 import batect.dockerclient.native.DisposeClient
 import batect.dockerclient.native.DockerClientHandle
 import batect.dockerclient.native.FreeCreateClientReturn
+import batect.dockerclient.native.FreeCreateNetworkReturn
 import batect.dockerclient.native.FreeCreateVolumeReturn
 import batect.dockerclient.native.FreeError
 import batect.dockerclient.native.FreeGetDaemonVersionInformationReturn
+import batect.dockerclient.native.FreeGetNetworkByNameOrIDReturn
 import batect.dockerclient.native.FreeListAllVolumesReturn
 import batect.dockerclient.native.FreePingReturn
 import batect.dockerclient.native.GetDaemonVersionInformation
+import batect.dockerclient.native.GetNetworkByNameOrID
 import batect.dockerclient.native.ListAllVolumes
 import batect.dockerclient.native.Ping
 import kotlinx.cinterop.CPointed
@@ -140,12 +145,58 @@ public actual class DockerClient : AutoCloseable {
         }
     }
 
+    public actual fun createNetwork(name: String, driver: String): NetworkReference {
+        val ret = CreateNetwork(clientHandle, name.cstr, driver.cstr)!!
+
+        try {
+            if (ret.pointed.Error != null) {
+                throw NetworkCreationFailedException(ret.pointed.Error!!.pointed)
+            }
+
+            return NetworkReference(ret.pointed.Response!!.pointed)
+        } finally {
+            FreeCreateNetworkReturn(ret)
+        }
+    }
+
+    public actual fun deleteNetwork(network: NetworkReference) {
+        val error = DeleteNetwork(clientHandle, network.id.cstr)
+
+        try {
+            if (error != null) {
+                throw NetworkDeletionFailedException(error.pointed)
+            }
+        } finally {
+            FreeError(error)
+        }
+    }
+
+    public actual fun getNetworkByNameOrID(searchFor: String): NetworkReference? {
+        val ret = GetNetworkByNameOrID(clientHandle, searchFor.cstr)!!
+
+        try {
+            if (ret.pointed.Error != null) {
+                throw NetworkRetrievalFailedException(ret.pointed.Error!!.pointed)
+            }
+
+            if (ret.pointed.Response == null) {
+                return null
+            }
+
+            return NetworkReference(ret.pointed.Response!!.pointed)
+        } finally {
+            FreeGetNetworkByNameOrIDReturn(ret)
+        }
+    }
+
     actual override fun close() {
         DisposeClient(clientHandle)
     }
 
     private fun VolumeReference(native: batect.dockerclient.native.VolumeReference): VolumeReference =
         VolumeReference(native.Name!!.toKString())
+
+    private fun NetworkReference(native: batect.dockerclient.native.NetworkReference): NetworkReference = NetworkReference(native.ID!!.toKString())
 
     private inline fun <reified NativeType : CPointed, KotlinType> fromArray(
         source: CPointer<CPointerVar<NativeType>>,

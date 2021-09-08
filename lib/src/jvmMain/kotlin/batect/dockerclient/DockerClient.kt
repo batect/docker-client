@@ -97,9 +97,42 @@ public actual class DockerClient : AutoCloseable {
         }
     }
 
+    public actual fun createNetwork(name: String, driver: String): NetworkReference {
+        nativeAPI.CreateNetwork(clientHandle, name, driver)!!.use { ret ->
+            if (ret.error != null) {
+                throw NetworkCreationFailedException(ret.error!!)
+            }
+
+            return NetworkReference(ret.response!!)
+        }
+    }
+
+    public actual fun deleteNetwork(network: NetworkReference) {
+        nativeAPI.DeleteNetwork(clientHandle, network.id).use { ret ->
+            if (ret != null) {
+                throw NetworkDeletionFailedException(ret)
+            }
+        }
+    }
+
+    public actual fun getNetworkByNameOrID(searchFor: String): NetworkReference? {
+        nativeAPI.GetNetworkByNameOrID(clientHandle, searchFor)!!.use { ret ->
+            if (ret.error != null) {
+                throw NetworkRetrievalFailedException(ret.error!!)
+            }
+
+            if (ret.response == null) {
+                return null
+            }
+
+            return NetworkReference(ret.response!!)
+        }
+    }
+
     actual override fun close() {
         nativeAPI.DisposeClient(clientHandle)
     }
 
     private fun VolumeReference(native: batect.dockerclient.native.VolumeReference): VolumeReference = VolumeReference(native.name.get())
+    private fun NetworkReference(native: batect.dockerclient.native.NetworkReference): NetworkReference = NetworkReference(native.id.get())
 }
