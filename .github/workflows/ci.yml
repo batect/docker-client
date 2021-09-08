@@ -71,6 +71,12 @@ jobs:
           rm -f  $HOME/.gradle/caches/journal-1/file-access.bin
           rm -f  $HOME/.gradle/caches/journal-1/*.lock
 
+      - name: Upload Golang wrapper libraries
+        uses: actions/upload-artifact@v2.2.4
+        with:
+          name: wrapper-libs-${{ runner.os }}
+          path: docker-client-wrapper/build/libs
+          if-no-files-found: error
 
   build-mac:
     name: "Build (macOS)"
@@ -135,6 +141,13 @@ jobs:
           rm -f  $HOME/.gradle/caches/journal-1/file-access.bin
           rm -f  $HOME/.gradle/caches/journal-1/*.lock
 
+      - name: Upload Golang wrapper libraries
+        uses: actions/upload-artifact@v2.2.4
+        with:
+          name: wrapper-libs-${{ runner.os }}
+          path: docker-client-wrapper/build/libs
+          if-no-files-found: error
+
   build-windows:
     name: "Build (Windows)"
     runs-on: windows-2019
@@ -193,3 +206,10 @@ jobs:
           Remove-Item -ErrorAction SilentlyContinue          ~/.gradle/caches/jars-*/*.lock
           Remove-Item -ErrorAction SilentlyContinue          ~/.gradle/caches/journal-1/file-access.bin
           Remove-Item -ErrorAction SilentlyContinue          ~/.gradle/caches/journal-1/*.lock
+
+      - name: Upload Golang wrapper libraries
+        uses: actions/upload-artifact@v2.2.4
+        with:
+          name: wrapper-libs-${{ runner.os }}
+          path: docker-client-wrapper/build/libs
+          if-no-files-found: error
