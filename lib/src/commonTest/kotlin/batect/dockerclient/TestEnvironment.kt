@@ -24,4 +24,16 @@ import kotlin.time.ExperimentalTime
 internal fun RootTestWithConfigBuilder.onlyIfDockerDaemonPresent(test: suspend TestContext.() -> Unit) =
     this.config(enabledIf = { getEnvironmentVariable("DISABLE_DOCKER_DAEMON_TESTS") != "1" }, test = test)
 
+internal val testEnvironmentContainerOperatingSystem: ContainerOperatingSystem
+    get() = when (val value = getEnvironmentVariable("DOCKER_CONTAINER_OPERATING_SYSTEM")) {
+        "windows" -> ContainerOperatingSystem.Windows
+        null, "", "linux" -> ContainerOperatingSystem.Linux
+        else -> throw IllegalArgumentException("Unknown value for 'DOCKER_CONTAINER_OPERATING_SYSTEM' environment variable: $value")
+    }
+
 expect fun getEnvironmentVariable(name: String): String?
+
+enum class ContainerOperatingSystem {
+    Linux,
+    Windows
+}

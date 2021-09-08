@@ -26,10 +26,14 @@ import kotlin.time.ExperimentalTime
 @ExperimentalTime
 class DockerClientNetworkManagementSpec : ShouldSpec({
     val client = closeAfterTest(DockerClient())
+    val networkDriver = when (testEnvironmentContainerOperatingSystem) {
+        ContainerOperatingSystem.Linux -> NetworkDrivers.bridge
+        ContainerOperatingSystem.Windows -> NetworkDrivers.nat
+    }
 
     should("be able to create, get and delete networks").onlyIfDockerDaemonPresent {
         val networkName = "docker-client-test-${Random.nextULong()}"
-        val networkFromCreate = client.createNetwork(networkName, NetworkDrivers.bridge)
+        val networkFromCreate = client.createNetwork(networkName, networkDriver)
 
         val networkFromGet = client.getNetworkByNameOrID(networkName)
         networkFromCreate shouldBe networkFromGet
@@ -42,11 +46,11 @@ class DockerClientNetworkManagementSpec : ShouldSpec({
 
     should("fail when creating a network with the same name as an existing network").onlyIfDockerDaemonPresent {
         val networkName = "docker-client-test-${Random.nextULong()}"
-        val network = client.createNetwork(networkName, NetworkDrivers.bridge)
+        val network = client.createNetwork(networkName, networkDriver)
 
         try {
             val exception = shouldThrow<NetworkCreationFailedException> {
-                client.createNetwork(networkName, NetworkDrivers.bridge)
+                client.createNetwork(networkName, networkDriver)
             }
 
             exception.message shouldBe "Error response from daemon: network with name $networkName already exists"

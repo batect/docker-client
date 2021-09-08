@@ -165,19 +165,27 @@ val KonanTarget.golangOSName: String
         else -> throw UnsupportedOperationException("Unknown target family: $family")
     }
 
-val disableDockerDaemonTestsEnvironmentVariableName = "DISABLE_DOCKER_DAEMON_TESTS"
-val disableDockerDaemonTestsEnvironmentVariableValue = System.getenv(disableDockerDaemonTestsEnvironmentVariableName) ?: ""
+val testEnvironmentVariables = setOf(
+    "DISABLE_DOCKER_DAEMON_TESTS",
+    "DOCKER_CONTAINER_OPERATING_SYSTEM"
+)
 
 tasks.named<Test>("jvmTest") {
     useJUnitPlatform()
 
-    inputs.property("disableDockerDaemonTests", disableDockerDaemonTestsEnvironmentVariableValue)
-    environment(disableDockerDaemonTestsEnvironmentVariableName, disableDockerDaemonTestsEnvironmentVariableValue)
+    testEnvironmentVariables.forEach { name ->
+        val value = System.getenv(name) ?: ""
+        inputs.property(name, value)
+        environment(name, value)
+    }
 }
 
 tasks.withType<KotlinNativeHostTest>().configureEach {
-    inputs.property("disableDockerDaemonTests", disableDockerDaemonTestsEnvironmentVariableValue)
-    environment(disableDockerDaemonTestsEnvironmentVariableName, disableDockerDaemonTestsEnvironmentVariableValue)
+    testEnvironmentVariables.forEach { name ->
+        val value = System.getenv(name) ?: ""
+        inputs.property(name, value)
+        environment(name, value)
+    }
 }
 
 tasks.withType<AbstractTestTask>().configureEach {

@@ -18,6 +18,17 @@ package batect.dockerclient
 
 public data class NetworkReference(val id: String)
 
+/**
+ * Common network drivers used by Docker.
+ */
 public object NetworkDrivers {
+    /**
+     * Default network type on Linux. Not available on Windows.
+     */
     public const val bridge: String = "bridge"
+
+    /**
+     * Default network type on Windows. Not available on Linux.
+     */
+    public const val nat: String = "nat"
 }
