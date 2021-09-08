@@ -32,10 +32,12 @@ jobs:
           - name: Windows
             os: windows-2019
             artefactName: windows
+            extraGradleArgs: --exclude-task :docker-client-wrapper:lint
 
           - name: macOS
             os: macos-11
             artefactName: macos
+            extraGradleArgs: --exclude-task :docker-client-wrapper:lint
 
     name: "Build wrapper (${{ matrix.name }})"
     runs-on: ${{ matrix.os }}
@@ -64,8 +66,16 @@ jobs:
           key: gradle-wrapper-packages-${{ runner.os }}-${{ hashFiles('**/*.gradle.kts') }}
           restore-keys: gradle-wrapper-packages-${{ runner.os }}
 
+      - name: Cache Kotlin/Native dependencies
+        id: cache-kotlin-native
+        uses: actions/cache@v2.1.6
+        with:
+          path: ~/.konan
+          key: kotlin-native-${{ runner.os }}-${{ hashFiles('**/*.gradle.kts') }}
+          restore-keys: kotlin-native-${{ runner.os }}
+
       - name: Build and test
-        run: ./gradlew --parallel docker-client-wrapper:check
+        run: ./gradlew --parallel docker-client-wrapper:check ${{ matrix.extraGradleArgs }}
 
       - name: Stop Gradle daemon
         run: ./gradlew --stop
