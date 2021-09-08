@@ -102,8 +102,11 @@ jobs:
         include:
           - name: Linux
             os: ubuntu-20.04
+
           - name: Windows
             os: windows-2019
+            containerOperatingSystem: windows
+
           - name: macOS
             os: macos-11
             disableDockerDaemonTests: 1
@@ -174,6 +177,7 @@ jobs:
         run: ./gradlew --parallel check
         env:
           DISABLE_DOCKER_DAEMON_TESTS: ${{ matrix.disableDockerDaemonTests }}
+          DOCKER_CONTAINER_OPERATING_SYSTEM: ${{ matrix.containerOperatingSystem }}
 
       - name: Stop Gradle daemon
         run: ./gradlew --stop
