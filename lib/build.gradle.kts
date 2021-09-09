@@ -247,13 +247,13 @@ val generateJvm = tasks.register("generateJvm") {
     dependsOn(generateJvmMethods)
 }
 
-tasks.named("compileKotlinJvm") {
-    dependsOn(generateJvm)
-}
+val dependOnGeneratedCode = setOf(
+    "compileKotlinJvm",
+    "jvmSourcesJar",
+    "sourcesJar"
+)
 
-tasks.named("jvmSourcesJar") {
-    dependsOn(generateJvm)
-}
+dependOnGeneratedCode.forEach { task -> tasks.named(task) { dependsOn(generateJvm) } }
 
 afterEvaluate {
     tasks.named("spotlessKotlin") {
@@ -270,6 +270,14 @@ publishing {
             val publication = this
 
             tasks.withType<AbstractPublishToMaven>()
+                .matching { it.publication == publication }
+                .all {
+                    val task = this
+
+                    task.onlyIf { buildIsRunningOnLinux }
+                }
+
+            tasks.withType<GenerateModuleMetadata>()
                 .matching { it.publication == publication }
                 .all {
                     val task = this
