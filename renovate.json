@@ -20,7 +20,7 @@
                 ".gradle.kts$"
             ],
             "matchStrings": [
-                "golangCILintVersion\\.set\\(\"v(?<currentValue>[\\d.]+)\"\\)"
+                "golangCILintVersion\\.set\\(\"(?<currentValue>v[\\d.]+)\"\\)"
             ],
             "datasourceTemplate": "github-releases",
             "depNameTemplate": "golangci/golangci-lint"
