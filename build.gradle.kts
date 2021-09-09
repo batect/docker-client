@@ -18,6 +18,7 @@ import java.nio.file.Files
 
 plugins {
     id("com.diffplug.spotless")
+    id("org.ajoberstar.reckon") version "0.13.0"
 }
 
 repositories {
@@ -28,12 +29,17 @@ tasks.named<Wrapper>("wrapper") {
     distributionType = Wrapper.DistributionType.ALL
 }
 
+reckon {
+    scopeFromProp()
+    stageFromProp("prerelease")
+}
+
 val licenseText = Files.readString(project.projectDir.resolve("gradle").resolve("license.txt").toPath())!!
 
 allprojects {
     afterEvaluate {
         if (extensions.findByName("spotless") == null) {
-            throw RuntimeException("Project ${this.displayName} does not have the Spotless plugin applied.")
+            throw RuntimeException("Project ${this.path} does not have the Spotless plugin applied.")
         }
 
         val isKotlinProject = plugins.hasPlugin("org.jetbrains.kotlin.multiplatform")
