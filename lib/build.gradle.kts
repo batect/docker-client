@@ -287,3 +287,13 @@ publishing {
         }
     }
 }
+
+tasks.named("allMetadataJar") {
+    onlyIf { buildIsRunningOnLinux }
+}
+
+afterEvaluate {
+    tasks.named("compileNativeMainKotlinMetadata") {
+        onlyIf { buildIsRunningOnLinux }
+    }
+}
