@@ -197,7 +197,7 @@ jobs:
 
       # FIXME: only run these next two steps once all OSes have passed so we don't end up with a partial publication if one OS succeeds and another fails
       - name: Publish snapshot
-        run: ./batect publishSnapshot
+        run: ./gradlew publishSnapshot
         env:
           ORG_GRADLE_PROJECT_sonatypeUsername: ${{ env.SONATYPE_USERNAME }}
           ORG_GRADLE_PROJECT_sonatypePassword: ${{ secrets.SONATYPE_PASSWORD }}
@@ -206,7 +206,7 @@ jobs:
         if: github.repository == 'batect/docker-client' && github.ref == 'refs/heads/main' && github.event_name == 'push'
 
       - name: Publish release
-        run: ./batect publishRelease
+        run: ./gradlew publishRelease
         env:
           ORG_GRADLE_PROJECT_sonatypeUsername: ${{ env.SONATYPE_USERNAME }}
           ORG_GRADLE_PROJECT_sonatypePassword: ${{ secrets.SONATYPE_PASSWORD }}
