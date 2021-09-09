@@ -287,6 +287,35 @@ publishing {
                     task.onlyIf { buildIsRunningOnLinux }
                 }
         }
+
+        withType<MavenPublication>().configureEach {
+            pom {
+                name.set("docker-client")
+                description.set("A Docker client for Kotlin/JVM and Kotlin/Native")
+                url.set("https://github.com/batect/docker-client")
+
+                licenses {
+                    license {
+                        name.set("The Apache License, Version 2.0")
+                        url.set("http://www.apache.org/licenses/LICENSE-2.0.txt")
+                    }
+                }
+
+                developers {
+                    developer {
+                        id.set("charleskorn")
+                        name.set("Charles Korn")
+                        email.set("me@charleskorn.com")
+                    }
+                }
+
+                scm {
+                    connection.set("scm:git:git://github.com/batect/docker-client.git")
+                    developerConnection.set("scm:git:ssh://github.com:batect/docker-client.git")
+                    url.set("https://github.com/batect/docker-client")
+                }
+            }
+        }
     }
 }
 
