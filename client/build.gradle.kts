@@ -34,6 +34,7 @@ plugins {
     id("io.kotest.multiplatform") version "5.0.0.5"
     id("com.diffplug.spotless")
     `maven-publish`
+    signing
 }
 
 repositories {
@@ -327,4 +328,22 @@ afterEvaluate {
     tasks.named("compileNativeMainKotlinMetadata") {
         onlyIf { buildIsRunningOnLinux }
     }
+}
+
+tasks.register("publishSnapshot") {
+    dependsOn("publishAllPublicationsToSonatypeRepository")
+}
+
+tasks.register("publishRelease") {
+    dependsOn("publishAllPublicationsToSonatypeRepository")
+    dependsOn("closeAndReleaseSonatypeStagingRepository")
+}
+
+signing {
+    val signingKey: String? by project
+    val signingPassword: String? by project
+
+    useInMemoryPgpKeys(signingKey, signingPassword)
+
+    sign(publishing.publications)
 }

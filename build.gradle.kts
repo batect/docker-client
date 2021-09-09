@@ -19,6 +19,7 @@ import java.nio.file.Files
 plugins {
     id("com.diffplug.spotless")
     id("org.ajoberstar.reckon") version "0.13.0"
+    id("io.github.gradle-nexus.publish-plugin") version "1.1.0"
 }
 
 repositories {
@@ -36,7 +37,20 @@ tasks.register("generate") {
 
 reckon {
     scopeFromProp()
-    stageFromProp("prerelease")
+    snapshotFromProp()
+}
+
+nexusPublishing {
+    repositories {
+        sonatype {
+            nexusUrl.set(uri("https://s01.oss.sonatype.org/service/local/"))
+            snapshotRepositoryUrl.set(uri("https://s01.oss.sonatype.org/content/repositories/snapshots/"))
+        }
+    }
+}
+
+tasks.named("closeSonatypeStagingRepository") {
+    mustRunAfter(":client:publishAllPublicationsToSonatypeRepository")
 }
 
 val licenseText = Files.readString(project.projectDir.resolve("gradle").resolve("license.txt").toPath())!!
