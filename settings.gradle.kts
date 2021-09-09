@@ -22,5 +22,5 @@ pluginManagement {
     }
 }
 
-include("docker-client-wrapper")
-include("lib")
+include("golang-wrapper")
+include("client")

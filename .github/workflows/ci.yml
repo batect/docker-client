@@ -74,7 +74,7 @@ jobs:
           restore-keys: kotlin-native-${{ runner.os }}
 
       - name: Build and test
-        run: ./gradlew --parallel docker-client-wrapper:buildSharedLibs
+        run: ./gradlew --parallel golang-wrapper:buildSharedLibs
 
       - name: Stop Gradle daemon
         run: ./gradlew --stop
@@ -101,7 +101,7 @@ jobs:
         uses: actions/upload-artifact@v2.2.4
         with:
           name: wrapper-libs-${{ matrix.artefactName }}
-          path: docker-client-wrapper/build/libs
+          path: golang-wrapper/build/libs
           if-no-files-found: error
 
   build-and-test:
@@ -166,31 +166,31 @@ jobs:
         uses: actions/download-artifact@v2.0.10
         with:
           name: wrapper-libs-linux
-          path: docker-client-wrapper/build/libs
+          path: golang-wrapper/build/libs
 
       - name: Fetch macOS wrapper libraries
         uses: actions/download-artifact@v2.0.10
         with:
           name: wrapper-libs-macos
-          path: docker-client-wrapper/build/libs
+          path: golang-wrapper/build/libs
 
       - name: Fetch Windows wrapper libraries
         uses: actions/download-artifact@v2.0.10
         with:
           name: wrapper-libs-windows
-          path: docker-client-wrapper/build/libs
+          path: golang-wrapper/build/libs
 
       - name: Build, test and package
-        run: ./gradlew --parallel lib:check lib:jvmJar
+        run: ./gradlew --parallel client:check client:jvmJar
         env:
           DISABLE_DOCKER_DAEMON_TESTS: ${{ matrix.disableDockerDaemonTests }}
           DOCKER_CONTAINER_OPERATING_SYSTEM: ${{ matrix.containerOperatingSystem }}
 
       - name: Check JAR contains native libraries for all operating systems
-        run: ./gradlew --parallel lib:checkJarContents
+        run: ./gradlew --parallel client:checkJarContents
 
       - name: Publish to local Maven repository
-        run: ./gradlew --parallel lib:publishToMavenLocal
+        run: ./gradlew --parallel client:publishToMavenLocal
         if: github.repository == 'batect/docker-client' && github.ref == 'refs/heads/main' && github.event_name == 'push'
 
       - name: Stop Gradle daemon

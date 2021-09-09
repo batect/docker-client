@@ -37,6 +37,8 @@ reckon {
 val licenseText = Files.readString(project.projectDir.resolve("gradle").resolve("license.txt").toPath())!!
 
 allprojects {
+    group = "dev.batect.docker"
+
     afterEvaluate {
         if (extensions.findByName("spotless") == null) {
             throw RuntimeException("Project ${this.path} does not have the Spotless plugin applied.")

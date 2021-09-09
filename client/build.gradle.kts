@@ -41,7 +41,9 @@ repositories {
     maven("https://oss.sonatype.org/content/repositories/snapshots")
 }
 
-val dockerClientWrapperProject = project(":docker-client-wrapper")
+evaluationDependsOn(":golang-wrapper")
+
+val golangWrapperProject = project(":golang-wrapper")
 val jvmLibsDir = buildDir.resolve("resources").resolve("jvm")
 
 val buildIsRunningOnLinux = org.gradle.internal.os.OperatingSystem.current().isLinux
@@ -103,7 +105,7 @@ kotlin {
         if (target.platformType == KotlinPlatformType.native) {
             addNativeCommonSourceSetDependencies()
 
-            target.compilations.getByName<KotlinNativeCompilation>("main") {
+            target.compilations.named<KotlinNativeCompilation>("main") {
                 addDockerClientWrapperCinterop()
             }
         }
@@ -111,8 +113,8 @@ kotlin {
 }
 
 fun KotlinNativeCompilation.addDockerClientWrapperCinterop() {
-    val generationTask = dockerClientWrapperProject.tasks.named<GenerateGolangTypes>("generateTypes")
-    val sourceTask = dockerClientWrapperProject.tasks.named<GolangBuild>("buildArchiveLib${konanTarget.golangOSName.capitalize()}${konanTarget.architecture.name.toLowerCase().capitalize()}")
+    val generationTask = golangWrapperProject.tasks.named<GenerateGolangTypes>("generateTypes")
+    val sourceTask = golangWrapperProject.tasks.named<GolangBuild>("buildArchiveLib${konanTarget.golangOSName.capitalize()}${konanTarget.architecture.name.toLowerCase().capitalize()}")
 
     cinterops.register("dockerClientWrapper") {
         extraOpts("-libraryPath", sourceTask.get().outputDirectory.get())
@@ -199,11 +201,11 @@ tasks.withType<AbstractTestTask>().configureEach {
     }
 }
 
-val buildSharedLibTasks = dockerClientWrapperProject.tasks.names.filter { it.startsWith("buildSharedLib") && it != "buildSharedLibs" }
+val buildSharedLibTasks = golangWrapperProject.tasks.names.filter { it.startsWith("buildSharedLib") && it != "buildSharedLibs" }
 
 val copyJvmLibs = tasks.register<Copy>("copyJvmLibs") {
     buildSharedLibTasks.forEach { taskName ->
-        val task = dockerClientWrapperProject.tasks.getByName<GolangBuild>(taskName)
+        val task = golangWrapperProject.tasks.getByName<GolangBuild>(taskName)
 
         from(task.outputLibraryFile) {
             into("batect/dockerclient/libs/${task.targetOperatingSystem.get().name}/${task.targetArchitecture.get().jnrName}".toLowerCase())
@@ -234,7 +236,7 @@ val generateJvmTypes = tasks.register<GenerateKotlinJVMTypes>("generateJvmTypes"
 
 val generateJvmMethods = tasks.register<GenerateKotlinJVMMethods>("generateJvmMethods") {
     buildSharedLibTasks.forEach { taskName ->
-        val task = dockerClientWrapperProject.tasks.getByName<GolangBuild>(taskName)
+        val task = golangWrapperProject.tasks.getByName<GolangBuild>(taskName)
 
         sourceHeaderFiles.from(task.outputHeaderFile)
     }
