@@ -1,15 +1,29 @@
 {
-  "extends": [
-    "config:base",
-    ":prHourlyLimitNone",
-    ":prConcurrentLimitNone",
-    ":switchToGradleLite",
-    "github>batect/renovate-config:default"
-  ],
-  "reviewers": [
-    "charleskorn"
-  ],
-  "automerge": true,
-  "labels": ["is:dependency-update"],
-  "rebaseWhen": "behind-base-branch"
+    "extends": [
+        "config:base",
+        ":prHourlyLimitNone",
+        ":prConcurrentLimitNone",
+        ":switchToGradleLite",
+        "github>batect/renovate-config:default"
+    ],
+    "reviewers": [
+        "charleskorn"
+    ],
+    "automerge": true,
+    "labels": [
+        "is:dependency-update"
+    ],
+    "rebaseWhen": "behind-base-branch",
+    "regexManagers": [
+        {
+            "fileMatch": [
+                ".gradle.kts$"
+            ],
+            "matchStrings": [
+                "golangCILintVersion\\.set\\(\"v(?<currentValue>[\\d.]+)\"\\)"
+            ],
+            "datasourceTemplate": "github-releases",
+            "depNameTemplate": "golangci/golangci-lint"
+        }
+    ]
 }
