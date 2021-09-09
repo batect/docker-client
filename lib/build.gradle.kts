@@ -278,7 +278,7 @@ publishing {
                 }
 
             tasks.withType<GenerateModuleMetadata>()
-                .matching { it.publication == publication }
+                .matching { it.publication.get() == publication }
                 .all {
                     val task = this
 
