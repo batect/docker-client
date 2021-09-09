@@ -2,6 +2,7 @@
 
 [![CI](https://github.com/batect/docker-client/actions/workflows/ci.yml/badge.svg)](https://github.com/batect/docker-client/actions/workflows/ci.yml)
 [![License](https://img.shields.io/github/license/batect/batect.svg)](https://opensource.org/licenses/Apache-2.0)
+[![Maven Central](https://img.shields.io/maven-central/v/dev.batect.docker/client.svg?label=maven%20central)](https://search.maven.org/search?q=g:%22dev.batect.docker%22%20AND%20a:%22client%22)
 
 A Docker client library for Kotlin/JVM and Kotlin/Native.
 
@@ -11,6 +12,22 @@ A Docker client library for Kotlin/JVM and Kotlin/Native.
 The initial focus is on providing the APIs used by [Batect](https://batect.dev).
 
 If you require an API not provided here, please [open a new issue](https://github.com/batect/docker-client/issues).
+
+## How to use
+
+### Gradle reference
+
+Using the Kotlin Gradle DSL:
+
+```kotlin
+dependencies {
+  implementation("dev.batect.docker:client:<version number here>") // Get the latest version number from https://github.com/batect/docker-client/releases/latest
+}
+```
+
+Check the [releases page](https://github.com/batect/docker-client/releases/latest) for the latest release information,
+and the [Maven Central page](https://search.maven.org/artifact/dev.batect.docker/client) for examples of how
+to reference the library in other build systems.
 
 ## Requirements
 
