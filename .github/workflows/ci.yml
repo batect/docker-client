@@ -209,10 +209,3 @@ jobs:
           rm -f  $HOME/.gradle/caches/transforms-1/transforms-1.lock
           rm -f  $HOME/.gradle/caches/journal-1/file-access.bin
           rm -f  $HOME/.gradle/caches/journal-1/*.lock
-
-      - name: Upload JVM .jar
-        uses: actions/upload-artifact@v2.2.4
-        with:
-          name: jar-${{ runner.os }}
-          path: lib/build/libs/lib-jvm.jar
-          if-no-files-found: error
