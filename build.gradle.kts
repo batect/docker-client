@@ -29,6 +29,11 @@ tasks.named<Wrapper>("wrapper") {
     distributionType = Wrapper.DistributionType.ALL
 }
 
+tasks.register("generate") {
+    dependsOn(":golang-wrapper:generateTypes")
+    dependsOn(":client:generateJvm")
+}
+
 reckon {
     scopeFromProp()
     stageFromProp("prerelease")

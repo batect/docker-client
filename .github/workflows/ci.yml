@@ -189,6 +189,9 @@ jobs:
       - name: Check JAR contains native libraries for all operating systems
         run: ./gradlew --parallel client:checkJarContents
 
+      - name: Check for outdated generated code
+        run: if [ ! -z "$(git status --porcelain)" ]; then echo "Generated code changed. Do you need to run './gradlew generate'?">/dev/stderr; echo; git status --porcelain; echo; git diff; exit 1; fi
+
       - name: Publish to local Maven repository
         run: ./gradlew --parallel client:publishToMavenLocal
         if: github.repository == 'batect/docker-client' && github.ref == 'refs/heads/main' && github.event_name == 'push'
