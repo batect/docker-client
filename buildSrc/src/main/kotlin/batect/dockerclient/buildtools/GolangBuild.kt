@@ -115,8 +115,8 @@ abstract class GolangBuild @Inject constructor(private val execActionFactory: Ex
             project.provider {
                 if (targetOperatingSystem.get() == OperatingSystem.Linux) {
                     when (targetArchitecture.get()) {
-                        Architecture.X86, Architecture.X64 -> "docker.elastic.co/beats-dev/golang-crossbuild:1.16.4-main-debian10"
-                        Architecture.Arm64 -> "docker.elastic.co/beats-dev/golang-crossbuild:1.16.4-arm-debian10"
+                        Architecture.X86, Architecture.X64 -> "docker.elastic.co/beats-dev/golang-crossbuild:$golangVersion-main-debian10"
+                        Architecture.Arm64 -> "docker.elastic.co/beats-dev/golang-crossbuild:$golangVersion-arm-debian10"
                         else -> throw IllegalArgumentException("Cannot get Docker image for architecture ${targetArchitecture.get().name}")
                     }
                 } else {
@@ -213,4 +213,8 @@ abstract class GolangBuild @Inject constructor(private val execActionFactory: Ex
         } else {
             outputLibraryFile.get().toString()
         }
+
+    companion object {
+        private const val golangVersion = "1.16.4"
+    }
 }

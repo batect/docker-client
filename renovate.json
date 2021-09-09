@@ -24,6 +24,33 @@
             ],
             "datasourceTemplate": "github-releases",
             "depNameTemplate": "golangci/golangci-lint"
+        },
+        {
+            "fileMatch": [
+                "^.github/workflows/ci.yml$"
+            ],
+            "matchStrings": [
+                "go-version: (?<currentValue>[\\d.]+)"
+            ],
+            "datasourceTemplate": "github-tags",
+            "depNameTemplate": "golang/go"
+        },
+        {
+            "fileMatch": [
+                "GolangBuild.kt$"
+            ],
+            "matchStrings": [
+                "val golangVersion = \"(?<currentValue>[\\d.]+)\""
+            ],
+            "datasourceTemplate": "github-tags",
+            "depNameTemplate": "golang/go"
+        }
+    ],
+    "packageRules": [
+        {
+            "matchPackageNames": ["golang/go"],
+            "matchDatasources": ["github-tags"],
+            "extractVersion": "^go(?<version>[\\d.]+)"
         }
     ]
 }
