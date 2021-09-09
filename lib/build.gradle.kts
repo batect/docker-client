@@ -33,6 +33,7 @@ plugins {
     kotlin("multiplatform") version "1.5.30"
     id("io.kotest.multiplatform") version "5.0.0.5"
     id("com.diffplug.spotless")
+    `maven-publish`
 }
 
 repositories {
@@ -250,8 +251,31 @@ tasks.named("compileKotlinJvm") {
     dependsOn(generateJvm)
 }
 
+tasks.named("jvmSourcesJar") {
+    dependsOn(generateJvm)
+}
+
 afterEvaluate {
     tasks.named("spotlessKotlin") {
         dependsOn(generateJvm)
+    }
+}
+
+publishing {
+    publications {
+        // This block does two things:
+        // - it limits Linux publications to only be published from Linux (Kotlin/Native supports cross-compilation of Linux targets from macOS and Windows)
+        // - it ensures that the main multiplatform publication and the JVM publication are only published from Linux on CI
+        matching { it.name.startsWith("linux") || it.name == "kotlinMultiplatform" || it.name == "jvm" }.all {
+            val publication = this
+
+            tasks.withType<AbstractPublishToMaven>()
+                .matching { it.publication == publication }
+                .all {
+                    val task = this
+
+                    task.onlyIf { buildIsRunningOnLinux }
+                }
+        }
     }
 }

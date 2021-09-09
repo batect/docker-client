@@ -189,6 +189,10 @@ jobs:
       - name: Check JAR contains native libraries for all operating systems
         run: ./gradlew --parallel lib:checkJarContents
 
+      - name: Publish to local Maven repository
+        run: ./gradlew --parallel lib:publishToMavenLocal
+        if: github.repository == 'batect/docker-client' && github.ref == 'refs/heads/main' && github.event_name == 'push'
+
       - name: Stop Gradle daemon
         run: ./gradlew --stop
 
