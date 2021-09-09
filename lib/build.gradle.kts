@@ -14,6 +14,7 @@
     limitations under the License.
 */
 
+import batect.dockerclient.buildtools.CheckJarContents
 import batect.dockerclient.buildtools.GolangBuild
 import batect.dockerclient.buildtools.codegen.GenerateGolangTypes
 import batect.dockerclient.buildtools.codegen.GenerateKotlinJVMMethods
@@ -215,6 +216,15 @@ val copyJvmLibs = tasks.register<Copy>("copyJvmLibs") {
 
 tasks.named("jvmProcessResources") {
     dependsOn(copyJvmLibs)
+}
+
+tasks.register<CheckJarContents>("checkJarContents") {
+    jarFile.set(tasks.getByName<Jar>("jvmJar").archiveFile)
+    expectedFiles.add("batect/dockerclient/libs/darwin/aarch64/libdockerclientwrapper.dylib")
+    expectedFiles.add("batect/dockerclient/libs/darwin/x86_64/libdockerclientwrapper.dylib")
+    expectedFiles.add("batect/dockerclient/libs/linux/aarch64/libdockerclientwrapper.so")
+    expectedFiles.add("batect/dockerclient/libs/linux/x86_64/libdockerclientwrapper.so")
+    expectedFiles.add("batect/dockerclient/libs/windows/x86_64/dockerclientwrapper.dll")
 }
 
 val generateJvmTypes = tasks.register<GenerateKotlinJVMTypes>("generateJvmTypes") {

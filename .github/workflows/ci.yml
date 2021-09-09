@@ -186,6 +186,9 @@ jobs:
           DISABLE_DOCKER_DAEMON_TESTS: ${{ matrix.disableDockerDaemonTests }}
           DOCKER_CONTAINER_OPERATING_SYSTEM: ${{ matrix.containerOperatingSystem }}
 
+      - name: Check JAR contains native libraries for all operating systems
+        run: ./gradlew --parallel lib:checkJarContents
+
       - name: Stop Gradle daemon
         run: ./gradlew --stop
 
