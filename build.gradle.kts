@@ -53,6 +53,15 @@ tasks.named("closeSonatypeStagingRepository") {
     mustRunAfter(":client:publishAllPublicationsToSonatypeRepository")
 }
 
+tasks.register("publishSnapshot") {
+    dependsOn(":client:publishAllPublicationsToSonatypeRepository")
+}
+
+tasks.register("publishRelease") {
+    dependsOn(":client:publishAllPublicationsToSonatypeRepository")
+    dependsOn("closeAndReleaseSonatypeStagingRepository")
+}
+
 val licenseText = Files.readString(project.projectDir.resolve("gradle").resolve("license.txt").toPath())!!
 
 allprojects {

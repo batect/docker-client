@@ -330,15 +330,6 @@ afterEvaluate {
     }
 }
 
-tasks.register("publishSnapshot") {
-    dependsOn("publishAllPublicationsToSonatypeRepository")
-}
-
-tasks.register("publishRelease") {
-    dependsOn("publishAllPublicationsToSonatypeRepository")
-    dependsOn("closeAndReleaseSonatypeStagingRepository")
-}
-
 signing {
     val signingKey: String? by project
     val signingPassword: String? by project
