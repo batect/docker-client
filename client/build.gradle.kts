@@ -264,6 +264,11 @@ afterEvaluate {
     }
 }
 
+// Generate dummy Javadoc JAR to make Sonatype happy: see https://github.com/Kotlin/dokka/issues/1753#issuecomment-784173735
+val javadocJar by tasks.register<Jar>("javadocJar") {
+    archiveClassifier.set("javadoc")
+}
+
 publishing {
     publications {
         // This block does two things:
@@ -287,6 +292,10 @@ publishing {
 
                     task.onlyIf { buildIsRunningOnLinux }
                 }
+        }
+
+        named<MavenPublication>("jvm") {
+            artifact(javadocJar)
         }
 
         withType<MavenPublication>().configureEach {
