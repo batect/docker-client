@@ -68,7 +68,7 @@ kotlin {
 
         val jvmMain by getting {
             dependencies {
-                implementation("com.github.jnr:jnr-ffi:2.2.6")
+                implementation("com.github.jnr:jnr-ffi:2.2.7")
             }
 
             resources.srcDir(jvmLibsDir)
