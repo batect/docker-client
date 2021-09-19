@@ -51,6 +51,20 @@
             "matchPackageNames": ["golang/go"],
             "matchDatasources": ["github-tags"],
             "extractVersion": "^go(?<version>[\\d.]+)"
+        },
+        {
+            "groupName": "Kotlin",
+            "matchManagers": ["gradle-lite"],
+            "matchPackagePatterns": ["^org\\.jetbrains\\.kotlin\\."],
+            "matchDepTypes": ["plugin"]
+        },
+        {
+            "matchDatasources": ["maven"],
+            "matchPackagePatterns": ["\\.gradle\\.plugin$"],
+            "registryUrls": [
+                "https://repo.maven.apache.org/maven2/",
+                "https://plugins.gradle.org/m2/"
+            ]
         }
     ]
 }
