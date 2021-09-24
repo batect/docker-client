@@ -17,6 +17,7 @@ package batect.dockerclient
 
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.core.spec.style.ShouldSpec
+import io.kotest.matchers.collections.shouldBeIn
 import io.kotest.matchers.shouldBe
 import kotlin.time.ExperimentalTime
 
@@ -64,7 +65,14 @@ class DockerClientImagePullSpec: ShouldSpec({
             client.pullImage(imageThatDoesNotExist)
         }
 
-        exception.message shouldBe "Error response from daemon: manifest for $imageThatDoesNotExist not found: manifest unknown: manifest unknown"
+        // Docker returns a different error message depending on whether or not the user is logged in to the source registry
+        exception.message shouldBeIn setOf(
+            // User is logged in
+            "Error response from daemon: manifest for $imageThatDoesNotExist not found: manifest unknown: manifest unknown",
+
+            // User is not logged in
+            "Error response from daemonː pull access denied for $imageThatDoesNotExist, repository does not exist or may require 'docker login'ː deniedː requested access to the resource is denied"
+        )
     }
 
     should("return null when getting a non-existent image").onlyIfDockerDaemonPresent {
