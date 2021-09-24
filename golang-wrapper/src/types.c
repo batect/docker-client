@@ -244,6 +244,58 @@ void FreeGetNetworkByNameOrIDReturn(GetNetworkByNameOrIDReturn* value) {
     free(value);
 }
 
+ImageReference* AllocImageReference() {
+    ImageReference* value = malloc(sizeof(ImageReference));
+    value->ID = NULL;
+
+    return value;
+}
+
+void FreeImageReference(ImageReference* value) {
+    if (value == NULL) {
+        return;
+    }
+
+    free(value->ID);
+    free(value);
+}
+
+PullImageReturn* AllocPullImageReturn() {
+    PullImageReturn* value = malloc(sizeof(PullImageReturn));
+    value->Response = NULL;
+    value->Error = NULL;
+
+    return value;
+}
+
+void FreePullImageReturn(PullImageReturn* value) {
+    if (value == NULL) {
+        return;
+    }
+
+    FreeImageReference(value->Response);
+    FreeError(value->Error);
+    free(value);
+}
+
+GetImageReturn* AllocGetImageReturn() {
+    GetImageReturn* value = malloc(sizeof(GetImageReturn));
+    value->Response = NULL;
+    value->Error = NULL;
+
+    return value;
+}
+
+void FreeGetImageReturn(GetImageReturn* value) {
+    if (value == NULL) {
+        return;
+    }
+
+    FreeImageReference(value->Response);
+    FreeError(value->Error);
+    free(value);
+}
+
 VolumeReference** CreateVolumeReferenceArray(uint64_t size) {
     return malloc(size * sizeof(VolumeReference*));
 }

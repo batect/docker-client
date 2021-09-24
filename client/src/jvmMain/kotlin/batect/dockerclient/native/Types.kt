@@ -209,3 +209,45 @@ internal class GetNetworkByNameOrIDReturn(runtime: Runtime) : Struct(runtime), A
         nativeAPI.FreeGetNetworkByNameOrIDReturn(this)
     }
 }
+
+internal class ImageReference(runtime: Runtime) : Struct(runtime), AutoCloseable {
+    constructor(pointer: jnr.ffi.Pointer) : this(pointer.runtime) {
+        this.useMemory(pointer)
+    }
+
+    val id = UTF8StringRef()
+
+    override fun close() {
+        nativeAPI.FreeImageReference(this)
+    }
+}
+
+internal class PullImageReturn(runtime: Runtime) : Struct(runtime), AutoCloseable {
+    constructor(pointer: jnr.ffi.Pointer) : this(pointer.runtime) {
+        this.useMemory(pointer)
+    }
+
+    private val responsePointer = Pointer()
+    val response: ImageReference? by lazy { if (responsePointer.intValue() == 0) null else ImageReference(responsePointer.get()) }
+    private val errorPointer = Pointer()
+    val error: Error? by lazy { if (errorPointer.intValue() == 0) null else Error(errorPointer.get()) }
+
+    override fun close() {
+        nativeAPI.FreePullImageReturn(this)
+    }
+}
+
+internal class GetImageReturn(runtime: Runtime) : Struct(runtime), AutoCloseable {
+    constructor(pointer: jnr.ffi.Pointer) : this(pointer.runtime) {
+        this.useMemory(pointer)
+    }
+
+    private val responsePointer = Pointer()
+    val response: ImageReference? by lazy { if (responsePointer.intValue() == 0) null else ImageReference(responsePointer.get()) }
+    private val errorPointer = Pointer()
+    val error: Error? by lazy { if (errorPointer.intValue() == 0) null else Error(errorPointer.get()) }
+
+    override fun close() {
+        nativeAPI.FreeGetImageReturn(this)
+    }
+}

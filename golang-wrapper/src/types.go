@@ -37,6 +37,9 @@ type ListAllVolumesReturn *C.ListAllVolumesReturn
 type NetworkReference *C.NetworkReference
 type CreateNetworkReturn *C.CreateNetworkReturn
 type GetNetworkByNameOrIDReturn *C.GetNetworkByNameOrIDReturn
+type ImageReference *C.ImageReference
+type PullImageReturn *C.PullImageReturn
+type GetImageReturn *C.GetImageReturn
 
 func newError(
     Type string,
@@ -181,6 +184,37 @@ func newGetNetworkByNameOrIDReturn(
     Error Error,
 ) GetNetworkByNameOrIDReturn {
     value := C.AllocGetNetworkByNameOrIDReturn()
+    value.Response = Response
+    value.Error = Error
+
+    return value
+}
+
+func newImageReference(
+    ID string,
+) ImageReference {
+    value := C.AllocImageReference()
+    value.ID = C.CString(ID)
+
+    return value
+}
+
+func newPullImageReturn(
+    Response ImageReference,
+    Error Error,
+) PullImageReturn {
+    value := C.AllocPullImageReturn()
+    value.Response = Response
+    value.Error = Error
+
+    return value
+}
+
+func newGetImageReturn(
+    Response ImageReference,
+    Error Error,
+) GetImageReturn {
+    value := C.AllocGetImageReturn()
     value.Response = Response
     value.Error = Error
 

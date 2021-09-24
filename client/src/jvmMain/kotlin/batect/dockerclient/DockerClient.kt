@@ -90,9 +90,9 @@ public actual class DockerClient : AutoCloseable {
     }
 
     public actual fun deleteVolume(volume: VolumeReference) {
-        nativeAPI.DeleteVolume(clientHandle, volume.name).use { ret ->
-            if (ret != null) {
-                throw VolumeDeletionFailedException(ret)
+        nativeAPI.DeleteVolume(clientHandle, volume.name).use { error ->
+            if (error != null) {
+                throw VolumeDeletionFailedException(error)
             }
         }
     }
@@ -108,9 +108,9 @@ public actual class DockerClient : AutoCloseable {
     }
 
     public actual fun deleteNetwork(network: NetworkReference) {
-        nativeAPI.DeleteNetwork(clientHandle, network.id).use { ret ->
-            if (ret != null) {
-                throw NetworkDeletionFailedException(ret)
+        nativeAPI.DeleteNetwork(clientHandle, network.id).use { error ->
+            if (error != null) {
+                throw NetworkDeletionFailedException(error)
             }
         }
     }
@@ -129,10 +129,43 @@ public actual class DockerClient : AutoCloseable {
         }
     }
 
+    public actual fun pullImage(name: String): ImageReference {
+        nativeAPI.PullImage(clientHandle, name)!!.use { ret ->
+            if (ret.error != null) {
+                throw ImagePullFailedException(ret.error!!)
+            }
+
+            return ImageReference(ret.response!!)
+        }
+    }
+
+    public actual fun deleteImage(image: ImageReference) {
+        nativeAPI.DeleteImage(clientHandle, image.id).use { error ->
+            if (error != null) {
+                throw ImageDeletionFailedException(error)
+            }
+        }
+    }
+
+    public actual fun getImage(name: String): ImageReference? {
+        nativeAPI.GetImage(clientHandle, name)!!.use { ret ->
+            if (ret.error != null) {
+                throw ImageRetrievalFailedException(ret.error!!)
+            }
+
+            if (ret.response == null) {
+                return null
+            }
+
+            return ImageReference(ret.response!!)
+        }
+    }
+
     actual override fun close() {
         nativeAPI.DisposeClient(clientHandle)
     }
 
     private fun VolumeReference(native: batect.dockerclient.native.VolumeReference): VolumeReference = VolumeReference(native.name.get())
     private fun NetworkReference(native: batect.dockerclient.native.NetworkReference): NetworkReference = NetworkReference(native.id.get())
+    private fun ImageReference(native: batect.dockerclient.native.ImageReference): ImageReference = ImageReference(native.id.get())
 }

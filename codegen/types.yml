@@ -80,3 +80,20 @@
   fields:
     Response: NetworkReference
     Error: Error
+
+- name: ImageReference
+  type: struct
+  fields:
+    ID: string
+
+- name: PullImageReturn
+  type: struct
+  fields:
+    Response: ImageReference
+    Error: Error
+
+- name: GetImageReturn
+  type: struct
+  fields:
+    Response: ImageReference
+    Error: Error

@@ -19,6 +19,7 @@ package batect.dockerclient
 import batect.dockerclient.native.CreateClient
 import batect.dockerclient.native.CreateNetwork
 import batect.dockerclient.native.CreateVolume
+import batect.dockerclient.native.DeleteImage
 import batect.dockerclient.native.DeleteNetwork
 import batect.dockerclient.native.DeleteVolume
 import batect.dockerclient.native.DisposeClient
@@ -28,13 +29,17 @@ import batect.dockerclient.native.FreeCreateNetworkReturn
 import batect.dockerclient.native.FreeCreateVolumeReturn
 import batect.dockerclient.native.FreeError
 import batect.dockerclient.native.FreeGetDaemonVersionInformationReturn
+import batect.dockerclient.native.FreeGetImageReturn
 import batect.dockerclient.native.FreeGetNetworkByNameOrIDReturn
 import batect.dockerclient.native.FreeListAllVolumesReturn
 import batect.dockerclient.native.FreePingReturn
+import batect.dockerclient.native.FreePullImageReturn
 import batect.dockerclient.native.GetDaemonVersionInformation
+import batect.dockerclient.native.GetImage
 import batect.dockerclient.native.GetNetworkByNameOrID
 import batect.dockerclient.native.ListAllVolumes
 import batect.dockerclient.native.Ping
+import batect.dockerclient.native.PullImage
 import kotlinx.cinterop.CPointed
 import kotlinx.cinterop.CPointer
 import kotlinx.cinterop.CPointerVar
@@ -189,6 +194,50 @@ public actual class DockerClient : AutoCloseable {
         }
     }
 
+    public actual fun pullImage(name: String): ImageReference {
+        val ret = PullImage(clientHandle, name.cstr)!!
+
+        try {
+            if (ret.pointed.Error != null) {
+                throw ImagePullFailedException(ret.pointed.Error!!.pointed)
+            }
+
+            return ImageReference(ret.pointed.Response!!.pointed)
+        } finally {
+            FreePullImageReturn(ret)
+        }
+    }
+
+    public actual fun deleteImage(image: ImageReference) {
+        val error = DeleteImage(clientHandle, image.id.cstr)
+
+        try {
+            if (error != null) {
+                throw ImageDeletionFailedException(error.pointed)
+            }
+        } finally {
+            FreeError(error)
+        }
+    }
+
+    public actual fun getImage(name: String): ImageReference? {
+        val ret = GetImage(clientHandle, name.cstr)!!
+
+        try {
+            if (ret.pointed.Error != null) {
+                throw ImageRetrievalFailedException(ret.pointed.Error!!.pointed)
+            }
+
+            if (ret.pointed.Response == null) {
+                return null
+            }
+
+            return ImageReference(ret.pointed.Response!!.pointed)
+        } finally {
+            FreeGetImageReturn(ret)
+        }
+    }
+
     actual override fun close() {
         DisposeClient(clientHandle)
     }
@@ -196,7 +245,11 @@ public actual class DockerClient : AutoCloseable {
     private fun VolumeReference(native: batect.dockerclient.native.VolumeReference): VolumeReference =
         VolumeReference(native.Name!!.toKString())
 
-    private fun NetworkReference(native: batect.dockerclient.native.NetworkReference): NetworkReference = NetworkReference(native.ID!!.toKString())
+    private fun NetworkReference(native: batect.dockerclient.native.NetworkReference): NetworkReference =
+        NetworkReference(native.ID!!.toKString())
+
+    private fun ImageReference(native: batect.dockerclient.native.ImageReference): ImageReference =
+        ImageReference(native.ID!!.toKString())
 
     private inline fun <reified NativeType : CPointed, KotlinType> fromArray(
         source: CPointer<CPointerVar<NativeType>>,

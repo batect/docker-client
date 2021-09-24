@@ -28,5 +28,9 @@ public expect class DockerClient() : AutoCloseable {
     public fun deleteNetwork(network: NetworkReference)
     public fun getNetworkByNameOrID(searchFor: String): NetworkReference?
 
+    public fun pullImage(name: String): ImageReference
+    public fun deleteImage(image: ImageReference)
+    public fun getImage(name: String): ImageReference?
+
     override fun close()
 }

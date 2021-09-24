@@ -90,5 +90,29 @@ public actual class NetworkRetrievalFailedException actual constructor(
     internal constructor(error: Error) : this(error.cleanErrorMessage, null, golangErrorType = error.type.get())
 }
 
+public actual class ImagePullFailedException actual constructor(
+    message: String,
+    cause: Throwable?,
+    golangErrorType: String?
+) : DockerClientException(message, cause, golangErrorType) {
+    internal constructor(error: Error) : this(error.cleanErrorMessage, null, golangErrorType = error.type.get())
+}
+
+public actual class ImageDeletionFailedException actual constructor(
+    message: String,
+    cause: Throwable?,
+    golangErrorType: String?
+) : DockerClientException(message, cause, golangErrorType) {
+    internal constructor(error: Error) : this(error.cleanErrorMessage, null, golangErrorType = error.type.get())
+}
+
+public actual class ImageRetrievalFailedException actual constructor(
+    message: String,
+    cause: Throwable?,
+    golangErrorType: String?
+) : DockerClientException(message, cause, golangErrorType) {
+    internal constructor(error: Error) : this(error.cleanErrorMessage, null, golangErrorType = error.type.get())
+}
+
 private val Error.cleanErrorMessage: String
     get() = this.message.get().removePrefix("Error: ")

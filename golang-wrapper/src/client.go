@@ -19,16 +19,19 @@ import (
 		#include "types.h"
 	*/
 	"C"
-	"fmt"
 	"sync"
 
+	"github.com/docker/cli/cli/config"
+	"github.com/docker/cli/cli/config/configfile"
+	"github.com/docker/cli/cli/config/credentials"
 	"github.com/docker/docker/client"
 )
 
 //nolint:gochecknoglobals
 var (
-	clients = map[uint64]*client.Client{}
-	clientsLock = sync.RWMutex{}
+	clients               = map[uint64]*client.Client{}
+	configFilesForClients = map[uint64]*configfile.ConfigFile{}
+	clientsLock           = sync.RWMutex{}
 	nextClientIndex uint64 = 0
 )
 
@@ -40,11 +43,18 @@ func CreateClient() CreateClientReturn {
 		return newCreateClientReturn(0, toError(err))
 	}
 
+	configFile, err := loadConfigFile()
+
+	if err != nil {
+		return newCreateClientReturn(0, toError(err))
+	}
+
 	clientsLock.Lock()
 	defer clientsLock.Unlock()
 
 	clientIndex := nextClientIndex
 	clients[clientIndex] = c
+	configFilesForClients[clientIndex] = configFile
 	nextClientIndex++
 
 	return newCreateClientReturn(DockerClientHandle(clientIndex) , nil)
@@ -56,6 +66,7 @@ func DisposeClient(clientHandle DockerClientHandle) {
 	defer clientsLock.Unlock()
 
 	delete(clients, uint64(clientHandle))
+	delete(configFilesForClients, uint64(clientHandle))
 }
 
 func getClient(clientHandle DockerClientHandle) *client.Client {
@@ -65,13 +76,24 @@ func getClient(clientHandle DockerClientHandle) *client.Client {
 	return clients[uint64(clientHandle)]
 }
 
-func toError(err error) Error {
-	if err == nil {
-		return nil
+func getClientConfigFile(clientHandle DockerClientHandle) *configfile.ConfigFile {
+	clientsLock.RLock()
+	defer clientsLock.RUnlock()
+
+	return configFilesForClients[uint64(clientHandle)]
+}
+
+func loadConfigFile() (*configfile.ConfigFile, error) {
+	// TODO: allow overriding default config file path
+	configFile, err := config.Load(config.Dir())
+
+	if err != nil {
+		return nil, err
 	}
 
-	return newError(
-		fmt.Sprintf("%T", err),
-		err.Error(),
-	)
+	if !configFile.ContainsAuth() {
+		configFile.CredentialsStore = credentials.DetectDefaultStore(configFile.CredentialsStore)
+	}
+
+	return configFile, nil
 }

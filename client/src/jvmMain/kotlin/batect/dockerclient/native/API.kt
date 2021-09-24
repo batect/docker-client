@@ -28,6 +28,9 @@ internal interface API {
     fun DisposeClient(@In clientHandle: Long)
     fun Ping(@In clientHandle: Long): PingReturn?
     fun GetDaemonVersionInformation(@In clientHandle: Long): GetDaemonVersionInformationReturn?
+    fun PullImage(@In clientHandle: Long, @In ref: String): PullImageReturn?
+    fun DeleteImage(@In clientHandle: Long, @In ref: String): Error?
+    fun GetImage(@In clientHandle: Long, @In ref: String): GetImageReturn?
     fun CreateNetwork(@In clientHandle: Long, @In name: String, @In driver: String): CreateNetworkReturn?
     fun DeleteNetwork(@In clientHandle: Long, @In id: String): Error?
     fun GetNetworkByNameOrID(@In clientHandle: Long, @In searchFor: String): GetNetworkByNameOrIDReturn?
@@ -58,4 +61,10 @@ internal interface API {
     fun AllocCreateNetworkReturn(): CreateNetworkReturn?
     fun FreeGetNetworkByNameOrIDReturn(@In value: GetNetworkByNameOrIDReturn)
     fun AllocGetNetworkByNameOrIDReturn(): GetNetworkByNameOrIDReturn?
+    fun FreeImageReference(@In value: ImageReference)
+    fun AllocImageReference(): ImageReference?
+    fun FreePullImageReturn(@In value: PullImageReturn)
+    fun AllocPullImageReturn(): PullImageReturn?
+    fun FreeGetImageReturn(@In value: GetImageReturn)
+    fun AllocGetImageReturn(): GetImageReturn?
 }

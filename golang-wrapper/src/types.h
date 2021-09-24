@@ -132,6 +132,29 @@ typedef struct {
 EXPORTED_FUNCTION GetNetworkByNameOrIDReturn* AllocGetNetworkByNameOrIDReturn();
 EXPORTED_FUNCTION void FreeGetNetworkByNameOrIDReturn(GetNetworkByNameOrIDReturn* value);
 
+typedef struct {
+    char* ID;
+} ImageReference;
+
+EXPORTED_FUNCTION ImageReference* AllocImageReference();
+EXPORTED_FUNCTION void FreeImageReference(ImageReference* value);
+
+typedef struct {
+    ImageReference* Response;
+    Error* Error;
+} PullImageReturn;
+
+EXPORTED_FUNCTION PullImageReturn* AllocPullImageReturn();
+EXPORTED_FUNCTION void FreePullImageReturn(PullImageReturn* value);
+
+typedef struct {
+    ImageReference* Response;
+    Error* Error;
+} GetImageReturn;
+
+EXPORTED_FUNCTION GetImageReturn* AllocGetImageReturn();
+EXPORTED_FUNCTION void FreeGetImageReturn(GetImageReturn* value);
+
 EXPORTED_FUNCTION VolumeReference** CreateVolumeReferenceArray(uint64_t size);
 EXPORTED_FUNCTION void SetVolumeReferenceArrayElement(VolumeReference** array, uint64_t index, VolumeReference* value);
 
