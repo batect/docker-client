@@ -13,6 +13,7 @@
     See the License for the specific language governing permissions and
     limitations under the License.
 */
+
 package batect.dockerclient
 
 import io.kotest.assertions.throwables.shouldThrow
@@ -22,7 +23,7 @@ import io.kotest.matchers.shouldBe
 import kotlin.time.ExperimentalTime
 
 @ExperimentalTime
-class DockerClientImagePullSpec: ShouldSpec({
+class DockerClientImagePullSpec : ShouldSpec({
     val client = closeAfterTest(DockerClient())
 
     val testImages = mapOf(
