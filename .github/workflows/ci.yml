@@ -123,6 +123,9 @@ jobs:
     needs:
       - build-wrapper
 
+    permissions:
+      packages: read
+
     env:
       SONATYPE_USERNAME: batect-docker-client-github-actions
 
@@ -182,6 +185,12 @@ jobs:
         with:
           name: wrapper-libs-windows
           path: golang-wrapper/build/libs
+
+      # This step is required so that we can test pulling images from a registry that requires authentication.
+      - name: Log in to GitHub Container Registry
+        run: echo "$GITHUB_TOKEN" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Build, test and package
         run: ./gradlew --parallel client:check client:jvmJar
