@@ -191,6 +191,7 @@ jobs:
         run: echo "$GITHUB_TOKEN" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        if: matrix.disableDockerDaemonTests != 1
 
       - name: Build, test and package
         run: ./gradlew --parallel client:check client:jvmJar
