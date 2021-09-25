@@ -69,10 +69,10 @@ class DockerClientImagePullSpec : ShouldSpec({
         // Docker returns a different error message depending on whether or not the user is logged in to the source registry
         exception.message shouldBeIn setOf(
             // User is logged in
-            "Error response from daemon: manifest for $imageThatDoesNotExist not found: manifest unknown: manifest unknown",
+            "Error response from daemon: manifest for batect/this-image-does-not-exist:abc123 not found: manifest unknown: manifest unknown",
 
             // User is not logged in
-            "Error response from daemonː pull access denied for $imageThatDoesNotExist, repository does not exist or may require 'docker login'ː deniedː requested access to the resource is denied"
+            "Error response from daemonː pull access denied for batect/this-image-does-not-exist, repository does not exist or may require 'docker login'ː deniedː requested access to the resource is denied"
         )
     }
 
