@@ -72,7 +72,7 @@ class DockerClientImagePullSpec : ShouldSpec({
             "Error response from daemon: manifest for batect/this-image-does-not-exist:abc123 not found: manifest unknown: manifest unknown",
 
             // User is not logged in
-            "Error response from daemonː pull access denied for batect/this-image-does-not-exist, repository does not exist or may require 'docker login'ː deniedː requested access to the resource is denied"
+            "Error response from daemon: pull access denied for batect/this-image-does-not-exist, repository does not exist or may require 'docker login': denied: requested access to the resource is denied"
         )
     }
 
