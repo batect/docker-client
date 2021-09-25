@@ -65,6 +65,11 @@
                 "https://repo.maven.apache.org/maven2/",
                 "https://plugins.gradle.org/m2/"
             ]
+        },
+        {
+            "groupName": "Kotest",
+            "matchManagers": ["gradle-lite"],
+            "matchPackagePatterns": ["^io\\.kotest:"]
         }
     ]
 }
