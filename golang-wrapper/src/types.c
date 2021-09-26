@@ -186,7 +186,7 @@ void FreeListAllVolumesReturn(ListAllVolumesReturn* value) {
     for (uint64_t i = 0; i < value->VolumesCount; i++) {
         FreeVolumeReference(value->Volumes[i]);
     }
-    
+
     free(value->Volumes);
     FreeError(value->Error);
     free(value);

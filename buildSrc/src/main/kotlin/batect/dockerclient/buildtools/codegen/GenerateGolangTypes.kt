@@ -70,12 +70,38 @@ abstract class GenerateGolangTypes : DefaultTask() {
     @TaskAction
     fun run() {
         val types = loadTypeConfigurationFile(sourceFile.get().asFile.toPath())
-        generateHeaderFile(types)
-        generateCFile(types)
+        val methods = generateCMethods(types)
+
+        generateHeaderFile(types, methods)
+        generateCFile(methods)
         generateGoFile(types)
     }
 
-    private fun generateHeaderFile(types: List<TypeInformation>) {
+    private fun generateCMethods(types: List<TypeInformation>): Set<CMethod> {
+        val typeMethods = types.flatMap { type -> generateMethodsForType(type) }.toSet()
+        val arrayMethods = types.findAllTypesUsedAsArrayElements().flatMap { elementType -> generateMethodsForTypeUsedAsArrayElement(elementType) }.toSet()
+
+        return typeMethods + arrayMethods
+    }
+
+    private fun generateMethodsForType(type: TypeInformation): Set<CMethod> {
+        return when (type) {
+            is StructType -> setOf(
+                CMethod.alloc(type),
+                CMethod.free(type)
+            )
+            else -> emptySet()
+        }
+    }
+
+    private fun generateMethodsForTypeUsedAsArrayElement(elementType: TypeInformation): Set<CMethod> {
+        return setOf(
+            CMethod.createArray(elementType),
+            CMethod.setArrayElement(elementType)
+        )
+    }
+
+    private fun generateHeaderFile(types: List<TypeInformation>, methods: Set<CMethod>) {
         val builder = StringBuilder()
 
         builder.appendLine(fileHeader)
@@ -97,11 +123,8 @@ abstract class GenerateGolangTypes : DefaultTask() {
             """.trimIndent()
         )
 
-        types.forEach { type -> generateHeaderFileContentForType(builder, type) }
-
-        types
-            .findAllTypesUsedAsArrayElements()
-            .forEach { elementType -> generateHeaderFileContentForTypeUsedAsArrayElement(builder, elementType) }
+        types.forEach { generateHeaderFileContentForType(builder, it) }
+        methods.forEach { it.writeToHeaderFile(builder) }
 
         builder.appendLine(
             """
@@ -111,13 +134,6 @@ abstract class GenerateGolangTypes : DefaultTask() {
 
         Files.writeString(headerFile.get().asFile.toPath(), builder, Charsets.UTF_8)
     }
-
-    private fun List<TypeInformation>.findAllTypesUsedAsArrayElements(): Set<TypeInformation> = this
-        .filterIsInstance<StructType>()
-        .flatMap { it.fields.values }
-        .filterIsInstance<ArrayType>()
-        .map { it.elementType }
-        .toSet()
 
     private fun generateHeaderFileContentForType(builder: StringBuilder, type: TypeInformation) {
         when (type) {
@@ -138,24 +154,11 @@ abstract class GenerateGolangTypes : DefaultTask() {
 
                 builder.appendLine("} ${type.name};")
                 builder.appendLine()
-                builder.appendLine("EXPORTED_FUNCTION ${type.name}* Alloc${type.name}();")
-                builder.appendLine("EXPORTED_FUNCTION void Free${type.name}(${type.name}* value);")
-                builder.appendLine()
             }
         }
     }
 
-    private fun generateHeaderFileContentForTypeUsedAsArrayElement(builder: StringBuilder, elementType: TypeInformation) {
-        builder.appendLine(
-            """
-                EXPORTED_FUNCTION ${elementType.cName}* Create${elementType.yamlName}Array(uint64_t size);
-                EXPORTED_FUNCTION void Set${elementType.yamlName}ArrayElement(${elementType.cName}* array, uint64_t index, ${elementType.cName} value);
-
-            """.trimIndent()
-        )
-    }
-
-    private fun generateCFile(types: List<TypeInformation>) {
+    private fun generateCFile(methods: Set<CMethod>) {
         val builder = StringBuilder()
 
         builder.appendLine(fileHeader)
@@ -163,99 +166,15 @@ abstract class GenerateGolangTypes : DefaultTask() {
             """
                 #include <stdlib.h>
                 #include "${headerFile.get().asFile.name}"
-
             """.trimIndent()
         )
 
-        types
-            .filterIsInstance<StructType>()
-            .forEach { structType ->
-                generateStructAllocAndFree(builder, structType)
-            }
-
-        types
-            .findAllTypesUsedAsArrayElements()
-            .forEach { elementType -> generateArrayCreatorAndSetter(builder, elementType) }
+        methods.forEach { method ->
+            builder.appendLine()
+            method.writeToDefinitionFile(builder)
+        }
 
         Files.writeString(cFile.get().asFile.toPath(), builder, Charsets.UTF_8)
-    }
-
-    private fun generateStructAllocAndFree(builder: StringBuilder, type: StructType) {
-        val pointerFields = type.fields.filterValues { it.isPointer }
-
-        builder.appendLine(
-            """
-            ${type.name}* Alloc${type.name}() {
-                ${type.name}* value = malloc(sizeof(${type.name}));
-            """.trimIndent()
-        )
-
-        pointerFields.forEach { builder.appendLine("    value->${it.key} = NULL;") }
-
-        type.fields
-            .filterValues { it is ArrayType }
-            .forEach { (fieldName, _) -> builder.appendLine("    value->${fieldName}Count = 0;") }
-
-        builder.appendLine(
-            """
-
-                return value;
-            }
-
-            """.trimIndent()
-        )
-
-        builder.appendLine(
-            """
-            void Free${type.name}(${type.name}* value) {
-                if (value == NULL) {
-                    return;
-                }
-
-            """.trimIndent()
-        )
-
-        pointerFields.forEach { (fieldName, fieldType) ->
-            builder.appendLine(pointerMemberCleanupFunction("value->$fieldName", fieldType).prependIndent("    "))
-        }
-
-        builder.appendLine(
-            """
-                free(value);
-            }
-
-            """.trimIndent()
-        )
-    }
-
-    private fun generateArrayCreatorAndSetter(builder: StringBuilder, elementType: TypeInformation) {
-        builder.appendLine(
-            """
-                ${elementType.cName}* Create${elementType.yamlName}Array(uint64_t size) {
-                    return malloc(size * sizeof(${elementType.cName}));
-                }
-
-                void Set${elementType.yamlName}ArrayElement(${elementType.cName}* array, uint64_t index, ${elementType.cName} value) {
-                    array[index] = value;
-                }
-            """.trimIndent()
-        )
-    }
-
-    private fun pointerMemberCleanupFunction(expression: String, type: TypeInformation): String {
-        return when (type) {
-            is PrimitiveType -> "free($expression);"
-            is StructType -> "Free${type.name}($expression);"
-            is ArrayType ->
-                """
-                for (uint64_t i = 0; i < ${expression}Count; i++) {
-                ${pointerMemberCleanupFunction("$expression[i]", type.elementType).prependIndent("    ")}
-                }
-
-                free($expression);
-                """.trimIndent()
-            else -> throw UnsupportedOperationException("Don't know how to clean up pointer type of ${type::class.simpleName!!}")
-        }
     }
 
     private fun generateGoFile(types: List<TypeInformation>) {
@@ -331,6 +250,127 @@ abstract class GenerateGolangTypes : DefaultTask() {
                 """.trimMargin()
         }
     }
+
+    private data class CMethod(
+        val name: String,
+        val returnType: String?,
+        val parameters: List<CMethodParameter>,
+        val body: String
+    ) {
+        private val parameterList: String = parameters.joinToString(", ") { "${it.type} ${it.name}" }
+
+        fun writeToHeaderFile(builder: StringBuilder) {
+            builder.appendLine("EXPORTED_FUNCTION ${returnType ?: "void"} $name($parameterList);")
+        }
+
+        fun writeToDefinitionFile(builder: StringBuilder) {
+            builder.appendLine("${returnType ?: "void"} $name($parameterList) {")
+
+            body.trim().lines().forEach { line ->
+                if (line.isEmpty()) {
+                    builder.appendLine()
+                } else {
+                    builder.append("    ")
+                    builder.appendLine(line)
+                }
+            }
+
+            builder.appendLine("}")
+        }
+
+        companion object {
+            fun alloc(type: StructType): CMethod {
+                val builder = StringBuilder()
+                val pointerFields = type.fields.filterValues { it.isPointer }
+
+                builder.appendLine("${type.name}* value = malloc(sizeof(${type.name}));")
+                pointerFields.forEach { builder.appendLine("value->${it.key} = NULL;") }
+
+                type.fields
+                    .filterValues { it is ArrayType }
+                    .forEach { (fieldName, _) -> builder.appendLine("value->${fieldName}Count = 0;") }
+
+                builder.appendLine()
+                builder.appendLine("return value;")
+
+                return CMethod(
+                    "Alloc${type.name}",
+                    "${type.name}*",
+                    emptyList(),
+                    builder.toString()
+                )
+            }
+
+            fun free(type: StructType): CMethod {
+                val builder = StringBuilder()
+                val pointerFields = type.fields.filterValues { it.isPointer }
+
+                builder.appendLine(
+                    """
+                    if (value == NULL) {
+                        return;
+                    }
+
+                    """.trimIndent()
+                )
+
+                pointerFields.forEach { (fieldName, fieldType) ->
+                    builder.appendLine(pointerMemberCleanupFunction("value->$fieldName", fieldType))
+                }
+
+                builder.appendLine("free(value);")
+
+                return CMethod(
+                    "Free${type.name}",
+                    null,
+                    listOf(CMethodParameter("value", "${type.name}*")),
+                    builder.toString()
+                )
+            }
+
+            private fun pointerMemberCleanupFunction(expression: String, type: TypeInformation): String {
+                return when (type) {
+                    is PrimitiveType -> "free($expression);"
+                    is StructType -> "Free${type.name}($expression);"
+                    is ArrayType ->
+                        """
+                        for (uint64_t i = 0; i < ${expression}Count; i++) {
+                        ${pointerMemberCleanupFunction("$expression[i]", type.elementType).prependIndent("    ")}
+                        }
+
+                        free($expression);
+                        """.trimIndent()
+                    else -> throw UnsupportedOperationException("Don't know how to clean up pointer type of ${type::class.simpleName!!}")
+                }
+            }
+
+            fun createArray(elementType: TypeInformation): CMethod = CMethod(
+                "Create${elementType.yamlName}Array",
+                "${elementType.cName}*",
+                listOf(CMethodParameter("size", "uint64_t")),
+                "return malloc(size * sizeof(${elementType.cName}));"
+            )
+
+            fun setArrayElement(elementType: TypeInformation): CMethod = CMethod(
+                "Set${elementType.yamlName}ArrayElement",
+                null,
+                listOf(CMethodParameter("array", "${elementType.cName}*"), CMethodParameter("index", "uint64_t"), CMethodParameter("value", elementType.cName)),
+                "array[index] = value;"
+            )
+        }
+    }
+
+    private data class CMethodParameter(
+        val name: String,
+        val type: String
+    )
+
+    private fun List<TypeInformation>.findAllTypesUsedAsArrayElements(): Set<TypeInformation> = this
+        .filterIsInstance<StructType>()
+        .flatMap { it.fields.values }
+        .filterIsInstance<ArrayType>()
+        .map { it.elementType }
+        .toSet()
 
     private val fileHeader: String
         get() =

@@ -35,16 +35,10 @@ typedef struct {
     char* Message;
 } Error;
 
-EXPORTED_FUNCTION Error* AllocError();
-EXPORTED_FUNCTION void FreeError(Error* value);
-
 typedef struct {
     DockerClientHandle Client;
     Error* Error;
 } CreateClientReturn;
-
-EXPORTED_FUNCTION CreateClientReturn* AllocCreateClientReturn();
-EXPORTED_FUNCTION void FreeCreateClientReturn(CreateClientReturn* value);
 
 typedef struct {
     char* APIVersion;
@@ -53,16 +47,10 @@ typedef struct {
     char* BuilderVersion;
 } PingResponse;
 
-EXPORTED_FUNCTION PingResponse* AllocPingResponse();
-EXPORTED_FUNCTION void FreePingResponse(PingResponse* value);
-
 typedef struct {
     PingResponse* Response;
     Error* Error;
 } PingReturn;
-
-EXPORTED_FUNCTION PingReturn* AllocPingReturn();
-EXPORTED_FUNCTION void FreePingReturn(PingReturn* value);
 
 typedef struct {
     char* Version;
@@ -74,31 +62,19 @@ typedef struct {
     bool Experimental;
 } DaemonVersionInformation;
 
-EXPORTED_FUNCTION DaemonVersionInformation* AllocDaemonVersionInformation();
-EXPORTED_FUNCTION void FreeDaemonVersionInformation(DaemonVersionInformation* value);
-
 typedef struct {
     DaemonVersionInformation* Response;
     Error* Error;
 } GetDaemonVersionInformationReturn;
 
-EXPORTED_FUNCTION GetDaemonVersionInformationReturn* AllocGetDaemonVersionInformationReturn();
-EXPORTED_FUNCTION void FreeGetDaemonVersionInformationReturn(GetDaemonVersionInformationReturn* value);
-
 typedef struct {
     char* Name;
 } VolumeReference;
-
-EXPORTED_FUNCTION VolumeReference* AllocVolumeReference();
-EXPORTED_FUNCTION void FreeVolumeReference(VolumeReference* value);
 
 typedef struct {
     VolumeReference* Response;
     Error* Error;
 } CreateVolumeReturn;
-
-EXPORTED_FUNCTION CreateVolumeReturn* AllocCreateVolumeReturn();
-EXPORTED_FUNCTION void FreeCreateVolumeReturn(CreateVolumeReturn* value);
 
 typedef struct {
     uint64_t VolumesCount;
@@ -106,56 +82,64 @@ typedef struct {
     Error* Error;
 } ListAllVolumesReturn;
 
-EXPORTED_FUNCTION ListAllVolumesReturn* AllocListAllVolumesReturn();
-EXPORTED_FUNCTION void FreeListAllVolumesReturn(ListAllVolumesReturn* value);
-
 typedef struct {
     char* ID;
 } NetworkReference;
-
-EXPORTED_FUNCTION NetworkReference* AllocNetworkReference();
-EXPORTED_FUNCTION void FreeNetworkReference(NetworkReference* value);
 
 typedef struct {
     NetworkReference* Response;
     Error* Error;
 } CreateNetworkReturn;
 
-EXPORTED_FUNCTION CreateNetworkReturn* AllocCreateNetworkReturn();
-EXPORTED_FUNCTION void FreeCreateNetworkReturn(CreateNetworkReturn* value);
-
 typedef struct {
     NetworkReference* Response;
     Error* Error;
 } GetNetworkByNameOrIDReturn;
 
-EXPORTED_FUNCTION GetNetworkByNameOrIDReturn* AllocGetNetworkByNameOrIDReturn();
-EXPORTED_FUNCTION void FreeGetNetworkByNameOrIDReturn(GetNetworkByNameOrIDReturn* value);
-
 typedef struct {
     char* ID;
 } ImageReference;
-
-EXPORTED_FUNCTION ImageReference* AllocImageReference();
-EXPORTED_FUNCTION void FreeImageReference(ImageReference* value);
 
 typedef struct {
     ImageReference* Response;
     Error* Error;
 } PullImageReturn;
 
-EXPORTED_FUNCTION PullImageReturn* AllocPullImageReturn();
-EXPORTED_FUNCTION void FreePullImageReturn(PullImageReturn* value);
-
 typedef struct {
     ImageReference* Response;
     Error* Error;
 } GetImageReturn;
 
+EXPORTED_FUNCTION Error* AllocError();
+EXPORTED_FUNCTION void FreeError(Error* value);
+EXPORTED_FUNCTION CreateClientReturn* AllocCreateClientReturn();
+EXPORTED_FUNCTION void FreeCreateClientReturn(CreateClientReturn* value);
+EXPORTED_FUNCTION PingResponse* AllocPingResponse();
+EXPORTED_FUNCTION void FreePingResponse(PingResponse* value);
+EXPORTED_FUNCTION PingReturn* AllocPingReturn();
+EXPORTED_FUNCTION void FreePingReturn(PingReturn* value);
+EXPORTED_FUNCTION DaemonVersionInformation* AllocDaemonVersionInformation();
+EXPORTED_FUNCTION void FreeDaemonVersionInformation(DaemonVersionInformation* value);
+EXPORTED_FUNCTION GetDaemonVersionInformationReturn* AllocGetDaemonVersionInformationReturn();
+EXPORTED_FUNCTION void FreeGetDaemonVersionInformationReturn(GetDaemonVersionInformationReturn* value);
+EXPORTED_FUNCTION VolumeReference* AllocVolumeReference();
+EXPORTED_FUNCTION void FreeVolumeReference(VolumeReference* value);
+EXPORTED_FUNCTION CreateVolumeReturn* AllocCreateVolumeReturn();
+EXPORTED_FUNCTION void FreeCreateVolumeReturn(CreateVolumeReturn* value);
+EXPORTED_FUNCTION ListAllVolumesReturn* AllocListAllVolumesReturn();
+EXPORTED_FUNCTION void FreeListAllVolumesReturn(ListAllVolumesReturn* value);
+EXPORTED_FUNCTION NetworkReference* AllocNetworkReference();
+EXPORTED_FUNCTION void FreeNetworkReference(NetworkReference* value);
+EXPORTED_FUNCTION CreateNetworkReturn* AllocCreateNetworkReturn();
+EXPORTED_FUNCTION void FreeCreateNetworkReturn(CreateNetworkReturn* value);
+EXPORTED_FUNCTION GetNetworkByNameOrIDReturn* AllocGetNetworkByNameOrIDReturn();
+EXPORTED_FUNCTION void FreeGetNetworkByNameOrIDReturn(GetNetworkByNameOrIDReturn* value);
+EXPORTED_FUNCTION ImageReference* AllocImageReference();
+EXPORTED_FUNCTION void FreeImageReference(ImageReference* value);
+EXPORTED_FUNCTION PullImageReturn* AllocPullImageReturn();
+EXPORTED_FUNCTION void FreePullImageReturn(PullImageReturn* value);
 EXPORTED_FUNCTION GetImageReturn* AllocGetImageReturn();
 EXPORTED_FUNCTION void FreeGetImageReturn(GetImageReturn* value);
-
 EXPORTED_FUNCTION VolumeReference** CreateVolumeReferenceArray(uint64_t size);
 EXPORTED_FUNCTION void SetVolumeReferenceArrayElement(VolumeReference** array, uint64_t index, VolumeReference* value);
-
 #endif
