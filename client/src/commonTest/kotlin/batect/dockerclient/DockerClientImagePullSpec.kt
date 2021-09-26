@@ -42,7 +42,7 @@ class DockerClientImagePullSpec : ShouldSpec({
             "that requires authentication to pull" to "ghcr.io/batect/docker-client:sample-authenticated-image"
         )
         ContainerOperatingSystem.Windows -> mapOf(
-            "with a tag" to "mcr.microsoft.com/windows/nanoserver:ltsc2022"
+            "with a tag" to "mcr.microsoft.com/windows/nanoserver:1809"
         )
     }
 
@@ -93,8 +93,10 @@ class DockerClientImagePullSpec : ShouldSpec({
 
         exception.message shouldBeIn setOf(
             "no matching manifest for ${testEnvironmentContainerOperatingSystem.platformDescription} in the manifest list entries",
-            "image operating system \"${testEnvironmentContainerOperatingSystem.name.lowercase()}\" cannot be used on this platform"
-        )
+        ) +
+            ContainerOperatingSystem.values()
+                .filterNot { it == testEnvironmentContainerOperatingSystem }
+                .map { "image operating system \"${it.name.lowercase()}\" cannot be used on this platform" }
     }
 
     should("return null when getting a non-existent image").onlyIfDockerDaemonPresent {
