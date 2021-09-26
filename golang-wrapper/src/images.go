@@ -24,6 +24,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"strings"
 
 	"github.com/docker/cli/cli/command"
 	"github.com/docker/cli/cli/trust"
@@ -33,6 +34,7 @@ import (
 	"github.com/docker/docker/client"
 	"github.com/docker/docker/pkg/jsonmessage"
 	"github.com/docker/docker/registry"
+	"github.com/opencontainers/go-digest"
 )
 
 //export PullImage
@@ -76,23 +78,7 @@ func PullImage(clientHandle DockerClientHandle, ref *C.char) PullImageReturn {
 
 	defer responseBody.Close()
 
-	err = parsePullResponseBody(responseBody, func(message jsonmessage.JSONMessage) error {
-		// TODO: callback with progress information
-		// TODO: capture digest and use this for getting the correct image reference below
-		return nil
-	})
-
-	if err != nil {
-		return newPullImageReturn(nil, toError(err))
-	}
-
-	reference, err := getImageReference(docker, distributionRef.String())
-
-	if err != nil {
-		return newPullImageReturn(nil, toError(fmt.Errorf("could not get image reference after pulling image: %w", err)))
-	}
-
-	return newPullImageReturn(reference, nil)
+	return processPullResponse(docker, responseBody, distributionRef)
 }
 
 func getAuthResolver(clientHandle DockerClientHandle) func(ctx context.Context, index *registrytypes.IndexInfo) types.AuthConfig {
@@ -119,6 +105,42 @@ func electAuthServerForOfficialIndex(ctx context.Context, clientHandle DockerCli
 	}
 
 	return info.IndexServerAddress
+}
+
+func processPullResponse(docker *client.Client, responseBody io.ReadCloser, originalReference reference.Named ) PullImageReturn {
+	pulledDigest := ""
+
+	err := parsePullResponseBody(responseBody, func(message jsonmessage.JSONMessage) error {
+		// TODO: callback with progress information
+
+		if strings.HasPrefix(message.Status, "Digest: ") {
+			pulledDigest = strings.TrimPrefix(message.Status, "Digest: ")
+		}
+
+		return nil
+	})
+
+	if err != nil {
+		return newPullImageReturn(nil, toError(err))
+	}
+
+	lookupReference := originalReference
+
+	if pulledDigest != "" {
+		lookupReference, err = reference.WithDigest(originalReference, digest.Digest(pulledDigest))
+
+		if err != nil {
+			return newPullImageReturn(nil, toError(err))
+		}
+	}
+
+	ref, err := getImageReference(docker, lookupReference.String())
+
+	if err != nil {
+		return newPullImageReturn(nil, toError(fmt.Errorf("could not get image reference after pulling image: %w", err)))
+	}
+
+	return newPullImageReturn(ref, nil)
 }
 
 func parsePullResponseBody(body io.ReadCloser, callback func(message jsonmessage.JSONMessage) error) error {
