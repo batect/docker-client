@@ -76,8 +76,10 @@ func PullImage(clientHandle DockerClientHandle, ref *C.char) PullImageReturn {
 
 	defer responseBody.Close()
 
-	err = parsePullResponseBody(responseBody, func(message jsonmessage.JSONMessage) {
+	err = parsePullResponseBody(responseBody, func(message jsonmessage.JSONMessage) error {
 		// TODO: callback with progress information
+		// TODO: capture digest and use this for getting the correct image reference below
+		return nil
 	})
 
 	if err != nil {
@@ -119,7 +121,7 @@ func electAuthServerForOfficialIndex(ctx context.Context, clientHandle DockerCli
 	return info.IndexServerAddress
 }
 
-func parsePullResponseBody(body io.ReadCloser, callback func(message jsonmessage.JSONMessage)) error {
+func parsePullResponseBody(body io.ReadCloser, callback func(message jsonmessage.JSONMessage) error) error {
 	decoder := json.NewDecoder(body)
 
 	for {
@@ -133,7 +135,17 @@ func parsePullResponseBody(body io.ReadCloser, callback func(message jsonmessage
 			return err
 		}
 
-		callback(message)
+		if message.Error != nil {
+			return errors.New(message.Error.Message)
+		}
+
+		if message.ErrorMessage != "" {
+			return errors.New(message.ErrorMessage)
+		}
+
+		if err := callback(message); err != nil {
+			return err
+		}
 	}
 }
 

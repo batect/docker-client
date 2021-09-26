@@ -76,6 +76,14 @@ class DockerClientImagePullSpec : ShouldSpec({
         )
     }
 
+    should("fail when pulling an image for another platform").onlyIfDockerDaemonPresent {
+        val exception = shouldThrow<ImagePullFailedException> {
+            client.pullImage("mcr.microsoft.com/windows/nanoserver:ltsc2022")
+        }
+
+        exception.message shouldBe "no matching manifest for linux/amd64 in the manifest list entries"
+    }
+
     should("return null when getting a non-existent image").onlyIfDockerDaemonPresent {
         val imageReference = client.getImage(imageThatDoesNotExist)
         imageReference shouldBe null
