@@ -33,7 +33,7 @@ internal val testEnvironmentContainerOperatingSystem: ContainerOperatingSystem
 
 expect fun getEnvironmentVariable(name: String): String?
 
-enum class ContainerOperatingSystem {
-    Linux,
-    Windows
+enum class ContainerOperatingSystem(val platformDescription: String) {
+    Linux("linux/amd64"),
+    Windows("windows/amd64")
 }

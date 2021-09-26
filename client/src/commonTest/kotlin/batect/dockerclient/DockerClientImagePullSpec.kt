@@ -26,20 +26,25 @@ import kotlin.time.ExperimentalTime
 class DockerClientImagePullSpec : ShouldSpec({
     val client = closeAfterTest(DockerClient())
 
-    val testImages = mapOf(
-        "with a digest and no tag" to "gcr.io/distroless/static@sha256:aadea1b1f16af043a34491eec481d0132479382096ea34f608087b4bef3634be",
-        "with a digest and tag" to "gcr.io/distroless/static:063a079c1a87bad3369cb9daf05e371e925c0c91@sha256:aadea1b1f16af043a34491eec481d0132479382096ea34f608087b4bef3634be",
-        "with a tag and no digest" to "gcr.io/distroless/static:063a079c1a87bad3369cb9daf05e371e925c0c91",
-        "with neither a digest nor a tag" to "gcr.io/distroless/static",
+    val testImages = when (testEnvironmentContainerOperatingSystem) {
+        ContainerOperatingSystem.Linux -> mapOf(
+            "with a digest and no tag" to "gcr.io/distroless/static@sha256:aadea1b1f16af043a34491eec481d0132479382096ea34f608087b4bef3634be",
+            "with a digest and tag" to "gcr.io/distroless/static:063a079c1a87bad3369cb9daf05e371e925c0c91@sha256:aadea1b1f16af043a34491eec481d0132479382096ea34f608087b4bef3634be",
+            "with a tag and no digest" to "gcr.io/distroless/static:063a079c1a87bad3369cb9daf05e371e925c0c91",
+            "with neither a digest nor a tag" to "gcr.io/distroless/static",
 
-        // To recreate this image:
-        //   docker pull gcr.io/distroless/static@sha256:aadea1b1f16af043a34491eec481d0132479382096ea34f608087b4bef3634be
-        //   docker tag gcr.io/distroless/static@sha256:aadea1b1f16af043a34491eec481d0132479382096ea34f608087b4bef3634be ghcr.io/batect/docker-client:sample-authenticated-image
-        //   docker push ghcr.io/batect/docker-client:sample-authenticated-image
-        //
-        // If you need to configure credentials locally: https://docs.github.com/en/packages/working-with-a-github-packages-registry/working-with-the-container-registry#authenticating-to-the-container-registry
-        "that requires authentication to pull" to "ghcr.io/batect/docker-client:sample-authenticated-image"
-    )
+            // To recreate this image:
+            //   docker pull gcr.io/distroless/static@sha256:aadea1b1f16af043a34491eec481d0132479382096ea34f608087b4bef3634be
+            //   docker tag gcr.io/distroless/static@sha256:aadea1b1f16af043a34491eec481d0132479382096ea34f608087b4bef3634be ghcr.io/batect/docker-client:sample-authenticated-image
+            //   docker push ghcr.io/batect/docker-client:sample-authenticated-image
+            //
+            // If you need to configure credentials locally: https://docs.github.com/en/packages/working-with-a-github-packages-registry/working-with-the-container-registry#authenticating-to-the-container-registry
+            "that requires authentication to pull" to "ghcr.io/batect/docker-client:sample-authenticated-image"
+        )
+        ContainerOperatingSystem.Windows -> mapOf(
+            "with a tag" to "mcr.microsoft.com/windows/nanoserver:ltsc2022"
+        )
+    }
 
     val imageThatDoesNotExist = "batect/this-image-does-not-exist:abc123"
 
@@ -77,11 +82,19 @@ class DockerClientImagePullSpec : ShouldSpec({
     }
 
     should("fail when pulling an image for another platform").onlyIfDockerDaemonPresent {
-        val exception = shouldThrow<ImagePullFailedException> {
-            client.pullImage("mcr.microsoft.com/windows/nanoserver:ltsc2022")
+        val imageForOtherPlatform = when (testEnvironmentContainerOperatingSystem) {
+            ContainerOperatingSystem.Linux -> "mcr.microsoft.com/windows/nanoserver:ltsc2022"
+            ContainerOperatingSystem.Windows -> "gcr.io/distroless/static:063a079c1a87bad3369cb9daf05e371e925c0c91@sha256:aadea1b1f16af043a34491eec481d0132479382096ea34f608087b4bef3634be"
         }
 
-        exception.message shouldBe "no matching manifest for linux/amd64 in the manifest list entries"
+        val exception = shouldThrow<ImagePullFailedException> {
+            client.pullImage(imageForOtherPlatform)
+        }
+
+        exception.message shouldBeIn setOf(
+            "no matching manifest for ${testEnvironmentContainerOperatingSystem.platformDescription} in the manifest list entries",
+            "image operating system \"${testEnvironmentContainerOperatingSystem.name.lowercase()}\" cannot be used on this platform"
+        )
     }
 
     should("return null when getting a non-existent image").onlyIfDockerDaemonPresent {
