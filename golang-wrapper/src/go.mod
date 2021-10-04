@@ -6,7 +6,7 @@ require (
 	github.com/containerd/containerd v1.5.5 // indirect
 	github.com/docker/cli v20.10.9+incompatible
 	github.com/docker/distribution v2.7.1+incompatible
-	github.com/docker/docker v20.10.8+incompatible
+	github.com/docker/docker v20.10.9+incompatible
 	github.com/docker/docker-credential-helpers v0.6.4 // indirect
 	github.com/fvbommel/sortorder v1.0.2 // indirect
 	github.com/gorilla/mux v1.8.0 // indirect
