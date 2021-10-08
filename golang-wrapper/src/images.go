@@ -25,6 +25,7 @@ import (
 	"fmt"
 	"io"
 	"strings"
+	"unsafe"
 
 	"github.com/docker/cli/cli/command"
 	"github.com/docker/cli/cli/trust"
@@ -38,7 +39,7 @@ import (
 )
 
 //export PullImage
-func PullImage(clientHandle DockerClientHandle, ref *C.char) PullImageReturn {
+func PullImage(clientHandle DockerClientHandle, ref *C.char, onProgressUpdate PullImageProgressCallback, callbackUserData unsafe.Pointer) PullImageReturn {
 	docker := getClient(clientHandle)
 
 	distributionRef, err := reference.ParseNormalizedNamed(C.GoString(ref))
@@ -78,7 +79,7 @@ func PullImage(clientHandle DockerClientHandle, ref *C.char) PullImageReturn {
 
 	defer responseBody.Close()
 
-	return processPullResponse(docker, responseBody, distributionRef)
+	return processPullResponse(docker, responseBody, distributionRef, onProgressUpdate, callbackUserData)
 }
 
 func getAuthResolver(clientHandle DockerClientHandle) func(ctx context.Context, index *registrytypes.IndexInfo) types.AuthConfig {
@@ -107,15 +108,25 @@ func electAuthServerForOfficialIndex(ctx context.Context, clientHandle DockerCli
 	return info.IndexServerAddress
 }
 
-func processPullResponse(docker *client.Client, responseBody io.ReadCloser, originalReference reference.Named ) PullImageReturn {
+func processPullResponse(docker *client.Client, responseBody io.ReadCloser, originalReference reference.Named, onProgressUpdate PullImageProgressCallback, callbackUserData unsafe.Pointer) PullImageReturn {
 	pulledDigest := ""
 
 	err := parsePullResponseBody(responseBody, func(message jsonmessage.JSONMessage) error {
-		// TODO: callback with progress information
-
 		if strings.HasPrefix(message.Status, "Digest: ") {
 			pulledDigest = strings.TrimPrefix(message.Status, "Digest: ")
 		}
+
+		var progressDetail PullImageProgressDetail = nil
+		defer C.FreePullImageProgressDetail(progressDetail)
+
+		if message.Progress != nil {
+			progressDetail = newPullImageProgressDetail(message.Progress.Current, message.Progress.Total)
+		}
+
+		progressUpdate := newPullImageProgressUpdate(message.Status, progressDetail, message.ID)
+		defer C.FreePullImageProgressUpdate(progressUpdate)
+
+		invokePullImageProgressCallback(onProgressUpdate, callbackUserData, progressUpdate)
 
 		return nil
 	})
@@ -158,11 +169,11 @@ func parsePullResponseBody(body io.ReadCloser, callback func(message jsonmessage
 		}
 
 		if message.Error != nil {
-			return errors.New(message.Error.Message)
+			return errors.New(message.Error.Message) // nolint:goerr113
 		}
 
 		if message.ErrorMessage != "" {
-			return errors.New(message.ErrorMessage)
+			return errors.New(message.ErrorMessage) // nolint:goerr113
 		}
 
 		if err := callback(message); err != nil {

@@ -20,8 +20,10 @@
 
 package batect.dockerclient.native
 
+import jnr.ffi.Pointer
 import jnr.ffi.Runtime
 import jnr.ffi.Struct
+import jnr.ffi.annotations.Delegate
 
 internal typealias DockerClientHandle = Long
 
@@ -235,6 +237,39 @@ internal class PullImageReturn(runtime: Runtime) : Struct(runtime), AutoCloseabl
     override fun close() {
         nativeAPI.FreePullImageReturn(this)
     }
+}
+
+internal class PullImageProgressDetail(runtime: Runtime) : Struct(runtime), AutoCloseable {
+    constructor(pointer: jnr.ffi.Pointer) : this(pointer.runtime) {
+        this.useMemory(pointer)
+    }
+
+    val current = int64_t()
+    val total = int64_t()
+
+    override fun close() {
+        nativeAPI.FreePullImageProgressDetail(this)
+    }
+}
+
+internal class PullImageProgressUpdate(runtime: Runtime) : Struct(runtime), AutoCloseable {
+    constructor(pointer: jnr.ffi.Pointer) : this(pointer.runtime) {
+        this.useMemory(pointer)
+    }
+
+    val message = UTF8StringRef()
+    private val detailPointer = Pointer()
+    val detail: PullImageProgressDetail? by lazy { if (detailPointer.intValue() == 0) null else PullImageProgressDetail(detailPointer.get()) }
+    val id = UTF8StringRef()
+
+    override fun close() {
+        nativeAPI.FreePullImageProgressUpdate(this)
+    }
+}
+
+internal interface PullImageProgressCallback {
+    @Delegate
+    fun invoke(userData: Pointer?, progressPointer: Pointer?)
 }
 
 internal class GetImageReturn(runtime: Runtime) : Struct(runtime), AutoCloseable {

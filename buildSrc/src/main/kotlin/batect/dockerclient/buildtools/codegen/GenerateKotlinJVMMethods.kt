@@ -192,6 +192,7 @@ abstract class GenerateKotlinJVMMethods : DefaultTask() {
             """
             package batect.dockerclient.native
 
+            import jnr.ffi.Pointer
             import jnr.ffi.annotations.In
 
             @Suppress("FunctionName")

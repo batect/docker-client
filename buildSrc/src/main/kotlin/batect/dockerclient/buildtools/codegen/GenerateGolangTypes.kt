@@ -90,6 +90,9 @@ abstract class GenerateGolangTypes : DefaultTask() {
                 CMethod.alloc(type),
                 CMethod.free(type)
             )
+            is CallbackType -> setOf(
+                CMethod.invoke(type)
+            )
             else -> emptySet()
         }
     }
@@ -155,6 +158,10 @@ abstract class GenerateGolangTypes : DefaultTask() {
                 builder.appendLine("} ${type.name};")
                 builder.appendLine()
             }
+            is CallbackType -> {
+                builder.appendLine("typedef void (*${type.name}) (void*, ${type.parameters.joinToString(", ") { it.type.cName }});")
+                builder.appendLine()
+            }
         }
     }
 
@@ -190,6 +197,7 @@ abstract class GenerateGolangTypes : DefaultTask() {
                 #include "types.h"
             */
             import "C"
+            import "unsafe"
 
             """.trimIndent()
         )
@@ -202,12 +210,16 @@ abstract class GenerateGolangTypes : DefaultTask() {
 
         types
             .filterIsInstance<StructType>()
-            .forEach { type -> generateConstructor(builder, type) }
+            .forEach { type -> generateGoConstructor(builder, type) }
+
+        types
+            .filterIsInstance<CallbackType>()
+            .forEach { type -> generateGoInvoke(builder, type) }
 
         Files.writeString(goFile.get().asFile.toPath(), builder, Charsets.UTF_8)
     }
 
-    private fun generateConstructor(builder: StringBuilder, type: StructType) {
+    private fun generateGoConstructor(builder: StringBuilder, type: StructType) {
         builder.appendLine("func new${type.golangName}(")
 
         type.fields.forEach { (fieldName, fieldType) -> builder.appendLine("    $fieldName ${fieldType.golangName},") }
@@ -219,7 +231,7 @@ abstract class GenerateGolangTypes : DefaultTask() {
             """.trimIndent()
         )
 
-        type.fields.forEach { (fieldName, fieldType) -> builder.appendLine(generateConstructorSetter(fieldName, fieldType)) }
+        type.fields.forEach { (fieldName, fieldType) -> builder.appendLine(generateGoConstructorSetter(type, fieldName, fieldType)) }
 
         builder.appendLine(
             """
@@ -232,7 +244,7 @@ abstract class GenerateGolangTypes : DefaultTask() {
         builder.appendLine()
     }
 
-    private fun generateConstructorSetter(fieldName: String, fieldType: TypeInformation): String {
+    private fun generateGoConstructorSetter(structType: StructType, fieldName: String, fieldType: TypeInformation): String {
         return when (fieldType) {
             is StructType -> "    value.$fieldName = $fieldName"
             is AliasType -> "    value.$fieldName = ${fieldType.cgoConversionFunctionName}($fieldName)"
@@ -248,7 +260,20 @@ abstract class GenerateGolangTypes : DefaultTask() {
 	            |    }
                 |
                 """.trimMargin()
+            is CallbackType -> throw UnsupportedOperationException("Embedding callback types in structs is not supported. Field $fieldName of ${structType.name} contains callback type ${fieldType.name}.")
         }
+    }
+
+    private fun generateGoInvoke(builder: StringBuilder, type: CallbackType) {
+        builder.appendLine(
+            """
+                func invoke${type.name}(method ${type.golangName}, userData unsafe.Pointer, ${type.parameters.joinToString(", ") { "${it.name} ${it.type.golangName}" }}) {
+                    C.Invoke${type.name}(method, userData, ${type.parameters.joinToString(", ") { it.name }})
+                }
+            """.trimIndent()
+        )
+
+        builder.appendLine()
     }
 
     private data class CMethod(
@@ -281,13 +306,13 @@ abstract class GenerateGolangTypes : DefaultTask() {
         companion object {
             fun alloc(type: StructType): CMethod {
                 val builder = StringBuilder()
-                val pointerFields = type.fields.filterValues { it.isPointer }
+                val pointerFields = type.fields.filter { it.type.isPointer }
 
                 builder.appendLine("${type.name}* value = malloc(sizeof(${type.name}));")
-                pointerFields.forEach { builder.appendLine("value->${it.key} = NULL;") }
+                pointerFields.forEach { builder.appendLine("value->${it.name} = NULL;") }
 
                 type.fields
-                    .filterValues { it is ArrayType }
+                    .filter { it.type is ArrayType }
                     .forEach { (fieldName, _) -> builder.appendLine("value->${fieldName}Count = 0;") }
 
                 builder.appendLine()
@@ -303,7 +328,7 @@ abstract class GenerateGolangTypes : DefaultTask() {
 
             fun free(type: StructType): CMethod {
                 val builder = StringBuilder()
-                val pointerFields = type.fields.filterValues { it.isPointer }
+                val pointerFields = type.fields.filter { it.type.isPointer }
 
                 builder.appendLine(
                     """
@@ -357,6 +382,13 @@ abstract class GenerateGolangTypes : DefaultTask() {
                 listOf(CMethodParameter("array", "${elementType.cName}*"), CMethodParameter("index", "uint64_t"), CMethodParameter("value", elementType.cName)),
                 "array[index] = value;"
             )
+
+            fun invoke(callback: CallbackType): CMethod = CMethod(
+                "Invoke${callback.name}",
+                null,
+                listOf(CMethodParameter("method", callback.cName), CMethodParameter("userData", "void*")) + callback.parameters.map { CMethodParameter(it.name, it.type.cName) },
+                "method(userData, ${callback.parameters.joinToString(", ") { it.name }});"
+            )
         }
     }
 
@@ -367,7 +399,8 @@ abstract class GenerateGolangTypes : DefaultTask() {
 
     private fun List<TypeInformation>.findAllTypesUsedAsArrayElements(): Set<TypeInformation> = this
         .filterIsInstance<StructType>()
-        .flatMap { it.fields.values }
+        .flatMap { struct -> struct.fields }
+        .map { field -> field.type }
         .filterIsInstance<ArrayType>()
         .map { it.elementType }
         .toSet()

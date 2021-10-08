@@ -7,93 +7,151 @@
 - name: Error
   type: struct
   fields:
-    Type: string
-    Message: string
+    - name: Type
+      type: string
+    - name: Message
+      type: string
 
 - name: CreateClientReturn
   type: struct
   fields:
-    Client: DockerClientHandle
-    Error: Error
+    - name: Client
+      type: DockerClientHandle
+    - name: Error
+      type: Error
 
 - name: PingResponse
   type: struct
   fields:
-    APIVersion: string
-    OSType: string
-    Experimental: boolean
-    BuilderVersion: string
+    - name: APIVersion
+      type: string
+    - name: OSType
+      type: string
+    - name: Experimental
+      type: boolean
+    - name: BuilderVersion
+      type: string
 
 - name: PingReturn
   type: struct
   fields:
-    Response: PingResponse
-    Error: Error
+    - name: Response
+      type: PingResponse
+    - name: Error
+      type: Error
 
 - name: DaemonVersionInformation
   type: struct
   fields:
-    Version: string
-    APIVersion: string
-    MinAPIVersion: string
-    GitCommit: string
-    OperatingSystem: string
-    Architecture: string
-    Experimental: boolean
+    - name: Version
+      type: string
+    - name: APIVersion
+      type: string
+    - name: MinAPIVersion
+      type: string
+    - name: GitCommit
+      type: string
+    - name: OperatingSystem
+      type: string
+    - name: Architecture
+      type: string
+    - name: Experimental
+      type: boolean
 
 - name: GetDaemonVersionInformationReturn
   type: struct
   fields:
-    Response: DaemonVersionInformation
-    Error: Error
+    - name: Response
+      type: DaemonVersionInformation
+    - name: Error
+      type: Error
 
 - name: VolumeReference
   type: struct
   fields:
-    Name: string
+    - name: Name
+      type: string
 
 - name: CreateVolumeReturn
   type: struct
   fields:
-    Response: VolumeReference
-    Error: Error
+    - name: Response
+      type: VolumeReference
+    - name: Error
+      type: Error
 
 - name: ListAllVolumesReturn
   type: struct
   fields:
-    Volumes: VolumeReference[]
-    Error: Error
+    - name: Volumes
+      type: VolumeReference[]
+    - name: Error
+      type: Error
 
 - name: NetworkReference
   type: struct
   fields:
-    ID: string
+    - name: ID
+      type: string
 
 - name: CreateNetworkReturn
   type: struct
   fields:
-    Response: NetworkReference
-    Error: Error
+    - name: Response
+      type: NetworkReference
+    - name: Error
+      type: Error
 
 - name: GetNetworkByNameOrIDReturn
   type: struct
   fields:
-    Response: NetworkReference
-    Error: Error
+    - name: Response
+      type: NetworkReference
+    - name: Error
+      type: Error
 
 - name: ImageReference
   type: struct
   fields:
-    ID: string
+    - name: ID
+      type: string
 
 - name: PullImageReturn
   type: struct
   fields:
-    Response: ImageReference
-    Error: Error
+    - name: Response
+      type: ImageReference
+    - name: Error
+      type: Error
+
+- name: PullImageProgressDetail
+  type: struct
+  fields:
+    - name: Current
+      type: int64
+    - name: Total
+      type: int64
+
+- name: PullImageProgressUpdate
+  type: struct
+  fields:
+    - name: Message
+      type: string
+    - name: Detail
+      type: PullImageProgressDetail
+    - name: ID
+      type: string
+
+- name: PullImageProgressCallback
+  type: callback
+  parameters:
+    - name: progress
+      type: PullImageProgressUpdate
 
 - name: GetImageReturn
   type: struct
   fields:
-    Response: ImageReference
-    Error: Error
+    - name: Response
+      type: ImageReference
+    - name: Error
+      type: Error

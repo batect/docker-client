@@ -64,38 +64,25 @@ data class AliasType(
 @SerialName("struct")
 data class StructTypeFromConfigFile(
     override val name: String,
-    val fields: Map<String, String>
+    val fields: List<FieldInfo>
 ) : TypeFromConfigFile() {
     override fun resolve(userDefinedTypes: Map<String, TypeFromConfigFile>): TypeInformation {
         return StructType(
             name,
-            fields.mapValues { (fieldName, fieldValue) -> resolveTypeReference(fieldName, fieldValue, userDefinedTypes) }
+            fields.map { (fieldName, fieldValue) -> StructMember(fieldName, resolveTypeReference("field", fieldName, fieldValue, userDefinedTypes, "struct", this.name)) }
         )
     }
 
-    private fun resolveTypeReference(fieldName: String, typeName: String, allDefinedTypes: Map<String, TypeFromConfigFile>): TypeInformation {
-        if (typeName.endsWith("[]")) {
-            val elementType = resolveTypeReference(fieldName, typeName.removeSuffix("[]"), allDefinedTypes)
-            return ArrayType(elementType)
-        }
-
-        val userDefinedType = allDefinedTypes[typeName]
-
-        if (userDefinedType != null) {
-            return userDefinedType.resolve(allDefinedTypes)
-        }
-
-        if (PrimitiveType.yamlNamesToValues.containsKey(typeName)) {
-            return PrimitiveType.yamlNamesToValues[typeName]!!
-        }
-
-        throw IllegalArgumentException("Unknown type '$typeName' for field '$fieldName' in struct '${this.name}'")
-    }
+    @Serializable
+    data class FieldInfo(
+        val name: String,
+        val type: String
+    )
 }
 
 data class StructType(
     val name: String,
-    val fields: Map<String, TypeInformation>
+    val fields: List<StructMember>
 ) : TypeInformation {
     override val isPointer: Boolean = true
     override val cName: String = "$name*"
@@ -104,6 +91,11 @@ data class StructType(
     override val golangName: String = name
     override val jvmName: String = name
 }
+
+data class StructMember(
+    val name: String,
+    val type: TypeInformation
+)
 
 enum class PrimitiveType(
     override val yamlName: String,
@@ -116,7 +108,9 @@ enum class PrimitiveType(
     val cgoConversionFunctionName: String = "C.$golangName"
 ) : TypeInformation {
     StringType("string", "string", "char*", "String", jvmNameInStruct = "UTF8StringRef", isPointer = true, cgoConversionFunctionName = "C.CString"),
-    BooleanType("boolean", "bool", "bool", "Boolean");
+    BooleanType("boolean", "bool", "bool", "Boolean"),
+    Int64Type("int64", "int64", "int64_t", "long", jvmNameInStruct = "int64_t", cgoConversionFunctionName = "C.int64_t"),
+    GenericPointerType("void*", "unsafe.Pointer", "void*", "Pointer?");
 
     companion object {
         val yamlNamesToValues: Map<String, PrimitiveType> = values().associateBy { it.yamlName }
@@ -135,6 +129,43 @@ data class ArrayType(
     override val jvmName: String = "Array<${elementType.jvmName}>"
 }
 
+@Serializable
+@SerialName("callback")
+data class CallbackTypeFromConfigFile(
+    override val name: String,
+    val parameters: List<ParameterInfo>
+) : TypeFromConfigFile() {
+    override fun resolve(userDefinedTypes: Map<String, TypeFromConfigFile>): TypeInformation {
+        return CallbackType(
+            name,
+            parameters.map { (parameterName, parameterType) -> CallbackParameter(parameterName, resolveTypeReference("parameter", parameterName, parameterType, userDefinedTypes, "callback", this.name)) }
+        )
+    }
+
+    @Serializable
+    data class ParameterInfo(
+        val name: String,
+        val type: String
+    )
+}
+
+data class CallbackType(
+    val name: String,
+    val parameters: List<CallbackParameter>
+) : TypeInformation {
+    override val isPointer: Boolean = false
+    override val cName: String = name
+    override val cgoTypeName: String = "C.$name"
+    override val yamlName: String = name
+    override val golangName: String = name
+    override val jvmName: String = name
+}
+
+data class CallbackParameter(
+    val name: String,
+    val type: TypeInformation
+)
+
 internal fun loadTypeConfigurationFile(path: Path): List<TypeInformation> {
     val content = Files.readString(path)
     val yaml = Yaml(configuration = YamlConfiguration(polymorphismStyle = PolymorphismStyle.Property))
@@ -146,4 +177,30 @@ internal fun loadTypeConfigurationFile(path: Path): List<TypeInformation> {
     } catch (e: YamlException) {
         throw RuntimeException("Could not load types from $path: $e", e)
     }
+}
+
+private fun resolveTypeReference(
+    itemType: String,
+    itemName: String,
+    typeName: String,
+    allDefinedTypes: Map<String, TypeFromConfigFile>,
+    parentTypeDescription: String,
+    parentTypeName: String
+): TypeInformation {
+    if (typeName.endsWith("[]")) {
+        val elementType = resolveTypeReference(itemType, itemName, typeName.removeSuffix("[]"), allDefinedTypes, parentTypeDescription, parentTypeName)
+        return ArrayType(elementType)
+    }
+
+    val userDefinedType = allDefinedTypes[typeName]
+
+    if (userDefinedType != null) {
+        return userDefinedType.resolve(allDefinedTypes)
+    }
+
+    if (PrimitiveType.yamlNamesToValues.containsKey(typeName)) {
+        return PrimitiveType.yamlNamesToValues[typeName]!!
+    }
+
+    throw IllegalArgumentException("Unknown type '$typeName' for $itemType '$itemName' in $parentTypeDescription '$parentTypeName'")
 }

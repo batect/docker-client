@@ -17,7 +17,10 @@
 package batect.dockerclient
 
 import batect.dockerclient.native.DockerClientHandle
+import batect.dockerclient.native.PullImageProgressCallback
+import batect.dockerclient.native.PullImageProgressUpdate
 import batect.dockerclient.native.nativeAPI
+import jnr.ffi.Pointer
 
 public actual class DockerClient : AutoCloseable {
     private val clientHandle: DockerClientHandle = createClient()
@@ -129,8 +132,22 @@ public actual class DockerClient : AutoCloseable {
         }
     }
 
-    public actual fun pullImage(name: String): ImageReference {
-        nativeAPI.PullImage(clientHandle, name)!!.use { ret ->
+    public actual fun pullImage(name: String, onProgressUpdate: ImagePullProgressReceiver): ImageReference {
+        val callback = object : PullImageProgressCallback {
+            override fun invoke(userData: Pointer?, progressPointer: Pointer?) {
+                val progress = PullImageProgressUpdate(progressPointer!!)
+
+                val detail = if (progress.detail == null) {
+                    null
+                } else {
+                    ImagePullProgressDetail(progress.detail!!.current.get(), progress.detail!!.total.get())
+                }
+
+                onProgressUpdate(ImagePullProgressUpdate(progress.message.get(), detail, progress.id.get()))
+            }
+        }
+
+        nativeAPI.PullImage(clientHandle, name, callback, null)!!.use { ret ->
             if (ret.error != null) {
                 throw ImagePullFailedException(ret.error!!)
             }

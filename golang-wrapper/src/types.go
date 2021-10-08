@@ -23,6 +23,7 @@ package main
     #include "types.h"
 */
 import "C"
+import "unsafe"
 
 type DockerClientHandle C.DockerClientHandle
 type Error *C.Error
@@ -39,6 +40,9 @@ type CreateNetworkReturn *C.CreateNetworkReturn
 type GetNetworkByNameOrIDReturn *C.GetNetworkByNameOrIDReturn
 type ImageReference *C.ImageReference
 type PullImageReturn *C.PullImageReturn
+type PullImageProgressDetail *C.PullImageProgressDetail
+type PullImageProgressUpdate *C.PullImageProgressUpdate
+type PullImageProgressCallback C.PullImageProgressCallback
 type GetImageReturn *C.GetImageReturn
 
 func newError(
@@ -210,6 +214,30 @@ func newPullImageReturn(
     return value
 }
 
+func newPullImageProgressDetail(
+    Current int64,
+    Total int64,
+) PullImageProgressDetail {
+    value := C.AllocPullImageProgressDetail()
+    value.Current = C.int64_t(Current)
+    value.Total = C.int64_t(Total)
+
+    return value
+}
+
+func newPullImageProgressUpdate(
+    Message string,
+    Detail PullImageProgressDetail,
+    ID string,
+) PullImageProgressUpdate {
+    value := C.AllocPullImageProgressUpdate()
+    value.Message = C.CString(Message)
+    value.Detail = Detail
+    value.ID = C.CString(ID)
+
+    return value
+}
+
 func newGetImageReturn(
     Response ImageReference,
     Error Error,
@@ -219,5 +247,9 @@ func newGetImageReturn(
     value.Error = Error
 
     return value
+}
+
+func invokePullImageProgressCallback(method PullImageProgressCallback, userData unsafe.Pointer, progress PullImageProgressUpdate) {
+    C.InvokePullImageProgressCallback(method, userData, progress)
 }
 

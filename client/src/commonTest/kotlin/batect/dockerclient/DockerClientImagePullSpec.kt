@@ -18,8 +18,13 @@ package batect.dockerclient
 
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.core.spec.style.ShouldSpec
+import io.kotest.inspectors.forAtLeastOne
 import io.kotest.matchers.collections.shouldBeIn
+import io.kotest.matchers.collections.shouldContain
+import io.kotest.matchers.collections.shouldEndWith
+import io.kotest.matchers.collections.shouldStartWith
 import io.kotest.matchers.shouldBe
+import io.kotest.matchers.shouldNotBe
 import kotlin.time.ExperimentalTime
 
 @ExperimentalTime
@@ -64,7 +69,47 @@ class DockerClientImagePullSpec : ShouldSpec({
         }
     }
 
-    // TODO: test image pull progress reporting
+    // TODO: Windows container image
+    // TODO: callback that throws an exception
+    should("report progress information while pulling an image").onlyIfDockerDaemonSupportsLinuxContainers {
+        val image = "gcr.io/distroless/static@sha256:aadea1b1f16af043a34491eec481d0132479382096ea34f608087b4bef3634be"
+        val progressUpdatesReceived = mutableListOf<ImagePullProgressUpdate>()
+
+        client.pullImage(image) { update ->
+            progressUpdatesReceived.add(update)
+        }
+
+        val layerId = "b49b96595fd4"
+        val layerSize = 657696
+
+        progressUpdatesReceived shouldStartWith listOf(
+            ImagePullProgressUpdate("Pulling from distroless/static", null, image),
+            ImagePullProgressUpdate("Pulling fs layer", ImagePullProgressDetail(0, 0), layerId),
+        )
+
+        progressUpdatesReceived.forAtLeastOne {
+            it.message shouldBe "Downloading"
+            it.detail shouldNotBe null
+            it.detail!!.total shouldBe layerSize
+            it.id shouldBe layerId
+        }
+
+        progressUpdatesReceived shouldContain ImagePullProgressUpdate("Verifying Checksum", ImagePullProgressDetail(0, 0), layerId)
+        progressUpdatesReceived shouldContain ImagePullProgressUpdate("Download complete", ImagePullProgressDetail(0, 0), layerId)
+
+        progressUpdatesReceived.forAtLeastOne {
+            it.message shouldBe "Extracting"
+            it.detail shouldNotBe null
+            it.detail!!.total shouldBe layerSize
+            it.id shouldBe layerId
+        }
+
+        progressUpdatesReceived shouldEndWith listOf(
+            ImagePullProgressUpdate("Pull complete", ImagePullProgressDetail(0, 0), layerId),
+            ImagePullProgressUpdate("Digest: sha256:aadea1b1f16af043a34491eec481d0132479382096ea34f608087b4bef3634be", null, ""),
+            ImagePullProgressUpdate("Status: Downloaded newer image for $image", null, "")
+        )
+    }
 
     should("fail when pulling a non-existent image").onlyIfDockerDaemonPresent {
         val exception = shouldThrow<ImagePullFailedException> {

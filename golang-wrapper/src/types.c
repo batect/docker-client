@@ -278,6 +278,44 @@ void FreePullImageReturn(PullImageReturn* value) {
     free(value);
 }
 
+PullImageProgressDetail* AllocPullImageProgressDetail() {
+    PullImageProgressDetail* value = malloc(sizeof(PullImageProgressDetail));
+
+    return value;
+}
+
+void FreePullImageProgressDetail(PullImageProgressDetail* value) {
+    if (value == NULL) {
+        return;
+    }
+
+    free(value);
+}
+
+PullImageProgressUpdate* AllocPullImageProgressUpdate() {
+    PullImageProgressUpdate* value = malloc(sizeof(PullImageProgressUpdate));
+    value->Message = NULL;
+    value->Detail = NULL;
+    value->ID = NULL;
+
+    return value;
+}
+
+void FreePullImageProgressUpdate(PullImageProgressUpdate* value) {
+    if (value == NULL) {
+        return;
+    }
+
+    free(value->Message);
+    FreePullImageProgressDetail(value->Detail);
+    free(value->ID);
+    free(value);
+}
+
+void InvokePullImageProgressCallback(PullImageProgressCallback method, void* userData, PullImageProgressUpdate* progress) {
+    method(userData, progress);
+}
+
 GetImageReturn* AllocGetImageReturn() {
     GetImageReturn* value = malloc(sizeof(GetImageReturn));
     value->Response = NULL;

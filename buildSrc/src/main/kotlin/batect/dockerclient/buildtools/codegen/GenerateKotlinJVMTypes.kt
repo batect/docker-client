@@ -55,13 +55,16 @@ abstract class GenerateKotlinJVMTypes : DefaultTask() {
         builder.appendLine(fileHeader)
         builder.appendLine("package batect.dockerclient.native")
         builder.appendLine()
+        builder.appendLine("import jnr.ffi.Pointer")
         builder.appendLine("import jnr.ffi.Runtime")
         builder.appendLine("import jnr.ffi.Struct")
+        builder.appendLine("import jnr.ffi.annotations.Delegate")
 
         types.forEach { type ->
             when (type) {
                 is StructType -> generateStruct(builder, type)
                 is AliasType -> generateAlias(builder, type)
+                is CallbackType -> generateCallback(builder, type)
                 else -> throw UnsupportedOperationException("Unknown type: ${type::class.simpleName}")
             }
         }
@@ -82,8 +85,9 @@ abstract class GenerateKotlinJVMTypes : DefaultTask() {
         )
 
         type.fields
-            .mapKeys { (fieldName, _) -> convertFieldNameToKotlinConvention(fieldName) }
-            .forEach { (fieldName, fieldType) -> builder.appendLine(generateStructField(fieldName, fieldType)) }
+            .forEach { (fieldName, fieldType) ->
+                builder.appendLine(generateStructField(type, convertFieldNameToKotlinConvention(fieldName), fieldType))
+            }
 
         builder.appendLine(
             """
@@ -96,7 +100,7 @@ abstract class GenerateKotlinJVMTypes : DefaultTask() {
         )
     }
 
-    private fun generateStructField(fieldName: String, fieldType: TypeInformation): String {
+    private fun generateStructField(structType: StructType, fieldName: String, fieldType: TypeInformation): String {
         return when (fieldType) {
             is PrimitiveType -> "    val $fieldName = ${fieldType.jvmNameInStruct}()"
             is AliasType -> "    val $fieldName = ${fieldType.jnrType}()"
@@ -126,12 +130,37 @@ abstract class GenerateKotlinJVMTypes : DefaultTask() {
                 |    }
                 """.trimMargin()
             }
+            is CallbackType -> throw UnsupportedOperationException("Embedding callback types in structs is not supported. Field $fieldName of ${structType.name} contains callback type ${fieldType.name}.")
         }
     }
 
     private fun generateAlias(builder: StringBuilder, type: AliasType) {
         builder.appendLine()
         builder.appendLine("internal typealias ${type.name} = ${type.jvmName}")
+    }
+
+    private fun generateCallback(builder: StringBuilder, type: CallbackType) {
+        builder.appendLine()
+
+        val parameters = type.parameters
+            .associate { it.name to it.type }
+            .map { (name, type) ->
+                when (type) {
+                    // We convert all struct types to pointers here because of https://github.com/jnr/jnr-ffi/issues/274.
+                    is StructType -> "${name}Pointer" to "Pointer?"
+                    else -> name to type.jvmName
+                }
+            }
+            .joinToString(", ") { (name, type) -> "$name: $type" }
+
+        builder.appendLine(
+            """
+                internal interface ${type.jvmName} {
+                    @Delegate
+                    fun invoke(userData: Pointer?, $parameters)
+                }
+            """.trimIndent()
+        )
     }
 
     private fun convertFieldNameToKotlinConvention(fieldName: String): String {

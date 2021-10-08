@@ -40,12 +40,18 @@ import batect.dockerclient.native.GetNetworkByNameOrID
 import batect.dockerclient.native.ListAllVolumes
 import batect.dockerclient.native.Ping
 import batect.dockerclient.native.PullImage
+import batect.dockerclient.native.PullImageProgressDetail
+import batect.dockerclient.native.PullImageProgressUpdate
+import kotlinx.cinterop.COpaquePointer
 import kotlinx.cinterop.CPointed
 import kotlinx.cinterop.CPointer
 import kotlinx.cinterop.CPointerVar
+import kotlinx.cinterop.StableRef
+import kotlinx.cinterop.asStableRef
 import kotlinx.cinterop.cstr
 import kotlinx.cinterop.get
 import kotlinx.cinterop.pointed
+import kotlinx.cinterop.staticCFunction
 import kotlinx.cinterop.toKString
 
 public actual class DockerClient : AutoCloseable {
@@ -194,17 +200,29 @@ public actual class DockerClient : AutoCloseable {
         }
     }
 
-    public actual fun pullImage(name: String): ImageReference {
-        val ret = PullImage(clientHandle, name.cstr)!!
-
-        try {
-            if (ret.pointed.Error != null) {
-                throw ImagePullFailedException(ret.pointed.Error!!.pointed)
+    public actual fun pullImage(name: String, onProgressUpdate: ImagePullProgressReceiver): ImageReference {
+        val callback = staticCFunction { userData: COpaquePointer?, progress: CPointer<PullImageProgressUpdate>? ->
+            // TODO: this code must never throw an exception otherwise the process will crash
+            if (progress == null) {
+                return@staticCFunction
             }
 
-            return ImageReference(ret.pointed.Response!!.pointed)
-        } finally {
-            FreePullImageReturn(ret)
+            val callback = userData!!.asStableRef<ImagePullProgressReceiver>().get()
+            callback(ImagePullProgressUpdate(progress.pointed))
+        }
+
+        return StableRef.create(onProgressUpdate).use { userData ->
+            val ret = PullImage(clientHandle, name.cstr, callback, userData.asCPointer())!!
+
+            try {
+                if (ret.pointed.Error != null) {
+                    throw ImagePullFailedException(ret.pointed.Error!!.pointed)
+                }
+
+                ImageReference(ret.pointed.Response!!.pointed)
+            } finally {
+                FreePullImageReturn(ret)
+            }
         }
     }
 
@@ -241,22 +259,40 @@ public actual class DockerClient : AutoCloseable {
     actual override fun close() {
         DisposeClient(clientHandle)
     }
+}
 
-    private fun VolumeReference(native: batect.dockerclient.native.VolumeReference): VolumeReference =
-        VolumeReference(native.Name!!.toKString())
+private fun VolumeReference(native: batect.dockerclient.native.VolumeReference): VolumeReference =
+    VolumeReference(native.Name!!.toKString())
 
-    private fun NetworkReference(native: batect.dockerclient.native.NetworkReference): NetworkReference =
-        NetworkReference(native.ID!!.toKString())
+private fun NetworkReference(native: batect.dockerclient.native.NetworkReference): NetworkReference =
+    NetworkReference(native.ID!!.toKString())
 
-    private fun ImageReference(native: batect.dockerclient.native.ImageReference): ImageReference =
-        ImageReference(native.ID!!.toKString())
+private fun ImageReference(native: batect.dockerclient.native.ImageReference): ImageReference =
+    ImageReference(native.ID!!.toKString())
 
-    private inline fun <reified NativeType : CPointed, KotlinType> fromArray(
-        source: CPointer<CPointerVar<NativeType>>,
-        count: ULong,
-        creator: (NativeType) -> KotlinType
-    ): List<KotlinType> {
-        return (0.toULong().until(count))
-            .map { i -> creator(source[i.toLong()]!!.pointed) }
+private fun ImagePullProgressUpdate(native: PullImageProgressUpdate): ImagePullProgressUpdate =
+    ImagePullProgressUpdate(
+        native.Message!!.toKString(),
+        if (native.Detail == null) null else ImagePullProgressDetail(native.Detail!!.pointed),
+        native.ID!!.toKString()
+    )
+
+private fun ImagePullProgressDetail(native: PullImageProgressDetail): ImagePullProgressDetail =
+    ImagePullProgressDetail(native.Current, native.Total)
+
+private inline fun <reified NativeType : CPointed, KotlinType> fromArray(
+    source: CPointer<CPointerVar<NativeType>>,
+    count: ULong,
+    creator: (NativeType) -> KotlinType
+): List<KotlinType> {
+    return (0.toULong().until(count))
+        .map { i -> creator(source[i.toLong()]!!.pointed) }
+}
+
+private inline fun <T : Any, R> StableRef<T>.use(user: (StableRef<T>) -> R): R {
+    try {
+        return user(this)
+    } finally {
+        this.dispose()
     }
 }

@@ -22,7 +22,18 @@ import kotlin.time.ExperimentalTime
 
 @ExperimentalTime
 internal fun RootTestWithConfigBuilder.onlyIfDockerDaemonPresent(test: suspend TestContext.() -> Unit) =
-    this.config(enabledIf = { getEnvironmentVariable("DISABLE_DOCKER_DAEMON_TESTS") != "1" }, test = test)
+    this.config(enabledIf = { dockerDaemonPresent }, test = test)
+
+private val dockerDaemonPresent: Boolean
+    get() = getEnvironmentVariable("DISABLE_DOCKER_DAEMON_TESTS") != "1"
+
+@ExperimentalTime
+internal fun RootTestWithConfigBuilder.onlyIfDockerDaemonSupportsLinuxContainers(test: suspend TestContext.() -> Unit) =
+    this.config(enabledIf = { dockerDaemonPresent && testEnvironmentContainerOperatingSystem == ContainerOperatingSystem.Linux }, test = test)
+
+@ExperimentalTime
+internal fun RootTestWithConfigBuilder.onlyIfDockerDaemonSupportsWindowsContainers(test: suspend TestContext.() -> Unit) =
+    this.config(enabledIf = { dockerDaemonPresent && testEnvironmentContainerOperatingSystem == ContainerOperatingSystem.Windows }, test = test)
 
 internal val testEnvironmentContainerOperatingSystem: ContainerOperatingSystem
     get() = when (val value = getEnvironmentVariable("DOCKER_CONTAINER_OPERATING_SYSTEM")) {

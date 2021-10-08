@@ -20,6 +20,7 @@
 
 package batect.dockerclient.native
 
+import jnr.ffi.Pointer
 import jnr.ffi.annotations.In
 
 @Suppress("FunctionName")
@@ -28,7 +29,7 @@ internal interface API {
     fun DisposeClient(@In clientHandle: Long)
     fun Ping(@In clientHandle: Long): PingReturn?
     fun GetDaemonVersionInformation(@In clientHandle: Long): GetDaemonVersionInformationReturn?
-    fun PullImage(@In clientHandle: Long, @In ref: String): PullImageReturn?
+    fun PullImage(@In clientHandle: Long, @In ref: String, @In onProgressUpdate: PullImageProgressCallback, @In callbackUserData: Pointer?): PullImageReturn?
     fun DeleteImage(@In clientHandle: Long, @In ref: String): Error?
     fun GetImage(@In clientHandle: Long, @In ref: String): GetImageReturn?
     fun CreateNetwork(@In clientHandle: Long, @In name: String, @In driver: String): CreateNetworkReturn?
@@ -65,6 +66,10 @@ internal interface API {
     fun AllocImageReference(): ImageReference?
     fun FreePullImageReturn(@In value: PullImageReturn)
     fun AllocPullImageReturn(): PullImageReturn?
+    fun FreePullImageProgressDetail(@In value: PullImageProgressDetail)
+    fun AllocPullImageProgressDetail(): PullImageProgressDetail?
+    fun FreePullImageProgressUpdate(@In value: PullImageProgressUpdate)
+    fun AllocPullImageProgressUpdate(): PullImageProgressUpdate?
     fun FreeGetImageReturn(@In value: GetImageReturn)
     fun AllocGetImageReturn(): GetImageReturn?
 }
