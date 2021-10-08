@@ -70,6 +70,15 @@
             "groupName": "Kotest",
             "matchManagers": ["gradle-lite"],
             "matchPackagePatterns": ["^io\\.kotest:"]
+        },
+        {
+            "groupName": "Docker",
+            "matchManagers": ["gomod"],
+            "matchPackagePatterns": [
+                "^github.com/docker/cli",
+                "^github.com/docker/docker",
+                "^github.com/moby/moby"
+            ]
         }
     ]
 }
