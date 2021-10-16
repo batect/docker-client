@@ -31,9 +31,12 @@ import kotlin.time.ExperimentalTime
 class DockerClientImagePullSpec : ShouldSpec({
     val client = closeAfterTest(DockerClient())
 
+    val defaultLinuxTestImage = "gcr.io/distroless/static@sha256:aadea1b1f16af043a34491eec481d0132479382096ea34f608087b4bef3634be"
+    val defaultWindowsTestImage = "mcr.microsoft.com/windows/nanoserver@sha256:4f06e1d8263b934d2e88dc1c6ff402f5b499c4d19ad6d0e2a5b9ee945f782928" // This is nanoserver:1809
+
     val testImages = when (testEnvironmentContainerOperatingSystem) {
         ContainerOperatingSystem.Linux -> mapOf(
-            "with a digest and no tag" to "gcr.io/distroless/static@sha256:aadea1b1f16af043a34491eec481d0132479382096ea34f608087b4bef3634be",
+            "with a digest and no tag" to defaultLinuxTestImage,
             "with a digest and tag" to "gcr.io/distroless/static:063a079c1a87bad3369cb9daf05e371e925c0c91@sha256:aadea1b1f16af043a34491eec481d0132479382096ea34f608087b4bef3634be",
             "with a tag and no digest" to "gcr.io/distroless/static:063a079c1a87bad3369cb9daf05e371e925c0c91",
             "with neither a digest nor a tag" to "gcr.io/distroless/static",
@@ -47,7 +50,7 @@ class DockerClientImagePullSpec : ShouldSpec({
             "that requires authentication to pull" to "ghcr.io/batect/docker-client:sample-authenticated-image"
         )
         ContainerOperatingSystem.Windows -> mapOf(
-            "with a tag" to "mcr.microsoft.com/windows/nanoserver:1809"
+            "with a tag" to defaultWindowsTestImage
         )
     }
 
@@ -69,10 +72,9 @@ class DockerClientImagePullSpec : ShouldSpec({
         }
     }
 
-    // TODO: Windows container image
     // TODO: callback that throws an exception
-    should("report progress information while pulling an image").onlyIfDockerDaemonSupportsLinuxContainers {
-        val image = "gcr.io/distroless/static@sha256:aadea1b1f16af043a34491eec481d0132479382096ea34f608087b4bef3634be"
+    should("report progress information while pulling a Linux image").onlyIfDockerDaemonSupportsLinuxContainers {
+        val image = defaultLinuxTestImage
         val progressUpdatesReceived = mutableListOf<ImagePullProgressUpdate>()
 
         client.pullImage(image) { update ->
@@ -107,6 +109,46 @@ class DockerClientImagePullSpec : ShouldSpec({
         progressUpdatesReceived shouldEndWith listOf(
             ImagePullProgressUpdate("Pull complete", ImagePullProgressDetail(0, 0), layerId),
             ImagePullProgressUpdate("Digest: sha256:aadea1b1f16af043a34491eec481d0132479382096ea34f608087b4bef3634be", null, ""),
+            ImagePullProgressUpdate("Status: Downloaded newer image for $image", null, "")
+        )
+    }
+
+    should("report progress information while pulling a Windows image").onlyIfDockerDaemonSupportsWindowsContainers {
+        val image = defaultWindowsTestImage
+        val progressUpdatesReceived = mutableListOf<ImagePullProgressUpdate>()
+
+        client.pullImage(image) { update ->
+            progressUpdatesReceived.add(update)
+        }
+
+        val layerId = "934e212983f2"
+        val layerSize = 102661372
+
+        progressUpdatesReceived shouldStartWith listOf(
+            ImagePullProgressUpdate("Pulling from windows/nanoserver", null, image),
+            ImagePullProgressUpdate("Pulling fs layer", ImagePullProgressDetail(0, 0), layerId),
+        )
+
+        progressUpdatesReceived.forAtLeastOne {
+            it.message shouldBe "Downloading"
+            it.detail shouldNotBe null
+            it.detail!!.total shouldBe layerSize
+            it.id shouldBe layerId
+        }
+
+        progressUpdatesReceived shouldContain ImagePullProgressUpdate("Verifying Checksum", ImagePullProgressDetail(0, 0), layerId)
+        progressUpdatesReceived shouldContain ImagePullProgressUpdate("Download complete", ImagePullProgressDetail(0, 0), layerId)
+
+        progressUpdatesReceived.forAtLeastOne {
+            it.message shouldBe "Extracting"
+            it.detail shouldNotBe null
+            it.detail!!.total shouldBe layerSize
+            it.id shouldBe layerId
+        }
+
+        progressUpdatesReceived shouldEndWith listOf(
+            ImagePullProgressUpdate("Pull complete", ImagePullProgressDetail(0, 0), layerId),
+            ImagePullProgressUpdate("Digest: sha256:4f06e1d8263b934d2e88dc1c6ff402f5b499c4d19ad6d0e2a5b9ee945f782928", null, ""),
             ImagePullProgressUpdate("Status: Downloaded newer image for $image", null, "")
         )
     }
