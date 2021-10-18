@@ -211,8 +211,10 @@ public actual class DockerClient : AutoCloseable {
 
             try {
                 if (ret.pointed.Error != null) {
-                    if (ret.pointed.Error!!.pointed.Type!!.toKString() == "main.ProgressCallbackFailedError") {
-                        throw ImagePullFailedException("Image pull progress receiver threw an exception: ${callbackState.exceptionThrown}", callbackState.exceptionThrown)
+                    val errorType = ret.pointed.Error!!.pointed.Type!!.toKString()
+
+                    if (errorType == "main.ProgressCallbackFailedError") {
+                        throw ImagePullFailedException("Image pull progress receiver threw an exception: ${callbackState.exceptionThrown}", callbackState.exceptionThrown, errorType)
                     }
 
                     throw ImagePullFailedException(ret.pointed.Error!!.pointed)
