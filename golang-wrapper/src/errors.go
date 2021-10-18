@@ -18,7 +18,7 @@ var (
 	ErrProgressCallbackFailed = ProgressCallbackFailedError{}
 )
 
-type ProgressCallbackFailedError struct {}
+type ProgressCallbackFailedError struct{}
 
 func (e ProgressCallbackFailedError) Error() string {
 	return "progress callback failed"
