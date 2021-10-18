@@ -182,6 +182,8 @@ tasks.named<Test>("jvmTest") {
         inputs.property(name, value)
         environment(name, value)
     }
+
+    environment("GODEBUG", "cgocheck=2")
 }
 
 tasks.withType<KotlinNativeHostTest>().configureEach {
@@ -190,6 +192,8 @@ tasks.withType<KotlinNativeHostTest>().configureEach {
         inputs.property(name, value)
         environment(name, value)
     }
+
+    environment("GODEBUG", "cgocheck=2")
 }
 
 tasks.withType<AbstractTestTask>().configureEach {
