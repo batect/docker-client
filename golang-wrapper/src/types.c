@@ -312,8 +312,8 @@ void FreePullImageProgressUpdate(PullImageProgressUpdate* value) {
     free(value);
 }
 
-void InvokePullImageProgressCallback(PullImageProgressCallback method, void* userData, PullImageProgressUpdate* progress) {
-    method(userData, progress);
+bool InvokePullImageProgressCallback(PullImageProgressCallback method, void* userData, PullImageProgressUpdate* progress) {
+    return method(userData, progress);
 }
 
 GetImageReturn* AllocGetImageReturn() {

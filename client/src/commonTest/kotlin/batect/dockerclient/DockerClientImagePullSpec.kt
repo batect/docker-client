@@ -113,6 +113,19 @@ class DockerClientImagePullSpec : ShouldSpec({
         )
     }
 
+    should("gracefully handle a progress callback that throws an exception while pulling an image").onlyIfDockerDaemonSupportsLinuxContainers {
+        val exceptionThrownByCallbackHandler = RuntimeException("This is an exception from the callback handler")
+
+        val exceptionThrownByPullMethod = shouldThrow<ImagePullFailedException> {
+            client.pullImage(defaultLinuxTestImage) {
+                throw exceptionThrownByCallbackHandler
+            }
+        }
+
+        exceptionThrownByPullMethod.message shouldBe "Image pull progress receiver threw an exception: $exceptionThrownByCallbackHandler"
+        exceptionThrownByPullMethod.cause shouldBe exceptionThrownByCallbackHandler
+    }
+
     should("report progress information while pulling a Windows image").onlyIfDockerDaemonSupportsWindowsContainers {
         val image = defaultWindowsTestImage
         val progressUpdatesReceived = mutableListOf<ImagePullProgressUpdate>()

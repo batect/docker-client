@@ -133,22 +133,29 @@ public actual class DockerClient : AutoCloseable {
     }
 
     public actual fun pullImage(name: String, onProgressUpdate: ImagePullProgressReceiver): ImageReference {
+        var exceptionThrownInCallback: Throwable? = null
+
         val callback = object : PullImageProgressCallback {
-            override fun invoke(userData: Pointer?, progressPointer: Pointer?) {
-                val progress = PullImageProgressUpdate(progressPointer!!)
+            override fun invoke(userData: Pointer?, progressPointer: Pointer?): Boolean {
+                try {
+                    val progress = PullImageProgressUpdate(progressPointer!!)
+                    onProgressUpdate(ImagePullProgressUpdate(progress))
 
-                val detail = if (progress.detail == null) {
-                    null
-                } else {
-                    ImagePullProgressDetail(progress.detail!!.current.get(), progress.detail!!.total.get())
+                    return true
+                } catch (t: Throwable) {
+                    exceptionThrownInCallback = t
+
+                    return false
                 }
-
-                onProgressUpdate(ImagePullProgressUpdate(progress.message.get(), detail, progress.id.get()))
             }
         }
 
         nativeAPI.PullImage(clientHandle, name, callback, null)!!.use { ret ->
             if (ret.error != null) {
+                if (ret.error!!.type.get() == "main.ProgressCallbackFailedError") {
+                    throw ImagePullFailedException("Image pull progress receiver threw an exception: $exceptionThrownInCallback", exceptionThrownInCallback)
+                }
+
                 throw ImagePullFailedException(ret.error!!)
             }
 
@@ -185,4 +192,13 @@ public actual class DockerClient : AutoCloseable {
     private fun VolumeReference(native: batect.dockerclient.native.VolumeReference): VolumeReference = VolumeReference(native.name.get())
     private fun NetworkReference(native: batect.dockerclient.native.NetworkReference): NetworkReference = NetworkReference(native.id.get())
     private fun ImageReference(native: batect.dockerclient.native.ImageReference): ImageReference = ImageReference(native.id.get())
+
+    private fun ImagePullProgressUpdate(native: batect.dockerclient.native.PullImageProgressUpdate): ImagePullProgressUpdate =
+        ImagePullProgressUpdate(native.message.get(), ImagePullProgressDetail(native.detail), native.id.get())
+
+    private fun ImagePullProgressDetail(native: batect.dockerclient.native.PullImageProgressDetail?): ImagePullProgressDetail? =
+        when (native) {
+            null -> null
+            else -> ImagePullProgressDetail(native.current.get(), native.total.get())
+        }
 }

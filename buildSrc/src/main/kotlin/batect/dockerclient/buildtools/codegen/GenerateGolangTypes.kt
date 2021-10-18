@@ -159,7 +159,7 @@ abstract class GenerateGolangTypes : DefaultTask() {
                 builder.appendLine()
             }
             is CallbackType -> {
-                builder.appendLine("typedef void (*${type.name}) (void*, ${type.parameters.joinToString(", ") { it.type.cName }});")
+                builder.appendLine("typedef bool (*${type.name}) (void*, ${type.parameters.joinToString(", ") { it.type.cName }});")
                 builder.appendLine()
             }
         }
@@ -267,8 +267,8 @@ abstract class GenerateGolangTypes : DefaultTask() {
     private fun generateGoInvoke(builder: StringBuilder, type: CallbackType) {
         builder.appendLine(
             """
-                func invoke${type.name}(method ${type.golangName}, userData unsafe.Pointer, ${type.parameters.joinToString(", ") { "${it.name} ${it.type.golangName}" }}) {
-                    C.Invoke${type.name}(method, userData, ${type.parameters.joinToString(", ") { it.name }})
+                func invoke${type.name}(method ${type.golangName}, userData unsafe.Pointer, ${type.parameters.joinToString(", ") { "${it.name} ${it.type.golangName}" }}) bool {
+                    return bool(C.Invoke${type.name}(method, userData, ${type.parameters.joinToString(", ") { it.name }}))
                 }
             """.trimIndent()
         )
@@ -385,9 +385,9 @@ abstract class GenerateGolangTypes : DefaultTask() {
 
             fun invoke(callback: CallbackType): CMethod = CMethod(
                 "Invoke${callback.name}",
-                null,
+                "bool",
                 listOf(CMethodParameter("method", callback.cName), CMethodParameter("userData", "void*")) + callback.parameters.map { CMethodParameter(it.name, it.type.cName) },
-                "method(userData, ${callback.parameters.joinToString(", ") { it.name }});"
+                "return method(userData, ${callback.parameters.joinToString(", ") { it.name }});"
             )
         }
     }

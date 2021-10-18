@@ -42,6 +42,7 @@ import batect.dockerclient.native.Ping
 import batect.dockerclient.native.PullImage
 import batect.dockerclient.native.PullImageProgressDetail
 import batect.dockerclient.native.PullImageProgressUpdate
+import kotlinx.cinterop.CFunction
 import kotlinx.cinterop.COpaquePointer
 import kotlinx.cinterop.CPointed
 import kotlinx.cinterop.CPointer
@@ -201,21 +202,19 @@ public actual class DockerClient : AutoCloseable {
     }
 
     public actual fun pullImage(name: String, onProgressUpdate: ImagePullProgressReceiver): ImageReference {
-        val callback = staticCFunction { userData: COpaquePointer?, progress: CPointer<PullImageProgressUpdate>? ->
-            // TODO: this code must never throw an exception otherwise the process will crash
-            if (progress == null) {
-                return@staticCFunction
-            }
-
-            val callback = userData!!.asStableRef<ImagePullProgressReceiver>().get()
-            callback(ImagePullProgressUpdate(progress.pointed))
+        val callbackState = CallbackState<PullImageProgressUpdate> { progress ->
+            onProgressUpdate.invoke(ImagePullProgressUpdate(progress!!.pointed))
         }
 
-        return StableRef.create(onProgressUpdate).use { userData ->
-            val ret = PullImage(clientHandle, name.cstr, callback, userData.asCPointer())!!
+        return callbackState.use { callback, callbackUserData ->
+            val ret = PullImage(clientHandle, name.cstr, callback, callbackUserData)!!
 
             try {
                 if (ret.pointed.Error != null) {
+                    if (ret.pointed.Error!!.pointed.Type!!.toKString() == "main.ProgressCallbackFailedError") {
+                        throw ImagePullFailedException("Image pull progress receiver threw an exception: ${callbackState.exceptionThrown}", callbackState.exceptionThrown)
+                    }
+
                     throw ImagePullFailedException(ret.pointed.Error!!.pointed)
                 }
 
@@ -294,5 +293,33 @@ private inline fun <T : Any, R> StableRef<T>.use(user: (StableRef<T>) -> R): R {
         return user(this)
     } finally {
         this.dispose()
+    }
+}
+
+// What's this for?
+// Kotlin/Native does not handle exceptions that propagate out of Kotlin/Native well.
+// For example, if a C function invokes a Kotlin function, and that Kotlin function throws an exception,
+// the process crashes.
+// While we can make sure our own code invoked by C functions don't throw exceptions, we can't make the
+// same guarantee for functions provided by users of this library, such as progress reporting callback
+// functions.
+// This is a helper class that helps us capture exceptions and report them later on.
+private class CallbackState<ParameterType : CPointed>(private val callbackFunction: (CPointer<ParameterType>?) -> Unit) {
+    var exceptionThrown: Throwable? = null
+
+    fun <R> use(user: (CPointer<CFunction<(COpaquePointer?, CPointer<ParameterType>?) -> Boolean>>, COpaquePointer) -> R): R = StableRef.create(this).use { userDataRef ->
+        val callback = staticCFunction { userData: COpaquePointer?, param: CPointer<ParameterType>? ->
+            val callbackState = userData!!.asStableRef<CallbackState<ParameterType>>().get()
+
+            try {
+                callbackState.callbackFunction(param)
+                true
+            } catch (t: Throwable) {
+                callbackState.exceptionThrown = t
+                false
+            }
+        }
+
+        user(callback, userDataRef.asCPointer())
     }
 }

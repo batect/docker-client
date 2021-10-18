@@ -249,7 +249,7 @@ func newGetImageReturn(
     return value
 }
 
-func invokePullImageProgressCallback(method PullImageProgressCallback, userData unsafe.Pointer, progress PullImageProgressUpdate) {
-    C.InvokePullImageProgressCallback(method, userData, progress)
+func invokePullImageProgressCallback(method PullImageProgressCallback, userData unsafe.Pointer, progress PullImageProgressUpdate) bool {
+    return bool(C.InvokePullImageProgressCallback(method, userData, progress))
 }
 

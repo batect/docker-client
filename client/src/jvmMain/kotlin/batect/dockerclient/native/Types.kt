@@ -269,7 +269,7 @@ internal class PullImageProgressUpdate(runtime: Runtime) : Struct(runtime), Auto
 
 internal interface PullImageProgressCallback {
     @Delegate
-    fun invoke(userData: Pointer?, progressPointer: Pointer?)
+    fun invoke(userData: Pointer?, progressPointer: Pointer?): Boolean
 }
 
 internal class GetImageReturn(runtime: Runtime) : Struct(runtime), AutoCloseable {

@@ -157,7 +157,7 @@ abstract class GenerateKotlinJVMTypes : DefaultTask() {
             """
                 internal interface ${type.jvmName} {
                     @Delegate
-                    fun invoke(userData: Pointer?, $parameters)
+                    fun invoke(userData: Pointer?, $parameters): Boolean
                 }
             """.trimIndent()
         )

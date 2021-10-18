@@ -116,7 +116,7 @@ typedef struct {
     char* ID;
 } PullImageProgressUpdate;
 
-typedef void (*PullImageProgressCallback) (void*, PullImageProgressUpdate*);
+typedef bool (*PullImageProgressCallback) (void*, PullImageProgressUpdate*);
 
 typedef struct {
     ImageReference* Response;
@@ -155,7 +155,7 @@ EXPORTED_FUNCTION PullImageProgressDetail* AllocPullImageProgressDetail();
 EXPORTED_FUNCTION void FreePullImageProgressDetail(PullImageProgressDetail* value);
 EXPORTED_FUNCTION PullImageProgressUpdate* AllocPullImageProgressUpdate();
 EXPORTED_FUNCTION void FreePullImageProgressUpdate(PullImageProgressUpdate* value);
-EXPORTED_FUNCTION void InvokePullImageProgressCallback(PullImageProgressCallback method, void* userData, PullImageProgressUpdate* progress);
+EXPORTED_FUNCTION bool InvokePullImageProgressCallback(PullImageProgressCallback method, void* userData, PullImageProgressUpdate* progress);
 EXPORTED_FUNCTION GetImageReturn* AllocGetImageReturn();
 EXPORTED_FUNCTION void FreeGetImageReturn(GetImageReturn* value);
 EXPORTED_FUNCTION VolumeReference** CreateVolumeReferenceArray(uint64_t size);

@@ -126,7 +126,9 @@ func processPullResponse(docker *client.Client, responseBody io.ReadCloser, orig
 		progressUpdate := newPullImageProgressUpdate(message.Status, progressDetail, message.ID)
 		defer C.FreePullImageProgressUpdate(progressUpdate)
 
-		invokePullImageProgressCallback(onProgressUpdate, callbackUserData, progressUpdate)
+		if !invokePullImageProgressCallback(onProgressUpdate, callbackUserData, progressUpdate) {
+			return ErrProgressCallbackFailed
+		}
 
 		return nil
 	})
