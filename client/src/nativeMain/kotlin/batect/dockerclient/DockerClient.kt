@@ -258,7 +258,15 @@ public actual class DockerClient : AutoCloseable {
     }
 
     actual override fun close() {
-        DisposeClient(clientHandle)
+        val error = DisposeClient(clientHandle)
+
+        try {
+            if (error != null) {
+                throw DockerClientException(error.pointed)
+            }
+        } finally {
+            FreeError(error)
+        }
     }
 }
 

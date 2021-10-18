@@ -61,12 +61,20 @@ func CreateClient() CreateClientReturn {
 }
 
 //export DisposeClient
-func DisposeClient(clientHandle DockerClientHandle) {
+func DisposeClient(clientHandle DockerClientHandle) Error {
 	clientsLock.Lock()
 	defer clientsLock.Unlock()
 
-	delete(clients, uint64(clientHandle))
-	delete(configFilesForClients, uint64(clientHandle))
+	idx := uint64(clientHandle)
+
+	if _, ok := clients[idx]; !ok {
+		return toError(ErrInvalidDockerClientHandle)
+	}
+
+	delete(clients, idx)
+	delete(configFilesForClients, idx)
+
+	return nil
 }
 
 func getClient(clientHandle DockerClientHandle) *client.Client {

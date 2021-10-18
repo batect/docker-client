@@ -26,7 +26,7 @@ import jnr.ffi.annotations.In
 @Suppress("FunctionName")
 internal interface API {
     fun CreateClient(): CreateClientReturn?
-    fun DisposeClient(@In clientHandle: Long)
+    fun DisposeClient(@In clientHandle: Long): Error?
     fun Ping(@In clientHandle: Long): PingReturn?
     fun GetDaemonVersionInformation(@In clientHandle: Long): GetDaemonVersionInformationReturn?
     fun PullImage(@In clientHandle: Long, @In ref: String, @In onProgressUpdate: PullImageProgressCallback, @In callbackUserData: Pointer?): PullImageReturn?

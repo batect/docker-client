@@ -186,7 +186,11 @@ public actual class DockerClient : AutoCloseable {
     }
 
     actual override fun close() {
-        nativeAPI.DisposeClient(clientHandle)
+        nativeAPI.DisposeClient(clientHandle).use { error ->
+            if (error != null) {
+                throw DockerClientException(error)
+            }
+        }
     }
 
     private fun VolumeReference(native: batect.dockerclient.native.VolumeReference): VolumeReference = VolumeReference(native.name.get())

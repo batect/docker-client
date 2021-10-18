@@ -15,11 +15,18 @@
 package main
 
 var (
-	ErrProgressCallbackFailed = ProgressCallbackFailedError{}
+	ErrInvalidDockerClientHandle = InvalidDockerClientHandleError{}
+	ErrProgressCallbackFailed    = ProgressCallbackFailedError{}
 )
 
 type ProgressCallbackFailedError struct{}
 
 func (e ProgressCallbackFailedError) Error() string {
 	return "progress callback failed"
+}
+
+type InvalidDockerClientHandleError struct{}
+
+func (e InvalidDockerClientHandleError) Error() string {
+	return "invalid Docker client handle"
 }
