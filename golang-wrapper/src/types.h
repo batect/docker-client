@@ -36,6 +36,20 @@ typedef struct {
 } Error;
 
 typedef struct {
+    char* CAFilePath;
+    char* CertFilePath;
+    char* KeyFilePath;
+    bool InsecureSkipVerify;
+} TLSConfiguration;
+
+typedef struct {
+    bool UseConfigurationFromEnvironment;
+    char* Host;
+    TLSConfiguration* TLS;
+    char* ConfigDirectoryPath;
+} ClientConfiguration;
+
+typedef struct {
     DockerClientHandle Client;
     Error* Error;
 } CreateClientReturn;
@@ -125,6 +139,10 @@ typedef struct {
 
 EXPORTED_FUNCTION Error* AllocError();
 EXPORTED_FUNCTION void FreeError(Error* value);
+EXPORTED_FUNCTION TLSConfiguration* AllocTLSConfiguration();
+EXPORTED_FUNCTION void FreeTLSConfiguration(TLSConfiguration* value);
+EXPORTED_FUNCTION ClientConfiguration* AllocClientConfiguration();
+EXPORTED_FUNCTION void FreeClientConfiguration(ClientConfiguration* value);
 EXPORTED_FUNCTION CreateClientReturn* AllocCreateClientReturn();
 EXPORTED_FUNCTION void FreeCreateClientReturn(CreateClientReturn* value);
 EXPORTED_FUNCTION PingResponse* AllocPingResponse();

@@ -106,7 +106,7 @@ abstract class GenerateKotlinJVMTypes : DefaultTask() {
             is AliasType -> "    val $fieldName = ${fieldType.jnrType}()"
             is StructType ->
                 """
-                |    private val ${fieldName}Pointer = Pointer()
+                |    val ${fieldName}Pointer = Pointer()
                 |    val $fieldName: ${fieldType.name}? by lazy { if (${fieldName}Pointer.intValue() == 0) null else ${fieldType.name}(${fieldName}Pointer.get()) }
                 """.trimMargin()
             is ArrayType -> {

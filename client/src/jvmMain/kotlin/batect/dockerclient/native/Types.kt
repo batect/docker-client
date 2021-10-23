@@ -40,13 +40,44 @@ internal class Error(runtime: Runtime) : Struct(runtime), AutoCloseable {
     }
 }
 
+internal class TLSConfiguration(runtime: Runtime) : Struct(runtime), AutoCloseable {
+    constructor(pointer: jnr.ffi.Pointer) : this(pointer.runtime) {
+        this.useMemory(pointer)
+    }
+
+    val caFilePath = UTF8StringRef()
+    val certFilePath = UTF8StringRef()
+    val keyFilePath = UTF8StringRef()
+    val insecureSkipVerify = Boolean()
+
+    override fun close() {
+        nativeAPI.FreeTLSConfiguration(this)
+    }
+}
+
+internal class ClientConfiguration(runtime: Runtime) : Struct(runtime), AutoCloseable {
+    constructor(pointer: jnr.ffi.Pointer) : this(pointer.runtime) {
+        this.useMemory(pointer)
+    }
+
+    val useConfigurationFromEnvironment = Boolean()
+    val host = UTF8StringRef()
+    val tlsPointer = Pointer()
+    val tls: TLSConfiguration? by lazy { if (tlsPointer.intValue() == 0) null else TLSConfiguration(tlsPointer.get()) }
+    val configDirectoryPath = UTF8StringRef()
+
+    override fun close() {
+        nativeAPI.FreeClientConfiguration(this)
+    }
+}
+
 internal class CreateClientReturn(runtime: Runtime) : Struct(runtime), AutoCloseable {
     constructor(pointer: jnr.ffi.Pointer) : this(pointer.runtime) {
         this.useMemory(pointer)
     }
 
     val client = u_int64_t()
-    private val errorPointer = Pointer()
+    val errorPointer = Pointer()
     val error: Error? by lazy { if (errorPointer.intValue() == 0) null else Error(errorPointer.get()) }
 
     override fun close() {
@@ -74,9 +105,9 @@ internal class PingReturn(runtime: Runtime) : Struct(runtime), AutoCloseable {
         this.useMemory(pointer)
     }
 
-    private val responsePointer = Pointer()
+    val responsePointer = Pointer()
     val response: PingResponse? by lazy { if (responsePointer.intValue() == 0) null else PingResponse(responsePointer.get()) }
-    private val errorPointer = Pointer()
+    val errorPointer = Pointer()
     val error: Error? by lazy { if (errorPointer.intValue() == 0) null else Error(errorPointer.get()) }
 
     override fun close() {
@@ -107,9 +138,9 @@ internal class GetDaemonVersionInformationReturn(runtime: Runtime) : Struct(runt
         this.useMemory(pointer)
     }
 
-    private val responsePointer = Pointer()
+    val responsePointer = Pointer()
     val response: DaemonVersionInformation? by lazy { if (responsePointer.intValue() == 0) null else DaemonVersionInformation(responsePointer.get()) }
-    private val errorPointer = Pointer()
+    val errorPointer = Pointer()
     val error: Error? by lazy { if (errorPointer.intValue() == 0) null else Error(errorPointer.get()) }
 
     override fun close() {
@@ -134,9 +165,9 @@ internal class CreateVolumeReturn(runtime: Runtime) : Struct(runtime), AutoClose
         this.useMemory(pointer)
     }
 
-    private val responsePointer = Pointer()
+    val responsePointer = Pointer()
     val response: VolumeReference? by lazy { if (responsePointer.intValue() == 0) null else VolumeReference(responsePointer.get()) }
-    private val errorPointer = Pointer()
+    val errorPointer = Pointer()
     val error: Error? by lazy { if (errorPointer.intValue() == 0) null else Error(errorPointer.get()) }
 
     override fun close() {
@@ -162,7 +193,7 @@ internal class ListAllVolumesReturn(runtime: Runtime) : Struct(runtime), AutoClo
             (0..(count - 1)).map { i -> VolumeReference(pointer.getPointer(elementSize * i)) }
         }
     }
-    private val errorPointer = Pointer()
+    val errorPointer = Pointer()
     val error: Error? by lazy { if (errorPointer.intValue() == 0) null else Error(errorPointer.get()) }
 
     override fun close() {
@@ -187,9 +218,9 @@ internal class CreateNetworkReturn(runtime: Runtime) : Struct(runtime), AutoClos
         this.useMemory(pointer)
     }
 
-    private val responsePointer = Pointer()
+    val responsePointer = Pointer()
     val response: NetworkReference? by lazy { if (responsePointer.intValue() == 0) null else NetworkReference(responsePointer.get()) }
-    private val errorPointer = Pointer()
+    val errorPointer = Pointer()
     val error: Error? by lazy { if (errorPointer.intValue() == 0) null else Error(errorPointer.get()) }
 
     override fun close() {
@@ -202,9 +233,9 @@ internal class GetNetworkByNameOrIDReturn(runtime: Runtime) : Struct(runtime), A
         this.useMemory(pointer)
     }
 
-    private val responsePointer = Pointer()
+    val responsePointer = Pointer()
     val response: NetworkReference? by lazy { if (responsePointer.intValue() == 0) null else NetworkReference(responsePointer.get()) }
-    private val errorPointer = Pointer()
+    val errorPointer = Pointer()
     val error: Error? by lazy { if (errorPointer.intValue() == 0) null else Error(errorPointer.get()) }
 
     override fun close() {
@@ -229,9 +260,9 @@ internal class PullImageReturn(runtime: Runtime) : Struct(runtime), AutoCloseabl
         this.useMemory(pointer)
     }
 
-    private val responsePointer = Pointer()
+    val responsePointer = Pointer()
     val response: ImageReference? by lazy { if (responsePointer.intValue() == 0) null else ImageReference(responsePointer.get()) }
-    private val errorPointer = Pointer()
+    val errorPointer = Pointer()
     val error: Error? by lazy { if (errorPointer.intValue() == 0) null else Error(errorPointer.get()) }
 
     override fun close() {
@@ -258,7 +289,7 @@ internal class PullImageProgressUpdate(runtime: Runtime) : Struct(runtime), Auto
     }
 
     val message = UTF8StringRef()
-    private val detailPointer = Pointer()
+    val detailPointer = Pointer()
     val detail: PullImageProgressDetail? by lazy { if (detailPointer.intValue() == 0) null else PullImageProgressDetail(detailPointer.get()) }
     val id = UTF8StringRef()
 
@@ -277,9 +308,9 @@ internal class GetImageReturn(runtime: Runtime) : Struct(runtime), AutoCloseable
         this.useMemory(pointer)
     }
 
-    private val responsePointer = Pointer()
+    val responsePointer = Pointer()
     val response: ImageReference? by lazy { if (responsePointer.intValue() == 0) null else ImageReference(responsePointer.get()) }
-    private val errorPointer = Pointer()
+    val errorPointer = Pointer()
     val error: Error? by lazy { if (errorPointer.intValue() == 0) null else Error(errorPointer.get()) }
 
     override fun close() {

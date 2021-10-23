@@ -25,7 +25,7 @@ import kotlin.time.ExperimentalTime
 
 @ExperimentalTime
 class DockerClientNetworkManagementSpec : ShouldSpec({
-    val client = closeAfterTest(DockerClient())
+    val client = closeAfterTest(DockerClientBuilder().build())
     val networkDriver = when (testEnvironmentContainerOperatingSystem) {
         ContainerOperatingSystem.Linux -> NetworkDrivers.bridge
         ContainerOperatingSystem.Windows -> NetworkDrivers.nat

@@ -37,6 +37,46 @@ void FreeError(Error* value) {
     free(value);
 }
 
+TLSConfiguration* AllocTLSConfiguration() {
+    TLSConfiguration* value = malloc(sizeof(TLSConfiguration));
+    value->CAFilePath = NULL;
+    value->CertFilePath = NULL;
+    value->KeyFilePath = NULL;
+
+    return value;
+}
+
+void FreeTLSConfiguration(TLSConfiguration* value) {
+    if (value == NULL) {
+        return;
+    }
+
+    free(value->CAFilePath);
+    free(value->CertFilePath);
+    free(value->KeyFilePath);
+    free(value);
+}
+
+ClientConfiguration* AllocClientConfiguration() {
+    ClientConfiguration* value = malloc(sizeof(ClientConfiguration));
+    value->Host = NULL;
+    value->TLS = NULL;
+    value->ConfigDirectoryPath = NULL;
+
+    return value;
+}
+
+void FreeClientConfiguration(ClientConfiguration* value) {
+    if (value == NULL) {
+        return;
+    }
+
+    free(value->Host);
+    FreeTLSConfiguration(value->TLS);
+    free(value->ConfigDirectoryPath);
+    free(value);
+}
+
 CreateClientReturn* AllocCreateClientReturn() {
     CreateClientReturn* value = malloc(sizeof(CreateClientReturn));
     value->Error = NULL;

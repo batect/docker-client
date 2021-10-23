@@ -52,11 +52,12 @@ kotlin {
     jvm()
     linuxX64()
     macosX64()
-    macosArm64()
     mingwX64()
 
     // This is currently not supported by kotest:
     //  linuxArm64()
+    // This is currently not supported by okio (will be available in alpha.11 - https://github.com/square/okio/pull/1027):
+    //  macosArm64()
 
     sourceSets {
         val commonMain by getting
@@ -78,6 +79,8 @@ kotlin {
                 implementation("io.kotest:kotest-assertions-core:5.0.0.M1")
                 implementation("io.kotest:kotest-framework-api:5.0.0.M1")
                 implementation("io.kotest:kotest-framework-engine:5.0.0.M1")
+
+                implementation("com.squareup.okio:okio:3.0.0-alpha.10")
             }
         }
 
@@ -91,10 +94,42 @@ kotlin {
             dependsOn(commonTest)
         }
 
+        val linuxTest by creating {
+            dependsOn(nativeTest)
+        }
+
+        val linuxX64Test by getting {
+            dependsOn(linuxTest)
+        }
+
+        val mingwTest by creating {
+            dependsOn(nativeTest)
+        }
+
+        val mingwX64Test by getting {
+            dependsOn(mingwTest)
+        }
+
+        val macosTest by creating {
+            dependsOn(nativeTest)
+        }
+
+        val macosX64Test by getting {
+            dependsOn(macosTest)
+        }
+
         all {
+            val sourceSet = this
+
             languageSettings {
                 progressiveMode = true
                 explicitApi = ExplicitApiMode.Strict
+            }
+
+            if (sourceSet.name.endsWith("Test")) {
+                // Required for Okio's experimental filesystem support.
+                // Can be removed once filesystem support is no longer experimental.
+                languageSettings.optIn("kotlin.RequiresOptIn")
             }
         }
     }

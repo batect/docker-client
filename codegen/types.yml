@@ -12,6 +12,30 @@
     - name: Message
       type: string
 
+- name: TLSConfiguration
+  type: struct
+  fields:
+    - name: CAFilePath
+      type: string
+    - name: CertFilePath
+      type: string
+    - name: KeyFilePath
+      type: string
+    - name: InsecureSkipVerify
+      type: boolean
+
+- name: ClientConfiguration
+  type: struct
+  fields:
+    - name: UseConfigurationFromEnvironment
+      type: boolean
+    - name: Host
+      type: string
+    - name: TLS
+      type: TLSConfiguration
+    - name: ConfigDirectoryPath
+      type: string
+
 - name: CreateClientReturn
   type: struct
   fields:

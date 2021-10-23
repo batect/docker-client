@@ -16,7 +16,7 @@
 
 package batect.dockerclient
 
-public expect class DockerClient() : AutoCloseable {
+public interface DockerClient : AutoCloseable {
     public fun ping(): PingResponse
     public fun getDaemonVersionInformation(): DaemonVersionInformation
 
@@ -31,6 +31,6 @@ public expect class DockerClient() : AutoCloseable {
     public fun pullImage(name: String, onProgressUpdate: ImagePullProgressReceiver = {}): ImageReference
     public fun deleteImage(image: ImageReference)
     public fun getImage(name: String): ImageReference?
-
-    override fun close()
 }
+
+internal expect class RealDockerClient(configuration: DockerClientConfiguration) : DockerClient, AutoCloseable

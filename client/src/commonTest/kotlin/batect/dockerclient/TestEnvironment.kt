@@ -42,9 +42,17 @@ internal val testEnvironmentContainerOperatingSystem: ContainerOperatingSystem
         else -> throw IllegalArgumentException("Unknown value for 'DOCKER_CONTAINER_OPERATING_SYSTEM' environment variable: $value")
     }
 
+expect val testEnvironmentOperatingSystem: OperatingSystem
+
 expect fun getEnvironmentVariable(name: String): String?
 
 enum class ContainerOperatingSystem(val platformDescription: String) {
     Linux("linux/amd64"),
     Windows("windows/amd64")
+}
+
+enum class OperatingSystem {
+    Linux,
+    Windows,
+    MacOS
 }

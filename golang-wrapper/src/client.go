@@ -19,12 +19,19 @@ import (
 		#include "types.h"
 	*/
 	"C"
+	"fmt"
+	"net"
+	"net/http"
+	"os"
 	"sync"
+	"time"
 
 	"github.com/docker/cli/cli/config"
 	"github.com/docker/cli/cli/config/configfile"
 	"github.com/docker/cli/cli/config/credentials"
 	"github.com/docker/docker/client"
+
+	"github.com/docker/go-connections/tlsconfig"
 )
 
 //nolint:gochecknoglobals
@@ -36,14 +43,43 @@ var (
 )
 
 //export CreateClient
-func CreateClient() CreateClientReturn {
-	c, err := client.NewClientWithOpts()
+func CreateClient(cfg *C.ClientConfiguration) CreateClientReturn {
+	var opts []client.Opt
+
+	if cfg.UseConfigurationFromEnvironment {
+		opts = append(opts, client.FromEnv)
+	}
+
+	if cfg.Host != nil {
+		opts = append(opts, client.WithHost(C.GoString(cfg.Host)))
+	}
+
+	if cfg.TLS != nil {
+		opts = append(opts, withTLSClientConfig(
+			C.GoString(cfg.TLS.CAFilePath),
+			C.GoString(cfg.TLS.CertFilePath),
+			C.GoString(cfg.TLS.KeyFilePath),
+			bool(cfg.TLS.InsecureSkipVerify),
+		))
+	}
+
+	c, err := client.NewClientWithOpts(opts...)
 
 	if err != nil {
 		return newCreateClientReturn(0, toError(err))
 	}
 
-	configFile, err := loadConfigFile()
+	configDir := config.Dir()
+
+	if cfg.ConfigDirectoryPath != nil {
+		configDir = C.GoString(cfg.ConfigDirectoryPath)
+
+		if !directoryExists(configDir) {
+			return newCreateClientReturn(0, toError(fmt.Errorf("configuration directory '%s' does not exist or is not a directory", configDir)))
+		}
+	}
+
+	configFile, err := loadConfigFile(configDir)
 
 	if err != nil {
 		return newCreateClientReturn(0, toError(err))
@@ -58,6 +94,49 @@ func CreateClient() CreateClientReturn {
 	nextClientIndex++
 
 	return newCreateClientReturn(DockerClientHandle(clientIndex) , nil)
+}
+
+// The Docker client library does not expose a version of WithTLSClientConfig that allows us to set
+// InsecureSkipVerify. So this is a mish-mash of that function and cli/context/docker.withHTTPConfig()
+func withTLSClientConfig(caCertPath, certPath, keyPath string, insecureSkipVerify bool) client.Opt {
+	return func(c *client.Client) error {
+		opts := tlsconfig.Options{
+			CAFile:             caCertPath,
+			CertFile:           certPath,
+			KeyFile:            keyPath,
+			ExclusiveRootPools: true,
+			InsecureSkipVerify: insecureSkipVerify,
+		}
+
+		tlsConfig, err := tlsconfig.Client(opts)
+
+		if err != nil {
+			return fmt.Errorf("failed to create TLS config: %w", err)
+		}
+
+		httpClient := &http.Client{
+			Transport: &http.Transport{
+				TLSClientConfig: tlsConfig,
+				DialContext: (&net.Dialer{
+					KeepAlive: 30 * time.Second,
+					Timeout:   30 * time.Second,
+				}).DialContext,
+			},
+			CheckRedirect: client.CheckRedirect,
+		}
+
+		return client.WithHTTPClient(httpClient)(c)
+	}
+}
+
+func directoryExists(path string) bool {
+	s, err := os.Stat(path)
+
+	if err == nil {
+		return s.IsDir()
+	}
+
+	return false
 }
 
 //export DisposeClient
@@ -91,9 +170,8 @@ func getClientConfigFile(clientHandle DockerClientHandle) *configfile.ConfigFile
 	return configFilesForClients[uint64(clientHandle)]
 }
 
-func loadConfigFile() (*configfile.ConfigFile, error) {
-	// TODO: allow overriding default config file path
-	configFile, err := config.Load(config.Dir())
+func loadConfigFile(configPath string) (*configfile.ConfigFile, error) {
+	configFile, err := config.Load(configPath)
 
 	if err != nil {
 		return nil, err

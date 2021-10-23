@@ -27,6 +27,8 @@ import "unsafe"
 
 type DockerClientHandle C.DockerClientHandle
 type Error *C.Error
+type TLSConfiguration *C.TLSConfiguration
+type ClientConfiguration *C.ClientConfiguration
 type CreateClientReturn *C.CreateClientReturn
 type PingResponse *C.PingResponse
 type PingReturn *C.PingReturn
@@ -52,6 +54,36 @@ func newError(
     value := C.AllocError()
     value.Type = C.CString(Type)
     value.Message = C.CString(Message)
+
+    return value
+}
+
+func newTLSConfiguration(
+    CAFilePath string,
+    CertFilePath string,
+    KeyFilePath string,
+    InsecureSkipVerify bool,
+) TLSConfiguration {
+    value := C.AllocTLSConfiguration()
+    value.CAFilePath = C.CString(CAFilePath)
+    value.CertFilePath = C.CString(CertFilePath)
+    value.KeyFilePath = C.CString(KeyFilePath)
+    value.InsecureSkipVerify = C.bool(InsecureSkipVerify)
+
+    return value
+}
+
+func newClientConfiguration(
+    UseConfigurationFromEnvironment bool,
+    Host string,
+    TLS TLSConfiguration,
+    ConfigDirectoryPath string,
+) ClientConfiguration {
+    value := C.AllocClientConfiguration()
+    value.UseConfigurationFromEnvironment = C.bool(UseConfigurationFromEnvironment)
+    value.Host = C.CString(Host)
+    value.TLS = TLS
+    value.ConfigDirectoryPath = C.CString(ConfigDirectoryPath)
 
     return value
 }

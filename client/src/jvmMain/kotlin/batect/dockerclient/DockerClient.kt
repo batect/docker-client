@@ -16,17 +16,21 @@
 
 package batect.dockerclient
 
+import batect.dockerclient.native.ClientConfiguration
 import batect.dockerclient.native.DockerClientHandle
 import batect.dockerclient.native.PullImageProgressCallback
 import batect.dockerclient.native.PullImageProgressUpdate
+import batect.dockerclient.native.TLSConfiguration
 import batect.dockerclient.native.nativeAPI
 import jnr.ffi.Pointer
+import jnr.ffi.Runtime
+import jnr.ffi.Struct
 
-public actual class DockerClient : AutoCloseable {
-    private val clientHandle: DockerClientHandle = createClient()
+internal actual class RealDockerClient actual constructor(configuration: DockerClientConfiguration) : DockerClient, AutoCloseable {
+    private val clientHandle: DockerClientHandle = createClient(configuration)
 
-    private fun createClient(): DockerClientHandle {
-        nativeAPI.CreateClient()!!.use { ret ->
+    private fun createClient(configuration: DockerClientConfiguration): DockerClientHandle {
+        nativeAPI.CreateClient(ClientConfiguration(configuration))!!.use { ret ->
             if (ret.error != null) {
                 throw DockerClientException(ret.error!!)
             }
@@ -35,7 +39,7 @@ public actual class DockerClient : AutoCloseable {
         }
     }
 
-    public actual fun ping(): PingResponse {
+    public override fun ping(): PingResponse {
         nativeAPI.Ping(clientHandle)!!.use { ret ->
             if (ret.error != null) {
                 throw PingFailedException(ret.error!!)
@@ -52,7 +56,7 @@ public actual class DockerClient : AutoCloseable {
         }
     }
 
-    public actual fun getDaemonVersionInformation(): DaemonVersionInformation {
+    public override fun getDaemonVersionInformation(): DaemonVersionInformation {
         nativeAPI.GetDaemonVersionInformation(clientHandle)!!.use { ret ->
             if (ret.error != null) {
                 throw GetDaemonVersionInformationFailedException(ret.error!!)
@@ -72,7 +76,7 @@ public actual class DockerClient : AutoCloseable {
         }
     }
 
-    public actual fun listAllVolumes(): Set<VolumeReference> {
+    public override fun listAllVolumes(): Set<VolumeReference> {
         nativeAPI.ListAllVolumes(clientHandle)!!.use { ret ->
             if (ret.error != null) {
                 throw ListAllVolumesFailedException(ret.error!!)
@@ -82,7 +86,7 @@ public actual class DockerClient : AutoCloseable {
         }
     }
 
-    public actual fun createVolume(name: String): VolumeReference {
+    public override fun createVolume(name: String): VolumeReference {
         nativeAPI.CreateVolume(clientHandle, name)!!.use { ret ->
             if (ret.error != null) {
                 throw VolumeCreationFailedException(ret.error!!)
@@ -92,7 +96,7 @@ public actual class DockerClient : AutoCloseable {
         }
     }
 
-    public actual fun deleteVolume(volume: VolumeReference) {
+    public override fun deleteVolume(volume: VolumeReference) {
         nativeAPI.DeleteVolume(clientHandle, volume.name).use { error ->
             if (error != null) {
                 throw VolumeDeletionFailedException(error)
@@ -100,7 +104,7 @@ public actual class DockerClient : AutoCloseable {
         }
     }
 
-    public actual fun createNetwork(name: String, driver: String): NetworkReference {
+    public override fun createNetwork(name: String, driver: String): NetworkReference {
         nativeAPI.CreateNetwork(clientHandle, name, driver)!!.use { ret ->
             if (ret.error != null) {
                 throw NetworkCreationFailedException(ret.error!!)
@@ -110,7 +114,7 @@ public actual class DockerClient : AutoCloseable {
         }
     }
 
-    public actual fun deleteNetwork(network: NetworkReference) {
+    public override fun deleteNetwork(network: NetworkReference) {
         nativeAPI.DeleteNetwork(clientHandle, network.id).use { error ->
             if (error != null) {
                 throw NetworkDeletionFailedException(error)
@@ -118,7 +122,7 @@ public actual class DockerClient : AutoCloseable {
         }
     }
 
-    public actual fun getNetworkByNameOrID(searchFor: String): NetworkReference? {
+    public override fun getNetworkByNameOrID(searchFor: String): NetworkReference? {
         nativeAPI.GetNetworkByNameOrID(clientHandle, searchFor)!!.use { ret ->
             if (ret.error != null) {
                 throw NetworkRetrievalFailedException(ret.error!!)
@@ -132,7 +136,7 @@ public actual class DockerClient : AutoCloseable {
         }
     }
 
-    public actual fun pullImage(name: String, onProgressUpdate: ImagePullProgressReceiver): ImageReference {
+    public override fun pullImage(name: String, onProgressUpdate: ImagePullProgressReceiver): ImageReference {
         var exceptionThrownInCallback: Throwable? = null
 
         val callback = object : PullImageProgressCallback {
@@ -163,7 +167,7 @@ public actual class DockerClient : AutoCloseable {
         }
     }
 
-    public actual fun deleteImage(image: ImageReference) {
+    public override fun deleteImage(image: ImageReference) {
         nativeAPI.DeleteImage(clientHandle, image.id).use { error ->
             if (error != null) {
                 throw ImageDeletionFailedException(error)
@@ -171,7 +175,7 @@ public actual class DockerClient : AutoCloseable {
         }
     }
 
-    public actual fun getImage(name: String): ImageReference? {
+    public override fun getImage(name: String): ImageReference? {
         nativeAPI.GetImage(clientHandle, name)!!.use { ret ->
             if (ret.error != null) {
                 throw ImageRetrievalFailedException(ret.error!!)
@@ -185,7 +189,7 @@ public actual class DockerClient : AutoCloseable {
         }
     }
 
-    actual override fun close() {
+    override fun close() {
         nativeAPI.DisposeClient(clientHandle).use { error ->
             if (error != null) {
                 throw DockerClientException(error)
@@ -205,4 +209,29 @@ public actual class DockerClient : AutoCloseable {
             null -> null
             else -> ImagePullProgressDetail(native.current.get(), native.total.get())
         }
+
+    private fun ClientConfiguration(jvm: DockerClientConfiguration): ClientConfiguration {
+        val config = ClientConfiguration(Runtime.getRuntime(nativeAPI))
+        config.useConfigurationFromEnvironment.set(jvm.useConfigurationFromEnvironment)
+        config.host.set(jvm.host)
+        config.configDirectoryPath.set(jvm.configDirectoryPath)
+
+        if (jvm.tls != null) {
+            config.tlsPointer.set(Struct.getMemory(TLSConfiguration(jvm.tls)))
+        } else {
+            config.tlsPointer.set(0)
+        }
+
+        return config
+    }
+
+    private fun TLSConfiguration(jvm: DockerClientTLSConfiguration): TLSConfiguration {
+        val tls = TLSConfiguration(Runtime.getRuntime(nativeAPI))
+        tls.caFilePath.set(jvm.caFilePath)
+        tls.certFilePath.set(jvm.certFilePath)
+        tls.keyFilePath.set(jvm.keyFilePath)
+        tls.insecureSkipVerify.set(jvm.insecureSkipVerify)
+
+        return tls
+    }
 }

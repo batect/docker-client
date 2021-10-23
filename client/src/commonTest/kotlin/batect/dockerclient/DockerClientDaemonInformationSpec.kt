@@ -25,7 +25,7 @@ import kotlin.time.ExperimentalTime
 
 @ExperimentalTime
 class DockerClientDaemonInformationSpec : ShouldSpec({
-    val client = closeAfterTest(DockerClient())
+    val client = closeAfterTest(DockerClientBuilder().build())
 
     should("be able to ping the daemon").onlyIfDockerDaemonPresent {
         val response = client.ping()

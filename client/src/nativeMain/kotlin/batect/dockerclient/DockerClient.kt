@@ -16,6 +16,7 @@
 
 package batect.dockerclient
 
+import batect.dockerclient.native.ClientConfiguration
 import batect.dockerclient.native.CreateClient
 import batect.dockerclient.native.CreateNetwork
 import batect.dockerclient.native.CreateVolume
@@ -42,37 +43,66 @@ import batect.dockerclient.native.Ping
 import batect.dockerclient.native.PullImage
 import batect.dockerclient.native.PullImageProgressDetail
 import batect.dockerclient.native.PullImageProgressUpdate
+import batect.dockerclient.native.TLSConfiguration
 import kotlinx.cinterop.CFunction
 import kotlinx.cinterop.COpaquePointer
 import kotlinx.cinterop.CPointed
 import kotlinx.cinterop.CPointer
 import kotlinx.cinterop.CPointerVar
+import kotlinx.cinterop.MemScope
+import kotlinx.cinterop.NativePlacement
 import kotlinx.cinterop.StableRef
+import kotlinx.cinterop.alloc
 import kotlinx.cinterop.asStableRef
 import kotlinx.cinterop.cstr
 import kotlinx.cinterop.get
+import kotlinx.cinterop.memScoped
 import kotlinx.cinterop.pointed
+import kotlinx.cinterop.ptr
 import kotlinx.cinterop.staticCFunction
 import kotlinx.cinterop.toKString
 
-public actual class DockerClient : AutoCloseable {
-    private val clientHandle: DockerClientHandle = createClient()
+internal actual class RealDockerClient actual constructor(configuration: DockerClientConfiguration) : DockerClient, AutoCloseable {
+    private val clientHandle: DockerClientHandle = createClient(configuration)
 
-    private fun createClient(): DockerClientHandle {
-        val ret = CreateClient()!!
+    private fun createClient(configuration: DockerClientConfiguration): DockerClientHandle {
+        memScoped {
+            val ret = CreateClient(allocClientConfiguration(configuration).ptr)!!
 
-        try {
-            if (ret.pointed.Error != null) {
-                throw DockerClientException(ret.pointed.Error!!.pointed)
+            try {
+                if (ret.pointed.Error != null) {
+                    throw DockerClientException(ret.pointed.Error!!.pointed)
+                }
+
+                return ret.pointed.Client
+            } finally {
+                FreeCreateClientReturn(ret)
             }
-
-            return ret.pointed.Client
-        } finally {
-            FreeCreateClientReturn(ret)
         }
     }
 
-    public actual fun ping(): PingResponse {
+    private fun MemScope.allocClientConfiguration(configuration: DockerClientConfiguration): ClientConfiguration {
+        val nativeConfig = alloc<ClientConfiguration>()
+        nativeConfig.UseConfigurationFromEnvironment = configuration.useConfigurationFromEnvironment
+        nativeConfig.Host = configuration.host?.cstr?.ptr
+        nativeConfig.ConfigDirectoryPath = configuration.configDirectoryPath?.cstr?.ptr
+
+        if (configuration.tls != null) {
+            val tls = alloc<TLSConfiguration>()
+            tls.CAFilePath = configuration.tls.caFilePath.cstr.ptr
+            tls.CertFilePath = configuration.tls.certFilePath.cstr.ptr
+            tls.KeyFilePath = configuration.tls.keyFilePath.cstr.ptr
+            tls.InsecureSkipVerify = configuration.tls.insecureSkipVerify
+
+            nativeConfig.TLS = tls.ptr
+        } else {
+            nativeConfig.TLS = null
+        }
+
+        return nativeConfig
+    }
+
+    public override fun ping(): PingResponse {
         val ret = Ping(clientHandle)!!
 
         try {
@@ -93,7 +123,7 @@ public actual class DockerClient : AutoCloseable {
         }
     }
 
-    public actual fun getDaemonVersionInformation(): DaemonVersionInformation {
+    public override fun getDaemonVersionInformation(): DaemonVersionInformation {
         val ret = GetDaemonVersionInformation(clientHandle)!!
 
         try {
@@ -117,7 +147,7 @@ public actual class DockerClient : AutoCloseable {
         }
     }
 
-    public actual fun listAllVolumes(): Set<VolumeReference> {
+    public override fun listAllVolumes(): Set<VolumeReference> {
         val ret = ListAllVolumes(clientHandle)!!
 
         try {
@@ -131,7 +161,7 @@ public actual class DockerClient : AutoCloseable {
         }
     }
 
-    public actual fun createVolume(name: String): VolumeReference {
+    public override fun createVolume(name: String): VolumeReference {
         val ret = CreateVolume(clientHandle, name.cstr)!!
 
         try {
@@ -145,7 +175,7 @@ public actual class DockerClient : AutoCloseable {
         }
     }
 
-    public actual fun deleteVolume(volume: VolumeReference) {
+    public override fun deleteVolume(volume: VolumeReference) {
         val error = DeleteVolume(clientHandle, volume.name.cstr)
 
         try {
@@ -157,7 +187,7 @@ public actual class DockerClient : AutoCloseable {
         }
     }
 
-    public actual fun createNetwork(name: String, driver: String): NetworkReference {
+    public override fun createNetwork(name: String, driver: String): NetworkReference {
         val ret = CreateNetwork(clientHandle, name.cstr, driver.cstr)!!
 
         try {
@@ -171,7 +201,7 @@ public actual class DockerClient : AutoCloseable {
         }
     }
 
-    public actual fun deleteNetwork(network: NetworkReference) {
+    public override fun deleteNetwork(network: NetworkReference) {
         val error = DeleteNetwork(clientHandle, network.id.cstr)
 
         try {
@@ -183,7 +213,7 @@ public actual class DockerClient : AutoCloseable {
         }
     }
 
-    public actual fun getNetworkByNameOrID(searchFor: String): NetworkReference? {
+    public override fun getNetworkByNameOrID(searchFor: String): NetworkReference? {
         val ret = GetNetworkByNameOrID(clientHandle, searchFor.cstr)!!
 
         try {
@@ -201,7 +231,7 @@ public actual class DockerClient : AutoCloseable {
         }
     }
 
-    public actual fun pullImage(name: String, onProgressUpdate: ImagePullProgressReceiver): ImageReference {
+    public override fun pullImage(name: String, onProgressUpdate: ImagePullProgressReceiver): ImageReference {
         val callbackState = CallbackState<PullImageProgressUpdate> { progress ->
             onProgressUpdate.invoke(ImagePullProgressUpdate(progress!!.pointed))
         }
@@ -227,7 +257,7 @@ public actual class DockerClient : AutoCloseable {
         }
     }
 
-    public actual fun deleteImage(image: ImageReference) {
+    public override fun deleteImage(image: ImageReference) {
         val error = DeleteImage(clientHandle, image.id.cstr)
 
         try {
@@ -239,7 +269,7 @@ public actual class DockerClient : AutoCloseable {
         }
     }
 
-    public actual fun getImage(name: String): ImageReference? {
+    public override fun getImage(name: String): ImageReference? {
         val ret = GetImage(clientHandle, name.cstr)!!
 
         try {
@@ -257,7 +287,7 @@ public actual class DockerClient : AutoCloseable {
         }
     }
 
-    actual override fun close() {
+    override fun close() {
         val error = DisposeClient(clientHandle)
 
         try {

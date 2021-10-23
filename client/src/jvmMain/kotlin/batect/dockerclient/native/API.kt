@@ -25,7 +25,7 @@ import jnr.ffi.annotations.In
 
 @Suppress("FunctionName")
 internal interface API {
-    fun CreateClient(): CreateClientReturn?
+    fun CreateClient(@In cfg: ClientConfiguration): CreateClientReturn?
     fun DisposeClient(@In clientHandle: Long): Error?
     fun Ping(@In clientHandle: Long): PingReturn?
     fun GetDaemonVersionInformation(@In clientHandle: Long): GetDaemonVersionInformationReturn?
@@ -40,6 +40,10 @@ internal interface API {
     fun ListAllVolumes(@In clientHandle: Long): ListAllVolumesReturn?
     fun FreeError(@In value: Error)
     fun AllocError(): Error?
+    fun FreeTLSConfiguration(@In value: TLSConfiguration)
+    fun AllocTLSConfiguration(): TLSConfiguration?
+    fun FreeClientConfiguration(@In value: ClientConfiguration)
+    fun AllocClientConfiguration(): ClientConfiguration?
     fun FreeCreateClientReturn(@In value: CreateClientReturn)
     fun AllocCreateClientReturn(): CreateClientReturn?
     fun FreePingResponse(@In value: PingResponse)
