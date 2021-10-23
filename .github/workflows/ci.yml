@@ -126,9 +126,6 @@ jobs:
     permissions:
       packages: read
 
-    env:
-      SONATYPE_USERNAME: batect-docker-client-github-actions
-
     name: "Build and test (${{ matrix.name }})"
     runs-on: ${{ matrix.os }}
     steps:
@@ -205,7 +202,110 @@ jobs:
       - name: Check for outdated generated code
         run: if [ ! -z "$(git status --porcelain)" ]; then echo "Generated code changed. Do you need to run './gradlew generate'?">/dev/stderr; echo; git status --porcelain; echo; git diff; exit 1; fi
 
-      # FIXME: only run these next two steps once all OSes have passed so we don't end up with a partial publication if one OS succeeds and another fails
+      - name: Stop Gradle daemon
+        run: ./gradlew --stop
+
+      - name: Clean up dependencies before caching
+        if: steps.cache-packages.outputs.cache-hit != 'true'
+        run: |
+          rm -f  $HOME/.gradle/caches/modules-2/modules-2.lock
+          rm -fr $HOME/.gradle/caches/*/plugin-resolution/
+          rm -fr $HOME/.gradle/caches/*/scripts/
+          rm -fr $HOME/.gradle/caches/*/scripts-remapped/
+          rm -fr $HOME/.gradle/caches/*/fileHashes/
+          rm -f  $HOME/.gradle/caches/*/fileContent/*.lock
+          rm -f  $HOME/.gradle/caches/*/javaCompile/*.lock
+          rm -f  $HOME/.gradle/caches/*/executionHistory/*.lock
+          rm -f  $HOME/.gradle/caches/*/generated-gradle-jars/*.lock
+          rm -f  $HOME/.gradle/caches/jars-3/*.lock
+          rm -f  $HOME/.gradle/caches/jars-8/*.lock
+          rm -f  $HOME/.gradle/caches/transforms-1/transforms-1.lock
+          rm -f  $HOME/.gradle/caches/journal-1/file-access.bin
+          rm -f  $HOME/.gradle/caches/journal-1/*.lock
+
+  publish:
+    if: github.repository == 'batect/docker-client' && (github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/')) && github.event_name == 'push'
+
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: Linux
+            os: ubuntu-20.04
+
+          - name: Windows
+            os: windows-2019
+
+          - name: macOS
+            os: macos-11
+
+    needs:
+      - build-and-test
+
+    env:
+      SONATYPE_USERNAME: batect-docker-client-github-actions
+
+    name: "Publish (${{ matrix.name }})"
+    runs-on: ${{ matrix.os }}
+    steps:
+      - name: Check out code
+        uses: actions/checkout@v2.3.5
+        with:
+          fetch-depth: 0
+
+      - name: Set up JDK
+        uses: actions/setup-java@v2.3.1
+        with:
+          java-version: 11
+          distribution: adopt
+
+      - name: Set up Golang
+        if: ${{ runner.os != 'Linux' }} # We use a container on Linux.
+        uses: actions/setup-go@v2.1.4
+        with:
+          go-version: 1.17.2
+
+      - name: Cache packages
+        id: cache-packages
+        uses: actions/cache@v2.1.6
+        with:
+          path: ~/.gradle/caches
+          key: gradle-kotlin-packages-${{ runner.os }}-${{ hashFiles('**/*.gradle.kts') }}
+          restore-keys: gradle-kotlin-packages-${{ runner.os }}
+
+      - name: Cache Kotlin/Native dependencies
+        id: cache-kotlin-native
+        uses: actions/cache@v2.1.6
+        with:
+          path: ~/.konan
+          key: kotlin-native-${{ runner.os }}-${{ hashFiles('**/*.gradle.kts') }}
+          restore-keys: kotlin-native-${{ runner.os }}
+
+      # Why do we get all libraries for all operating systems? This is to ensure that we embed the libraries
+      # for all operating systems in the .jar produced for the JVM, regardless of the system that the .jar is
+      # built on.
+      - name: Fetch Linux wrapper libraries
+        uses: actions/download-artifact@v2.0.10
+        with:
+          name: wrapper-libs-linux
+          path: golang-wrapper/build/libs
+
+      - name: Fetch macOS wrapper libraries
+        uses: actions/download-artifact@v2.0.10
+        with:
+          name: wrapper-libs-macos
+          path: golang-wrapper/build/libs
+
+      - name: Fetch Windows wrapper libraries
+        uses: actions/download-artifact@v2.0.10
+        with:
+          name: wrapper-libs-windows
+          path: golang-wrapper/build/libs
+
+      - name: Check JAR contains native libraries for all operating systems
+        run: ./gradlew --parallel client:checkJarContents
+        if: ${{ runner.os == 'Linux' }} # We only publish the JAR from Linux, so there's no point checking on other operating systems.
+
       - name: Publish snapshot
         run: ./gradlew publishSnapshot
         env:
