@@ -80,7 +80,7 @@ kotlin {
                 implementation("io.kotest:kotest-framework-api:5.0.0.M1")
                 implementation("io.kotest:kotest-framework-engine:5.0.0.M1")
 
-                implementation("com.squareup.okio:okio:3.0.0-alpha.10")
+                implementation("com.squareup.okio:okio:3.0.0-alpha.11")
             }
         }
 
