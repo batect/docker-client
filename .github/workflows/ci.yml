@@ -223,6 +223,61 @@ jobs:
           rm -f  $HOME/.gradle/caches/journal-1/file-access.bin
           rm -f  $HOME/.gradle/caches/journal-1/*.lock
 
+  check-wrapper:
+    name: "Lint wrapper library"
+    runs-on: ubuntu-20.04
+    steps:
+      - name: Check out code
+        uses: actions/checkout@v2.3.5
+        with:
+          fetch-depth: 0
+
+      - name: Set up JDK
+        uses: actions/setup-java@v2.3.1
+        with:
+          java-version: 11
+          distribution: adopt
+
+      - name: Cache packages
+        id: cache-packages
+        uses: actions/cache@v2.1.6
+        with:
+          path: ~/.gradle/caches
+          key: gradle-wrapper-packages-${{ runner.os }}-${{ hashFiles('**/*.gradle.kts') }}
+          restore-keys: gradle-wrapper-packages-${{ runner.os }}
+
+      - name: Cache Kotlin/Native dependencies
+        id: cache-kotlin-native
+        uses: actions/cache@v2.1.6
+        with:
+          path: ~/.konan
+          key: kotlin-native-${{ runner.os }}-${{ hashFiles('**/*.gradle.kts') }}
+          restore-keys: kotlin-native-${{ runner.os }}
+
+      - name: Build and test
+        run: ./gradlew --parallel golang-wrapper:check
+
+      - name: Stop Gradle daemon
+        run: ./gradlew --stop
+
+      - name: Clean up dependencies before caching
+        if: steps.cache-packages.outputs.cache-hit != 'true'
+        run: |
+          rm -f  $HOME/.gradle/caches/modules-2/modules-2.lock
+          rm -fr $HOME/.gradle/caches/*/plugin-resolution/
+          rm -fr $HOME/.gradle/caches/*/scripts/
+          rm -fr $HOME/.gradle/caches/*/scripts-remapped/
+          rm -fr $HOME/.gradle/caches/*/fileHashes/
+          rm -f  $HOME/.gradle/caches/*/fileContent/*.lock
+          rm -f  $HOME/.gradle/caches/*/javaCompile/*.lock
+          rm -f  $HOME/.gradle/caches/*/executionHistory/*.lock
+          rm -f  $HOME/.gradle/caches/*/generated-gradle-jars/*.lock
+          rm -f  $HOME/.gradle/caches/jars-3/*.lock
+          rm -f  $HOME/.gradle/caches/jars-8/*.lock
+          rm -f  $HOME/.gradle/caches/transforms-1/transforms-1.lock
+          rm -f  $HOME/.gradle/caches/journal-1/file-access.bin
+          rm -f  $HOME/.gradle/caches/journal-1/*.lock
+
   publish:
     if: github.repository == 'batect/docker-client' && (github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/')) && github.event_name == 'push'
 
@@ -241,6 +296,7 @@ jobs:
 
     needs:
       - build-and-test
+      - check-wrapper
 
     env:
       SONATYPE_USERNAME: batect-docker-client-github-actions
