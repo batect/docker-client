@@ -52,12 +52,11 @@ kotlin {
     jvm()
     linuxX64()
     macosX64()
+    macosArm64()
     mingwX64()
 
     // This is currently not supported by kotest:
     //  linuxArm64()
-    // This is currently not supported by okio (will be available in alpha.11 - https://github.com/square/okio/pull/1027):
-    //  macosArm64()
 
     sourceSets {
         val commonMain by getting
@@ -80,7 +79,7 @@ kotlin {
                 implementation("io.kotest:kotest-framework-api:5.0.0.M1")
                 implementation("io.kotest:kotest-framework-engine:5.0.0.M1")
 
-                implementation("com.squareup.okio:okio:3.0.0-alpha.10")
+                implementation("com.squareup.okio:okio:3.0.0-alpha.11")
             }
         }
 
@@ -115,6 +114,10 @@ kotlin {
         }
 
         val macosX64Test by getting {
+            dependsOn(macosTest)
+        }
+
+        val macosArm64Test by getting {
             dependsOn(macosTest)
         }
 
