@@ -79,7 +79,7 @@ kotlin {
                 implementation("io.kotest:kotest-framework-api:5.0.0.M1")
                 implementation("io.kotest:kotest-framework-engine:5.0.0.M1")
 
-                implementation("com.squareup.okio:okio:3.0.0-alpha.11")
+                implementation("com.squareup.okio:okio:3.0.0")
             }
         }
 
@@ -127,12 +127,6 @@ kotlin {
             languageSettings {
                 progressiveMode = true
                 explicitApi = ExplicitApiMode.Strict
-            }
-
-            if (sourceSet.name.endsWith("Test")) {
-                // Required for Okio's experimental filesystem support.
-                // Can be removed once filesystem support is no longer experimental.
-                languageSettings.optIn("kotlin.RequiresOptIn")
             }
         }
     }

@@ -22,12 +22,10 @@ import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
 import io.kotest.matchers.string.shouldEndWith
 import io.kotest.matchers.string.shouldStartWith
-import okio.ExperimentalFileSystem
 import okio.FileSystem
 import okio.Path.Companion.toPath
 import kotlin.time.ExperimentalTime
 
-@OptIn(ExperimentalFileSystem::class)
 @ExperimentalTime
 class DockerClientBuilderSpec : ShouldSpec({
     val rootTestCertificatesDirectory = FileSystem.SYSTEM.canonicalize("./src/commonTest/resources/dummyClientCertificates".toPath())
