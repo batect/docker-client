@@ -4,9 +4,9 @@ go 1.17
 
 require (
 	github.com/containerd/containerd v1.5.5 // indirect
-	github.com/docker/cli v20.10.9+incompatible
+	github.com/docker/cli v20.10.10+incompatible
 	github.com/docker/distribution v2.7.1+incompatible
-	github.com/docker/docker v20.10.9+incompatible
+	github.com/docker/docker v20.10.10+incompatible
 	github.com/docker/docker-credential-helpers v0.6.4 // indirect
 	github.com/fvbommel/sortorder v1.0.2 // indirect
 	github.com/gorilla/mux v1.8.0 // indirect
@@ -19,6 +19,8 @@ require (
 	google.golang.org/grpc v1.40.0 // indirect
 )
 
+require github.com/docker/go-connections v0.4.0
+
 require (
 	github.com/Azure/go-ansiterm v0.0.0-20210617225240-d185dfc1b5a1 // indirect
 	github.com/Microsoft/go-winio v0.4.17 // indirect
@@ -26,7 +28,6 @@ require (
 	github.com/beorn7/perks v1.0.1 // indirect
 	github.com/cespare/xxhash/v2 v2.1.1 // indirect
 	github.com/docker/go v1.5.1-1.0.20160303222718-d30aec9fd63c // indirect
-	github.com/docker/go-connections v0.4.0 // indirect
 	github.com/docker/go-metrics v0.0.1 // indirect
 	github.com/docker/go-units v0.4.0 // indirect
 	github.com/gogo/protobuf v1.3.2 // indirect
