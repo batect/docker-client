@@ -179,7 +179,7 @@ jobs:
           restore-keys: kotlin-native-${{ runner.os }}
 
       - name: Install Docker
-        run: ./.github/workflows/ci/install_docker.sh ${{ matrix.docker_version }}
+        run: ./.github/workflows/ci/install_docker.sh ${{ matrix.dockerVersion }}
         if: ${{ matrix.dockerVersion != 'useRunnerDefault' }}
 
       - name: Configure Docker to use TLS over TCP
