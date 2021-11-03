@@ -72,7 +72,6 @@ class DockerClientImagePullSpec : ShouldSpec({
         }
     }
 
-    // TODO: callback that throws an exception
     should("report progress information while pulling a Linux image").onlyIfDockerDaemonSupportsLinuxContainers {
         val image = defaultLinuxTestImage
         val progressUpdatesReceived = mutableListOf<ImagePullProgressUpdate>()
@@ -96,7 +95,11 @@ class DockerClientImagePullSpec : ShouldSpec({
             it.id shouldBe layerId
         }
 
-        progressUpdatesReceived shouldContain ImagePullProgressUpdate("Verifying Checksum", ImagePullProgressDetail(0, 0), layerId)
+        progressUpdatesReceived.forAtLeastOne {
+            it.message shouldBe "Verifying Checksum"
+            it.id shouldBe layerId
+        }
+
         progressUpdatesReceived shouldContain ImagePullProgressUpdate("Download complete", ImagePullProgressDetail(0, 0), layerId)
 
         progressUpdatesReceived.forAtLeastOne {
@@ -149,7 +152,11 @@ class DockerClientImagePullSpec : ShouldSpec({
             it.id shouldBe layerId
         }
 
-        progressUpdatesReceived shouldContain ImagePullProgressUpdate("Verifying Checksum", ImagePullProgressDetail(0, 0), layerId)
+        progressUpdatesReceived.forAtLeastOne {
+            it.message shouldBe "Verifying Checksum"
+            it.id shouldBe layerId
+        }
+
         progressUpdatesReceived shouldContain ImagePullProgressUpdate("Download complete", ImagePullProgressDetail(0, 0), layerId)
 
         progressUpdatesReceived.forAtLeastOne {
