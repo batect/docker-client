@@ -59,7 +59,11 @@ kotlin {
     //  linuxArm64()
 
     sourceSets {
-        val commonMain by getting
+        val commonMain by getting {
+            dependencies {
+                implementation("com.squareup.okio:okio:3.0.0")
+            }
+        }
 
         val nativeMain by creating {
             dependsOn(commonMain)
@@ -78,8 +82,6 @@ kotlin {
                 implementation("io.kotest:kotest-assertions-core:5.0.0.M1")
                 implementation("io.kotest:kotest-framework-api:5.0.0.M1")
                 implementation("io.kotest:kotest-framework-engine:5.0.0.M1")
-
-                implementation("com.squareup.okio:okio:3.0.0")
             }
         }
 

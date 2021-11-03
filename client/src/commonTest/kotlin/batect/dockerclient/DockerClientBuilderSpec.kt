@@ -92,7 +92,7 @@ class DockerClientBuilderSpec : ShouldSpec({
     should("throw an exception if the provided config directory does not exist") {
         val exception = shouldThrow<DockerClientException> {
             DockerClientBuilder(factory)
-                .withConfigDirectory("thisdirectorydoesnotexist")
+                .withConfigDirectory("thisdirectorydoesnotexist".toPath())
                 .build()
         }
 
@@ -101,7 +101,7 @@ class DockerClientBuilderSpec : ShouldSpec({
 
     should("configure the client with the given configuration directory") {
         DockerClientBuilder(factory)
-            .withConfigDirectory(".")
+            .withConfigDirectory(".".toPath())
             .build()
 
         configurationProvidedToClient!!.configDirectoryPath shouldBe "."
@@ -123,17 +123,17 @@ class DockerClientBuilderSpec : ShouldSpec({
     should("configure the client with the given TLS certificate and key files") {
         DockerClientBuilder(factory)
             .withTLSConfiguration(
-                "$rootTestCertificatesDirectory/ca.pem",
-                "$rootTestCertificatesDirectory/cert.pem",
-                "$rootTestCertificatesDirectory/key.pem",
+                rootTestCertificatesDirectory / "ca.pem",
+                rootTestCertificatesDirectory / "cert.pem",
+                rootTestCertificatesDirectory / "key.pem",
                 TLSVerification.Enabled
             )
             .build()
 
         configurationProvidedToClient!!.tls shouldBe DockerClientTLSConfiguration(
-            "$rootTestCertificatesDirectory/ca.pem",
-            "$rootTestCertificatesDirectory/cert.pem",
-            "$rootTestCertificatesDirectory/key.pem",
+            (rootTestCertificatesDirectory / "ca.pem").toString(),
+            (rootTestCertificatesDirectory / "cert.pem").toString(),
+            (rootTestCertificatesDirectory / "key.pem").toString(),
             false
         )
     }
@@ -141,16 +141,16 @@ class DockerClientBuilderSpec : ShouldSpec({
     should("configure default to verifying the daemon's identity if no explicit value is provided") {
         DockerClientBuilder(factory)
             .withTLSConfiguration(
-                "$rootTestCertificatesDirectory/ca.pem",
-                "$rootTestCertificatesDirectory/cert.pem",
-                "$rootTestCertificatesDirectory/key.pem"
+                rootTestCertificatesDirectory / "ca.pem",
+                rootTestCertificatesDirectory / "cert.pem",
+                rootTestCertificatesDirectory / "key.pem"
             )
             .build()
 
         configurationProvidedToClient!!.tls shouldBe DockerClientTLSConfiguration(
-            "$rootTestCertificatesDirectory/ca.pem",
-            "$rootTestCertificatesDirectory/cert.pem",
-            "$rootTestCertificatesDirectory/key.pem",
+            (rootTestCertificatesDirectory / "ca.pem").toString(),
+            (rootTestCertificatesDirectory / "cert.pem").toString(),
+            (rootTestCertificatesDirectory / "key.pem").toString(),
             false
         )
     }
@@ -158,17 +158,17 @@ class DockerClientBuilderSpec : ShouldSpec({
     should("configure the client with the given TLS certificate and key files with verification disabled") {
         DockerClientBuilder(factory)
             .withTLSConfiguration(
-                "$rootTestCertificatesDirectory/ca.pem",
-                "$rootTestCertificatesDirectory/cert.pem",
-                "$rootTestCertificatesDirectory/key.pem",
+                rootTestCertificatesDirectory / "ca.pem",
+                rootTestCertificatesDirectory / "cert.pem",
+                rootTestCertificatesDirectory / "key.pem",
                 TLSVerification.InsecureDisabled
             )
             .build()
 
         configurationProvidedToClient!!.tls shouldBe DockerClientTLSConfiguration(
-            "$rootTestCertificatesDirectory/ca.pem",
-            "$rootTestCertificatesDirectory/cert.pem",
-            "$rootTestCertificatesDirectory/key.pem",
+            (rootTestCertificatesDirectory / "ca.pem").toString(),
+            (rootTestCertificatesDirectory / "cert.pem").toString(),
+            (rootTestCertificatesDirectory / "key.pem").toString(),
             true
         )
     }
@@ -177,45 +177,45 @@ class DockerClientBuilderSpec : ShouldSpec({
         val exception = shouldThrow<DockerClientException> {
             DockerClientBuilder(factory)
                 .withTLSConfiguration(
-                    "$rootTestCertificatesDirectory/ca-does-not-exist.pem",
-                    "$rootTestCertificatesDirectory/cert.pem",
-                    "$rootTestCertificatesDirectory/key.pem"
+                    rootTestCertificatesDirectory / "ca-does-not-exist.pem",
+                    rootTestCertificatesDirectory / "cert.pem",
+                    rootTestCertificatesDirectory / "key.pem"
                 )
                 .build()
         }
 
         exception.message shouldStartWith "failed to create TLS config: could not read CA certificate"
-        exception.message shouldEndWith "$rootTestCertificatesDirectory/ca-does-not-exist.pem: $operatingSystemFileNotFoundMessage"
+        exception.message shouldEndWith "${rootTestCertificatesDirectory.resolve("ca-does-not-exist.pem")}: $operatingSystemFileNotFoundMessage"
     }
 
     should("throw an exception if the provided client certificate file does not exist") {
         val exception = shouldThrow<DockerClientException> {
             DockerClientBuilder(factory)
                 .withTLSConfiguration(
-                    "$rootTestCertificatesDirectory/ca.pem",
-                    "$rootTestCertificatesDirectory/cert-does-not-exist.pem",
-                    "$rootTestCertificatesDirectory/key.pem"
+                    rootTestCertificatesDirectory / "ca.pem",
+                    rootTestCertificatesDirectory / "cert-does-not-exist.pem",
+                    rootTestCertificatesDirectory / "key.pem"
                 )
                 .build()
         }
 
         exception.message shouldStartWith "failed to create TLS config: Could not load X509 key pair"
-        exception.message shouldEndWith "$rootTestCertificatesDirectory/cert-does-not-exist.pem: $operatingSystemFileNotFoundMessage"
+        exception.message shouldEndWith "${rootTestCertificatesDirectory.resolve("cert-does-not-exist.pem")}: $operatingSystemFileNotFoundMessage"
     }
 
     should("throw an exception if the provided client key file does not exist") {
         val exception = shouldThrow<DockerClientException> {
             DockerClientBuilder(factory)
                 .withTLSConfiguration(
-                    "$rootTestCertificatesDirectory/ca.pem",
-                    "$rootTestCertificatesDirectory/cert.pem",
-                    "$rootTestCertificatesDirectory/key-does-not-exist.pem"
+                    rootTestCertificatesDirectory / "ca.pem",
+                    rootTestCertificatesDirectory / "cert.pem",
+                    rootTestCertificatesDirectory / "key-does-not-exist.pem"
                 )
                 .build()
         }
 
         exception.message shouldStartWith "failed to create TLS config: Could not load X509 key pair"
-        exception.message shouldEndWith "$rootTestCertificatesDirectory/key-does-not-exist.pem: $operatingSystemFileNotFoundMessage"
+        exception.message shouldEndWith "${rootTestCertificatesDirectory.resolve("key-does-not-exist.pem")}: $operatingSystemFileNotFoundMessage"
     }
 
     // TODO: these tests verify that the right thing is passed into the native library, but don't verify that the have the intended effect

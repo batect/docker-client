@@ -16,6 +16,9 @@
 
 package batect.dockerclient
 
+import okio.FileSystem
+import okio.Path
+
 public class DockerClientBuilder internal constructor(internal val factory: DockerClientFactory) {
     public constructor() : this({ config -> RealDockerClient(config) })
 
@@ -72,13 +75,12 @@ public class DockerClientBuilder internal constructor(internal val factory: Dock
      * @param caFilePath path to a file containing certificate authority certificates
      * @param certFilePath path to a file containing certificate to present to the Docker daemon
      * @param keyFilePath path to a file containing the private key for the certificate in [certFilePath]
-     * @param insecureSkipVerify if `true`, disable validation of the server (not recommended as this allows
-     * anyone to intercept and modify data sent or recieved through the connection)
+     * @param serverIdentityVerification whether or not to validate the server's identity against the provided certificates
      */
     public fun withTLSConfiguration(
-        caFilePath: String,
-        certFilePath: String,
-        keyFilePath: String,
+        caFilePath: Path,
+        certFilePath: Path,
+        keyFilePath: Path,
         serverIdentityVerification: TLSVerification = TLSVerification.Enabled
     ): DockerClientBuilder {
         val insecureSkipVerify = when (serverIdentityVerification) {
@@ -88,7 +90,10 @@ public class DockerClientBuilder internal constructor(internal val factory: Dock
 
         configuration = configuration.copy(
             tls = DockerClientTLSConfiguration(
-                caFilePath, certFilePath, keyFilePath, insecureSkipVerify
+                caFilePath.toString(),
+                certFilePath.toString(),
+                keyFilePath.toString(),
+                insecureSkipVerify
             )
         )
 
@@ -104,8 +109,8 @@ public class DockerClientBuilder internal constructor(internal val factory: Dock
      *
      * @param configDirectoryPath path to a directory containing a Docker client configuration file
      */
-    public fun withConfigDirectory(configDirectoryPath: String): DockerClientBuilder {
-        configuration = configuration.copy(configDirectoryPath = configDirectoryPath)
+    public fun withConfigDirectory(configDirectoryPath: Path): DockerClientBuilder {
+        configuration = configuration.copy(configDirectoryPath = configDirectoryPath.toString())
 
         return this
     }
