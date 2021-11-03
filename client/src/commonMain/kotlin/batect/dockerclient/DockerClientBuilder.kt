@@ -16,7 +16,6 @@
 
 package batect.dockerclient
 
-import okio.FileSystem
 import okio.Path
 
 public class DockerClientBuilder internal constructor(internal val factory: DockerClientFactory) {
