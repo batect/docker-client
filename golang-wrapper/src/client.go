@@ -44,7 +44,9 @@ var (
 
 //export CreateClient
 func CreateClient(cfg *C.ClientConfiguration) CreateClientReturn {
-	var opts []client.Opt
+	opts := []client.Opt{
+		client.WithAPIVersionNegotiation(),
+	}
 
 	if cfg.UseConfigurationFromEnvironment {
 		opts = append(opts, client.FromEnv)
