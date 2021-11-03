@@ -20,6 +20,7 @@ import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.core.spec.style.ShouldSpec
 import io.kotest.inspectors.forAtLeastOne
 import io.kotest.matchers.collections.shouldBeIn
+import io.kotest.matchers.collections.shouldBeOneOf
 import io.kotest.matchers.collections.shouldContain
 import io.kotest.matchers.collections.shouldEndWith
 import io.kotest.matchers.collections.shouldStartWith
@@ -83,10 +84,13 @@ class DockerClientImagePullSpec : ShouldSpec({
         val layerId = "b49b96595fd4"
         val layerSize = 657696
 
-        progressUpdatesReceived shouldStartWith listOf(
-            ImagePullProgressUpdate("Pulling from distroless/static", null, image),
-            ImagePullProgressUpdate("Pulling fs layer", ImagePullProgressDetail(0, 0), layerId),
-        )
+        progressUpdatesReceived.forAtLeastOne {
+            it.message shouldBe "Pulling from distroless/static"
+            it.detail shouldBe null
+            it.id shouldBeOneOf setOf(image, image.substringAfter('@')) // Older versions of Docker only return the digest here
+        }
+
+        progressUpdatesReceived shouldContain ImagePullProgressUpdate("Pulling fs layer", ImagePullProgressDetail(0, 0), layerId)
 
         progressUpdatesReceived.forAtLeastOne {
             it.message shouldBe "Downloading"
