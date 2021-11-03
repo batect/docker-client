@@ -191,7 +191,7 @@ jobs:
         if: matrix.disableDockerDaemonTests != 1
 
       - name: Build, test and package
-        run: ./gradlew --parallel client:check client:jvmJar
+        run: ./gradlew --parallel client:check client:jvmJar --exclude-task=client:jvmTest
         env:
           DISABLE_DOCKER_DAEMON_TESTS: ${{ matrix.disableDockerDaemonTests }}
           DOCKER_CONTAINER_OPERATING_SYSTEM: ${{ matrix.containerOperatingSystem }}
