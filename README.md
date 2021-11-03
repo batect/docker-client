@@ -47,7 +47,9 @@ Support for ARM64 Linux with Kotlin/Native will be added once kotlinx.coroutines
 
 ### Docker daemon
 
-This library supports Docker 18.03.1 or later. However, using the most recent version of Docker is highly recommended.
+This library supports Docker 19.03.10 or later. However, using the most recent version of Docker is highly recommended.
+
+This library _may_ work with earlier versions of Docker, but this is untested and unsupported.
 
 ## How is this different to other Docker client libraries?
 
