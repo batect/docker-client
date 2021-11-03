@@ -109,16 +109,32 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - name: Linux
+          - name: Linux, latest Docker
             os: ubuntu-20.04
+            dockerVersion: latest
 
-          - name: Windows
+          - name: Linux, Docker 18.03.1
+            os: ubuntu-20.04
+            dockerVersion: 18.03.1~ce~3-0~ubuntu
+
+          - name: Linux, Docker 19.03.14
+            os: ubuntu-20.04
+            dockerVersion: 5:19.03.14~3-0~ubuntu-bionic # Docker 20.04 introduced some breaking changes, this is the last version before 20.04
+
+          - name: Linux, latest Docker, TLS over TCP connection
+            os: ubuntu-20.04
+            dockerVersion: latest
+            useTLS: true
+
+          - name: Windows, default Docker
             os: windows-2019
             containerOperatingSystem: windows
+            dockerVersion: useRunnerDefault
 
-          - name: macOS
+          - name: macOS, no Docker
             os: macos-11
             disableDockerDaemonTests: 1
+            dockerVersion: useRunnerDefault
 
     needs:
       - build-wrapper
@@ -161,6 +177,14 @@ jobs:
           path: ~/.konan
           key: kotlin-native-${{ runner.os }}-${{ hashFiles('**/*.gradle.kts') }}
           restore-keys: kotlin-native-${{ runner.os }}
+
+      - name: Install Docker
+        run: ./.github/workflows/ci/install_docker.sh ${{ matrix.docker_version }}
+        if: ${{ matrix.dockerVersion != 'useRunnerDefault' }}
+
+      - name: Configure Docker to use TLS over TCP
+        run: ./.github/workflows/ci/configure_docker_tls.sh
+        if: ${{ matrix.useTLS == 'true' }}
 
       # Why do we get all libraries for all operating systems? This is to ensure that we embed the libraries
       # for all operating systems in the .jar produced for the JVM, regardless of the system that the .jar is
