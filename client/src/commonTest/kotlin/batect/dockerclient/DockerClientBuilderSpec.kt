@@ -45,7 +45,7 @@ class DockerClientBuilderSpec : ShouldSpec({
     beforeEach { configurationProvidedToClient = null }
 
     should("be able to create a client with the default configuration, implicitly taking values from the environment") {
-        DockerClientBuilder(factory).build()
+        DockerClient.Builder(factory).build()
 
         configurationProvidedToClient shouldNotBe null
         configurationProvidedToClient!!.useConfigurationFromEnvironment shouldBe true
@@ -55,7 +55,7 @@ class DockerClientBuilderSpec : ShouldSpec({
     }
 
     should("be able to create a client with the default configuration, explicitly taking values from the environment") {
-        DockerClientBuilder(factory)
+        DockerClient.Builder(factory)
             .useDefaultConfigurationFromEnvironment()
             .build()
 
@@ -67,7 +67,7 @@ class DockerClientBuilderSpec : ShouldSpec({
     }
 
     should("be able to create a client with the default configuration, without taking values from the environment") {
-        DockerClientBuilder(factory)
+        DockerClient.Builder(factory)
             .doNotUseDefaultConfigurationFromEnvironment()
             .build()
 
@@ -81,7 +81,7 @@ class DockerClientBuilderSpec : ShouldSpec({
         }
 
         val exception = shouldThrow<DockerClientException> {
-            DockerClientBuilder(factory)
+            DockerClient.Builder(factory)
                 .withHost("$protocol://thisdoesnotexist.batect.dev")
                 .build()
         }
@@ -91,7 +91,7 @@ class DockerClientBuilderSpec : ShouldSpec({
 
     should("throw an exception if the provided config directory does not exist") {
         val exception = shouldThrow<DockerClientException> {
-            DockerClientBuilder(factory)
+            DockerClient.Builder(factory)
                 .withConfigDirectory("thisdirectorydoesnotexist".toPath())
                 .build()
         }
@@ -100,7 +100,7 @@ class DockerClientBuilderSpec : ShouldSpec({
     }
 
     should("configure the client with the given configuration directory") {
-        DockerClientBuilder(factory)
+        DockerClient.Builder(factory)
             .withConfigDirectory(".".toPath())
             .build()
 
@@ -113,7 +113,7 @@ class DockerClientBuilderSpec : ShouldSpec({
             OperatingSystem.MacOS, OperatingSystem.Linux -> "unix:///var/run/docker.sock"
         }
 
-        DockerClientBuilder(factory)
+        DockerClient.Builder(factory)
             .withHost(host)
             .build()
 
@@ -121,7 +121,7 @@ class DockerClientBuilderSpec : ShouldSpec({
     }
 
     should("configure the client with the given TLS certificate and key files") {
-        DockerClientBuilder(factory)
+        DockerClient.Builder(factory)
             .withTLSConfiguration(
                 rootTestCertificatesDirectory / "ca.pem",
                 rootTestCertificatesDirectory / "cert.pem",
@@ -139,7 +139,7 @@ class DockerClientBuilderSpec : ShouldSpec({
     }
 
     should("configure default to verifying the daemon's identity if no explicit value is provided") {
-        DockerClientBuilder(factory)
+        DockerClient.Builder(factory)
             .withTLSConfiguration(
                 rootTestCertificatesDirectory / "ca.pem",
                 rootTestCertificatesDirectory / "cert.pem",
@@ -156,7 +156,7 @@ class DockerClientBuilderSpec : ShouldSpec({
     }
 
     should("configure the client with the given TLS certificate and key files with verification disabled") {
-        DockerClientBuilder(factory)
+        DockerClient.Builder(factory)
             .withTLSConfiguration(
                 rootTestCertificatesDirectory / "ca.pem",
                 rootTestCertificatesDirectory / "cert.pem",
@@ -175,7 +175,7 @@ class DockerClientBuilderSpec : ShouldSpec({
 
     should("throw an exception if the provided CA certificate file does not exist") {
         val exception = shouldThrow<DockerClientException> {
-            DockerClientBuilder(factory)
+            DockerClient.Builder(factory)
                 .withTLSConfiguration(
                     rootTestCertificatesDirectory / "ca-does-not-exist.pem",
                     rootTestCertificatesDirectory / "cert.pem",
@@ -190,7 +190,7 @@ class DockerClientBuilderSpec : ShouldSpec({
 
     should("throw an exception if the provided client certificate file does not exist") {
         val exception = shouldThrow<DockerClientException> {
-            DockerClientBuilder(factory)
+            DockerClient.Builder(factory)
                 .withTLSConfiguration(
                     rootTestCertificatesDirectory / "ca.pem",
                     rootTestCertificatesDirectory / "cert-does-not-exist.pem",
@@ -205,7 +205,7 @@ class DockerClientBuilderSpec : ShouldSpec({
 
     should("throw an exception if the provided client key file does not exist") {
         val exception = shouldThrow<DockerClientException> {
-            DockerClientBuilder(factory)
+            DockerClient.Builder(factory)
                 .withTLSConfiguration(
                     rootTestCertificatesDirectory / "ca.pem",
                     rootTestCertificatesDirectory / "cert.pem",

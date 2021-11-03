@@ -27,7 +27,7 @@ import kotlin.time.ExperimentalTime
 
 @ExperimentalTime
 class DockerClientVolumeManagementSpec : ShouldSpec({
-    val client = closeAfterTest(DockerClientBuilder().build())
+    val client = closeAfterTest(DockerClient.Builder().build())
 
     should("be able to create, list and delete volumes").onlyIfDockerDaemonPresent {
         val volumeName = "docker-client-test-volume-${Random.nextULong()}"
