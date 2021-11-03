@@ -30,6 +30,11 @@ import kotlin.time.ExperimentalTime
 class DockerClientBuilderSpec : ShouldSpec({
     val rootTestCertificatesDirectory = FileSystem.SYSTEM.canonicalize("./src/commonTest/resources/dummyClientCertificates".toPath())
 
+    val operatingSystemFileNotFoundMessage = when (testEnvironmentOperatingSystem) {
+        OperatingSystem.Windows -> "The system cannot find the file specified."
+        OperatingSystem.Linux, OperatingSystem.MacOS -> "no such file or directory"
+    }
+
     var configurationProvidedToClient: DockerClientConfiguration? = null
 
     val factory: DockerClientFactory = { config ->
@@ -180,7 +185,7 @@ class DockerClientBuilderSpec : ShouldSpec({
         }
 
         exception.message shouldStartWith "failed to create TLS config: could not read CA certificate"
-        exception.message shouldEndWith "$rootTestCertificatesDirectory/ca-does-not-exist.pem: no such file or directory"
+        exception.message shouldEndWith "$rootTestCertificatesDirectory/ca-does-not-exist.pem: $operatingSystemFileNotFoundMessage"
     }
 
     should("throw an exception if the provided client certificate file does not exist") {
@@ -195,7 +200,7 @@ class DockerClientBuilderSpec : ShouldSpec({
         }
 
         exception.message shouldStartWith "failed to create TLS config: Could not load X509 key pair"
-        exception.message shouldEndWith "$rootTestCertificatesDirectory/cert-does-not-exist.pem: no such file or directory"
+        exception.message shouldEndWith "$rootTestCertificatesDirectory/cert-does-not-exist.pem: $operatingSystemFileNotFoundMessage"
     }
 
     should("throw an exception if the provided client key file does not exist") {
@@ -210,7 +215,7 @@ class DockerClientBuilderSpec : ShouldSpec({
         }
 
         exception.message shouldStartWith "failed to create TLS config: Could not load X509 key pair"
-        exception.message shouldEndWith "$rootTestCertificatesDirectory/key-does-not-exist.pem: no such file or directory"
+        exception.message shouldEndWith "$rootTestCertificatesDirectory/key-does-not-exist.pem: $operatingSystemFileNotFoundMessage"
     }
 
     // TODO: these tests verify that the right thing is passed into the native library, but don't verify that the have the intended effect
