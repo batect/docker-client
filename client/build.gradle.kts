@@ -77,6 +77,18 @@ kotlin {
             resources.srcDir(jvmLibsDir)
         }
 
+        val macosMain by creating {
+            dependsOn(nativeMain)
+        }
+
+        val macosX64Main by getting {
+            dependsOn(macosMain)
+        }
+
+        val macosArm64Main by getting {
+            dependsOn(macosMain)
+        }
+
         val commonTest by getting {
             dependencies {
                 implementation("io.kotest:kotest-assertions-core:5.0.0.M1")

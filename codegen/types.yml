@@ -4,6 +4,18 @@
   jvmName: Long
   jnrType: u_int64_t
 
+- name: OutputStreamHandle
+  type: alias
+  nativeType: uint64_t
+  jvmName: Long
+  jnrType: u_int64_t
+
+- name: FileDescriptor
+  type: alias
+  nativeType: uintptr_t
+  jvmName: ULong
+  jnrType: uintptr
+
 - name: Error
   type: struct
   fields:
@@ -41,6 +53,16 @@
   fields:
     - name: Client
       type: DockerClientHandle
+    - name: Error
+      type: Error
+
+- name: CreateOutputPipeReturn
+  type: struct
+  fields:
+    - name: OutputStream
+      type: OutputStreamHandle
+    - name: ReadFileDescriptor
+      type: FileDescriptor
     - name: Error
       type: Error
 
@@ -173,6 +195,38 @@
       type: PullImageProgressUpdate
 
 - name: GetImageReturn
+  type: struct
+  fields:
+    - name: Response
+      type: ImageReference
+    - name: Error
+      type: Error
+
+- name: StringPair
+  type: struct
+  fields:
+    - name: Key
+      type: string
+    - name: Value
+      type: string
+
+- name: BuildImageRequest
+  type: struct
+  fields:
+    - name: ContextDirectory
+      type: string
+    - name: PathToDockerfile
+      type: string
+    - name: BuildArgs
+      type: StringPair[]
+    - name: ImageTags
+      type: string[]
+    - name: AlwaysPullBaseImages
+      type: boolean
+    - name: NoCache
+      type: boolean
+
+- name: BuildImageReturn
   type: struct
   fields:
     - name: Response

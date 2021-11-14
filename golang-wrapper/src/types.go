@@ -26,10 +26,13 @@ import "C"
 import "unsafe"
 
 type DockerClientHandle C.DockerClientHandle
+type OutputStreamHandle C.OutputStreamHandle
+type FileDescriptor C.FileDescriptor
 type Error *C.Error
 type TLSConfiguration *C.TLSConfiguration
 type ClientConfiguration *C.ClientConfiguration
 type CreateClientReturn *C.CreateClientReturn
+type CreateOutputPipeReturn *C.CreateOutputPipeReturn
 type PingResponse *C.PingResponse
 type PingReturn *C.PingReturn
 type DaemonVersionInformation *C.DaemonVersionInformation
@@ -46,6 +49,9 @@ type PullImageProgressDetail *C.PullImageProgressDetail
 type PullImageProgressUpdate *C.PullImageProgressUpdate
 type PullImageProgressCallback C.PullImageProgressCallback
 type GetImageReturn *C.GetImageReturn
+type StringPair *C.StringPair
+type BuildImageRequest *C.BuildImageRequest
+type BuildImageReturn *C.BuildImageReturn
 
 func newError(
     Type string,
@@ -94,6 +100,19 @@ func newCreateClientReturn(
 ) CreateClientReturn {
     value := C.AllocCreateClientReturn()
     value.Client = C.uint64_t(Client)
+    value.Error = Error
+
+    return value
+}
+
+func newCreateOutputPipeReturn(
+    OutputStream OutputStreamHandle,
+    ReadFileDescriptor FileDescriptor,
+    Error Error,
+) CreateOutputPipeReturn {
+    value := C.AllocCreateOutputPipeReturn()
+    value.OutputStream = C.uint64_t(OutputStream)
+    value.ReadFileDescriptor = C.uintptr_t(ReadFileDescriptor)
     value.Error = Error
 
     return value
@@ -275,6 +294,61 @@ func newGetImageReturn(
     Error Error,
 ) GetImageReturn {
     value := C.AllocGetImageReturn()
+    value.Response = Response
+    value.Error = Error
+
+    return value
+}
+
+func newStringPair(
+    Key string,
+    Value string,
+) StringPair {
+    value := C.AllocStringPair()
+    value.Key = C.CString(Key)
+    value.Value = C.CString(Value)
+
+    return value
+}
+
+func newBuildImageRequest(
+    ContextDirectory string,
+    PathToDockerfile string,
+    BuildArgs []StringPair,
+    ImageTags []string,
+    AlwaysPullBaseImages bool,
+    NoCache bool,
+) BuildImageRequest {
+    value := C.AllocBuildImageRequest()
+    value.ContextDirectory = C.CString(ContextDirectory)
+    value.PathToDockerfile = C.CString(PathToDockerfile)
+
+    value.BuildArgsCount = C.uint64_t(len(BuildArgs))
+    value.BuildArgs = C.CreateStringPairArray(value.BuildArgsCount)
+
+    for i, v := range BuildArgs {
+        C.SetStringPairArrayElement(value.BuildArgs, C.uint64_t(i), v)
+    }
+
+
+    value.ImageTagsCount = C.uint64_t(len(ImageTags))
+    value.ImageTags = C.CreatestringArray(value.ImageTagsCount)
+
+    for i, v := range ImageTags {
+        C.SetstringArrayElement(value.ImageTags, C.uint64_t(i), C.CString(v))
+    }
+
+    value.AlwaysPullBaseImages = C.bool(AlwaysPullBaseImages)
+    value.NoCache = C.bool(NoCache)
+
+    return value
+}
+
+func newBuildImageReturn(
+    Response ImageReference,
+    Error Error,
+) BuildImageReturn {
+    value := C.AllocBuildImageReturn()
     value.Response = Response
     value.Error = Error
 

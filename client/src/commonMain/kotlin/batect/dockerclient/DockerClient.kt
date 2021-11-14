@@ -16,6 +16,7 @@
 
 package batect.dockerclient
 
+import batect.dockerclient.io.TextOutput
 import okio.Path
 
 public interface DockerClient : AutoCloseable {
@@ -31,8 +32,10 @@ public interface DockerClient : AutoCloseable {
     public fun getNetworkByNameOrID(searchFor: String): NetworkReference?
 
     public fun pullImage(name: String, onProgressUpdate: ImagePullProgressReceiver = {}): ImageReference
-    public fun deleteImage(image: ImageReference)
+    public fun deleteImage(image: ImageReference, force: Boolean = false)
     public fun getImage(name: String): ImageReference?
+
+    public fun buildImage(spec: ImageBuildSpec, output: TextOutput, onProgressUpdate: ImageBuildProgressReceiver = {}): ImageReference
 
     public class Builder internal constructor(internal val factory: DockerClientFactory) {
         public constructor() : this({ config -> RealDockerClient(config) })

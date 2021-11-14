@@ -93,6 +93,22 @@ void FreeCreateClientReturn(CreateClientReturn* value) {
     free(value);
 }
 
+CreateOutputPipeReturn* AllocCreateOutputPipeReturn() {
+    CreateOutputPipeReturn* value = malloc(sizeof(CreateOutputPipeReturn));
+    value->Error = NULL;
+
+    return value;
+}
+
+void FreeCreateOutputPipeReturn(CreateOutputPipeReturn* value) {
+    if (value == NULL) {
+        return;
+    }
+
+    FreeError(value->Error);
+    free(value);
+}
+
 PingResponse* AllocPingResponse() {
     PingResponse* value = malloc(sizeof(PingResponse));
     value->APIVersion = NULL;
@@ -374,10 +390,106 @@ void FreeGetImageReturn(GetImageReturn* value) {
     free(value);
 }
 
+StringPair* AllocStringPair() {
+    StringPair* value = malloc(sizeof(StringPair));
+    value->Key = NULL;
+    value->Value = NULL;
+
+    return value;
+}
+
+void FreeStringPair(StringPair* value) {
+    if (value == NULL) {
+        return;
+    }
+
+    free(value->Key);
+    free(value->Value);
+    free(value);
+}
+
+BuildImageRequest* AllocBuildImageRequest() {
+    BuildImageRequest* value = malloc(sizeof(BuildImageRequest));
+    value->ContextDirectory = NULL;
+    value->PathToDockerfile = NULL;
+    value->BuildArgs = NULL;
+    value->ImageTags = NULL;
+    value->BuildArgsCount = 0;
+    value->ImageTagsCount = 0;
+
+    return value;
+}
+
+void FreeBuildImageRequest(BuildImageRequest* value) {
+    if (value == NULL) {
+        return;
+    }
+
+    free(value->ContextDirectory);
+    free(value->PathToDockerfile);
+    for (uint64_t i = 0; i < value->BuildArgsCount; i++) {
+        FreeStringPair(value->BuildArgs[i]);
+    }
+
+    free(value->BuildArgs);
+    for (uint64_t i = 0; i < value->ImageTagsCount; i++) {
+        free(value->ImageTags[i]);
+    }
+
+    free(value->ImageTags);
+    free(value);
+}
+
+BuildImageReturn* AllocBuildImageReturn() {
+    BuildImageReturn* value = malloc(sizeof(BuildImageReturn));
+    value->Response = NULL;
+    value->Error = NULL;
+
+    return value;
+}
+
+void FreeBuildImageReturn(BuildImageReturn* value) {
+    if (value == NULL) {
+        return;
+    }
+
+    FreeImageReference(value->Response);
+    FreeError(value->Error);
+    free(value);
+}
+
 VolumeReference** CreateVolumeReferenceArray(uint64_t size) {
     return malloc(size * sizeof(VolumeReference*));
 }
 
 void SetVolumeReferenceArrayElement(VolumeReference** array, uint64_t index, VolumeReference* value) {
     array[index] = value;
+}
+
+VolumeReference* GetVolumeReferenceArrayElement(VolumeReference** array, uint64_t index) {
+    return array[index];
+}
+
+StringPair** CreateStringPairArray(uint64_t size) {
+    return malloc(size * sizeof(StringPair*));
+}
+
+void SetStringPairArrayElement(StringPair** array, uint64_t index, StringPair* value) {
+    array[index] = value;
+}
+
+StringPair* GetStringPairArrayElement(StringPair** array, uint64_t index) {
+    return array[index];
+}
+
+char** CreatestringArray(uint64_t size) {
+    return malloc(size * sizeof(char*));
+}
+
+void SetstringArrayElement(char** array, uint64_t index, char* value) {
+    array[index] = value;
+}
+
+char* GetstringArrayElement(char** array, uint64_t index) {
+    return array[index];
 }

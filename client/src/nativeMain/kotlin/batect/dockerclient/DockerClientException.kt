@@ -115,5 +115,13 @@ public actual class ImageRetrievalFailedException actual constructor(
     internal constructor(error: Error) : this(error.cleanErrorMessage, null, golangErrorType = error.Type!!.toKString())
 }
 
+public actual class ImageBuildFailedException actual constructor(
+    message: String,
+    cause: Throwable?,
+    golangErrorType: String?
+) : DockerClientException(message, cause, golangErrorType) {
+    internal constructor(error: Error) : this(error.cleanErrorMessage, null, golangErrorType = error.Type!!.toKString())
+}
+
 private val Error.cleanErrorMessage: String
     get() = this.Message!!.toKString().removePrefix("Error: ")

@@ -17,6 +17,7 @@ package main
 var (
 	ErrInvalidDockerClientHandle = InvalidDockerClientHandleError{}
 	ErrProgressCallbackFailed    = ProgressCallbackFailedError{}
+	ErrInvalidOutputStreamHandle = InvalidOutputStreamHandleError{}
 )
 
 type ProgressCallbackFailedError struct{}
@@ -29,4 +30,10 @@ type InvalidDockerClientHandleError struct{}
 
 func (e InvalidDockerClientHandleError) Error() string {
 	return "invalid Docker client handle"
+}
+
+type InvalidOutputStreamHandleError struct{}
+
+func (e InvalidOutputStreamHandleError) Error() string {
+	return "invalid output stream handle"
 }

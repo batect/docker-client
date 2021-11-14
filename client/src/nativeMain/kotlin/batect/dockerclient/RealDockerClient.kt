@@ -16,6 +16,9 @@
 
 package batect.dockerclient
 
+import batect.dockerclient.io.TextOutput
+import batect.dockerclient.native.BuildImage
+import batect.dockerclient.native.BuildImageRequest
 import batect.dockerclient.native.ClientConfiguration
 import batect.dockerclient.native.CreateClient
 import batect.dockerclient.native.CreateNetwork
@@ -25,6 +28,7 @@ import batect.dockerclient.native.DeleteNetwork
 import batect.dockerclient.native.DeleteVolume
 import batect.dockerclient.native.DisposeClient
 import batect.dockerclient.native.DockerClientHandle
+import batect.dockerclient.native.FreeBuildImageReturn
 import batect.dockerclient.native.FreeCreateClientReturn
 import batect.dockerclient.native.FreeCreateNetworkReturn
 import batect.dockerclient.native.FreeCreateVolumeReturn
@@ -43,6 +47,7 @@ import batect.dockerclient.native.Ping
 import batect.dockerclient.native.PullImage
 import batect.dockerclient.native.PullImageProgressDetail
 import batect.dockerclient.native.PullImageProgressUpdate
+import batect.dockerclient.native.StringPair
 import batect.dockerclient.native.TLSConfiguration
 import kotlinx.cinterop.CFunction
 import kotlinx.cinterop.COpaquePointer
@@ -52,6 +57,7 @@ import kotlinx.cinterop.CPointerVar
 import kotlinx.cinterop.MemScope
 import kotlinx.cinterop.StableRef
 import kotlinx.cinterop.alloc
+import kotlinx.cinterop.allocArrayOf
 import kotlinx.cinterop.asStableRef
 import kotlinx.cinterop.cstr
 import kotlinx.cinterop.get
@@ -256,8 +262,8 @@ internal actual class RealDockerClient actual constructor(configuration: DockerC
         }
     }
 
-    public override fun deleteImage(image: ImageReference) {
-        val error = DeleteImage(clientHandle, image.id.cstr)
+    public override fun deleteImage(image: ImageReference, force: Boolean) {
+        val error = DeleteImage(clientHandle, image.id.cstr, force)
 
         try {
             if (error != null) {
@@ -284,6 +290,47 @@ internal actual class RealDockerClient actual constructor(configuration: DockerC
         } finally {
             FreeGetImageReturn(ret)
         }
+    }
+
+    public override fun buildImage(spec: ImageBuildSpec, output: TextOutput, onProgressUpdate: ImageBuildProgressReceiver): ImageReference {
+        memScoped {
+            output.prepareStream().use { stream ->
+                val ret = BuildImage(clientHandle, allocBuildImageRequest(spec).ptr, stream.outputStreamHandle)!!
+
+                try {
+                    stream.run() // FIXME: This really should be done in parallel with the BuildImage call above, but Kotlin/Native does not yet support multithreaded coroutines
+
+                    if (ret.pointed.Error != null) {
+                        throw ImageBuildFailedException(ret.pointed.Error!!.pointed)
+                    }
+
+                    return ImageReference(ret.pointed.Response!!.pointed)
+                } finally {
+                    FreeBuildImageReturn(ret)
+                }
+            }
+        }
+    }
+
+    private fun MemScope.allocBuildImageRequest(spec: ImageBuildSpec): BuildImageRequest {
+        val request = alloc<BuildImageRequest>()
+        request.ContextDirectory = spec.contextDirectory.toString().cstr.ptr
+        request.PathToDockerfile = spec.pathToDockerfile.toString().cstr.ptr
+
+        request.BuildArgs = allocArrayOf(spec.buildArgs.map {
+            val pair = alloc<StringPair>()
+            pair.Key = it.key.cstr.ptr
+            pair.Value = it.value.cstr.ptr
+            pair.ptr
+        })
+        request.BuildArgsCount = spec.buildArgs.size.toULong()
+
+        request.ImageTags = allocArrayOf(spec.imageTags.map { it.cstr.ptr })
+        request.ImageTagsCount = spec.imageTags.size.toULong()
+        request.AlwaysPullBaseImages = spec.alwaysPullBaseImages
+        request.NoCache = spec.noCache
+
+        return request
     }
 
     override fun close() {

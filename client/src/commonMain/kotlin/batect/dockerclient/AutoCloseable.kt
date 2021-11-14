@@ -19,3 +19,5 @@ package batect.dockerclient
 public expect interface AutoCloseable {
     public fun close()
 }
+
+public expect inline fun <T : AutoCloseable?, R> T.use(block: (T) -> R): R

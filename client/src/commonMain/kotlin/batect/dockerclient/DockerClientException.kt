@@ -89,3 +89,9 @@ public expect class ImageRetrievalFailedException(
     cause: Throwable? = null,
     golangErrorType: String? = null
 ) : DockerClientException
+
+public expect class ImageBuildFailedException(
+    message: String,
+    cause: Throwable? = null,
+    golangErrorType: String? = null
+) : DockerClientException

@@ -57,7 +57,7 @@ class DockerClientImagePullSpec : ShouldSpec({
     val imageThatDoesNotExist = "batect/this-image-does-not-exist:abc123"
 
     beforeEach {
-        testImages.values.forEach { image -> client.deleteImageIfExists(image) }
+        testImages.values.forEach { image -> client.deleteImageIfPresent(image) }
     }
 
     testImages.forEach { (description, image) ->
@@ -218,10 +218,10 @@ class DockerClientImagePullSpec : ShouldSpec({
     }
 })
 
-private fun DockerClient.deleteImageIfExists(ref: String) {
-    val image = getImage(ref)
+internal fun DockerClient.deleteImageIfPresent(name: String) {
+    val image = getImage(name)
 
     if (image != null) {
-        deleteImage(image)
+        deleteImage(image, force = true)
     }
 }

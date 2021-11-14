@@ -100,7 +100,8 @@ abstract class GenerateGolangTypes : DefaultTask() {
     private fun generateMethodsForTypeUsedAsArrayElement(elementType: TypeInformation): Set<CMethod> {
         return setOf(
             CMethod.createArray(elementType),
-            CMethod.setArrayElement(elementType)
+            CMethod.setArrayElement(elementType),
+            CMethod.getArrayElement(elementType)
         )
     }
 
@@ -246,9 +247,7 @@ abstract class GenerateGolangTypes : DefaultTask() {
 
     private fun generateGoConstructorSetter(structType: StructType, fieldName: String, fieldType: TypeInformation): String {
         return when (fieldType) {
-            is StructType -> "    value.$fieldName = $fieldName"
-            is AliasType -> "    value.$fieldName = ${fieldType.cgoConversionFunctionName}($fieldName)"
-            is PrimitiveType -> "    value.$fieldName = ${fieldType.cgoConversionFunctionName}($fieldName)"
+            is StructType, is AliasType, is PrimitiveType -> "    value.$fieldName = ${golangConverterToCType(fieldName, fieldType)}"
             is ArrayType ->
                 """
                 |
@@ -256,12 +255,19 @@ abstract class GenerateGolangTypes : DefaultTask() {
                 |    value.$fieldName = C.Create${fieldType.elementType.yamlName}Array(value.${fieldName}Count)
                 |
                 |    for i, v := range $fieldName {
-                |        C.Set${fieldType.elementType.yamlName}ArrayElement(value.$fieldName, C.uint64_t(i), v)
+                |        C.Set${fieldType.elementType.yamlName}ArrayElement(value.$fieldName, C.uint64_t(i), ${golangConverterToCType("v", fieldType.elementType)})
 	            |    }
                 |
                 """.trimMargin()
             is CallbackType -> throw UnsupportedOperationException("Embedding callback types in structs is not supported. Field $fieldName of ${structType.name} contains callback type ${fieldType.name}.")
         }
+    }
+
+    private fun golangConverterToCType(source: String, type: TypeInformation): String = when (type) {
+        is StructType -> source
+        is AliasType -> "${type.cgoConversionFunctionName}($source)"
+        is PrimitiveType -> "${type.cgoConversionFunctionName}($source)"
+        else -> throw UnsupportedOperationException("Don't know how to convert ${type::class.simpleName} from Golang type to C type.")
     }
 
     private fun generateGoInvoke(builder: StringBuilder, type: CallbackType) {
@@ -381,6 +387,13 @@ abstract class GenerateGolangTypes : DefaultTask() {
                 null,
                 listOf(CMethodParameter("array", "${elementType.cName}*"), CMethodParameter("index", "uint64_t"), CMethodParameter("value", elementType.cName)),
                 "array[index] = value;"
+            )
+
+            fun getArrayElement(elementType: TypeInformation): CMethod = CMethod(
+                "Get${elementType.yamlName}ArrayElement",
+                elementType.cName,
+                listOf(CMethodParameter("array", "${elementType.cName}*"), CMethodParameter("index", "uint64_t")),
+                "return array[index];"
             )
 
             fun invoke(callback: CallbackType): CMethod = CMethod(

@@ -30,6 +30,10 @@
 
 typedef uint64_t DockerClientHandle;
 
+typedef uint64_t OutputStreamHandle;
+
+typedef uintptr_t FileDescriptor;
+
 typedef struct {
     char* Type;
     char* Message;
@@ -53,6 +57,12 @@ typedef struct {
     DockerClientHandle Client;
     Error* Error;
 } CreateClientReturn;
+
+typedef struct {
+    OutputStreamHandle OutputStream;
+    FileDescriptor ReadFileDescriptor;
+    Error* Error;
+} CreateOutputPipeReturn;
 
 typedef struct {
     char* APIVersion;
@@ -137,6 +147,27 @@ typedef struct {
     Error* Error;
 } GetImageReturn;
 
+typedef struct {
+    char* Key;
+    char* Value;
+} StringPair;
+
+typedef struct {
+    char* ContextDirectory;
+    char* PathToDockerfile;
+    uint64_t BuildArgsCount;
+    StringPair** BuildArgs;
+    uint64_t ImageTagsCount;
+    char** ImageTags;
+    bool AlwaysPullBaseImages;
+    bool NoCache;
+} BuildImageRequest;
+
+typedef struct {
+    ImageReference* Response;
+    Error* Error;
+} BuildImageReturn;
+
 EXPORTED_FUNCTION Error* AllocError();
 EXPORTED_FUNCTION void FreeError(Error* value);
 EXPORTED_FUNCTION TLSConfiguration* AllocTLSConfiguration();
@@ -145,6 +176,8 @@ EXPORTED_FUNCTION ClientConfiguration* AllocClientConfiguration();
 EXPORTED_FUNCTION void FreeClientConfiguration(ClientConfiguration* value);
 EXPORTED_FUNCTION CreateClientReturn* AllocCreateClientReturn();
 EXPORTED_FUNCTION void FreeCreateClientReturn(CreateClientReturn* value);
+EXPORTED_FUNCTION CreateOutputPipeReturn* AllocCreateOutputPipeReturn();
+EXPORTED_FUNCTION void FreeCreateOutputPipeReturn(CreateOutputPipeReturn* value);
 EXPORTED_FUNCTION PingResponse* AllocPingResponse();
 EXPORTED_FUNCTION void FreePingResponse(PingResponse* value);
 EXPORTED_FUNCTION PingReturn* AllocPingReturn();
@@ -176,6 +209,19 @@ EXPORTED_FUNCTION void FreePullImageProgressUpdate(PullImageProgressUpdate* valu
 EXPORTED_FUNCTION bool InvokePullImageProgressCallback(PullImageProgressCallback method, void* userData, PullImageProgressUpdate* progress);
 EXPORTED_FUNCTION GetImageReturn* AllocGetImageReturn();
 EXPORTED_FUNCTION void FreeGetImageReturn(GetImageReturn* value);
+EXPORTED_FUNCTION StringPair* AllocStringPair();
+EXPORTED_FUNCTION void FreeStringPair(StringPair* value);
+EXPORTED_FUNCTION BuildImageRequest* AllocBuildImageRequest();
+EXPORTED_FUNCTION void FreeBuildImageRequest(BuildImageRequest* value);
+EXPORTED_FUNCTION BuildImageReturn* AllocBuildImageReturn();
+EXPORTED_FUNCTION void FreeBuildImageReturn(BuildImageReturn* value);
 EXPORTED_FUNCTION VolumeReference** CreateVolumeReferenceArray(uint64_t size);
 EXPORTED_FUNCTION void SetVolumeReferenceArrayElement(VolumeReference** array, uint64_t index, VolumeReference* value);
+EXPORTED_FUNCTION VolumeReference* GetVolumeReferenceArrayElement(VolumeReference** array, uint64_t index);
+EXPORTED_FUNCTION StringPair** CreateStringPairArray(uint64_t size);
+EXPORTED_FUNCTION void SetStringPairArrayElement(StringPair** array, uint64_t index, StringPair* value);
+EXPORTED_FUNCTION StringPair* GetStringPairArrayElement(StringPair** array, uint64_t index);
+EXPORTED_FUNCTION char** CreatestringArray(uint64_t size);
+EXPORTED_FUNCTION void SetstringArrayElement(char** array, uint64_t index, char* value);
+EXPORTED_FUNCTION char* GetstringArrayElement(char** array, uint64_t index);
 #endif
