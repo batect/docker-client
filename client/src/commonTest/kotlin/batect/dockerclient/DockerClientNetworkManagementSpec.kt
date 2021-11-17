@@ -21,9 +21,7 @@ import io.kotest.core.spec.style.ShouldSpec
 import io.kotest.matchers.shouldBe
 import kotlin.random.Random
 import kotlin.random.nextULong
-import kotlin.time.ExperimentalTime
 
-@ExperimentalTime
 class DockerClientNetworkManagementSpec : ShouldSpec({
     val client = closeAfterTest(DockerClient.Builder().build())
     val networkDriver = when (testEnvironmentContainerOperatingSystem) {
