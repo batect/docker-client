@@ -31,7 +31,7 @@ import org.jetbrains.kotlin.konan.target.KonanTarget
 
 plugins {
     kotlin("multiplatform") version "1.5.31"
-    id("io.kotest.multiplatform") version "5.0.0.5"
+    id("io.kotest.multiplatform") version "5.0.0.6"
     id("com.diffplug.spotless")
     `maven-publish`
     signing
