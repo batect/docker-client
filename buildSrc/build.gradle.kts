@@ -28,11 +28,11 @@ repositories {
 
 dependencies {
     implementation(platform("org.jetbrains.kotlin:kotlin-bom"))
-    implementation("org.jetbrains.kotlinx:kotlinx-serialization-core:1.3.0")
+    implementation("org.jetbrains.kotlinx:kotlinx-serialization-core:1.3.1")
     implementation(gradleApi())
     implementation(gradleKotlinDsl())
     implementation("com.github.jnr:jnr-posix:3.1.11")
-    implementation("com.charleskorn.kaml:kaml:0.36.0")
+    implementation("com.charleskorn.kaml:kaml:0.37.0")
 }
 
 java {
