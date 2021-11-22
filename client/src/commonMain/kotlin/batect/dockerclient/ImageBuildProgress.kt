@@ -21,12 +21,13 @@ public typealias ImageBuildProgressReceiver = (ImageBuildProgressUpdate) -> Unit
 public sealed class ImageBuildProgressUpdate
 
 public sealed class ImageBuildStepProgressUpdate() : ImageBuildProgressUpdate() {
-    public abstract val stepIndex: Int
+    public abstract val stepNumber: Long
 }
 
-public data class StepStarting(override val stepIndex: Int, val stepName: String) : ImageBuildStepProgressUpdate()
-public data class StepOutput(override val stepIndex: Int, val output: String) : ImageBuildStepProgressUpdate()
-public data class StepPullProgressUpdate(override val stepIndex: Int, val pullProgress: ImagePullProgressUpdate) : ImageBuildStepProgressUpdate()
-public data class StepFinished(override val stepIndex: Int) : ImageBuildStepProgressUpdate()
+public data class ImageBuildContextUploadProgress(val bytesUploaded: Long, val totalBytes: Long) : ImageBuildProgressUpdate()
+public data class StepStarting(override val stepNumber: Long, val stepName: String) : ImageBuildStepProgressUpdate()
+public data class StepOutput(override val stepNumber: Long, val output: String) : ImageBuildStepProgressUpdate()
+public data class StepPullProgressUpdate(override val stepNumber: Long, val pullProgress: ImagePullProgressUpdate) : ImageBuildStepProgressUpdate()
+public data class StepFinished(override val stepNumber: Long) : ImageBuildStepProgressUpdate()
 public data class BuildFailed(val message: String) : ImageBuildProgressUpdate()
 public data class BuildComplete(val image: ImageReference) : ImageBuildProgressUpdate()

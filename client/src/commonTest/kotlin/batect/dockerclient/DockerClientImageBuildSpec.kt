@@ -60,19 +60,18 @@ class DockerClientImageBuildSpec : ShouldSpec({
             Successfully built [0-9a-f]{12}
         """.trimIndent().toRegex()
 
-        progressUpdatesReceived shouldStartWith StepStarting(0, "FROM alpine:3.14.2")
+        progressUpdatesReceived shouldStartWith StepStarting(1, "FROM alpine:3.14.2")
 
         progressUpdatesReceived shouldEndWith listOf(
-            StepFinished(0),
-            StepStarting(1, "RUN echo \"Hello world!\""),
-            StepOutput(1, "Hello world!\n"),
             StepFinished(1),
+            StepStarting(2, "RUN echo \"Hello world!\""),
+            StepOutput(2, "Hello world!\n"),
+            StepFinished(2),
             BuildComplete(image)
         )
 
         // TODO: assert on progress events
         // - context upload
-        // TODO: verify returned image reference can be used to run image
     }
 
     should("be able to build a Linux container image using files in the build context").onlyIfDockerDaemonSupportsLinuxContainers {
@@ -206,4 +205,5 @@ class DockerClientImageBuildSpec : ShouldSpec({
     // - Dockerfile not in context directory
     // - image tag not valid identifier
     // - invalid build arg name
+    // TODO: progress callback that throws an exception
 })

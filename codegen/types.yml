@@ -233,3 +233,69 @@
       type: ImageReference
     - name: Error
       type: Error
+
+- name: BuildImageProgressUpdate_ImageBuildContextUploadProgress
+  type: struct
+  fields:
+    - name: BytesUploaded
+      type: int64
+    - name: TotalBytes
+      type: int64
+
+- name: BuildImageProgressUpdate_StepStarting
+  type: struct
+  fields:
+    - name: StepNumber
+      type: int64
+    - name: StepName
+      type: string
+
+- name: BuildImageProgressUpdate_StepOutput
+  type: struct
+  fields:
+    - name: StepNumber
+      type: int64
+    - name: Output
+      type: string
+
+- name: BuildImageProgressUpdate_StepPullProgressUpdate
+  type: struct
+  fields:
+    - name: StepNumber
+      type: int64
+    - name: PullProgress
+      type: PullImageProgressUpdate
+
+- name: BuildImageProgressUpdate_StepFinished
+  type: struct
+  fields:
+    - name: StepNumber
+      type: int64
+
+- name: BuildImageProgressUpdate_BuildFailed
+  type: struct
+  fields:
+    - name: Message
+      type: string
+
+- name: BuildImageProgressUpdate
+  type: struct
+  fields:
+    - name: ImageBuildContextUploadProgress
+      type: BuildImageProgressUpdate_ImageBuildContextUploadProgress
+    - name: StepStarting
+      type: BuildImageProgressUpdate_StepStarting
+    - name: StepOutput
+      type: BuildImageProgressUpdate_StepOutput
+    - name: StepPullProgressUpdate
+      type: BuildImageProgressUpdate_StepPullProgressUpdate
+    - name: StepFinished
+      type: BuildImageProgressUpdate_StepFinished
+    - name: BuildFailed
+      type: BuildImageProgressUpdate_BuildFailed
+
+- name: BuildImageProgressCallback
+  type: callback
+  parameters:
+    - name: progress
+      type: BuildImageProgressUpdate

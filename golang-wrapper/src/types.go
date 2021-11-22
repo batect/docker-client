@@ -52,6 +52,14 @@ type GetImageReturn *C.GetImageReturn
 type StringPair *C.StringPair
 type BuildImageRequest *C.BuildImageRequest
 type BuildImageReturn *C.BuildImageReturn
+type BuildImageProgressUpdate_ImageBuildContextUploadProgress *C.BuildImageProgressUpdate_ImageBuildContextUploadProgress
+type BuildImageProgressUpdate_StepStarting *C.BuildImageProgressUpdate_StepStarting
+type BuildImageProgressUpdate_StepOutput *C.BuildImageProgressUpdate_StepOutput
+type BuildImageProgressUpdate_StepPullProgressUpdate *C.BuildImageProgressUpdate_StepPullProgressUpdate
+type BuildImageProgressUpdate_StepFinished *C.BuildImageProgressUpdate_StepFinished
+type BuildImageProgressUpdate_BuildFailed *C.BuildImageProgressUpdate_BuildFailed
+type BuildImageProgressUpdate *C.BuildImageProgressUpdate
+type BuildImageProgressCallback C.BuildImageProgressCallback
 
 func newError(
     Type string,
@@ -355,7 +363,92 @@ func newBuildImageReturn(
     return value
 }
 
+func newBuildImageProgressUpdate_ImageBuildContextUploadProgress(
+    BytesUploaded int64,
+    TotalBytes int64,
+) BuildImageProgressUpdate_ImageBuildContextUploadProgress {
+    value := C.AllocBuildImageProgressUpdate_ImageBuildContextUploadProgress()
+    value.BytesUploaded = C.int64_t(BytesUploaded)
+    value.TotalBytes = C.int64_t(TotalBytes)
+
+    return value
+}
+
+func newBuildImageProgressUpdate_StepStarting(
+    StepNumber int64,
+    StepName string,
+) BuildImageProgressUpdate_StepStarting {
+    value := C.AllocBuildImageProgressUpdate_StepStarting()
+    value.StepNumber = C.int64_t(StepNumber)
+    value.StepName = C.CString(StepName)
+
+    return value
+}
+
+func newBuildImageProgressUpdate_StepOutput(
+    StepNumber int64,
+    Output string,
+) BuildImageProgressUpdate_StepOutput {
+    value := C.AllocBuildImageProgressUpdate_StepOutput()
+    value.StepNumber = C.int64_t(StepNumber)
+    value.Output = C.CString(Output)
+
+    return value
+}
+
+func newBuildImageProgressUpdate_StepPullProgressUpdate(
+    StepNumber int64,
+    PullProgress PullImageProgressUpdate,
+) BuildImageProgressUpdate_StepPullProgressUpdate {
+    value := C.AllocBuildImageProgressUpdate_StepPullProgressUpdate()
+    value.StepNumber = C.int64_t(StepNumber)
+    value.PullProgress = PullProgress
+
+    return value
+}
+
+func newBuildImageProgressUpdate_StepFinished(
+    StepNumber int64,
+) BuildImageProgressUpdate_StepFinished {
+    value := C.AllocBuildImageProgressUpdate_StepFinished()
+    value.StepNumber = C.int64_t(StepNumber)
+
+    return value
+}
+
+func newBuildImageProgressUpdate_BuildFailed(
+    Message string,
+) BuildImageProgressUpdate_BuildFailed {
+    value := C.AllocBuildImageProgressUpdate_BuildFailed()
+    value.Message = C.CString(Message)
+
+    return value
+}
+
+func newBuildImageProgressUpdate(
+    ImageBuildContextUploadProgress BuildImageProgressUpdate_ImageBuildContextUploadProgress,
+    StepStarting BuildImageProgressUpdate_StepStarting,
+    StepOutput BuildImageProgressUpdate_StepOutput,
+    StepPullProgressUpdate BuildImageProgressUpdate_StepPullProgressUpdate,
+    StepFinished BuildImageProgressUpdate_StepFinished,
+    BuildFailed BuildImageProgressUpdate_BuildFailed,
+) BuildImageProgressUpdate {
+    value := C.AllocBuildImageProgressUpdate()
+    value.ImageBuildContextUploadProgress = ImageBuildContextUploadProgress
+    value.StepStarting = StepStarting
+    value.StepOutput = StepOutput
+    value.StepPullProgressUpdate = StepPullProgressUpdate
+    value.StepFinished = StepFinished
+    value.BuildFailed = BuildFailed
+
+    return value
+}
+
 func invokePullImageProgressCallback(method PullImageProgressCallback, userData unsafe.Pointer, progress PullImageProgressUpdate) bool {
     return bool(C.InvokePullImageProgressCallback(method, userData, progress))
+}
+
+func invokeBuildImageProgressCallback(method BuildImageProgressCallback, userData unsafe.Pointer, progress BuildImageProgressUpdate) bool {
+    return bool(C.InvokeBuildImageProgressCallback(method, userData, progress))
 }
 

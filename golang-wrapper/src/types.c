@@ -458,6 +458,128 @@ void FreeBuildImageReturn(BuildImageReturn* value) {
     free(value);
 }
 
+BuildImageProgressUpdate_ImageBuildContextUploadProgress* AllocBuildImageProgressUpdate_ImageBuildContextUploadProgress() {
+    BuildImageProgressUpdate_ImageBuildContextUploadProgress* value = malloc(sizeof(BuildImageProgressUpdate_ImageBuildContextUploadProgress));
+
+    return value;
+}
+
+void FreeBuildImageProgressUpdate_ImageBuildContextUploadProgress(BuildImageProgressUpdate_ImageBuildContextUploadProgress* value) {
+    if (value == NULL) {
+        return;
+    }
+
+    free(value);
+}
+
+BuildImageProgressUpdate_StepStarting* AllocBuildImageProgressUpdate_StepStarting() {
+    BuildImageProgressUpdate_StepStarting* value = malloc(sizeof(BuildImageProgressUpdate_StepStarting));
+    value->StepName = NULL;
+
+    return value;
+}
+
+void FreeBuildImageProgressUpdate_StepStarting(BuildImageProgressUpdate_StepStarting* value) {
+    if (value == NULL) {
+        return;
+    }
+
+    free(value->StepName);
+    free(value);
+}
+
+BuildImageProgressUpdate_StepOutput* AllocBuildImageProgressUpdate_StepOutput() {
+    BuildImageProgressUpdate_StepOutput* value = malloc(sizeof(BuildImageProgressUpdate_StepOutput));
+    value->Output = NULL;
+
+    return value;
+}
+
+void FreeBuildImageProgressUpdate_StepOutput(BuildImageProgressUpdate_StepOutput* value) {
+    if (value == NULL) {
+        return;
+    }
+
+    free(value->Output);
+    free(value);
+}
+
+BuildImageProgressUpdate_StepPullProgressUpdate* AllocBuildImageProgressUpdate_StepPullProgressUpdate() {
+    BuildImageProgressUpdate_StepPullProgressUpdate* value = malloc(sizeof(BuildImageProgressUpdate_StepPullProgressUpdate));
+    value->PullProgress = NULL;
+
+    return value;
+}
+
+void FreeBuildImageProgressUpdate_StepPullProgressUpdate(BuildImageProgressUpdate_StepPullProgressUpdate* value) {
+    if (value == NULL) {
+        return;
+    }
+
+    FreePullImageProgressUpdate(value->PullProgress);
+    free(value);
+}
+
+BuildImageProgressUpdate_StepFinished* AllocBuildImageProgressUpdate_StepFinished() {
+    BuildImageProgressUpdate_StepFinished* value = malloc(sizeof(BuildImageProgressUpdate_StepFinished));
+
+    return value;
+}
+
+void FreeBuildImageProgressUpdate_StepFinished(BuildImageProgressUpdate_StepFinished* value) {
+    if (value == NULL) {
+        return;
+    }
+
+    free(value);
+}
+
+BuildImageProgressUpdate_BuildFailed* AllocBuildImageProgressUpdate_BuildFailed() {
+    BuildImageProgressUpdate_BuildFailed* value = malloc(sizeof(BuildImageProgressUpdate_BuildFailed));
+    value->Message = NULL;
+
+    return value;
+}
+
+void FreeBuildImageProgressUpdate_BuildFailed(BuildImageProgressUpdate_BuildFailed* value) {
+    if (value == NULL) {
+        return;
+    }
+
+    free(value->Message);
+    free(value);
+}
+
+BuildImageProgressUpdate* AllocBuildImageProgressUpdate() {
+    BuildImageProgressUpdate* value = malloc(sizeof(BuildImageProgressUpdate));
+    value->ImageBuildContextUploadProgress = NULL;
+    value->StepStarting = NULL;
+    value->StepOutput = NULL;
+    value->StepPullProgressUpdate = NULL;
+    value->StepFinished = NULL;
+    value->BuildFailed = NULL;
+
+    return value;
+}
+
+void FreeBuildImageProgressUpdate(BuildImageProgressUpdate* value) {
+    if (value == NULL) {
+        return;
+    }
+
+    FreeBuildImageProgressUpdate_ImageBuildContextUploadProgress(value->ImageBuildContextUploadProgress);
+    FreeBuildImageProgressUpdate_StepStarting(value->StepStarting);
+    FreeBuildImageProgressUpdate_StepOutput(value->StepOutput);
+    FreeBuildImageProgressUpdate_StepPullProgressUpdate(value->StepPullProgressUpdate);
+    FreeBuildImageProgressUpdate_StepFinished(value->StepFinished);
+    FreeBuildImageProgressUpdate_BuildFailed(value->BuildFailed);
+    free(value);
+}
+
+bool InvokeBuildImageProgressCallback(BuildImageProgressCallback method, void* userData, BuildImageProgressUpdate* progress) {
+    return method(userData, progress);
+}
+
 VolumeReference** CreateVolumeReferenceArray(uint64_t size) {
     return malloc(size * sizeof(VolumeReference*));
 }

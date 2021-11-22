@@ -18,6 +18,13 @@ package batect.dockerclient
 
 import batect.dockerclient.io.TextOutput
 import batect.dockerclient.native.BuildImage
+import batect.dockerclient.native.BuildImageProgressUpdate
+import batect.dockerclient.native.BuildImageProgressUpdate_BuildFailed
+import batect.dockerclient.native.BuildImageProgressUpdate_ImageBuildContextUploadProgress
+import batect.dockerclient.native.BuildImageProgressUpdate_StepFinished
+import batect.dockerclient.native.BuildImageProgressUpdate_StepOutput
+import batect.dockerclient.native.BuildImageProgressUpdate_StepPullProgressUpdate
+import batect.dockerclient.native.BuildImageProgressUpdate_StepStarting
 import batect.dockerclient.native.BuildImageRequest
 import batect.dockerclient.native.ClientConfiguration
 import batect.dockerclient.native.CreateClient
@@ -295,18 +302,27 @@ internal actual class RealDockerClient actual constructor(configuration: DockerC
     public override fun buildImage(spec: ImageBuildSpec, output: TextOutput, onProgressUpdate: ImageBuildProgressReceiver): ImageReference {
         memScoped {
             output.prepareStream().use { stream ->
-                val ret = BuildImage(clientHandle, allocBuildImageRequest(spec).ptr, stream.outputStreamHandle)!!
+                val callbackState = CallbackState<BuildImageProgressUpdate> { progress ->
+                    onProgressUpdate.invoke(ImageBuildProgressUpdate(progress!!.pointed))
+                }
 
-                try {
-                    stream.run() // FIXME: This really should be done in parallel with the BuildImage call above, but Kotlin/Native does not yet support multithreaded coroutines
+                return callbackState.use { callback, callbackUserData ->
+                    val ret = BuildImage(clientHandle, allocBuildImageRequest(spec).ptr, stream.outputStreamHandle, callback, callbackUserData)!!
 
-                    if (ret.pointed.Error != null) {
-                        throw ImageBuildFailedException(ret.pointed.Error!!.pointed)
+                    try {
+                        stream.run() // FIXME: This really should be done in parallel with the BuildImage call above, but Kotlin/Native does not yet support multithreaded coroutines
+
+                        if (ret.pointed.Error != null) {
+                            throw ImageBuildFailedException(ret.pointed.Error!!.pointed)
+                        }
+
+                        val imageReference = ImageReference(ret.pointed.Response!!.pointed)
+                        onProgressUpdate(BuildComplete(imageReference))
+
+                        imageReference
+                    } finally {
+                        FreeBuildImageReturn(ret)
                     }
-
-                    return ImageReference(ret.pointed.Response!!.pointed)
-                } finally {
-                    FreeBuildImageReturn(ret)
                 }
             }
         }
@@ -364,6 +380,46 @@ private fun ImagePullProgressUpdate(native: PullImageProgressUpdate): ImagePullP
 
 private fun ImagePullProgressDetail(native: PullImageProgressDetail): ImagePullProgressDetail =
     ImagePullProgressDetail(native.Current, native.Total)
+
+private fun ImageBuildProgressUpdate(native: BuildImageProgressUpdate) : ImageBuildProgressUpdate = when {
+    native.ImageBuildContextUploadProgress != null -> ImageBuildContextUploadProgress(native.ImageBuildContextUploadProgress!!.pointed)
+    native.StepStarting != null -> StepStarting(native.StepStarting!!.pointed)
+    native.StepOutput != null -> StepOutput(native.StepOutput!!.pointed)
+    native.StepPullProgressUpdate != null -> StepPullProgressUpdate(native.StepPullProgressUpdate!!.pointed)
+    native.StepFinished != null -> StepFinished(native.StepFinished!!.pointed)
+    native.BuildFailed != null -> BuildFailed(native.BuildFailed!!.pointed)
+    else -> throw RuntimeException("${BuildImageProgressUpdate::class.qualifiedName} did not contain an update")
+}
+
+private fun ImageBuildContextUploadProgress(native: BuildImageProgressUpdate_ImageBuildContextUploadProgress): ImageBuildContextUploadProgress =
+    ImageBuildContextUploadProgress(
+        native.BytesUploaded,
+        native.TotalBytes
+    )
+
+private fun StepStarting(native: BuildImageProgressUpdate_StepStarting) : StepStarting =
+    StepStarting(
+        native.StepNumber,
+        native.StepName!!.toKString()
+    )
+
+private fun StepOutput(native: BuildImageProgressUpdate_StepOutput): StepOutput =
+    StepOutput(
+        native.StepNumber,
+        native.Output!!.toKString()
+    )
+
+private fun StepPullProgressUpdate(native: BuildImageProgressUpdate_StepPullProgressUpdate): StepPullProgressUpdate =
+    StepPullProgressUpdate(
+        native.StepNumber,
+        ImagePullProgressUpdate(native.PullProgress!!.pointed)
+    )
+
+private fun StepFinished(native: BuildImageProgressUpdate_StepFinished): StepFinished =
+    StepFinished(native.StepNumber)
+
+private fun BuildFailed(native: BuildImageProgressUpdate_BuildFailed): BuildFailed =
+    BuildFailed(native.Message!!.toKString())
 
 private inline fun <reified NativeType : CPointed, KotlinType> fromArray(
     source: CPointer<CPointerVar<NativeType>>,

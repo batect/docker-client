@@ -168,6 +168,45 @@ typedef struct {
     Error* Error;
 } BuildImageReturn;
 
+typedef struct {
+    int64_t BytesUploaded;
+    int64_t TotalBytes;
+} BuildImageProgressUpdate_ImageBuildContextUploadProgress;
+
+typedef struct {
+    int64_t StepNumber;
+    char* StepName;
+} BuildImageProgressUpdate_StepStarting;
+
+typedef struct {
+    int64_t StepNumber;
+    char* Output;
+} BuildImageProgressUpdate_StepOutput;
+
+typedef struct {
+    int64_t StepNumber;
+    PullImageProgressUpdate* PullProgress;
+} BuildImageProgressUpdate_StepPullProgressUpdate;
+
+typedef struct {
+    int64_t StepNumber;
+} BuildImageProgressUpdate_StepFinished;
+
+typedef struct {
+    char* Message;
+} BuildImageProgressUpdate_BuildFailed;
+
+typedef struct {
+    BuildImageProgressUpdate_ImageBuildContextUploadProgress* ImageBuildContextUploadProgress;
+    BuildImageProgressUpdate_StepStarting* StepStarting;
+    BuildImageProgressUpdate_StepOutput* StepOutput;
+    BuildImageProgressUpdate_StepPullProgressUpdate* StepPullProgressUpdate;
+    BuildImageProgressUpdate_StepFinished* StepFinished;
+    BuildImageProgressUpdate_BuildFailed* BuildFailed;
+} BuildImageProgressUpdate;
+
+typedef bool (*BuildImageProgressCallback) (void*, BuildImageProgressUpdate*);
+
 EXPORTED_FUNCTION Error* AllocError();
 EXPORTED_FUNCTION void FreeError(Error* value);
 EXPORTED_FUNCTION TLSConfiguration* AllocTLSConfiguration();
@@ -215,6 +254,21 @@ EXPORTED_FUNCTION BuildImageRequest* AllocBuildImageRequest();
 EXPORTED_FUNCTION void FreeBuildImageRequest(BuildImageRequest* value);
 EXPORTED_FUNCTION BuildImageReturn* AllocBuildImageReturn();
 EXPORTED_FUNCTION void FreeBuildImageReturn(BuildImageReturn* value);
+EXPORTED_FUNCTION BuildImageProgressUpdate_ImageBuildContextUploadProgress* AllocBuildImageProgressUpdate_ImageBuildContextUploadProgress();
+EXPORTED_FUNCTION void FreeBuildImageProgressUpdate_ImageBuildContextUploadProgress(BuildImageProgressUpdate_ImageBuildContextUploadProgress* value);
+EXPORTED_FUNCTION BuildImageProgressUpdate_StepStarting* AllocBuildImageProgressUpdate_StepStarting();
+EXPORTED_FUNCTION void FreeBuildImageProgressUpdate_StepStarting(BuildImageProgressUpdate_StepStarting* value);
+EXPORTED_FUNCTION BuildImageProgressUpdate_StepOutput* AllocBuildImageProgressUpdate_StepOutput();
+EXPORTED_FUNCTION void FreeBuildImageProgressUpdate_StepOutput(BuildImageProgressUpdate_StepOutput* value);
+EXPORTED_FUNCTION BuildImageProgressUpdate_StepPullProgressUpdate* AllocBuildImageProgressUpdate_StepPullProgressUpdate();
+EXPORTED_FUNCTION void FreeBuildImageProgressUpdate_StepPullProgressUpdate(BuildImageProgressUpdate_StepPullProgressUpdate* value);
+EXPORTED_FUNCTION BuildImageProgressUpdate_StepFinished* AllocBuildImageProgressUpdate_StepFinished();
+EXPORTED_FUNCTION void FreeBuildImageProgressUpdate_StepFinished(BuildImageProgressUpdate_StepFinished* value);
+EXPORTED_FUNCTION BuildImageProgressUpdate_BuildFailed* AllocBuildImageProgressUpdate_BuildFailed();
+EXPORTED_FUNCTION void FreeBuildImageProgressUpdate_BuildFailed(BuildImageProgressUpdate_BuildFailed* value);
+EXPORTED_FUNCTION BuildImageProgressUpdate* AllocBuildImageProgressUpdate();
+EXPORTED_FUNCTION void FreeBuildImageProgressUpdate(BuildImageProgressUpdate* value);
+EXPORTED_FUNCTION bool InvokeBuildImageProgressCallback(BuildImageProgressCallback method, void* userData, BuildImageProgressUpdate* progress);
 EXPORTED_FUNCTION VolumeReference** CreateVolumeReferenceArray(uint64_t size);
 EXPORTED_FUNCTION void SetVolumeReferenceArrayElement(VolumeReference** array, uint64_t index, VolumeReference* value);
 EXPORTED_FUNCTION VolumeReference* GetVolumeReferenceArrayElement(VolumeReference** array, uint64_t index);

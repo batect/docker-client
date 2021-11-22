@@ -22,6 +22,10 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"io"
+	"regexp"
+	"strconv"
+	"unsafe"
 
 	"github.com/docker/cli/cli/command/image/build"
 	"github.com/docker/docker/api/types"
@@ -31,8 +35,10 @@ import (
 	"github.com/pkg/errors"
 )
 
+var buildStepLineRegex = regexp.MustCompile("^Step (\\d+)/(\\d+) : (.*)$")
+
 //export BuildImage
-func BuildImage(clientHandle DockerClientHandle, request *C.BuildImageRequest, outputStreamHandle OutputStreamHandle) BuildImageReturn {
+func BuildImage(clientHandle DockerClientHandle, request *C.BuildImageRequest, outputStreamHandle OutputStreamHandle, onProgressUpdate BuildImageProgressCallback, callbackUserData unsafe.Pointer) BuildImageReturn {
 	defer closeOutputStream(outputStreamHandle)
 
 	docker := getClient(clientHandle)
@@ -76,23 +82,100 @@ func BuildImage(clientHandle DockerClientHandle, request *C.BuildImageRequest, o
 		return newBuildImageReturn(nil, toError(err))
 	}
 
-	imageID := ""
-	aux := func(msg jsonmessage.JSONMessage) {
-		var result types.BuildResult
-		if err := json.Unmarshal(*msg.Aux, &result); err == nil {
-			imageID = result.ID
-		}
-	}
-
-	output := getOutputStream(outputStreamHandle)
-
-	err = jsonmessage.DisplayJSONMessagesStream(response.Body, output, output.FD(), false, aux)
+	imageID, err := processImageBuildResponseBody(response, outputStreamHandle, onProgressUpdate, callbackUserData)
 
 	if err != nil {
 		return newBuildImageReturn(nil, toError(err))
 	}
 
 	return newBuildImageReturn(newImageReference(imageID), nil)
+}
+
+func processImageBuildResponseBody(response types.ImageBuildResponse, outputStreamHandle OutputStreamHandle, onProgressUpdate BuildImageProgressCallback, callbackUserData unsafe.Pointer) (string, error) {
+	imageID := ""
+	currentStep := int64(0)
+	haveSeenMeaningfulOutputForCurrentStep := false
+
+	process := func(msg jsonmessage.JSONMessage) error {
+		if msg.Stream != "" {
+			if match := buildStepLineRegex.FindStringSubmatch(msg.Stream); match != nil {
+				newStep, err := strconv.ParseInt(match[1], 10, 64)
+				stepName := match[3]
+
+				if err != nil {
+					// This should never happen - the regex should not match values that are non-numeric.
+					panic(err)
+				}
+
+				if currentStep != 0 {
+					update := newBuildImageProgressUpdate_StepFinished(currentStep)
+					invokeBuildImageProgressCallback(onProgressUpdate, callbackUserData, newBuildImageProgressUpdate(nil, nil, nil, nil, update, nil))
+				}
+
+				currentStep = newStep
+				haveSeenMeaningfulOutputForCurrentStep = false
+				update := newBuildImageProgressUpdate_StepStarting(newStep, stepName)
+				invokeBuildImageProgressCallback(onProgressUpdate, callbackUserData, newBuildImageProgressUpdate(nil, update, nil, nil, nil, nil))
+			} else {
+				if haveSeenMeaningfulOutputForCurrentStep || msg.Stream != "\n" {
+					haveSeenMeaningfulOutputForCurrentStep = true
+					update := newBuildImageProgressUpdate_StepOutput(currentStep, msg.Stream)
+					invokeBuildImageProgressCallback(onProgressUpdate, callbackUserData, newBuildImageProgressUpdate(nil, nil, update, nil, nil, nil))
+				}
+			}
+		}
+
+		if msg.Error != nil {
+			failure := newBuildImageProgressUpdate_BuildFailed(msg.Error.Message)
+			invokeBuildImageProgressCallback(onProgressUpdate, callbackUserData, newBuildImageProgressUpdate(nil, nil, nil, nil, nil, failure))
+		}
+
+		if msg.Aux != nil {
+			var result types.BuildResult
+			if err := json.Unmarshal(*msg.Aux, &result); err == nil {
+				imageID = result.ID
+			}
+		}
+
+		return nil
+	}
+
+	output := getOutputStream(outputStreamHandle)
+	err := parseJSONMessagesStream(response.Body, output, process)
+
+	if err != nil {
+		return "", err
+	}
+
+	return imageID, nil
+}
+
+// This function is based on jsonmessage.DisplayJSONMessagesStream, but allows us to process every message, not just those with
+// an aux value.
+func parseJSONMessagesStream(in io.Reader, out io.Writer, processor func(message jsonmessage.JSONMessage) error) error {
+	decoder := json.NewDecoder(in)
+
+	for {
+		var msg jsonmessage.JSONMessage
+
+		if err := decoder.Decode(&msg); err != nil {
+			if err == io.EOF {
+				return nil
+			}
+
+			return err
+		}
+
+		if msg.Aux == nil {
+			if err := msg.Display(out, false); err != nil {
+				return err
+			}
+		}
+
+		if err := processor(msg); err != nil {
+			return err
+		}
+	}
 }
 
 func fromStringPairs(pairs **C.StringPair, count C.uint64_t) map[string]*string {
