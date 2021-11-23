@@ -59,7 +59,7 @@ jobs:
 
       - name: Cache packages
         id: cache-packages
-        uses: actions/cache@v2.1.6
+        uses: actions/cache@v2.1.7
         with:
           path: ~/.gradle/caches
           key: gradle-wrapper-packages-${{ runner.os }}-${{ hashFiles('**/*.gradle.kts') }}
@@ -67,7 +67,7 @@ jobs:
 
       - name: Cache Kotlin/Native dependencies
         id: cache-kotlin-native
-        uses: actions/cache@v2.1.6
+        uses: actions/cache@v2.1.7
         with:
           path: ~/.konan
           key: kotlin-native-${{ runner.os }}-${{ hashFiles('**/*.gradle.kts') }}
@@ -160,7 +160,7 @@ jobs:
 
       - name: Cache packages
         id: cache-packages
-        uses: actions/cache@v2.1.6
+        uses: actions/cache@v2.1.7
         with:
           path: ~/.gradle/caches
           key: gradle-kotlin-packages-${{ runner.os }}-${{ hashFiles('**/*.gradle.kts') }}
@@ -168,7 +168,7 @@ jobs:
 
       - name: Cache Kotlin/Native dependencies
         id: cache-kotlin-native
-        uses: actions/cache@v2.1.6
+        uses: actions/cache@v2.1.7
         with:
           path: ~/.konan
           key: kotlin-native-${{ runner.os }}-${{ hashFiles('**/*.gradle.kts') }}
@@ -260,7 +260,7 @@ jobs:
 
       - name: Cache packages
         id: cache-packages
-        uses: actions/cache@v2.1.6
+        uses: actions/cache@v2.1.7
         with:
           path: ~/.gradle/caches
           key: gradle-wrapper-packages-${{ runner.os }}-${{ hashFiles('**/*.gradle.kts') }}
@@ -268,7 +268,7 @@ jobs:
 
       - name: Cache Kotlin/Native dependencies
         id: cache-kotlin-native
-        uses: actions/cache@v2.1.6
+        uses: actions/cache@v2.1.7
         with:
           path: ~/.konan
           key: kotlin-native-${{ runner.os }}-${{ hashFiles('**/*.gradle.kts') }}
@@ -343,7 +343,7 @@ jobs:
 
       - name: Cache packages
         id: cache-packages
-        uses: actions/cache@v2.1.6
+        uses: actions/cache@v2.1.7
         with:
           path: ~/.gradle/caches
           key: gradle-kotlin-packages-${{ runner.os }}-${{ hashFiles('**/*.gradle.kts') }}
@@ -351,7 +351,7 @@ jobs:
 
       - name: Cache Kotlin/Native dependencies
         id: cache-kotlin-native
-        uses: actions/cache@v2.1.6
+        uses: actions/cache@v2.1.7
         with:
           path: ~/.konan
           key: kotlin-native-${{ runner.os }}-${{ hashFiles('**/*.gradle.kts') }}
