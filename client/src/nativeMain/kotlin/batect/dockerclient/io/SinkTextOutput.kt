@@ -78,7 +78,7 @@ public actual class SinkTextOutput actual constructor(public val sink: Sink) : T
         }
     }
 
-    private class PipeSource(private val fd: Int): Source {
+    private class PipeSource(private val fd: Int) : Source {
         override fun timeout(): Timeout = Timeout.NONE
 
         override fun read(sink: Buffer, byteCount: Long): Long {

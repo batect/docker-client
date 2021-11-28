@@ -333,12 +333,14 @@ internal actual class RealDockerClient actual constructor(configuration: DockerC
         request.ContextDirectory = spec.contextDirectory.toString().cstr.ptr
         request.PathToDockerfile = spec.pathToDockerfile.toString().cstr.ptr
 
-        request.BuildArgs = allocArrayOf(spec.buildArgs.map {
-            val pair = alloc<StringPair>()
-            pair.Key = it.key.cstr.ptr
-            pair.Value = it.value.cstr.ptr
-            pair.ptr
-        })
+        request.BuildArgs = allocArrayOf(
+            spec.buildArgs.map {
+                val pair = alloc<StringPair>()
+                pair.Key = it.key.cstr.ptr
+                pair.Value = it.value.cstr.ptr
+                pair.ptr
+            }
+        )
         request.BuildArgsCount = spec.buildArgs.size.toULong()
 
         request.ImageTags = allocArrayOf(spec.imageTags.map { it.cstr.ptr })
@@ -381,7 +383,7 @@ private fun ImagePullProgressUpdate(native: PullImageProgressUpdate): ImagePullP
 private fun ImagePullProgressDetail(native: PullImageProgressDetail): ImagePullProgressDetail =
     ImagePullProgressDetail(native.Current, native.Total)
 
-private fun ImageBuildProgressUpdate(native: BuildImageProgressUpdate) : ImageBuildProgressUpdate = when {
+private fun ImageBuildProgressUpdate(native: BuildImageProgressUpdate): ImageBuildProgressUpdate = when {
     native.ImageBuildContextUploadProgress != null -> ImageBuildContextUploadProgress(native.ImageBuildContextUploadProgress!!.pointed)
     native.StepStarting != null -> StepStarting(native.StepStarting!!.pointed)
     native.StepOutput != null -> StepOutput(native.StepOutput!!.pointed)
@@ -397,7 +399,7 @@ private fun ImageBuildContextUploadProgress(native: BuildImageProgressUpdate_Ima
         native.TotalBytes
     )
 
-private fun StepStarting(native: BuildImageProgressUpdate_StepStarting) : StepStarting =
+private fun StepStarting(native: BuildImageProgressUpdate_StepStarting): StepStarting =
     StepStarting(
         native.StepNumber,
         native.StepName!!.toKString()
