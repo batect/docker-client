@@ -25,9 +25,7 @@ import io.kotest.matchers.collections.shouldEndWith
 import io.kotest.matchers.collections.shouldStartWith
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
-import kotlin.time.ExperimentalTime
 
-@ExperimentalTime
 class DockerClientImagePullSpec : ShouldSpec({
     val client = closeAfterTest(DockerClient.Builder().build())
 
