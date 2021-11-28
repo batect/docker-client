@@ -19,12 +19,12 @@ package batect.dockerclient.io
 import batect.dockerclient.AutoCloseable
 import okio.Sink
 
-public sealed interface TextOutput {
+public expect sealed interface TextOutput {
     public fun prepareStream(): PreparedOutputStream
 
     public companion object {
-        public val StandardOutput: TextOutput = StandardTextOutput(1u)
-        public val StandardError: TextOutput = StandardTextOutput(2u)
+        public val StandardOutput: TextOutput
+        public val StandardError: TextOutput
     }
 }
 

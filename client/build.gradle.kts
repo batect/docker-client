@@ -52,7 +52,15 @@ val buildIsRunningOnWindows = org.gradle.internal.os.OperatingSystem.current().i
 val shouldRunCommonNativeTasksOnThisMachine = buildIsRunningOnLinux
 
 kotlin {
-    jvm()
+    jvm {
+        compilations.all {
+            kotlinOptions {
+                jvmTarget = "1.8"
+                freeCompilerArgs = listOf("-Xjvm-default=all")
+            }
+        }
+    }
+
     linuxX64()
     macosX64()
     macosArm64()
@@ -75,6 +83,7 @@ kotlin {
         val jvmMain by getting {
             dependencies {
                 implementation("com.github.jnr:jnr-ffi:2.2.9")
+                implementation("com.github.jnr:jnr-posix:3.1.12")
             }
 
             resources.srcDir(jvmLibsDir)

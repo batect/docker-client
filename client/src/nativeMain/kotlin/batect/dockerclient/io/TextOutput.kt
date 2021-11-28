@@ -36,6 +36,15 @@ import okio.buffer
 import platform.posix.errno
 import platform.posix.strerror
 
+public actual sealed interface TextOutput {
+    public actual fun prepareStream(): PreparedOutputStream
+
+    public actual companion object {
+        public actual val StandardOutput: TextOutput = StandardTextOutput(1u)
+        public actual val StandardError: TextOutput = StandardTextOutput(2u)
+    }
+}
+
 public actual class SinkTextOutput actual constructor(public val sink: Sink) : TextOutput {
     override fun prepareStream(): PreparedOutputStream {
         return Pipe(sink)
