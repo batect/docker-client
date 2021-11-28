@@ -47,6 +47,9 @@ val golangWrapperProject = project(":golang-wrapper")
 val jvmLibsDir = buildDir.resolve("resources").resolve("jvm")
 
 val buildIsRunningOnLinux = org.gradle.internal.os.OperatingSystem.current().isLinux
+val buildIsRunningOnMac = org.gradle.internal.os.OperatingSystem.current().isMacOsX
+val buildIsRunningOnWindows = org.gradle.internal.os.OperatingSystem.current().isWindows
+val shouldRunCommonNativeTasksOnThisMachine = buildIsRunningOnLinux
 
 kotlin {
     jvm()
@@ -142,6 +145,21 @@ kotlin {
             target.compilations.named<KotlinNativeCompilation>("main") {
                 addDockerClientWrapperCinterop()
             }
+
+            val nativeTarget = target as org.jetbrains.kotlin.gradle.plugin.mpp.KotlinNativeTarget
+            val konanTarget = nativeTarget.konanTarget
+
+            setOf(
+                "compileKotlin${nativeTarget.name.capitalize()}",
+                "compileTestKotlin${nativeTarget.name.capitalize()}",
+                "${nativeTarget.name}MainKlibrary",
+                "${nativeTarget.name}TestKlibrary",
+                "linkDebugTest${nativeTarget.name.capitalize()}",
+            ).forEach { taskName ->
+                tasks.named(taskName) {
+                    onlyIf { konanTarget.isSupportedOnThisMachine }
+                }
+            }
         }
     }
 }
@@ -164,9 +182,7 @@ fun KotlinNativeCompilation.addDockerClientWrapperCinterop() {
 
         inputs.file(sourceTask.map { it.outputLibraryFile })
 
-        if (konanTarget.family == Family.LINUX) {
-            onlyIf { buildIsRunningOnLinux }
-        }
+        onlyIf { konanTarget.isSupportedOnThisMachine }
     }
 }
 
@@ -183,23 +199,19 @@ fun KotlinTarget.addNativeCommonSourceSetDependencies() {
     }
 }
 
-setOf(
-    "compileKotlinLinuxX64",
-    "compileTestKotlinLinuxX64",
-    "linuxX64MainKlibrary",
-    "linuxX64TestKlibrary",
-    "linkDebugTestLinuxX64",
-).forEach { taskName ->
-    tasks.named(taskName) {
-        onlyIf { buildIsRunningOnLinux }
-    }
-}
-
 val KonanTarget.golangOSName: String
     get() = when (family) {
         Family.OSX -> "darwin"
         Family.LINUX -> "linux"
         Family.MINGW -> "windows"
+        else -> throw UnsupportedOperationException("Unknown target family: $family")
+    }
+
+val KonanTarget.isSupportedOnThisMachine: Boolean
+    get() = when (this.family) {
+        Family.OSX -> buildIsRunningOnMac
+        Family.LINUX -> buildIsRunningOnLinux
+        Family.MINGW -> buildIsRunningOnWindows
         else -> throw UnsupportedOperationException("Unknown target family: $family")
     }
 
@@ -367,12 +379,12 @@ publishing {
 }
 
 tasks.named("allMetadataJar") {
-    onlyIf { buildIsRunningOnLinux }
+    onlyIf { shouldRunCommonNativeTasksOnThisMachine }
 }
 
 afterEvaluate {
     tasks.named("compileNativeMainKotlinMetadata") {
-        onlyIf { buildIsRunningOnLinux }
+        onlyIf { shouldRunCommonNativeTasksOnThisMachine }
     }
 }
 
