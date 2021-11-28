@@ -162,6 +162,9 @@ abstract class GenerateGolangTypes : DefaultTask() {
                 builder.appendLine("typedef bool (*${type.name}) (void*, ${type.parameters.joinToString(", ") { it.type.cName }});")
                 builder.appendLine()
             }
+            is PrimitiveType, is ArrayType -> {
+                // Nothing to do.
+            }
         }
     }
 
