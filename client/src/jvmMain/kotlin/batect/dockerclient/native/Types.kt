@@ -95,7 +95,7 @@ internal class CreateOutputPipeReturn(runtime: Runtime) : Struct(runtime), AutoC
     }
 
     val outputStream = u_int64_t()
-    val readFileDescriptor = uintptr()
+    val readFileDescriptor = uintptr_t()
     val errorPointer = Pointer()
     val error: Error? by lazy { if (errorPointer.intValue() == 0) null else Error(errorPointer.get()) }
 
@@ -372,7 +372,7 @@ internal class BuildImageRequest(runtime: Runtime) : Struct(runtime), AutoClosea
     }
     private val imageTagsCount = u_int64_t()
     private val imageTagsPointer = Pointer()
-    val imageTags: List<string> by lazy {
+    val imageTags: List<kotlin.String> by lazy {
         if (imageTagsPointer.intValue() == 0) {
             throw IllegalArgumentException("imageTags is null")
         } else {
@@ -380,7 +380,7 @@ internal class BuildImageRequest(runtime: Runtime) : Struct(runtime), AutoClosea
             val pointer = imageTagsPointer.get()
             val elementSize = runtime.addressSize()
 
-            (0..(count - 1)).map { i -> string(pointer.getPointer(elementSize * i)) }
+            (0..(count - 1)).map { i -> pointer.getPointer(elementSize * i).getString(0) }
         }
     }
     val alwaysPullBaseImages = Boolean()

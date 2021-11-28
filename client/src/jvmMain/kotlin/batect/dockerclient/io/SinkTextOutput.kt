@@ -14,11 +14,12 @@
     limitations under the License.
 */
 
-package batect.dockerclient
+package batect.dockerclient.io
 
-import java.lang.AutoCloseable
-import kotlin.use
+import okio.Sink
 
-public actual typealias AutoCloseable = AutoCloseable
-
-public actual inline fun <T : AutoCloseable?, R> T.use(block: (T) -> R): R = this.use(block)
+public actual class SinkTextOutput actual constructor(public val sink: Sink) : TextOutput {
+    override fun prepareStream(): PreparedOutputStream {
+        TODO("not implemented")
+    }
+}

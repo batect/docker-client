@@ -14,7 +14,7 @@
   type: alias
   nativeType: uintptr_t
   jvmName: ULong
-  jnrType: uintptr
+  jnrType: uintptr_t
 
 - name: Error
   type: struct

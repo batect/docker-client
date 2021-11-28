@@ -106,9 +106,10 @@ enum class PrimitiveType(
     override val isPointer: Boolean = false,
     override val cgoTypeName: String = "C.$golangName",
     val cgoConversionFunctionName: String = "C.$golangName",
-    val alternativeCNames: Set<String> = emptySet()
+    val alternativeCNames: Set<String> = emptySet(),
+    val jnrPointerAccessorFunctionName: String? = null
 ) : TypeInformation {
-    StringType("string", "string", "char*", "String", jvmNameInStruct = "UTF8StringRef", isPointer = true, cgoConversionFunctionName = "C.CString"),
+    StringType("string", "string", "char*", "kotlin.String", jvmNameInStruct = "UTF8StringRef", isPointer = true, cgoConversionFunctionName = "C.CString", jnrPointerAccessorFunctionName = "getString"),
     BooleanType("boolean", "bool", "bool", "Boolean", alternativeCNames = setOf("_Bool")),
     Int64Type("int64", "int64", "int64_t", "long", jvmNameInStruct = "int64_t", cgoConversionFunctionName = "C.int64_t"),
     GenericPointerType("void*", "unsafe.Pointer", "void*", "Pointer?");

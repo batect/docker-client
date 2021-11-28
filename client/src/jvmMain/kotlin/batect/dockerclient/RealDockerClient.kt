@@ -16,6 +16,7 @@
 
 package batect.dockerclient
 
+import batect.dockerclient.io.TextOutput
 import batect.dockerclient.native.ClientConfiguration
 import batect.dockerclient.native.DockerClientHandle
 import batect.dockerclient.native.PullImageProgressCallback
@@ -167,8 +168,8 @@ internal actual class RealDockerClient actual constructor(configuration: DockerC
         }
     }
 
-    public override fun deleteImage(image: ImageReference) {
-        nativeAPI.DeleteImage(clientHandle, image.id).use { error ->
+    public override fun deleteImage(image: ImageReference, force: Boolean) {
+        nativeAPI.DeleteImage(clientHandle, image.id, force).use { error ->
             if (error != null) {
                 throw ImageDeletionFailedException(error)
             }
@@ -187,6 +188,10 @@ internal actual class RealDockerClient actual constructor(configuration: DockerC
 
             return ImageReference(ret.response!!)
         }
+    }
+
+    override fun buildImage(spec: ImageBuildSpec, output: TextOutput, onProgressUpdate: ImageBuildProgressReceiver): ImageReference {
+        TODO("not implemented")
     }
 
     override fun close() {

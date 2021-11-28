@@ -29,17 +29,17 @@ internal interface API {
     fun DisposeClient(@In clientHandle: Long): Error?
     fun Ping(@In clientHandle: Long): PingReturn?
     fun GetDaemonVersionInformation(@In clientHandle: Long): GetDaemonVersionInformationReturn?
-    fun DeleteImage(@In clientHandle: Long, @In ref: String, @In force: Boolean): Error?
-    fun GetImage(@In clientHandle: Long, @In ref: String): GetImageReturn?
+    fun DeleteImage(@In clientHandle: Long, @In ref: kotlin.String, @In force: Boolean): Error?
+    fun GetImage(@In clientHandle: Long, @In ref: kotlin.String): GetImageReturn?
     fun BuildImage(@In clientHandle: Long, @In request: BuildImageRequest, @In outputStreamHandle: Long, @In onProgressUpdate: BuildImageProgressCallback, @In callbackUserData: Pointer?): BuildImageReturn?
-    fun PullImage(@In clientHandle: Long, @In ref: String, @In onProgressUpdate: PullImageProgressCallback, @In callbackUserData: Pointer?): PullImageReturn?
+    fun PullImage(@In clientHandle: Long, @In ref: kotlin.String, @In onProgressUpdate: PullImageProgressCallback, @In callbackUserData: Pointer?): PullImageReturn?
     fun CreateOutputPipe(): CreateOutputPipeReturn?
     fun DisposeOutputPipe(@In handle: Long): Error?
-    fun CreateNetwork(@In clientHandle: Long, @In name: String, @In driver: String): CreateNetworkReturn?
-    fun DeleteNetwork(@In clientHandle: Long, @In id: String): Error?
-    fun GetNetworkByNameOrID(@In clientHandle: Long, @In searchFor: String): GetNetworkByNameOrIDReturn?
-    fun CreateVolume(@In clientHandle: Long, @In name: String): CreateVolumeReturn?
-    fun DeleteVolume(@In clientHandle: Long, @In name: String): Error?
+    fun CreateNetwork(@In clientHandle: Long, @In name: kotlin.String, @In driver: kotlin.String): CreateNetworkReturn?
+    fun DeleteNetwork(@In clientHandle: Long, @In id: kotlin.String): Error?
+    fun GetNetworkByNameOrID(@In clientHandle: Long, @In searchFor: kotlin.String): GetNetworkByNameOrIDReturn?
+    fun CreateVolume(@In clientHandle: Long, @In name: kotlin.String): CreateVolumeReturn?
+    fun DeleteVolume(@In clientHandle: Long, @In name: kotlin.String): Error?
     fun ListAllVolumes(@In clientHandle: Long): ListAllVolumesReturn?
     fun FreeError(@In value: Error)
     fun AllocError(): Error?

@@ -114,10 +114,16 @@ abstract class GenerateKotlinJVMTypes : DefaultTask() {
                     throw UnsupportedOperationException("This method doesn't correctly calculate array element sizes for non-pointer fields.")
                 }
 
+                val constructor = if (fieldType.elementType is PrimitiveType && fieldType.elementType.jnrPointerAccessorFunctionName != null) {
+                    "pointer.getPointer(elementSize * i).${fieldType.elementType.jnrPointerAccessorFunctionName}(0)"
+                } else {
+                    "${fieldType.elementType.jvmName}(pointer.getPointer(elementSize * i))"
+                }
+
                 """
                 |    private val ${fieldName}Count = u_int64_t()
                 |    private val ${fieldName}Pointer = Pointer()
-                |    val $fieldName: List<${fieldType.elementType.yamlName}> by lazy {
+                |    val $fieldName: List<${fieldType.elementType.jvmName}> by lazy {
                 |        if (${fieldName}Pointer.intValue() == 0) {
                 |            throw IllegalArgumentException("$fieldName is null")
                 |        } else {
@@ -125,7 +131,7 @@ abstract class GenerateKotlinJVMTypes : DefaultTask() {
                 |            val pointer = ${fieldName}Pointer.get()
                 |            val elementSize = runtime.addressSize()
                 |
-                |            (0..(count - 1)).map { i -> ${fieldType.elementType.yamlName}(pointer.getPointer(elementSize * i)) }
+                |            (0..(count - 1)).map { i -> $constructor }
                 |        }
                 |    }
                 """.trimMargin()
