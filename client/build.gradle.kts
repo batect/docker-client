@@ -324,23 +324,7 @@ publishing {
         // - it limits Linux publications to only be published from Linux (Kotlin/Native supports cross-compilation of Linux targets from macOS and Windows)
         // - it ensures that the main multiplatform publication and the JVM publication are only published from Linux on CI
         matching { it.name.startsWith("linux") || it.name == "kotlinMultiplatform" || it.name == "jvm" }.all {
-            val publication = this
-
-            tasks.withType<AbstractPublishToMaven>()
-                .matching { it.publication == publication }
-                .all {
-                    val task = this
-
-                    task.onlyIf { buildIsRunningOnLinux }
-                }
-
-            tasks.withType<GenerateModuleMetadata>()
-                .matching { it.publication.get() == publication }
-                .all {
-                    val task = this
-
-                    task.onlyIf { buildIsRunningOnLinux }
-                }
+            onlyPublishIf(buildIsRunningOnLinux)
         }
 
         named<MavenPublication>("jvm") {
@@ -376,6 +360,26 @@ publishing {
             }
         }
     }
+}
+
+fun Publication.onlyPublishIf(condition: Boolean) {
+    val publication = this
+
+    tasks.withType<AbstractPublishToMaven>()
+        .matching { it.publication == publication }
+        .all {
+            val task = this
+
+            task.onlyIf { condition }
+        }
+
+    tasks.withType<GenerateModuleMetadata>()
+        .matching { it.publication.get() == publication }
+        .all {
+            val task = this
+
+            task.onlyIf { condition }
+        }
 }
 
 tasks.named("allMetadataJar") {
