@@ -27,6 +27,10 @@ import jnr.ffi.annotations.Delegate
 
 internal typealias DockerClientHandle = Long
 
+internal typealias OutputStreamHandle = Long
+
+internal typealias FileDescriptor = ULong
+
 internal class Error(runtime: Runtime) : Struct(runtime), AutoCloseable {
     constructor(pointer: jnr.ffi.Pointer) : this(pointer.runtime) {
         this.useMemory(pointer)
@@ -82,6 +86,21 @@ internal class CreateClientReturn(runtime: Runtime) : Struct(runtime), AutoClose
 
     override fun close() {
         nativeAPI.FreeCreateClientReturn(this)
+    }
+}
+
+internal class CreateOutputPipeReturn(runtime: Runtime) : Struct(runtime), AutoCloseable {
+    constructor(pointer: jnr.ffi.Pointer) : this(pointer.runtime) {
+        this.useMemory(pointer)
+    }
+
+    val outputStream = u_int64_t()
+    val readFileDescriptor = uintptr()
+    val errorPointer = Pointer()
+    val error: Error? by lazy { if (errorPointer.intValue() == 0) null else Error(errorPointer.get()) }
+
+    override fun close() {
+        nativeAPI.FreeCreateOutputPipeReturn(this)
     }
 }
 
@@ -316,4 +335,178 @@ internal class GetImageReturn(runtime: Runtime) : Struct(runtime), AutoCloseable
     override fun close() {
         nativeAPI.FreeGetImageReturn(this)
     }
+}
+
+internal class StringPair(runtime: Runtime) : Struct(runtime), AutoCloseable {
+    constructor(pointer: jnr.ffi.Pointer) : this(pointer.runtime) {
+        this.useMemory(pointer)
+    }
+
+    val key = UTF8StringRef()
+    val value = UTF8StringRef()
+
+    override fun close() {
+        nativeAPI.FreeStringPair(this)
+    }
+}
+
+internal class BuildImageRequest(runtime: Runtime) : Struct(runtime), AutoCloseable {
+    constructor(pointer: jnr.ffi.Pointer) : this(pointer.runtime) {
+        this.useMemory(pointer)
+    }
+
+    val contextDirectory = UTF8StringRef()
+    val pathToDockerfile = UTF8StringRef()
+    private val buildArgsCount = u_int64_t()
+    private val buildArgsPointer = Pointer()
+    val buildArgs: List<StringPair> by lazy {
+        if (buildArgsPointer.intValue() == 0) {
+            throw IllegalArgumentException("buildArgs is null")
+        } else {
+            val count = buildArgsCount.get()
+            val pointer = buildArgsPointer.get()
+            val elementSize = runtime.addressSize()
+
+            (0..(count - 1)).map { i -> StringPair(pointer.getPointer(elementSize * i)) }
+        }
+    }
+    private val imageTagsCount = u_int64_t()
+    private val imageTagsPointer = Pointer()
+    val imageTags: List<string> by lazy {
+        if (imageTagsPointer.intValue() == 0) {
+            throw IllegalArgumentException("imageTags is null")
+        } else {
+            val count = imageTagsCount.get()
+            val pointer = imageTagsPointer.get()
+            val elementSize = runtime.addressSize()
+
+            (0..(count - 1)).map { i -> string(pointer.getPointer(elementSize * i)) }
+        }
+    }
+    val alwaysPullBaseImages = Boolean()
+    val noCache = Boolean()
+
+    override fun close() {
+        nativeAPI.FreeBuildImageRequest(this)
+    }
+}
+
+internal class BuildImageReturn(runtime: Runtime) : Struct(runtime), AutoCloseable {
+    constructor(pointer: jnr.ffi.Pointer) : this(pointer.runtime) {
+        this.useMemory(pointer)
+    }
+
+    val responsePointer = Pointer()
+    val response: ImageReference? by lazy { if (responsePointer.intValue() == 0) null else ImageReference(responsePointer.get()) }
+    val errorPointer = Pointer()
+    val error: Error? by lazy { if (errorPointer.intValue() == 0) null else Error(errorPointer.get()) }
+
+    override fun close() {
+        nativeAPI.FreeBuildImageReturn(this)
+    }
+}
+
+internal class BuildImageProgressUpdate_ImageBuildContextUploadProgress(runtime: Runtime) : Struct(runtime), AutoCloseable {
+    constructor(pointer: jnr.ffi.Pointer) : this(pointer.runtime) {
+        this.useMemory(pointer)
+    }
+
+    val bytesUploaded = int64_t()
+    val totalBytes = int64_t()
+
+    override fun close() {
+        nativeAPI.FreeBuildImageProgressUpdate_ImageBuildContextUploadProgress(this)
+    }
+}
+
+internal class BuildImageProgressUpdate_StepStarting(runtime: Runtime) : Struct(runtime), AutoCloseable {
+    constructor(pointer: jnr.ffi.Pointer) : this(pointer.runtime) {
+        this.useMemory(pointer)
+    }
+
+    val stepNumber = int64_t()
+    val stepName = UTF8StringRef()
+
+    override fun close() {
+        nativeAPI.FreeBuildImageProgressUpdate_StepStarting(this)
+    }
+}
+
+internal class BuildImageProgressUpdate_StepOutput(runtime: Runtime) : Struct(runtime), AutoCloseable {
+    constructor(pointer: jnr.ffi.Pointer) : this(pointer.runtime) {
+        this.useMemory(pointer)
+    }
+
+    val stepNumber = int64_t()
+    val output = UTF8StringRef()
+
+    override fun close() {
+        nativeAPI.FreeBuildImageProgressUpdate_StepOutput(this)
+    }
+}
+
+internal class BuildImageProgressUpdate_StepPullProgressUpdate(runtime: Runtime) : Struct(runtime), AutoCloseable {
+    constructor(pointer: jnr.ffi.Pointer) : this(pointer.runtime) {
+        this.useMemory(pointer)
+    }
+
+    val stepNumber = int64_t()
+    val pullProgressPointer = Pointer()
+    val pullProgress: PullImageProgressUpdate? by lazy { if (pullProgressPointer.intValue() == 0) null else PullImageProgressUpdate(pullProgressPointer.get()) }
+
+    override fun close() {
+        nativeAPI.FreeBuildImageProgressUpdate_StepPullProgressUpdate(this)
+    }
+}
+
+internal class BuildImageProgressUpdate_StepFinished(runtime: Runtime) : Struct(runtime), AutoCloseable {
+    constructor(pointer: jnr.ffi.Pointer) : this(pointer.runtime) {
+        this.useMemory(pointer)
+    }
+
+    val stepNumber = int64_t()
+
+    override fun close() {
+        nativeAPI.FreeBuildImageProgressUpdate_StepFinished(this)
+    }
+}
+
+internal class BuildImageProgressUpdate_BuildFailed(runtime: Runtime) : Struct(runtime), AutoCloseable {
+    constructor(pointer: jnr.ffi.Pointer) : this(pointer.runtime) {
+        this.useMemory(pointer)
+    }
+
+    val message = UTF8StringRef()
+
+    override fun close() {
+        nativeAPI.FreeBuildImageProgressUpdate_BuildFailed(this)
+    }
+}
+
+internal class BuildImageProgressUpdate(runtime: Runtime) : Struct(runtime), AutoCloseable {
+    constructor(pointer: jnr.ffi.Pointer) : this(pointer.runtime) {
+        this.useMemory(pointer)
+    }
+
+    val imageBuildContextUploadProgressPointer = Pointer()
+    val imageBuildContextUploadProgress: BuildImageProgressUpdate_ImageBuildContextUploadProgress? by lazy { if (imageBuildContextUploadProgressPointer.intValue() == 0) null else BuildImageProgressUpdate_ImageBuildContextUploadProgress(imageBuildContextUploadProgressPointer.get()) }
+    val stepStartingPointer = Pointer()
+    val stepStarting: BuildImageProgressUpdate_StepStarting? by lazy { if (stepStartingPointer.intValue() == 0) null else BuildImageProgressUpdate_StepStarting(stepStartingPointer.get()) }
+    val stepOutputPointer = Pointer()
+    val stepOutput: BuildImageProgressUpdate_StepOutput? by lazy { if (stepOutputPointer.intValue() == 0) null else BuildImageProgressUpdate_StepOutput(stepOutputPointer.get()) }
+    val stepPullProgressUpdatePointer = Pointer()
+    val stepPullProgressUpdate: BuildImageProgressUpdate_StepPullProgressUpdate? by lazy { if (stepPullProgressUpdatePointer.intValue() == 0) null else BuildImageProgressUpdate_StepPullProgressUpdate(stepPullProgressUpdatePointer.get()) }
+    val stepFinishedPointer = Pointer()
+    val stepFinished: BuildImageProgressUpdate_StepFinished? by lazy { if (stepFinishedPointer.intValue() == 0) null else BuildImageProgressUpdate_StepFinished(stepFinishedPointer.get()) }
+    val buildFailedPointer = Pointer()
+    val buildFailed: BuildImageProgressUpdate_BuildFailed? by lazy { if (buildFailedPointer.intValue() == 0) null else BuildImageProgressUpdate_BuildFailed(buildFailedPointer.get()) }
+
+    override fun close() {
+        nativeAPI.FreeBuildImageProgressUpdate(this)
+    }
+}
+
+internal interface BuildImageProgressCallback {
+    @Delegate
+    fun invoke(userData: Pointer?, progressPointer: Pointer?): Boolean
 }

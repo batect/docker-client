@@ -29,9 +29,12 @@ internal interface API {
     fun DisposeClient(@In clientHandle: Long): Error?
     fun Ping(@In clientHandle: Long): PingReturn?
     fun GetDaemonVersionInformation(@In clientHandle: Long): GetDaemonVersionInformationReturn?
-    fun PullImage(@In clientHandle: Long, @In ref: String, @In onProgressUpdate: PullImageProgressCallback, @In callbackUserData: Pointer?): PullImageReturn?
-    fun DeleteImage(@In clientHandle: Long, @In ref: String): Error?
+    fun DeleteImage(@In clientHandle: Long, @In ref: String, @In force: Boolean): Error?
     fun GetImage(@In clientHandle: Long, @In ref: String): GetImageReturn?
+    fun BuildImage(@In clientHandle: Long, @In request: BuildImageRequest, @In outputStreamHandle: Long, @In onProgressUpdate: BuildImageProgressCallback, @In callbackUserData: Pointer?): BuildImageReturn?
+    fun PullImage(@In clientHandle: Long, @In ref: String, @In onProgressUpdate: PullImageProgressCallback, @In callbackUserData: Pointer?): PullImageReturn?
+    fun CreateOutputPipe(): CreateOutputPipeReturn?
+    fun DisposeOutputPipe(@In handle: Long): Error?
     fun CreateNetwork(@In clientHandle: Long, @In name: String, @In driver: String): CreateNetworkReturn?
     fun DeleteNetwork(@In clientHandle: Long, @In id: String): Error?
     fun GetNetworkByNameOrID(@In clientHandle: Long, @In searchFor: String): GetNetworkByNameOrIDReturn?
@@ -46,6 +49,8 @@ internal interface API {
     fun AllocClientConfiguration(): ClientConfiguration?
     fun FreeCreateClientReturn(@In value: CreateClientReturn)
     fun AllocCreateClientReturn(): CreateClientReturn?
+    fun FreeCreateOutputPipeReturn(@In value: CreateOutputPipeReturn)
+    fun AllocCreateOutputPipeReturn(): CreateOutputPipeReturn?
     fun FreePingResponse(@In value: PingResponse)
     fun AllocPingResponse(): PingResponse?
     fun FreePingReturn(@In value: PingReturn)
@@ -76,4 +81,24 @@ internal interface API {
     fun AllocPullImageProgressUpdate(): PullImageProgressUpdate?
     fun FreeGetImageReturn(@In value: GetImageReturn)
     fun AllocGetImageReturn(): GetImageReturn?
+    fun FreeStringPair(@In value: StringPair)
+    fun AllocStringPair(): StringPair?
+    fun FreeBuildImageRequest(@In value: BuildImageRequest)
+    fun AllocBuildImageRequest(): BuildImageRequest?
+    fun FreeBuildImageReturn(@In value: BuildImageReturn)
+    fun AllocBuildImageReturn(): BuildImageReturn?
+    fun FreeBuildImageProgressUpdate_ImageBuildContextUploadProgress(@In value: BuildImageProgressUpdate_ImageBuildContextUploadProgress)
+    fun AllocBuildImageProgressUpdate_ImageBuildContextUploadProgress(): BuildImageProgressUpdate_ImageBuildContextUploadProgress?
+    fun FreeBuildImageProgressUpdate_StepStarting(@In value: BuildImageProgressUpdate_StepStarting)
+    fun AllocBuildImageProgressUpdate_StepStarting(): BuildImageProgressUpdate_StepStarting?
+    fun FreeBuildImageProgressUpdate_StepOutput(@In value: BuildImageProgressUpdate_StepOutput)
+    fun AllocBuildImageProgressUpdate_StepOutput(): BuildImageProgressUpdate_StepOutput?
+    fun FreeBuildImageProgressUpdate_StepPullProgressUpdate(@In value: BuildImageProgressUpdate_StepPullProgressUpdate)
+    fun AllocBuildImageProgressUpdate_StepPullProgressUpdate(): BuildImageProgressUpdate_StepPullProgressUpdate?
+    fun FreeBuildImageProgressUpdate_StepFinished(@In value: BuildImageProgressUpdate_StepFinished)
+    fun AllocBuildImageProgressUpdate_StepFinished(): BuildImageProgressUpdate_StepFinished?
+    fun FreeBuildImageProgressUpdate_BuildFailed(@In value: BuildImageProgressUpdate_BuildFailed)
+    fun AllocBuildImageProgressUpdate_BuildFailed(): BuildImageProgressUpdate_BuildFailed?
+    fun FreeBuildImageProgressUpdate(@In value: BuildImageProgressUpdate)
+    fun AllocBuildImageProgressUpdate(): BuildImageProgressUpdate?
 }
