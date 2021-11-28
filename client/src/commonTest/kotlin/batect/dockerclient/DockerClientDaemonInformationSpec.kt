@@ -21,9 +21,7 @@ import io.kotest.core.spec.style.ShouldSpec
 import io.kotest.matchers.collections.shouldBeIn
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.string.shouldMatch
-import kotlin.time.ExperimentalTime
 
-@ExperimentalTime
 class DockerClientDaemonInformationSpec : ShouldSpec({
     val client = closeAfterTest(DockerClient.Builder().build())
 

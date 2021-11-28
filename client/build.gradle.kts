@@ -30,7 +30,7 @@ import org.jetbrains.kotlin.konan.target.Family
 import org.jetbrains.kotlin.konan.target.KonanTarget
 
 plugins {
-    kotlin("multiplatform") version "1.5.31"
+    kotlin("multiplatform") version "1.6.0"
     id("io.kotest.multiplatform") version "5.0.0.6"
     id("com.diffplug.spotless")
     `maven-publish`
@@ -47,6 +47,9 @@ val golangWrapperProject = project(":golang-wrapper")
 val jvmLibsDir = buildDir.resolve("resources").resolve("jvm")
 
 val buildIsRunningOnLinux = org.gradle.internal.os.OperatingSystem.current().isLinux
+val buildIsRunningOnMac = org.gradle.internal.os.OperatingSystem.current().isMacOsX
+val buildIsRunningOnWindows = org.gradle.internal.os.OperatingSystem.current().isWindows
+val shouldRunCommonNativeTasksOnThisMachine = buildIsRunningOnLinux
 
 kotlin {
     jvm()
@@ -79,15 +82,15 @@ kotlin {
 
         val commonTest by getting {
             dependencies {
-                implementation("io.kotest:kotest-assertions-core:5.0.0.M1")
-                implementation("io.kotest:kotest-framework-api:5.0.0.M1")
-                implementation("io.kotest:kotest-framework-engine:5.0.0.M1")
+                implementation("io.kotest:kotest-assertions-core:5.0.0")
+                implementation("io.kotest:kotest-framework-api:5.0.0")
+                implementation("io.kotest:kotest-framework-engine:5.0.0")
             }
         }
 
         val jvmTest by getting {
             dependencies {
-                implementation("io.kotest:kotest-runner-junit5:5.0.0.M1")
+                implementation("io.kotest:kotest-runner-junit5:5.0.0")
             }
         }
 
@@ -142,6 +145,21 @@ kotlin {
             target.compilations.named<KotlinNativeCompilation>("main") {
                 addDockerClientWrapperCinterop()
             }
+
+            val nativeTarget = target as org.jetbrains.kotlin.gradle.plugin.mpp.KotlinNativeTarget
+            val konanTarget = nativeTarget.konanTarget
+
+            setOf(
+                "compileKotlin${nativeTarget.name.capitalize()}",
+                "compileTestKotlin${nativeTarget.name.capitalize()}",
+                "${nativeTarget.name}MainKlibrary",
+                "${nativeTarget.name}TestKlibrary",
+                "linkDebugTest${nativeTarget.name.capitalize()}",
+            ).forEach { taskName ->
+                tasks.named(taskName) {
+                    onlyIf { konanTarget.isSupportedOnThisMachine }
+                }
+            }
         }
     }
 }
@@ -164,9 +182,7 @@ fun KotlinNativeCompilation.addDockerClientWrapperCinterop() {
 
         inputs.file(sourceTask.map { it.outputLibraryFile })
 
-        if (konanTarget.family == Family.LINUX) {
-            onlyIf { buildIsRunningOnLinux }
-        }
+        onlyIf { konanTarget.isSupportedOnThisMachine }
     }
 }
 
@@ -183,23 +199,19 @@ fun KotlinTarget.addNativeCommonSourceSetDependencies() {
     }
 }
 
-setOf(
-    "compileKotlinLinuxX64",
-    "compileTestKotlinLinuxX64",
-    "linuxX64MainKlibrary",
-    "linuxX64TestKlibrary",
-    "linkDebugTestLinuxX64",
-).forEach { taskName ->
-    tasks.named(taskName) {
-        onlyIf { buildIsRunningOnLinux }
-    }
-}
-
 val KonanTarget.golangOSName: String
     get() = when (family) {
         Family.OSX -> "darwin"
         Family.LINUX -> "linux"
         Family.MINGW -> "windows"
+        else -> throw UnsupportedOperationException("Unknown target family: $family")
+    }
+
+val KonanTarget.isSupportedOnThisMachine: Boolean
+    get() = when (this.family) {
+        Family.OSX -> buildIsRunningOnMac
+        Family.LINUX -> buildIsRunningOnLinux
+        Family.MINGW -> buildIsRunningOnWindows
         else -> throw UnsupportedOperationException("Unknown target family: $family")
     }
 
@@ -312,23 +324,7 @@ publishing {
         // - it limits Linux publications to only be published from Linux (Kotlin/Native supports cross-compilation of Linux targets from macOS and Windows)
         // - it ensures that the main multiplatform publication and the JVM publication are only published from Linux on CI
         matching { it.name.startsWith("linux") || it.name == "kotlinMultiplatform" || it.name == "jvm" }.all {
-            val publication = this
-
-            tasks.withType<AbstractPublishToMaven>()
-                .matching { it.publication == publication }
-                .all {
-                    val task = this
-
-                    task.onlyIf { buildIsRunningOnLinux }
-                }
-
-            tasks.withType<GenerateModuleMetadata>()
-                .matching { it.publication.get() == publication }
-                .all {
-                    val task = this
-
-                    task.onlyIf { buildIsRunningOnLinux }
-                }
+            onlyPublishIf(buildIsRunningOnLinux)
         }
 
         named<MavenPublication>("jvm") {
@@ -366,13 +362,33 @@ publishing {
     }
 }
 
+fun Publication.onlyPublishIf(condition: Boolean) {
+    val publication = this
+
+    tasks.withType<AbstractPublishToMaven>()
+        .matching { it.publication == publication }
+        .all {
+            val task = this
+
+            task.onlyIf { condition }
+        }
+
+    tasks.withType<GenerateModuleMetadata>()
+        .matching { it.publication.get() == publication }
+        .all {
+            val task = this
+
+            task.onlyIf { condition }
+        }
+}
+
 tasks.named("allMetadataJar") {
-    onlyIf { buildIsRunningOnLinux }
+    onlyIf { shouldRunCommonNativeTasksOnThisMachine }
 }
 
 afterEvaluate {
     tasks.named("compileNativeMainKotlinMetadata") {
-        onlyIf { buildIsRunningOnLinux }
+        onlyIf { shouldRunCommonNativeTasksOnThisMachine }
     }
 }
 

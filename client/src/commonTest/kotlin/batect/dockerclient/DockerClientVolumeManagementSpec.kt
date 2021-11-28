@@ -23,9 +23,7 @@ import io.kotest.matchers.collections.shouldNotContain
 import io.kotest.matchers.shouldBe
 import kotlin.random.Random
 import kotlin.random.nextULong
-import kotlin.time.ExperimentalTime
 
-@ExperimentalTime
 class DockerClientVolumeManagementSpec : ShouldSpec({
     val client = closeAfterTest(DockerClient.Builder().build())
 
