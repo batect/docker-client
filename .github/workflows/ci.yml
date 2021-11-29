@@ -46,7 +46,7 @@ jobs:
           fetch-depth: 0
 
       - name: Set up JDK
-        uses: actions/setup-java@v2.3.1
+        uses: actions/setup-java@v2.4.0
         with:
           java-version: 11
           distribution: adopt
@@ -147,7 +147,7 @@ jobs:
           fetch-depth: 0
 
       - name: Set up JDK
-        uses: actions/setup-java@v2.3.1
+        uses: actions/setup-java@v2.4.0
         with:
           java-version: 11
           distribution: adopt
@@ -253,7 +253,7 @@ jobs:
           fetch-depth: 0
 
       - name: Set up JDK
-        uses: actions/setup-java@v2.3.1
+        uses: actions/setup-java@v2.4.0
         with:
           java-version: 11
           distribution: adopt
@@ -330,7 +330,7 @@ jobs:
           fetch-depth: 0
 
       - name: Set up JDK
-        uses: actions/setup-java@v2.3.1
+        uses: actions/setup-java@v2.4.0
         with:
           java-version: 11
           distribution: adopt
