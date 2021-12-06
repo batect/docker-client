@@ -91,6 +91,7 @@ func BuildImage(clientHandle DockerClientHandle, request *C.BuildImageRequest, o
 	return newBuildImageReturn(newImageReference(imageID), nil)
 }
 
+// TODO: convert this to a struct so that it can be broken down into smaller methods
 func processImageBuildResponseBody(response types.ImageBuildResponse, outputStreamHandle OutputStreamHandle, onProgressUpdate BuildImageProgressCallback, callbackUserData unsafe.Pointer) (string, error) {
 	imageID := ""
 	currentStep := int64(0)
