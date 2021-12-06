@@ -19,6 +19,12 @@ package batect.dockerclient
 import batect.dockerclient.io.TextOutput
 import batect.dockerclient.native.BuildImageProgressCallback
 import batect.dockerclient.native.BuildImageProgressUpdate
+import batect.dockerclient.native.BuildImageProgressUpdate_BuildFailed
+import batect.dockerclient.native.BuildImageProgressUpdate_ImageBuildContextUploadProgress
+import batect.dockerclient.native.BuildImageProgressUpdate_StepFinished
+import batect.dockerclient.native.BuildImageProgressUpdate_StepOutput
+import batect.dockerclient.native.BuildImageProgressUpdate_StepPullProgressUpdate
+import batect.dockerclient.native.BuildImageProgressUpdate_StepStarting
 import batect.dockerclient.native.BuildImageRequest
 import batect.dockerclient.native.ClientConfiguration
 import batect.dockerclient.native.DockerClientHandle
@@ -207,7 +213,7 @@ internal actual class RealDockerClient actual constructor(configuration: DockerC
             override fun invoke(userData: Pointer?, progressPointer: Pointer?): Boolean {
                 try {
                     val progress = BuildImageProgressUpdate(progressPointer!!)
-//                    onProgressUpdate(ImageBuildProgressUpdate(progress))
+                    onProgressUpdate(ImageBuildProgressUpdate(progress))
 
                     return true
                 } catch (t: Throwable) {
@@ -225,7 +231,10 @@ internal actual class RealDockerClient actual constructor(configuration: DockerC
                 nativeAPI.BuildImage(clientHandle, BuildImageRequest(spec), stream.outputStreamHandle.toLong(), callback, null)!!.use { ret ->
                     if (ret.error != null) {
                         if (ret.error!!.type.get() == "main.ProgressCallbackFailedError") {
-                            throw ImageBuildFailedException("Image pull progress receiver threw an exception: $exceptionThrownInCallback", exceptionThrownInCallback)
+                            throw ImageBuildFailedException(
+                                "Image pull progress receiver threw an exception: $exceptionThrownInCallback",
+                                exceptionThrownInCallback
+                            )
                         }
 
                         throw ImagePullFailedException(ret.error!!)
@@ -257,6 +266,34 @@ internal actual class RealDockerClient actual constructor(configuration: DockerC
             null -> null
             else -> ImagePullProgressDetail(native.current.get(), native.total.get())
         }
+
+    private fun ImageBuildProgressUpdate(native: BuildImageProgressUpdate): ImageBuildProgressUpdate = when {
+        native.imageBuildContextUploadProgress != null -> ImageBuildContextUploadProgress(native.imageBuildContextUploadProgress!!)
+        native.stepStarting != null -> StepStarting(native.stepStarting!!)
+        native.stepOutput != null -> StepOutput(native.stepOutput!!)
+        native.stepPullProgressUpdate != null -> StepPullProgressUpdate(native.stepPullProgressUpdate!!)
+        native.stepFinished != null -> StepFinished(native.stepFinished!!)
+        native.buildFailed != null -> BuildFailed(native.buildFailed!!)
+        else -> throw RuntimeException("${BuildImageProgressUpdate::class.qualifiedName} did not contain an update")
+    }
+
+    private fun ImageBuildContextUploadProgress(native: BuildImageProgressUpdate_ImageBuildContextUploadProgress): ImageBuildContextUploadProgress =
+        ImageBuildContextUploadProgress(native.bytesUploaded.get(), native.totalBytes.get())
+
+    private fun StepStarting(native: BuildImageProgressUpdate_StepStarting): StepStarting =
+        StepStarting(native.stepNumber.get(), native.stepName.get())
+
+    private fun StepOutput(native: BuildImageProgressUpdate_StepOutput): StepOutput =
+        StepOutput(native.stepNumber.get(), native.output.get())
+
+    private fun StepPullProgressUpdate(native: BuildImageProgressUpdate_StepPullProgressUpdate): StepPullProgressUpdate =
+        StepPullProgressUpdate(native.stepNumber.get(), ImagePullProgressUpdate(native.pullProgress!!))
+
+    private fun StepFinished(native: BuildImageProgressUpdate_StepFinished): StepFinished =
+        StepFinished(native.stepNumber.get())
+
+    private fun BuildFailed(native: BuildImageProgressUpdate_BuildFailed): BuildFailed =
+        BuildFailed(native.message.get())
 
     private fun ClientConfiguration(jvm: DockerClientConfiguration): ClientConfiguration {
         val config = ClientConfiguration(Runtime.getRuntime(nativeAPI))
