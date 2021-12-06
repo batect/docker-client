@@ -35,7 +35,7 @@ import (
 	"github.com/pkg/errors"
 )
 
-var buildStepLineRegex = regexp.MustCompile("^Step (\\d+)/(\\d+) : (.*)$")
+var buildStepLineRegex = regexp.MustCompile(`^Step (\d+)/(\d+) : (.*)$`)
 
 //export BuildImage
 func BuildImage(clientHandle DockerClientHandle, request *C.BuildImageRequest, outputStreamHandle OutputStreamHandle, onProgressUpdate BuildImageProgressCallback, callbackUserData unsafe.Pointer) BuildImageReturn {
@@ -108,38 +108,22 @@ func processImageBuildResponseBody(response types.ImageBuildResponse, outputStre
 				}
 
 				if currentStep != 0 {
-					details := newBuildImageProgressUpdate_StepFinished(currentStep)
-					update := newBuildImageProgressUpdate(nil, nil, nil, nil, details, nil)
-					defer C.FreeBuildImageProgressUpdate(update)
-
-					invokeBuildImageProgressCallback(onProgressUpdate, callbackUserData, update)
+					onStepFinished(currentStep, onProgressUpdate, callbackUserData)
 				}
 
 				currentStep = newStep
 				haveSeenMeaningfulOutputForCurrentStep = false
-				details := newBuildImageProgressUpdate_StepStarting(newStep, stepName)
-				update := newBuildImageProgressUpdate(nil, details, nil, nil, nil, nil)
-				defer C.FreeBuildImageProgressUpdate(update)
 
-				invokeBuildImageProgressCallback(onProgressUpdate, callbackUserData, update)
-			} else {
-				if haveSeenMeaningfulOutputForCurrentStep || msg.Stream != "\n" {
-					haveSeenMeaningfulOutputForCurrentStep = true
-					details := newBuildImageProgressUpdate_StepOutput(currentStep, msg.Stream)
-					update := newBuildImageProgressUpdate(nil, nil, details, nil, nil, nil)
-					defer C.FreeBuildImageProgressUpdate(update)
+				onStepStarting(newStep, stepName, onProgressUpdate, callbackUserData)
+			} else if haveSeenMeaningfulOutputForCurrentStep || msg.Stream != "\n" {
+				haveSeenMeaningfulOutputForCurrentStep = true
 
-					invokeBuildImageProgressCallback(onProgressUpdate, callbackUserData, update)
-				}
+				onStepOutput(msg.Stream, currentStep, onProgressUpdate, callbackUserData)
 			}
 		}
 
 		if msg.Error != nil {
-			details := newBuildImageProgressUpdate_BuildFailed(msg.Error.Message)
-			update := newBuildImageProgressUpdate(nil, nil, nil, nil, nil, details)
-			defer C.FreeBuildImageProgressUpdate(update)
-
-			invokeBuildImageProgressCallback(onProgressUpdate, callbackUserData, update)
+			onBuildFailed(msg.Error.Message, onProgressUpdate, callbackUserData)
 		}
 
 		if msg.Aux != nil {
@@ -162,6 +146,38 @@ func processImageBuildResponseBody(response types.ImageBuildResponse, outputStre
 	return imageID, nil
 }
 
+func onBuildFailed(msg string, onProgressUpdate BuildImageProgressCallback, callbackUserData unsafe.Pointer) {
+	update := newBuildImageProgressUpdate(nil, nil, nil, nil, nil, newBuildImageProgressUpdate_BuildFailed(msg))
+
+	defer C.FreeBuildImageProgressUpdate(update)
+
+	invokeBuildImageProgressCallback(onProgressUpdate, callbackUserData, update)
+}
+
+func onStepOutput(output string, currentStep int64, onProgressUpdate BuildImageProgressCallback, callbackUserData unsafe.Pointer) {
+	update := newBuildImageProgressUpdate(nil, nil, newBuildImageProgressUpdate_StepOutput(currentStep, output), nil, nil, nil)
+
+	defer C.FreeBuildImageProgressUpdate(update)
+
+	invokeBuildImageProgressCallback(onProgressUpdate, callbackUserData, update)
+}
+
+func onStepFinished(currentStep int64, onProgressUpdate BuildImageProgressCallback, callbackUserData unsafe.Pointer) {
+	update := newBuildImageProgressUpdate(nil, nil, nil, nil, newBuildImageProgressUpdate_StepFinished(currentStep), nil)
+
+	defer C.FreeBuildImageProgressUpdate(update)
+
+	invokeBuildImageProgressCallback(onProgressUpdate, callbackUserData, update)
+}
+
+func onStepStarting(newStep int64, stepName string, onProgressUpdate BuildImageProgressCallback, callbackUserData unsafe.Pointer) {
+	update := newBuildImageProgressUpdate(nil, newBuildImageProgressUpdate_StepStarting(newStep, stepName), nil, nil, nil, nil)
+
+	defer C.FreeBuildImageProgressUpdate(update)
+
+	invokeBuildImageProgressCallback(onProgressUpdate, callbackUserData, update)
+}
+
 // This function is based on jsonmessage.DisplayJSONMessagesStream, but allows us to process every message, not just those with
 // an aux value.
 func parseJSONMessagesStream(in io.Reader, out io.Writer, processor func(message jsonmessage.JSONMessage) error) error {
@@ -171,7 +187,7 @@ func parseJSONMessagesStream(in io.Reader, out io.Writer, processor func(message
 		var msg jsonmessage.JSONMessage
 
 		if err := decoder.Decode(&msg); err != nil {
-			if err == io.EOF {
+			if errors.Is(err, io.EOF) {
 				return nil
 			}
 
@@ -205,7 +221,7 @@ func fromStringPairs(pairs **C.StringPair, count C.uint64_t) map[string]*string 
 }
 
 func fromStringArray(array **C.char, count C.uint64_t) []string {
-	l := make([]string, count)
+	l := make([]string, 0, count)
 
 	for i := 0; i < int(count); i++ {
 		value := C.GoString(C.GetstringArrayElement(array, C.uint64_t(i)))

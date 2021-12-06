@@ -27,6 +27,7 @@ import (
 	"github.com/docker/cli/cli/streams"
 )
 
+//nolint:gochecknoglobals
 var (
 	outputStreams = map[uint64]*streams.Out{
 		1: streams.NewOut(os.Stdout),
