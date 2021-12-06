@@ -121,8 +121,6 @@ class DockerClientImageBuildSpec : ShouldSpec({
         client.buildImage(spec, SinkTextOutput(output))
 
         val outputText = output.readUtf8()
-        println(outputText)
-
         outputText.lines() shouldContain "First arg: first value"
         outputText.lines() shouldContain "Second arg: second value"
         outputText.lines() shouldContain "Third arg: third value"
