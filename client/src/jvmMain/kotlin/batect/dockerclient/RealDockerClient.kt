@@ -17,6 +17,9 @@
 package batect.dockerclient
 
 import batect.dockerclient.io.TextOutput
+import batect.dockerclient.native.BuildImageProgressCallback
+import batect.dockerclient.native.BuildImageProgressUpdate
+import batect.dockerclient.native.BuildImageRequest
 import batect.dockerclient.native.ClientConfiguration
 import batect.dockerclient.native.DockerClientHandle
 import batect.dockerclient.native.PullImageProgressCallback
@@ -26,6 +29,9 @@ import batect.dockerclient.native.nativeAPI
 import jnr.ffi.Pointer
 import jnr.ffi.Runtime
 import jnr.ffi.Struct
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
 
 internal actual class RealDockerClient actual constructor(configuration: DockerClientConfiguration) : DockerClient, AutoCloseable {
     private val clientHandle: DockerClientHandle = createClient(configuration)
@@ -191,7 +197,40 @@ internal actual class RealDockerClient actual constructor(configuration: DockerC
     }
 
     override fun buildImage(spec: ImageBuildSpec, output: TextOutput, onProgressUpdate: ImageBuildProgressReceiver): ImageReference {
-        TODO("not implemented")
+        var exceptionThrownInCallback: Throwable? = null
+
+        val callback = object : BuildImageProgressCallback {
+            override fun invoke(userData: Pointer?, progressPointer: Pointer?): Boolean {
+                try {
+                    val progress = BuildImageProgressUpdate(progressPointer!!)
+//                    onProgressUpdate(ImageBuildProgressUpdate(progress))
+
+                    return true
+                } catch (t: Throwable) {
+                    exceptionThrownInCallback = t
+
+                    return false
+                }
+            }
+        }
+
+        output.prepareStream().use { stream ->
+            return runBlocking(Dispatchers.IO) {
+                launch { stream.run() }
+
+                nativeAPI.BuildImage(clientHandle, BuildImageRequest(spec), stream.outputStreamHandle.toLong(), callback, null)!!.use { ret ->
+                    if (ret.error != null) {
+                        if (ret.error!!.type.get() == "main.ProgressCallbackFailedError") {
+                            throw ImageBuildFailedException("Image pull progress receiver threw an exception: $exceptionThrownInCallback", exceptionThrownInCallback)
+                        }
+
+                        throw ImagePullFailedException(ret.error!!)
+                    }
+
+                    ImageReference(ret.response!!)
+                }
+            }
+        }
     }
 
     override fun close() {
@@ -238,5 +277,17 @@ internal actual class RealDockerClient actual constructor(configuration: DockerC
         tls.insecureSkipVerify.set(jvm.insecureSkipVerify)
 
         return tls
+    }
+
+    private fun BuildImageRequest(jvm: ImageBuildSpec): BuildImageRequest {
+        val request = BuildImageRequest(Runtime.getRuntime(nativeAPI))
+        request.contextDirectory.set(jvm.contextDirectory.toString())
+        request.pathToDockerfile.set(jvm.pathToDockerfile.toString())
+        // TODO: build args
+        // TODO: image tags
+        request.alwaysPullBaseImages.set(jvm.alwaysPullBaseImages)
+        request.noCache.set(jvm.noCache)
+
+        return request
     }
 }
