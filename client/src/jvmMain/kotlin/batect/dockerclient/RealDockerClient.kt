@@ -26,6 +26,7 @@ import batect.dockerclient.native.PullImageProgressCallback
 import batect.dockerclient.native.PullImageProgressUpdate
 import batect.dockerclient.native.TLSConfiguration
 import batect.dockerclient.native.nativeAPI
+import batect.dockerclient.native.volumes
 import jnr.ffi.Pointer
 import jnr.ffi.Runtime
 import jnr.ffi.Struct

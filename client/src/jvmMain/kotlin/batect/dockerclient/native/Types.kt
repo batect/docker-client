@@ -199,19 +199,8 @@ internal class ListAllVolumesReturn(runtime: Runtime) : Struct(runtime), AutoClo
         this.useMemory(pointer)
     }
 
-    private val volumesCount = u_int64_t()
-    private val volumesPointer = Pointer()
-    val volumes: List<VolumeReference> by lazy {
-        if (volumesPointer.intValue() == 0) {
-            throw IllegalArgumentException("volumes is null")
-        } else {
-            val count = volumesCount.get()
-            val pointer = volumesPointer.get()
-            val elementSize = runtime.addressSize()
-
-            (0..(count - 1)).map { i -> VolumeReference(pointer.getPointer(elementSize * i)) }
-        }
-    }
+    val volumesCount = u_int64_t()
+    val volumesPointer = Pointer()
     val errorPointer = Pointer()
     val error: Error? by lazy { if (errorPointer.intValue() == 0) null else Error(errorPointer.get()) }
 
@@ -357,32 +346,10 @@ internal class BuildImageRequest(runtime: Runtime) : Struct(runtime), AutoClosea
 
     val contextDirectory = UTF8StringRef()
     val pathToDockerfile = UTF8StringRef()
-    private val buildArgsCount = u_int64_t()
-    private val buildArgsPointer = Pointer()
-    val buildArgs: List<StringPair> by lazy {
-        if (buildArgsPointer.intValue() == 0) {
-            throw IllegalArgumentException("buildArgs is null")
-        } else {
-            val count = buildArgsCount.get()
-            val pointer = buildArgsPointer.get()
-            val elementSize = runtime.addressSize()
-
-            (0..(count - 1)).map { i -> StringPair(pointer.getPointer(elementSize * i)) }
-        }
-    }
-    private val imageTagsCount = u_int64_t()
-    private val imageTagsPointer = Pointer()
-    val imageTags: List<kotlin.String> by lazy {
-        if (imageTagsPointer.intValue() == 0) {
-            throw IllegalArgumentException("imageTags is null")
-        } else {
-            val count = imageTagsCount.get()
-            val pointer = imageTagsPointer.get()
-            val elementSize = runtime.addressSize()
-
-            (0..(count - 1)).map { i -> pointer.getPointer(elementSize * i).getString(0) }
-        }
-    }
+    val buildArgsCount = u_int64_t()
+    val buildArgsPointer = Pointer()
+    val imageTagsCount = u_int64_t()
+    val imageTagsPointer = Pointer()
     val alwaysPullBaseImages = Boolean()
     val noCache = Boolean()
 

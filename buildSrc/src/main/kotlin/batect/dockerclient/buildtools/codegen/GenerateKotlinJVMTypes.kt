@@ -110,30 +110,9 @@ abstract class GenerateKotlinJVMTypes : DefaultTask() {
                 |    val $fieldName: ${fieldType.name}? by lazy { if (${fieldName}Pointer.intValue() == 0) null else ${fieldType.name}(${fieldName}Pointer.get()) }
                 """.trimMargin()
             is ArrayType -> {
-                if (!fieldType.elementType.isPointer) {
-                    throw UnsupportedOperationException("This method doesn't correctly calculate array element sizes for non-pointer fields.")
-                }
-
-                val constructor = if (fieldType.elementType is PrimitiveType && fieldType.elementType.jnrPointerAccessorFunctionName != null) {
-                    "pointer.getPointer(elementSize * i).${fieldType.elementType.jnrPointerAccessorFunctionName}(0)"
-                } else {
-                    "${fieldType.elementType.jvmName}(pointer.getPointer(elementSize * i))"
-                }
-
                 """
-                |    private val ${fieldName}Count = u_int64_t()
-                |    private val ${fieldName}Pointer = Pointer()
-                |    val $fieldName: List<${fieldType.elementType.jvmName}> by lazy {
-                |        if (${fieldName}Pointer.intValue() == 0) {
-                |            throw IllegalArgumentException("$fieldName is null")
-                |        } else {
-                |            val count = ${fieldName}Count.get()
-                |            val pointer = ${fieldName}Pointer.get()
-                |            val elementSize = runtime.addressSize()
-                |
-                |            (0..(count - 1)).map { i -> $constructor }
-                |        }
-                |    }
+                |    val ${fieldName}Count = u_int64_t()
+                |    val ${fieldName}Pointer = Pointer()
                 """.trimMargin()
             }
             is CallbackType -> throw UnsupportedOperationException("Embedding callback types in structs is not supported. Field $fieldName of ${structType.name} contains callback type ${fieldType.name}.")
