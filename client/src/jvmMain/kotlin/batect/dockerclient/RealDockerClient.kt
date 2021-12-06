@@ -24,7 +24,10 @@ import batect.dockerclient.native.ClientConfiguration
 import batect.dockerclient.native.DockerClientHandle
 import batect.dockerclient.native.PullImageProgressCallback
 import batect.dockerclient.native.PullImageProgressUpdate
+import batect.dockerclient.native.StringPair
 import batect.dockerclient.native.TLSConfiguration
+import batect.dockerclient.native.buildArgs
+import batect.dockerclient.native.imageTags
 import batect.dockerclient.native.nativeAPI
 import batect.dockerclient.native.volumes
 import jnr.ffi.Pointer
@@ -284,8 +287,8 @@ internal actual class RealDockerClient actual constructor(configuration: DockerC
         val request = BuildImageRequest(Runtime.getRuntime(nativeAPI))
         request.contextDirectory.set(jvm.contextDirectory.toString())
         request.pathToDockerfile.set(jvm.pathToDockerfile.toString())
-        // TODO: build args
-        // TODO: image tags
+        request.buildArgs = jvm.buildArgs.map { StringPair(it.key, it.value) }
+        request.imageTags = jvm.imageTags
         request.alwaysPullBaseImages.set(jvm.alwaysPullBaseImages)
         request.noCache.set(jvm.noCache)
 
