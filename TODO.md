@@ -27,6 +27,8 @@
   * https://github.com/marketplace/actions/setup-zig
   * With Zig `master` as of 2021-10-25, things work but require removing debug information from Golang binaries (`-ldflags` option to `go build` in `GolangBuild`). May be worth waiting for the next release of Zig after 0.8.1 (latest as at 2021-10-25).
   * If implemented: need to add a check that the version of Zig in use matches the expected version (similar to check for Golang version).
+* Run tests with memory leak detector
+* Linter to catch when memory is not freed (eg. Golang code allocates struct that is used as callback parameter)
 
 # APIs
 

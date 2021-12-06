@@ -108,26 +108,38 @@ func processImageBuildResponseBody(response types.ImageBuildResponse, outputStre
 				}
 
 				if currentStep != 0 {
-					update := newBuildImageProgressUpdate_StepFinished(currentStep)
-					invokeBuildImageProgressCallback(onProgressUpdate, callbackUserData, newBuildImageProgressUpdate(nil, nil, nil, nil, update, nil))
+					details := newBuildImageProgressUpdate_StepFinished(currentStep)
+					update := newBuildImageProgressUpdate(nil, nil, nil, nil, details, nil)
+					defer C.FreeBuildImageProgressUpdate(update)
+
+					invokeBuildImageProgressCallback(onProgressUpdate, callbackUserData, update)
 				}
 
 				currentStep = newStep
 				haveSeenMeaningfulOutputForCurrentStep = false
-				update := newBuildImageProgressUpdate_StepStarting(newStep, stepName)
-				invokeBuildImageProgressCallback(onProgressUpdate, callbackUserData, newBuildImageProgressUpdate(nil, update, nil, nil, nil, nil))
+				details := newBuildImageProgressUpdate_StepStarting(newStep, stepName)
+				update := newBuildImageProgressUpdate(nil, details, nil, nil, nil, nil)
+				defer C.FreeBuildImageProgressUpdate(update)
+
+				invokeBuildImageProgressCallback(onProgressUpdate, callbackUserData, update)
 			} else {
 				if haveSeenMeaningfulOutputForCurrentStep || msg.Stream != "\n" {
 					haveSeenMeaningfulOutputForCurrentStep = true
-					update := newBuildImageProgressUpdate_StepOutput(currentStep, msg.Stream)
-					invokeBuildImageProgressCallback(onProgressUpdate, callbackUserData, newBuildImageProgressUpdate(nil, nil, update, nil, nil, nil))
+					details := newBuildImageProgressUpdate_StepOutput(currentStep, msg.Stream)
+					update := newBuildImageProgressUpdate(nil, nil, details, nil, nil, nil)
+					defer C.FreeBuildImageProgressUpdate(update)
+
+					invokeBuildImageProgressCallback(onProgressUpdate, callbackUserData, update)
 				}
 			}
 		}
 
 		if msg.Error != nil {
-			failure := newBuildImageProgressUpdate_BuildFailed(msg.Error.Message)
-			invokeBuildImageProgressCallback(onProgressUpdate, callbackUserData, newBuildImageProgressUpdate(nil, nil, nil, nil, nil, failure))
+			details := newBuildImageProgressUpdate_BuildFailed(msg.Error.Message)
+			update := newBuildImageProgressUpdate(nil, nil, nil, nil, nil, details)
+			defer C.FreeBuildImageProgressUpdate(update)
+
+			invokeBuildImageProgressCallback(onProgressUpdate, callbackUserData, update)
 		}
 
 		if msg.Aux != nil {
