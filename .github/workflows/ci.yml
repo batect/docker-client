@@ -98,7 +98,7 @@ jobs:
           rm -f  $HOME/.gradle/caches/journal-1/*.lock
 
       - name: Upload Golang wrapper libraries
-        uses: actions/upload-artifact@v2.2.4
+        uses: actions/upload-artifact@v2.3.0
         with:
           name: wrapper-libs-${{ matrix.artefactName }}
           path: golang-wrapper/build/libs
