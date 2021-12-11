@@ -46,7 +46,7 @@ class DockerClientDaemonInformationSpec : ShouldSpec({
             it.operatingSystem shouldBeIn setOf("linux", "windows")
             it.experimental shouldBe false
             it.gitCommit shouldMatch """^[0-9a-fA-F]{7,}$""".toRegex()
-            it.architecture shouldBe "amd64"
+            it.architecture shouldBeIn setOf("amd64", "arm64")
         }
     }
 })
