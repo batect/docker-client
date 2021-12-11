@@ -18,7 +18,7 @@ rootProject.name = "docker-client"
 
 pluginManagement {
     plugins {
-        id("com.diffplug.spotless") version "5.17.1" apply false
+        id("com.diffplug.spotless") version "6.0.4" apply false
     }
 }
 

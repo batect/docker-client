@@ -31,7 +31,7 @@ import org.jetbrains.kotlin.konan.target.KonanTarget
 
 plugins {
     kotlin("multiplatform") version "1.6.0"
-    id("io.kotest.multiplatform") version "5.0.0.6"
+    id("io.kotest.multiplatform") version "5.0.1"
     id("com.diffplug.spotless")
     `maven-publish`
     signing
@@ -82,7 +82,7 @@ kotlin {
 
         val jvmMain by getting {
             dependencies {
-                implementation("com.github.jnr:jnr-ffi:2.2.9")
+                implementation("com.github.jnr:jnr-ffi:2.2.10")
                 implementation("com.github.jnr:jnr-posix:3.1.12")
                 implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.6.0-RC")
             }
@@ -104,15 +104,15 @@ kotlin {
 
         val commonTest by getting {
             dependencies {
-                implementation("io.kotest:kotest-assertions-core:5.0.0")
-                implementation("io.kotest:kotest-framework-api:5.0.0")
-                implementation("io.kotest:kotest-framework-engine:5.0.0")
+                implementation("io.kotest:kotest-assertions-core:5.0.2")
+                implementation("io.kotest:kotest-framework-api:5.0.2")
+                implementation("io.kotest:kotest-framework-engine:5.0.2")
             }
         }
 
         val jvmTest by getting {
             dependencies {
-                implementation("io.kotest:kotest-runner-junit5:5.0.0")
+                implementation("io.kotest:kotest-runner-junit5:5.0.2")
             }
         }
 
@@ -347,6 +347,10 @@ publishing {
         // - it ensures that the main multiplatform publication and the JVM publication are only published from Linux on CI
         matching { it.name.startsWith("linux") || it.name == "kotlinMultiplatform" || it.name == "jvm" }.all {
             onlyPublishIf(buildIsRunningOnLinux)
+        }
+
+        matching { it.name.startsWith("mingw") }.all {
+            onlyPublishIf(buildIsRunningOnWindows)
         }
 
         named<MavenPublication>("jvm") {

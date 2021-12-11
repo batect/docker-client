@@ -46,7 +46,7 @@ jobs:
           fetch-depth: 0
 
       - name: Set up JDK
-        uses: actions/setup-java@v2.3.1
+        uses: actions/setup-java@v2.4.0
         with:
           java-version: 11
           distribution: adopt
@@ -98,7 +98,7 @@ jobs:
           rm -f  $HOME/.gradle/caches/journal-1/*.lock
 
       - name: Upload Golang wrapper libraries
-        uses: actions/upload-artifact@v2.2.4
+        uses: actions/upload-artifact@v2.3.0
         with:
           name: wrapper-libs-${{ matrix.artefactName }}
           path: golang-wrapper/build/libs
@@ -147,7 +147,7 @@ jobs:
           fetch-depth: 0
 
       - name: Set up JDK
-        uses: actions/setup-java@v2.3.1
+        uses: actions/setup-java@v2.4.0
         with:
           java-version: 11
           distribution: adopt
@@ -186,19 +186,19 @@ jobs:
       # for all operating systems in the .jar produced for the JVM, regardless of the system that the .jar is
       # built on.
       - name: Fetch Linux wrapper libraries
-        uses: actions/download-artifact@v2.0.10
+        uses: actions/download-artifact@v2.1.0
         with:
           name: wrapper-libs-linux
           path: golang-wrapper/build/libs
 
       - name: Fetch macOS wrapper libraries
-        uses: actions/download-artifact@v2.0.10
+        uses: actions/download-artifact@v2.1.0
         with:
           name: wrapper-libs-macos
           path: golang-wrapper/build/libs
 
       - name: Fetch Windows wrapper libraries
-        uses: actions/download-artifact@v2.0.10
+        uses: actions/download-artifact@v2.1.0
         with:
           name: wrapper-libs-windows
           path: golang-wrapper/build/libs
@@ -253,7 +253,7 @@ jobs:
           fetch-depth: 0
 
       - name: Set up JDK
-        uses: actions/setup-java@v2.3.1
+        uses: actions/setup-java@v2.4.0
         with:
           java-version: 11
           distribution: adopt
@@ -330,7 +330,7 @@ jobs:
           fetch-depth: 0
 
       - name: Set up JDK
-        uses: actions/setup-java@v2.3.1
+        uses: actions/setup-java@v2.4.0
         with:
           java-version: 11
           distribution: adopt
@@ -361,19 +361,19 @@ jobs:
       # for all operating systems in the .jar produced for the JVM, regardless of the system that the .jar is
       # built on.
       - name: Fetch Linux wrapper libraries
-        uses: actions/download-artifact@v2.0.10
+        uses: actions/download-artifact@v2.1.0
         with:
           name: wrapper-libs-linux
           path: golang-wrapper/build/libs
 
       - name: Fetch macOS wrapper libraries
-        uses: actions/download-artifact@v2.0.10
+        uses: actions/download-artifact@v2.1.0
         with:
           name: wrapper-libs-macos
           path: golang-wrapper/build/libs
 
       - name: Fetch Windows wrapper libraries
-        uses: actions/download-artifact@v2.0.10
+        uses: actions/download-artifact@v2.1.0
         with:
           name: wrapper-libs-windows
           path: golang-wrapper/build/libs

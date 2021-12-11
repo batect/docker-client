@@ -19,7 +19,7 @@ import java.nio.file.Files
 plugins {
     kotlin("jvm") version "1.6.0"
     kotlin("plugin.serialization") version "1.6.0"
-    id("com.diffplug.spotless") version "5.17.1"
+    id("com.diffplug.spotless") version "6.0.4"
 }
 
 repositories {
@@ -31,7 +31,7 @@ dependencies {
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-core:1.3.1")
     implementation(gradleApi())
     implementation(gradleKotlinDsl())
-    implementation("com.github.jnr:jnr-posix:3.1.12")
+    implementation("com.github.jnr:jnr-posix:3.1.14")
     implementation("com.charleskorn.kaml:kaml:0.37.0")
 }
 
