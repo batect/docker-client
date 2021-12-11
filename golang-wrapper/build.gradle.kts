@@ -125,8 +125,12 @@ tasks.register("check") {
 
 tasks.named("spotlessC") {
     dependsOn(generateTypes)
+
+    mustRunAfter(lint)
 }
 
 tasks.named("spotlessGolang") {
     dependsOn(generateTypes)
+
+    mustRunAfter(lint)
 }
