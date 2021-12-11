@@ -82,7 +82,8 @@ func BuildImage(clientHandle DockerClientHandle, request *C.BuildImageRequest, o
 		return newBuildImageReturn(nil, toError(err))
 	}
 
-	imageID, err := processImageBuildResponseBody(response, outputStreamHandle, onProgressUpdate, callbackUserData)
+	parser := newImageBuildResponseBodyParser(outputStreamHandle, onProgressUpdate, callbackUserData)
+	imageID, err := parser.Parse(response)
 
 	if err != nil {
 		return newBuildImageReturn(nil, toError(err))
@@ -91,97 +92,113 @@ func BuildImage(clientHandle DockerClientHandle, request *C.BuildImageRequest, o
 	return newBuildImageReturn(newImageReference(imageID), nil)
 }
 
-// TODO: convert this to a struct so that it can be broken down into smaller methods
-func processImageBuildResponseBody(response types.ImageBuildResponse, outputStreamHandle OutputStreamHandle, onProgressUpdate BuildImageProgressCallback, callbackUserData unsafe.Pointer) (string, error) {
-	imageID := ""
-	currentStep := int64(0)
-	haveSeenMeaningfulOutputForCurrentStep := false
+type imageBuildResponseBodyParser struct {
+	imageID                                string
+	currentStep                            int64
+	haveSeenMeaningfulOutputForCurrentStep bool
+	outputStreamHandle                     OutputStreamHandle
+	onProgressUpdate                       BuildImageProgressCallback
+	onProgressUpdateUserData               unsafe.Pointer
+}
 
-	process := func(msg jsonmessage.JSONMessage) error {
-		if msg.Stream != "" {
-			if match := buildStepLineRegex.FindStringSubmatch(msg.Stream); match != nil {
-				newStep, err := strconv.ParseInt(match[1], 10, 64)
-				stepName := match[3]
-
-				if err != nil {
-					// This should never happen - the regex should not match values that are non-numeric.
-					panic(err)
-				}
-
-				if currentStep != 0 {
-					onStepFinished(currentStep, onProgressUpdate, callbackUserData)
-				}
-
-				currentStep = newStep
-				haveSeenMeaningfulOutputForCurrentStep = false
-
-				onStepStarting(newStep, stepName, onProgressUpdate, callbackUserData)
-			} else if haveSeenMeaningfulOutputForCurrentStep || msg.Stream != "\n" {
-				haveSeenMeaningfulOutputForCurrentStep = true
-
-				onStepOutput(msg.Stream, currentStep, onProgressUpdate, callbackUserData)
-			}
-		}
-
-		if msg.Error != nil {
-			onBuildFailed(msg.Error.Message, onProgressUpdate, callbackUserData)
-		}
-
-		if msg.Aux != nil {
-			var result types.BuildResult
-			if err := json.Unmarshal(*msg.Aux, &result); err == nil {
-				imageID = result.ID
-			}
-		}
-
-		return nil
+func newImageBuildResponseBodyParser(outputStreamHandle OutputStreamHandle, onProgressUpdate BuildImageProgressCallback, callbackUserData unsafe.Pointer) *imageBuildResponseBodyParser {
+	return &imageBuildResponseBodyParser{
+		outputStreamHandle:       outputStreamHandle,
+		onProgressUpdate:         onProgressUpdate,
+		onProgressUpdateUserData: callbackUserData,
 	}
+}
 
-	output := getOutputStream(outputStreamHandle)
-	err := parseJSONMessagesStream(response.Body, output, process)
+func (p *imageBuildResponseBodyParser) Parse(response types.ImageBuildResponse) (string, error) {
+	p.imageID = ""
+	p.currentStep = int64(0)
+	p.haveSeenMeaningfulOutputForCurrentStep = false
+
+	output := getOutputStream(p.outputStreamHandle)
+	err := parseAndDisplayJSONMessagesStream(response.Body, output, p.onMessageReceived)
 
 	if err != nil {
 		return "", err
 	}
 
-	return imageID, nil
+	return p.imageID, nil
 }
 
-func onBuildFailed(msg string, onProgressUpdate BuildImageProgressCallback, callbackUserData unsafe.Pointer) {
+func (p *imageBuildResponseBodyParser) onMessageReceived(msg jsonmessage.JSONMessage) error {
+	if msg.Stream != "" {
+		if match := buildStepLineRegex.FindStringSubmatch(msg.Stream); match != nil {
+			newStep, err := strconv.ParseInt(match[1], 10, 64)
+			stepName := match[3]
+
+			if err != nil {
+				// This should never happen - the regex should not match values that are non-numeric.
+				panic(err)
+			}
+
+			if p.currentStep != 0 {
+				p.onStepFinished(p.currentStep)
+			}
+
+			p.currentStep = newStep
+			p.haveSeenMeaningfulOutputForCurrentStep = false
+
+			p.onStepStarting(newStep, stepName)
+		} else if p.haveSeenMeaningfulOutputForCurrentStep || msg.Stream != "\n" {
+			p.haveSeenMeaningfulOutputForCurrentStep = true
+
+			p.onStepOutput(msg.Stream, p.currentStep)
+		}
+	}
+
+	if msg.Error != nil {
+		p.onBuildFailed(msg.Error.Message)
+	}
+
+	if msg.Aux != nil {
+		var result types.BuildResult
+		if err := json.Unmarshal(*msg.Aux, &result); err == nil {
+			p.imageID = result.ID
+		}
+	}
+
+	return nil
+}
+
+func (p *imageBuildResponseBodyParser) onBuildFailed(msg string) {
 	update := newBuildImageProgressUpdate(nil, nil, nil, nil, nil, newBuildImageProgressUpdate_BuildFailed(msg))
 
 	defer C.FreeBuildImageProgressUpdate(update)
 
-	invokeBuildImageProgressCallback(onProgressUpdate, callbackUserData, update)
+	invokeBuildImageProgressCallback(p.onProgressUpdate, p.onProgressUpdateUserData, update)
 }
 
-func onStepOutput(output string, currentStep int64, onProgressUpdate BuildImageProgressCallback, callbackUserData unsafe.Pointer) {
+func (p *imageBuildResponseBodyParser) onStepOutput(output string, currentStep int64) {
 	update := newBuildImageProgressUpdate(nil, nil, newBuildImageProgressUpdate_StepOutput(currentStep, output), nil, nil, nil)
 
 	defer C.FreeBuildImageProgressUpdate(update)
 
-	invokeBuildImageProgressCallback(onProgressUpdate, callbackUserData, update)
+	invokeBuildImageProgressCallback(p.onProgressUpdate, p.onProgressUpdateUserData, update)
 }
 
-func onStepFinished(currentStep int64, onProgressUpdate BuildImageProgressCallback, callbackUserData unsafe.Pointer) {
+func (p *imageBuildResponseBodyParser) onStepFinished(currentStep int64) {
 	update := newBuildImageProgressUpdate(nil, nil, nil, nil, newBuildImageProgressUpdate_StepFinished(currentStep), nil)
 
 	defer C.FreeBuildImageProgressUpdate(update)
 
-	invokeBuildImageProgressCallback(onProgressUpdate, callbackUserData, update)
+	invokeBuildImageProgressCallback(p.onProgressUpdate, p.onProgressUpdateUserData, update)
 }
 
-func onStepStarting(newStep int64, stepName string, onProgressUpdate BuildImageProgressCallback, callbackUserData unsafe.Pointer) {
+func (p *imageBuildResponseBodyParser) onStepStarting(newStep int64, stepName string) {
 	update := newBuildImageProgressUpdate(nil, newBuildImageProgressUpdate_StepStarting(newStep, stepName), nil, nil, nil, nil)
 
 	defer C.FreeBuildImageProgressUpdate(update)
 
-	invokeBuildImageProgressCallback(onProgressUpdate, callbackUserData, update)
+	invokeBuildImageProgressCallback(p.onProgressUpdate, p.onProgressUpdateUserData, update)
 }
 
 // This function is based on jsonmessage.DisplayJSONMessagesStream, but allows us to process every message, not just those with
 // an aux value.
-func parseJSONMessagesStream(in io.Reader, out io.Writer, processor func(message jsonmessage.JSONMessage) error) error {
+func parseAndDisplayJSONMessagesStream(in io.Reader, out io.Writer, processor func(message jsonmessage.JSONMessage) error) error {
 	decoder := json.NewDecoder(in)
 
 	for {
