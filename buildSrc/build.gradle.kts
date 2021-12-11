@@ -19,7 +19,7 @@ import java.nio.file.Files
 plugins {
     kotlin("jvm") version "1.6.0"
     kotlin("plugin.serialization") version "1.6.0"
-    id("com.diffplug.spotless") version "5.17.1"
+    id("com.diffplug.spotless") version "6.0.4"
 }
 
 repositories {

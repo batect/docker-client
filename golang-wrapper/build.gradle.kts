@@ -26,6 +26,10 @@ plugins {
     id("com.diffplug.spotless")
 }
 
+repositories {
+    mavenCentral()
+}
+
 val baseName = "dockerclientwrapper"
 
 data class Target(
@@ -78,7 +82,7 @@ targets.forEach { target ->
     buildArchiveLibs.configure { dependsOn(buildArchiveLib) }
 }
 
-val assemble = tasks.named("assemble") {
+val assemble = tasks.register("assemble") {
     dependsOn(buildSharedLibs)
     dependsOn(buildArchiveLibs)
 }
@@ -114,7 +118,7 @@ val lint = tasks.register<GolangLint>("lint") {
     mustRunAfter(buildArchiveLibs.map { it.taskDependencies })
 }
 
-tasks.named("check") {
+tasks.register("check") {
     dependsOn(assemble)
     dependsOn(lint)
 }
