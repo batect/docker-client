@@ -194,12 +194,19 @@ class DockerClientImagePullSpec : ShouldSpec({
             client.pullImage(imageForOtherPlatform)
         }
 
-        exception.message shouldBeIn setOf(
-            "no matching manifest for ${testEnvironmentContainerOperatingSystem.platformDescription} in the manifest list entries",
-        ) +
-            ContainerOperatingSystem.values()
-                .filterNot { it == testEnvironmentContainerOperatingSystem }
-                .map { "image operating system \"${it.name.lowercase()}\" cannot be used on this platform" }
+        val expectedMessages = when (testEnvironmentContainerOperatingSystem) {
+            ContainerOperatingSystem.Linux -> setOf(
+                "no matching manifest for linux/amd64 in the manifest list entries",
+                "no matching manifest for linux/arm64/v8 in the manifest list entries",
+                "image operating system \"windows\" cannot be used on this platform"
+            )
+            ContainerOperatingSystem.Windows -> setOf(
+                "no matching manifest for windows/amd64 in the manifest list entries",
+                "image operating system \"linux\" cannot be used on this platform"
+            )
+        }
+
+        exception.message shouldBeIn expectedMessages
     }
 
     should("return null when getting a non-existent image").onlyIfDockerDaemonPresent {
