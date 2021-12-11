@@ -327,6 +327,10 @@ publishing {
             onlyPublishIf(buildIsRunningOnLinux)
         }
 
+        matching { it.name.startsWith("mingw") }.all {
+            onlyPublishIf(buildIsRunningOnWindows)
+        }
+
         named<MavenPublication>("jvm") {
             artifact(javadocJar)
         }
