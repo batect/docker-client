@@ -237,10 +237,13 @@ internal actual class RealDockerClient actual constructor(configuration: DockerC
                             )
                         }
 
-                        throw ImagePullFailedException(ret.error!!)
+                        throw ImageBuildFailedException(ret.error!!)
                     }
 
-                    ImageReference(ret.response!!)
+                    val imageReference = ImageReference(ret.response!!)
+                    onProgressUpdate(BuildComplete(imageReference))
+
+                    imageReference
                 }
             }
         }
