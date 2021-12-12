@@ -26,10 +26,14 @@ import batect.dockerclient.native.BuildImageProgressUpdate_StepOutput
 import batect.dockerclient.native.BuildImageProgressUpdate_StepPullProgressUpdate
 import batect.dockerclient.native.BuildImageProgressUpdate_StepStarting
 import batect.dockerclient.native.BuildImageRequest
+import batect.dockerclient.native.BuildImageReturn
 import batect.dockerclient.native.ClientConfiguration
 import batect.dockerclient.native.CreateClient
+import batect.dockerclient.native.CreateClientReturn
 import batect.dockerclient.native.CreateNetwork
+import batect.dockerclient.native.CreateNetworkReturn
 import batect.dockerclient.native.CreateVolume
+import batect.dockerclient.native.CreateVolumeReturn
 import batect.dockerclient.native.DeleteImage
 import batect.dockerclient.native.DeleteNetwork
 import batect.dockerclient.native.DeleteVolume
@@ -40,6 +44,7 @@ import batect.dockerclient.native.FreeCreateClientReturn
 import batect.dockerclient.native.FreeCreateNetworkReturn
 import batect.dockerclient.native.FreeCreateVolumeReturn
 import batect.dockerclient.native.FreeError
+import batect.dockerclient.native.Error
 import batect.dockerclient.native.FreeGetDaemonVersionInformationReturn
 import batect.dockerclient.native.FreeGetImageReturn
 import batect.dockerclient.native.FreeGetNetworkByNameOrIDReturn
@@ -47,13 +52,19 @@ import batect.dockerclient.native.FreeListAllVolumesReturn
 import batect.dockerclient.native.FreePingReturn
 import batect.dockerclient.native.FreePullImageReturn
 import batect.dockerclient.native.GetDaemonVersionInformation
+import batect.dockerclient.native.GetDaemonVersionInformationReturn
 import batect.dockerclient.native.GetImage
+import batect.dockerclient.native.GetImageReturn
 import batect.dockerclient.native.GetNetworkByNameOrID
+import batect.dockerclient.native.GetNetworkByNameOrIDReturn
 import batect.dockerclient.native.ListAllVolumes
+import batect.dockerclient.native.ListAllVolumesReturn
 import batect.dockerclient.native.Ping
+import batect.dockerclient.native.PingReturn
 import batect.dockerclient.native.PullImage
 import batect.dockerclient.native.PullImageProgressDetail
 import batect.dockerclient.native.PullImageProgressUpdate
+import batect.dockerclient.native.PullImageReturn
 import batect.dockerclient.native.StringPair
 import batect.dockerclient.native.TLSConfiguration
 import kotlinx.cinterop.CFunction
@@ -79,16 +90,12 @@ internal actual class RealDockerClient actual constructor(configuration: DockerC
 
     private fun createClient(configuration: DockerClientConfiguration): DockerClientHandle {
         memScoped {
-            val ret = CreateClient(allocClientConfiguration(configuration).ptr)!!
-
-            try {
+            CreateClient(allocClientConfiguration(configuration).ptr)!!.use { ret ->
                 if (ret.pointed.Error != null) {
                     throw DockerClientException(ret.pointed.Error!!.pointed)
                 }
 
                 return ret.pointed.Client
-            } finally {
-                FreeCreateClientReturn(ret)
             }
         }
     }
@@ -115,9 +122,7 @@ internal actual class RealDockerClient actual constructor(configuration: DockerC
     }
 
     public override fun ping(): PingResponse {
-        val ret = Ping(clientHandle)!!
-
-        try {
+        Ping(clientHandle)!!.use { ret ->
             if (ret.pointed.Error != null) {
                 throw PingFailedException(ret.pointed.Error!!.pointed)
             }
@@ -130,15 +135,11 @@ internal actual class RealDockerClient actual constructor(configuration: DockerC
                 response.Experimental,
                 BuilderVersion.fromAPI(response.BuilderVersion!!.toKString())
             )
-        } finally {
-            FreePingReturn(ret)
         }
     }
 
     public override fun getDaemonVersionInformation(): DaemonVersionInformation {
-        val ret = GetDaemonVersionInformation(clientHandle)!!
-
-        try {
+        GetDaemonVersionInformation(clientHandle)!!.use { ret ->
             if (ret.pointed.Error != null) {
                 throw GetDaemonVersionInformationFailedException(ret.pointed.Error!!.pointed)
             }
@@ -154,81 +155,53 @@ internal actual class RealDockerClient actual constructor(configuration: DockerC
                 response.Architecture!!.toKString(),
                 response.Experimental
             )
-        } finally {
-            FreeGetDaemonVersionInformationReturn(ret)
         }
     }
 
     public override fun listAllVolumes(): Set<VolumeReference> {
-        val ret = ListAllVolumes(clientHandle)!!
-
-        try {
+        ListAllVolumes(clientHandle)!!.use { ret ->
             if (ret.pointed.Error != null) {
                 throw ListAllVolumesFailedException(ret.pointed.Error!!.pointed)
             }
 
             return fromArray(ret.pointed.Volumes!!, ret.pointed.VolumesCount) { VolumeReference(it) }.toSet()
-        } finally {
-            FreeListAllVolumesReturn(ret)
         }
     }
 
     public override fun createVolume(name: String): VolumeReference {
-        val ret = CreateVolume(clientHandle, name.cstr)!!
-
-        try {
+        CreateVolume(clientHandle, name.cstr)!!.use { ret ->
             if (ret.pointed.Error != null) {
                 throw VolumeCreationFailedException(ret.pointed.Error!!.pointed)
             }
 
             return VolumeReference(ret.pointed.Response!!.pointed)
-        } finally {
-            FreeCreateVolumeReturn(ret)
         }
     }
 
     public override fun deleteVolume(volume: VolumeReference) {
-        val error = DeleteVolume(clientHandle, volume.name.cstr)
-
-        try {
-            if (error != null) {
-                throw VolumeDeletionFailedException(error.pointed)
-            }
-        } finally {
-            FreeError(error)
+        DeleteVolume(clientHandle, volume.name.cstr).ifFailed { error ->
+            throw VolumeDeletionFailedException(error.pointed)
         }
     }
 
     public override fun createNetwork(name: String, driver: String): NetworkReference {
-        val ret = CreateNetwork(clientHandle, name.cstr, driver.cstr)!!
-
-        try {
+        CreateNetwork(clientHandle, name.cstr, driver.cstr)!!.use { ret ->
             if (ret.pointed.Error != null) {
                 throw NetworkCreationFailedException(ret.pointed.Error!!.pointed)
             }
 
             return NetworkReference(ret.pointed.Response!!.pointed)
-        } finally {
-            FreeCreateNetworkReturn(ret)
         }
     }
 
     public override fun deleteNetwork(network: NetworkReference) {
-        val error = DeleteNetwork(clientHandle, network.id.cstr)
-
-        try {
-            if (error != null) {
-                throw NetworkDeletionFailedException(error.pointed)
-            }
-        } finally {
-            FreeError(error)
+        DeleteNetwork(clientHandle, network.id.cstr).ifFailed { error ->
+            throw NetworkDeletionFailedException(error.pointed)
         }
     }
 
     public override fun getNetworkByNameOrID(searchFor: String): NetworkReference? {
-        val ret = GetNetworkByNameOrID(clientHandle, searchFor.cstr)!!
-
-        try {
+        GetNetworkByNameOrID(clientHandle, searchFor.cstr)!!.use { ret ->
             if (ret.pointed.Error != null) {
                 throw NetworkRetrievalFailedException(ret.pointed.Error!!.pointed)
             }
@@ -238,8 +211,6 @@ internal actual class RealDockerClient actual constructor(configuration: DockerC
             }
 
             return NetworkReference(ret.pointed.Response!!.pointed)
-        } finally {
-            FreeGetNetworkByNameOrIDReturn(ret)
         }
     }
 
@@ -249,9 +220,7 @@ internal actual class RealDockerClient actual constructor(configuration: DockerC
         }
 
         return callbackState.use { callback, callbackUserData ->
-            val ret = PullImage(clientHandle, name.cstr, callback, callbackUserData)!!
-
-            try {
+            PullImage(clientHandle, name.cstr, callback, callbackUserData)!!.use { ret ->
                 if (ret.pointed.Error != null) {
                     val errorType = ret.pointed.Error!!.pointed.Type!!.toKString()
 
@@ -263,28 +232,18 @@ internal actual class RealDockerClient actual constructor(configuration: DockerC
                 }
 
                 ImageReference(ret.pointed.Response!!.pointed)
-            } finally {
-                FreePullImageReturn(ret)
             }
         }
     }
 
     public override fun deleteImage(image: ImageReference, force: Boolean) {
-        val error = DeleteImage(clientHandle, image.id.cstr, force)
-
-        try {
-            if (error != null) {
-                throw ImageDeletionFailedException(error.pointed)
-            }
-        } finally {
-            FreeError(error)
+        DeleteImage(clientHandle, image.id.cstr, force).ifFailed { error ->
+            throw ImageDeletionFailedException(error.pointed)
         }
     }
 
     public override fun getImage(name: String): ImageReference? {
-        val ret = GetImage(clientHandle, name.cstr)!!
-
-        try {
+        GetImage(clientHandle, name.cstr)!!.use { ret ->
             if (ret.pointed.Error != null) {
                 throw ImageRetrievalFailedException(ret.pointed.Error!!.pointed)
             }
@@ -294,8 +253,6 @@ internal actual class RealDockerClient actual constructor(configuration: DockerC
             }
 
             return ImageReference(ret.pointed.Response!!.pointed)
-        } finally {
-            FreeGetImageReturn(ret)
         }
     }
 
@@ -307,9 +264,7 @@ internal actual class RealDockerClient actual constructor(configuration: DockerC
                 }
 
                 return callbackState.use { callback, callbackUserData ->
-                    val ret = BuildImage(clientHandle, allocBuildImageRequest(spec).ptr, stream.outputStreamHandle, callback, callbackUserData)!!
-
-                    try {
+                    BuildImage(clientHandle, allocBuildImageRequest(spec).ptr, stream.outputStreamHandle, callback, callbackUserData)!!.use { ret ->
                         stream.run() // FIXME: This really should be done in parallel with the BuildImage call above, but Kotlin/Native does not yet support multithreaded coroutines
 
                         if (ret.pointed.Error != null) {
@@ -320,8 +275,6 @@ internal actual class RealDockerClient actual constructor(configuration: DockerC
                         onProgressUpdate(BuildComplete(imageReference))
 
                         imageReference
-                    } finally {
-                        FreeBuildImageReturn(ret)
                     }
                 }
             }
@@ -352,14 +305,8 @@ internal actual class RealDockerClient actual constructor(configuration: DockerC
     }
 
     override fun close() {
-        val error = DisposeClient(clientHandle)
-
-        try {
-            if (error != null) {
-                throw DockerClientException(error.pointed)
-            }
-        } finally {
-            FreeError(error)
+        DisposeClient(clientHandle).ifFailed { error ->
+            throw DockerClientException(error.pointed)
         }
     }
 }
@@ -432,11 +379,30 @@ private inline fun <reified NativeType : CPointed, KotlinType> fromArray(
         .map { i -> creator(source[i.toLong()]!!.pointed) }
 }
 
-private inline fun <T : Any, R> StableRef<T>.use(user: (StableRef<T>) -> R): R {
+private inline fun <T : Any?, R> T.use(dispose: (T) -> Unit, user: (T) -> R): R {
     try {
         return user(this)
     } finally {
-        this.dispose()
+        dispose(this)
+    }
+}
+
+private inline fun <T : Any, R> StableRef<T>.use(user: (StableRef<T>) -> R): R = use(StableRef<T>::dispose, user)
+private inline fun <R> CPointer<CreateClientReturn>.use(user: (CPointer<CreateClientReturn>) -> R): R = use(::FreeCreateClientReturn, user)
+private inline fun <R> CPointer<PingReturn>.use(user: (CPointer<PingReturn>) -> R): R = use(::FreePingReturn, user)
+private inline fun <R> CPointer<GetDaemonVersionInformationReturn>.use(user: (CPointer<GetDaemonVersionInformationReturn>) -> R): R = use(::FreeGetDaemonVersionInformationReturn, user)
+private inline fun <R> CPointer<ListAllVolumesReturn>.use(user: (CPointer<ListAllVolumesReturn>) -> R): R = use(::FreeListAllVolumesReturn, user)
+private inline fun <R> CPointer<CreateVolumeReturn>.use(user: (CPointer<CreateVolumeReturn>) -> R): R = use(::FreeCreateVolumeReturn, user)
+private inline fun <R> CPointer<CreateNetworkReturn>.use(user: (CPointer<CreateNetworkReturn>) -> R): R = use(::FreeCreateNetworkReturn, user)
+private inline fun <R> CPointer<GetNetworkByNameOrIDReturn>.use(user: (CPointer<GetNetworkByNameOrIDReturn>) -> R): R = use(::FreeGetNetworkByNameOrIDReturn, user)
+private inline fun <R> CPointer<PullImageReturn>.use(user: (CPointer<PullImageReturn>) -> R): R = use(::FreePullImageReturn, user)
+private inline fun <R> CPointer<GetImageReturn>.use(user: (CPointer<GetImageReturn>) -> R): R = use(::FreeGetImageReturn, user)
+private inline fun <R> CPointer<BuildImageReturn>.use(user: (CPointer<BuildImageReturn>) -> R): R = use(::FreeBuildImageReturn, user)
+private inline fun <R> CPointer<Error>?.use(user: (CPointer<Error>?) -> R): R = use(::FreeError, user)
+
+private inline fun CPointer<Error>?.ifFailed(onError: (CPointer<Error>) -> Unit) = use { error ->
+    if (error != null) {
+        onError(error)
     }
 }
 
