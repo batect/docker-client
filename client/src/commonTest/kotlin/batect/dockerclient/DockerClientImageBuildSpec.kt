@@ -51,7 +51,11 @@ class DockerClientImageBuildSpec : ShouldSpec({
         val outputText = output.readUtf8().trim()
 
         outputText shouldMatch """
-            Step 1/2 : FROM alpine:\d+\.\d+.\d+
+            Step 1/2 : FROM alpine:\d+\.\d+.\d+(
+            \d+\.\d+.\d+: Pulling from library/alpine
+            .*
+            Digest: sha256:[0-9a-f]{64}
+            Status: Downloaded newer image for alpine:\d+\.\d+\.\d+)?
              ---> [0-9a-f]{12}
             Step 2/2 : RUN echo "Hello world!"
              ---> Running in [0-9a-f]{12}
