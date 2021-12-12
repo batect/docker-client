@@ -23,17 +23,12 @@ import batect.dockerclient.native.FreeCreateOutputPipeReturn
 import batect.dockerclient.native.FreeError
 import kotlinx.cinterop.ByteVarOf
 import kotlinx.cinterop.CPointer
-import kotlinx.cinterop.addressOf
 import kotlinx.cinterop.get
 import kotlinx.cinterop.pointed
-import kotlinx.cinterop.usePinned
 import okio.Buffer
 import okio.IOException
 import okio.Sink
-import okio.Source
-import okio.Timeout
 import okio.buffer
-import platform.posix.errno
 import platform.posix.strerror
 
 public actual sealed interface TextOutput {
@@ -86,37 +81,9 @@ public actual class SinkTextOutput actual constructor(public val sink: Sink) : T
             }
         }
     }
-
-    private class PipeSource(private val fd: Int) : Source {
-        override fun timeout(): Timeout = Timeout.NONE
-
-        override fun read(sink: Buffer, byteCount: Long): Long {
-            val bytesToRead = if (byteCount > Int.MAX_VALUE) Int.MAX_VALUE else byteCount.toInt()
-            val buffer = ByteArray(bytesToRead)
-
-            val bytesRead = buffer.usePinned { pinned ->
-                platform.posix.read(fd, pinned.addressOf(0), bytesToRead.toULong())
-            }
-
-            return when (bytesRead) {
-                0L -> -1
-                -1L -> throw errnoToIOException(errno)
-                else -> {
-                    sink.write(buffer, 0, bytesRead.safeToInt())
-
-                    bytesRead
-                }
-            }
-        }
-
-        override fun close() {
-            // Nothing to do.
-        }
-    }
 }
 
 private fun ULong.safeToInt() = if (this > Int.MAX_VALUE.toULong()) throw IllegalArgumentException("Value out of range") else this.toInt()
-private fun Long.safeToInt() = if (this > Int.MAX_VALUE.toLong()) throw IllegalArgumentException("Value out of range") else this.toInt()
 
 // These two functions are based on okio's implementations.
 internal fun errnoToIOException(errno: Int): IOException {

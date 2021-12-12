@@ -90,8 +90,20 @@ kotlin {
             resources.srcDir(jvmLibsDir)
         }
 
-        val macosMain by creating {
+        val posixMain by creating {
             dependsOn(nativeMain)
+        }
+
+        val linuxMain by creating {
+            dependsOn(posixMain)
+        }
+
+        val linuxX64Main by getting {
+            dependsOn(linuxMain)
+        }
+
+        val macosMain by creating {
+            dependsOn(posixMain)
         }
 
         val macosX64Main by getting {
@@ -100,6 +112,14 @@ kotlin {
 
         val macosArm64Main by getting {
             dependsOn(macosMain)
+        }
+
+        val mingwMain by creating {
+            dependsOn(nativeMain)
+        }
+
+        val mingwX64Main by getting {
+            dependsOn(mingwMain)
         }
 
         val commonTest by getting {
@@ -120,8 +140,12 @@ kotlin {
             dependsOn(commonTest)
         }
 
-        val linuxTest by creating {
+        val posixTest by creating {
             dependsOn(nativeTest)
+        }
+
+        val linuxTest by creating {
+            dependsOn(posixTest)
         }
 
         val linuxX64Test by getting {
@@ -137,7 +161,7 @@ kotlin {
         }
 
         val macosTest by creating {
-            dependsOn(nativeTest)
+            dependsOn(posixTest)
         }
 
         val macosX64Test by getting {
@@ -149,8 +173,6 @@ kotlin {
         }
 
         all {
-            val sourceSet = this
-
             languageSettings {
                 progressiveMode = true
                 explicitApi = ExplicitApiMode.Strict
