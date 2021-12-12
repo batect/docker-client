@@ -29,6 +29,8 @@
   * If implemented: need to add a check that the version of Zig in use matches the expected version (similar to check for Golang version).
 * Run tests with memory leak detector
 * Linter to catch when memory is not freed (eg. Golang code allocates struct that is used as callback parameter)
+* Remove use of `allprojects` in root `build.gradle.kts` - use a custom plugin applied to all projects instead
+  * Then should be able to remove use of `afterEvaluate` in `golang-wrapper/build.gradle.kts`
 
 # APIs
 

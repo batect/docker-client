@@ -134,3 +134,9 @@ tasks.named("spotlessGolang") {
 
     mustRunAfter(lint)
 }
+
+afterEvaluate {
+    tasks.named("spotlessKotlinGradle") {
+        mustRunAfter(lint)
+    }
+}
