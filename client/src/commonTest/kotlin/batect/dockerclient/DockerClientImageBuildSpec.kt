@@ -25,6 +25,7 @@ import io.kotest.matchers.collections.shouldBeIn
 import io.kotest.matchers.collections.shouldContain
 import io.kotest.matchers.collections.shouldEndWith
 import io.kotest.matchers.collections.shouldStartWith
+import io.kotest.matchers.longs.shouldBeLessThan
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
 import io.kotest.matchers.string.shouldContain
@@ -431,8 +432,43 @@ class DockerClientImageBuildSpec : ShouldSpec({
         }
     }
 
+    should("be able to build a Linux container image that downloads a file and report download progress") {
+        val spec = ImageBuildSpec.Builder(rootTestImagesDirectory.resolve("file-download"))
+            .withNoBuildCache()
+            .build()
+
+        val output = Buffer()
+        val progressUpdatesReceived = mutableListOf<ImageBuildProgressUpdate>()
+
+        val image = client.buildImage(spec, SinkTextOutput(output)) { update ->
+            progressUpdatesReceived.add(update)
+        }
+
+        val outputText = output.readUtf8().trim()
+
+        outputText shouldMatch """
+            Step 1/2 : FROM alpine:3.14.2
+             ---> [0-9a-f]{12}
+            Step 2/2 : ADD "https://httpbin.org/drip\?duration=1&numbytes=2048&code=200&delay=0" /file.txt\n*
+             ---> [0-9a-f]{12}
+            Successfully built [0-9a-f]{12}
+        """.trimIndent().toRegex()
+
+        progressUpdatesReceived shouldContain StepStarting(1, "FROM alpine:3.14.2")
+        progressUpdatesReceived shouldContain StepStarting(2, "ADD \"https://httpbin.org/drip?duration=1&numbytes=2048&code=200&delay=0\" /file.txt")
+
+        progressUpdatesReceived.forAtLeastOne {
+            it.shouldBeTypeOf<StepDownloadProgressUpdate>()
+            it.stepNumber shouldBe 2
+            it.bytesDownloaded shouldBeLessThan 2048
+            it.totalBytes shouldBe 2048
+        }
+
+        progressUpdatesReceived shouldContain StepDownloadProgressUpdate(2, 2048, 2048)
+        progressUpdatesReceived shouldEndWith BuildComplete(image)
+    }
+
     // TODO: proxy environment variables - CLI does some magic for this
-    // TODO: image build that downloads a file - report progress information
     // TODO: handle invalid values
     // - context directory does not exist
     // - Dockerfile does not exist

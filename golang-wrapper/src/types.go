@@ -56,6 +56,7 @@ type BuildImageProgressUpdate_ImageBuildContextUploadProgress *C.BuildImageProgr
 type BuildImageProgressUpdate_StepStarting *C.BuildImageProgressUpdate_StepStarting
 type BuildImageProgressUpdate_StepOutput *C.BuildImageProgressUpdate_StepOutput
 type BuildImageProgressUpdate_StepPullProgressUpdate *C.BuildImageProgressUpdate_StepPullProgressUpdate
+type BuildImageProgressUpdate_StepDownloadProgressUpdate *C.BuildImageProgressUpdate_StepDownloadProgressUpdate
 type BuildImageProgressUpdate_StepFinished *C.BuildImageProgressUpdate_StepFinished
 type BuildImageProgressUpdate_BuildFailed *C.BuildImageProgressUpdate_BuildFailed
 type BuildImageProgressUpdate *C.BuildImageProgressUpdate
@@ -407,6 +408,19 @@ func newBuildImageProgressUpdate_StepPullProgressUpdate(
     return value
 }
 
+func newBuildImageProgressUpdate_StepDownloadProgressUpdate(
+    StepNumber int64,
+    DownloadedBytes int64,
+    TotalBytes int64,
+) BuildImageProgressUpdate_StepDownloadProgressUpdate {
+    value := C.AllocBuildImageProgressUpdate_StepDownloadProgressUpdate()
+    value.StepNumber = C.int64_t(StepNumber)
+    value.DownloadedBytes = C.int64_t(DownloadedBytes)
+    value.TotalBytes = C.int64_t(TotalBytes)
+
+    return value
+}
+
 func newBuildImageProgressUpdate_StepFinished(
     StepNumber int64,
 ) BuildImageProgressUpdate_StepFinished {
@@ -430,6 +444,7 @@ func newBuildImageProgressUpdate(
     StepStarting BuildImageProgressUpdate_StepStarting,
     StepOutput BuildImageProgressUpdate_StepOutput,
     StepPullProgressUpdate BuildImageProgressUpdate_StepPullProgressUpdate,
+    StepDownloadProgressUpdate BuildImageProgressUpdate_StepDownloadProgressUpdate,
     StepFinished BuildImageProgressUpdate_StepFinished,
     BuildFailed BuildImageProgressUpdate_BuildFailed,
 ) BuildImageProgressUpdate {
@@ -438,6 +453,7 @@ func newBuildImageProgressUpdate(
     value.StepStarting = StepStarting
     value.StepOutput = StepOutput
     value.StepPullProgressUpdate = StepPullProgressUpdate
+    value.StepDownloadProgressUpdate = StepDownloadProgressUpdate
     value.StepFinished = StepFinished
     value.BuildFailed = BuildFailed
 

@@ -21,6 +21,7 @@ import batect.dockerclient.native.BuildImage
 import batect.dockerclient.native.BuildImageProgressUpdate
 import batect.dockerclient.native.BuildImageProgressUpdate_BuildFailed
 import batect.dockerclient.native.BuildImageProgressUpdate_ImageBuildContextUploadProgress
+import batect.dockerclient.native.BuildImageProgressUpdate_StepDownloadProgressUpdate
 import batect.dockerclient.native.BuildImageProgressUpdate_StepFinished
 import batect.dockerclient.native.BuildImageProgressUpdate_StepOutput
 import batect.dockerclient.native.BuildImageProgressUpdate_StepPullProgressUpdate
@@ -343,6 +344,7 @@ private fun ImageBuildProgressUpdate(native: BuildImageProgressUpdate): ImageBui
     native.StepStarting != null -> StepStarting(native.StepStarting!!.pointed)
     native.StepOutput != null -> StepOutput(native.StepOutput!!.pointed)
     native.StepPullProgressUpdate != null -> StepPullProgressUpdate(native.StepPullProgressUpdate!!.pointed)
+    native.StepDownloadProgressUpdate != null -> StepDownloadProgressUpdate(native.StepDownloadProgressUpdate!!.pointed)
     native.StepFinished != null -> StepFinished(native.StepFinished!!.pointed)
     native.BuildFailed != null -> BuildFailed(native.BuildFailed!!.pointed)
     else -> throw RuntimeException("${BuildImageProgressUpdate::class.qualifiedName} did not contain an update")
@@ -367,6 +369,13 @@ private fun StepPullProgressUpdate(native: BuildImageProgressUpdate_StepPullProg
     StepPullProgressUpdate(
         native.StepNumber,
         ImagePullProgressUpdate(native.PullProgress!!.pointed)
+    )
+
+private fun StepDownloadProgressUpdate(native: BuildImageProgressUpdate_StepDownloadProgressUpdate): StepDownloadProgressUpdate =
+    StepDownloadProgressUpdate(
+        native.StepNumber,
+        native.DownloadedBytes,
+        native.TotalBytes
     )
 
 private fun StepFinished(native: BuildImageProgressUpdate_StepFinished): StepFinished =

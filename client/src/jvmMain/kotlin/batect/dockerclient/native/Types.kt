@@ -426,6 +426,20 @@ internal class BuildImageProgressUpdate_StepPullProgressUpdate(runtime: Runtime)
     }
 }
 
+internal class BuildImageProgressUpdate_StepDownloadProgressUpdate(runtime: Runtime) : Struct(runtime), AutoCloseable {
+    constructor(pointer: jnr.ffi.Pointer) : this(pointer.runtime) {
+        this.useMemory(pointer)
+    }
+
+    val stepNumber = int64_t()
+    val downloadedBytes = int64_t()
+    val totalBytes = int64_t()
+
+    override fun close() {
+        nativeAPI.FreeBuildImageProgressUpdate_StepDownloadProgressUpdate(this)
+    }
+}
+
 internal class BuildImageProgressUpdate_StepFinished(runtime: Runtime) : Struct(runtime), AutoCloseable {
     constructor(pointer: jnr.ffi.Pointer) : this(pointer.runtime) {
         this.useMemory(pointer)
@@ -463,6 +477,8 @@ internal class BuildImageProgressUpdate(runtime: Runtime) : Struct(runtime), Aut
     val stepOutput: BuildImageProgressUpdate_StepOutput? by lazy { if (stepOutputPointer.intValue() == 0) null else BuildImageProgressUpdate_StepOutput(stepOutputPointer.get()) }
     val stepPullProgressUpdatePointer = Pointer()
     val stepPullProgressUpdate: BuildImageProgressUpdate_StepPullProgressUpdate? by lazy { if (stepPullProgressUpdatePointer.intValue() == 0) null else BuildImageProgressUpdate_StepPullProgressUpdate(stepPullProgressUpdatePointer.get()) }
+    val stepDownloadProgressUpdatePointer = Pointer()
+    val stepDownloadProgressUpdate: BuildImageProgressUpdate_StepDownloadProgressUpdate? by lazy { if (stepDownloadProgressUpdatePointer.intValue() == 0) null else BuildImageProgressUpdate_StepDownloadProgressUpdate(stepDownloadProgressUpdatePointer.get()) }
     val stepFinishedPointer = Pointer()
     val stepFinished: BuildImageProgressUpdate_StepFinished? by lazy { if (stepFinishedPointer.intValue() == 0) null else BuildImageProgressUpdate_StepFinished(stepFinishedPointer.get()) }
     val buildFailedPointer = Pointer()

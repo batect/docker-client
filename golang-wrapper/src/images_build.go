@@ -240,19 +240,23 @@ func (p *imageBuildResponseBodyParser) onBuildOutput(stream string) {
 }
 
 func (p *imageBuildResponseBodyParser) onProgress(msg jsonmessage.JSONMessage) {
-	var progressDetail PullImageProgressDetail = nil
+	if p.currentStepIsPullStep {
+		var progressDetail PullImageProgressDetail = nil
 
-	if msg.Progress != nil {
-		progressDetail = newPullImageProgressDetail(msg.Progress.Current, msg.Progress.Total)
+		if msg.Progress != nil {
+			progressDetail = newPullImageProgressDetail(msg.Progress.Current, msg.Progress.Total)
+		}
+
+		progressUpdate := newPullImageProgressUpdate(msg.Status, progressDetail, msg.ID)
+
+		p.onImagePullProgress(progressUpdate, p.currentStep)
+	} else {
+		p.onDownloadProgress(p.currentStep, msg.Progress.Current, msg.Progress.Total)
 	}
-
-	progressUpdate := newPullImageProgressUpdate(msg.Status, progressDetail, msg.ID)
-
-	p.onImagePullProgress(progressUpdate, p.currentStep)
 }
 
 func (p *imageBuildResponseBodyParser) onBuildFailed(msg string) {
-	update := newBuildImageProgressUpdate(nil, nil, nil, nil, nil, newBuildImageProgressUpdate_BuildFailed(msg))
+	update := newBuildImageProgressUpdate(nil, nil, nil, nil, nil, nil, newBuildImageProgressUpdate_BuildFailed(msg))
 
 	defer C.FreeBuildImageProgressUpdate(update)
 
@@ -260,7 +264,7 @@ func (p *imageBuildResponseBodyParser) onBuildFailed(msg string) {
 }
 
 func (p *imageBuildResponseBodyParser) onStepOutput(output string, currentStep int64) {
-	update := newBuildImageProgressUpdate(nil, nil, newBuildImageProgressUpdate_StepOutput(currentStep, output), nil, nil, nil)
+	update := newBuildImageProgressUpdate(nil, nil, newBuildImageProgressUpdate_StepOutput(currentStep, output), nil, nil, nil, nil)
 
 	defer C.FreeBuildImageProgressUpdate(update)
 
@@ -268,7 +272,7 @@ func (p *imageBuildResponseBodyParser) onStepOutput(output string, currentStep i
 }
 
 func (p *imageBuildResponseBodyParser) onStepFinished(currentStep int64) {
-	update := newBuildImageProgressUpdate(nil, nil, nil, nil, newBuildImageProgressUpdate_StepFinished(currentStep), nil)
+	update := newBuildImageProgressUpdate(nil, nil, nil, nil, nil, newBuildImageProgressUpdate_StepFinished(currentStep), nil)
 
 	defer C.FreeBuildImageProgressUpdate(update)
 
@@ -276,7 +280,7 @@ func (p *imageBuildResponseBodyParser) onStepFinished(currentStep int64) {
 }
 
 func (p *imageBuildResponseBodyParser) onStepStarting(newStep int64, stepName string) {
-	update := newBuildImageProgressUpdate(nil, newBuildImageProgressUpdate_StepStarting(newStep, stepName), nil, nil, nil, nil)
+	update := newBuildImageProgressUpdate(nil, newBuildImageProgressUpdate_StepStarting(newStep, stepName), nil, nil, nil, nil, nil)
 
 	defer C.FreeBuildImageProgressUpdate(update)
 
@@ -284,7 +288,15 @@ func (p *imageBuildResponseBodyParser) onStepStarting(newStep int64, stepName st
 }
 
 func (p *imageBuildResponseBodyParser) onImagePullProgress(progressUpdate PullImageProgressUpdate, currentStep int64) {
-	update := newBuildImageProgressUpdate(nil, nil, nil, newBuildImageProgressUpdate_StepPullProgressUpdate(currentStep, progressUpdate), nil, nil)
+	update := newBuildImageProgressUpdate(nil, nil, nil, newBuildImageProgressUpdate_StepPullProgressUpdate(currentStep, progressUpdate), nil, nil, nil)
+
+	defer C.FreeBuildImageProgressUpdate(update)
+
+	invokeBuildImageProgressCallback(p.onProgressUpdate, p.onProgressUpdateUserData, update)
+}
+
+func (p *imageBuildResponseBodyParser) onDownloadProgress(currentStep int64, downloadedBytes int64, totalBytes int64) {
+	update := newBuildImageProgressUpdate(nil, nil, nil, nil, newBuildImageProgressUpdate_StepDownloadProgressUpdate(currentStep, downloadedBytes, totalBytes), nil, nil)
 
 	defer C.FreeBuildImageProgressUpdate(update)
 
@@ -332,7 +344,7 @@ func newContextUploadProgressHandler(onProgressUpdate BuildImageProgressCallback
 }
 
 func (h *contextUploadProgressHandler) WriteProgress(progress progress.Progress) error {
-	update := newBuildImageProgressUpdate(newBuildImageProgressUpdate_ImageBuildContextUploadProgress(progress.Current), nil, nil, nil, nil, nil)
+	update := newBuildImageProgressUpdate(newBuildImageProgressUpdate_ImageBuildContextUploadProgress(progress.Current), nil, nil, nil, nil, nil, nil)
 
 	defer C.FreeBuildImageProgressUpdate(update)
 

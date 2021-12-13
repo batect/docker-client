@@ -21,6 +21,7 @@ import batect.dockerclient.native.BuildImageProgressCallback
 import batect.dockerclient.native.BuildImageProgressUpdate
 import batect.dockerclient.native.BuildImageProgressUpdate_BuildFailed
 import batect.dockerclient.native.BuildImageProgressUpdate_ImageBuildContextUploadProgress
+import batect.dockerclient.native.BuildImageProgressUpdate_StepDownloadProgressUpdate
 import batect.dockerclient.native.BuildImageProgressUpdate_StepFinished
 import batect.dockerclient.native.BuildImageProgressUpdate_StepOutput
 import batect.dockerclient.native.BuildImageProgressUpdate_StepPullProgressUpdate
@@ -275,6 +276,7 @@ internal actual class RealDockerClient actual constructor(configuration: DockerC
         native.stepStarting != null -> StepStarting(native.stepStarting!!)
         native.stepOutput != null -> StepOutput(native.stepOutput!!)
         native.stepPullProgressUpdate != null -> StepPullProgressUpdate(native.stepPullProgressUpdate!!)
+        native.stepDownloadProgressUpdate != null -> StepDownloadProgressUpdate(native.stepDownloadProgressUpdate!!)
         native.stepFinished != null -> StepFinished(native.stepFinished!!)
         native.buildFailed != null -> BuildFailed(native.buildFailed!!)
         else -> throw RuntimeException("${BuildImageProgressUpdate::class.qualifiedName} did not contain an update")
@@ -291,6 +293,9 @@ internal actual class RealDockerClient actual constructor(configuration: DockerC
 
     private fun StepPullProgressUpdate(native: BuildImageProgressUpdate_StepPullProgressUpdate): StepPullProgressUpdate =
         StepPullProgressUpdate(native.stepNumber.get(), ImagePullProgressUpdate(native.pullProgress!!))
+
+    private fun StepDownloadProgressUpdate(native: BuildImageProgressUpdate_StepDownloadProgressUpdate): StepDownloadProgressUpdate =
+        StepDownloadProgressUpdate(native.stepNumber.get(), native.downloadedBytes.get(), native.totalBytes.get())
 
     private fun StepFinished(native: BuildImageProgressUpdate_StepFinished): StepFinished =
         StepFinished(native.stepNumber.get())

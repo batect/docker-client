@@ -95,6 +95,8 @@ internal interface API {
     fun AllocBuildImageProgressUpdate_StepOutput(): BuildImageProgressUpdate_StepOutput?
     fun FreeBuildImageProgressUpdate_StepPullProgressUpdate(@In value: BuildImageProgressUpdate_StepPullProgressUpdate)
     fun AllocBuildImageProgressUpdate_StepPullProgressUpdate(): BuildImageProgressUpdate_StepPullProgressUpdate?
+    fun FreeBuildImageProgressUpdate_StepDownloadProgressUpdate(@In value: BuildImageProgressUpdate_StepDownloadProgressUpdate)
+    fun AllocBuildImageProgressUpdate_StepDownloadProgressUpdate(): BuildImageProgressUpdate_StepDownloadProgressUpdate?
     fun FreeBuildImageProgressUpdate_StepFinished(@In value: BuildImageProgressUpdate_StepFinished)
     fun AllocBuildImageProgressUpdate_StepFinished(): BuildImageProgressUpdate_StepFinished?
     fun FreeBuildImageProgressUpdate_BuildFailed(@In value: BuildImageProgressUpdate_BuildFailed)

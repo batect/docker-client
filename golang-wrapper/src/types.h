@@ -190,6 +190,12 @@ typedef struct {
 
 typedef struct {
     int64_t StepNumber;
+    int64_t DownloadedBytes;
+    int64_t TotalBytes;
+} BuildImageProgressUpdate_StepDownloadProgressUpdate;
+
+typedef struct {
+    int64_t StepNumber;
 } BuildImageProgressUpdate_StepFinished;
 
 typedef struct {
@@ -201,6 +207,7 @@ typedef struct {
     BuildImageProgressUpdate_StepStarting* StepStarting;
     BuildImageProgressUpdate_StepOutput* StepOutput;
     BuildImageProgressUpdate_StepPullProgressUpdate* StepPullProgressUpdate;
+    BuildImageProgressUpdate_StepDownloadProgressUpdate* StepDownloadProgressUpdate;
     BuildImageProgressUpdate_StepFinished* StepFinished;
     BuildImageProgressUpdate_BuildFailed* BuildFailed;
 } BuildImageProgressUpdate;
@@ -262,6 +269,8 @@ EXPORTED_FUNCTION BuildImageProgressUpdate_StepOutput* AllocBuildImageProgressUp
 EXPORTED_FUNCTION void FreeBuildImageProgressUpdate_StepOutput(BuildImageProgressUpdate_StepOutput* value);
 EXPORTED_FUNCTION BuildImageProgressUpdate_StepPullProgressUpdate* AllocBuildImageProgressUpdate_StepPullProgressUpdate();
 EXPORTED_FUNCTION void FreeBuildImageProgressUpdate_StepPullProgressUpdate(BuildImageProgressUpdate_StepPullProgressUpdate* value);
+EXPORTED_FUNCTION BuildImageProgressUpdate_StepDownloadProgressUpdate* AllocBuildImageProgressUpdate_StepDownloadProgressUpdate();
+EXPORTED_FUNCTION void FreeBuildImageProgressUpdate_StepDownloadProgressUpdate(BuildImageProgressUpdate_StepDownloadProgressUpdate* value);
 EXPORTED_FUNCTION BuildImageProgressUpdate_StepFinished* AllocBuildImageProgressUpdate_StepFinished();
 EXPORTED_FUNCTION void FreeBuildImageProgressUpdate_StepFinished(BuildImageProgressUpdate_StepFinished* value);
 EXPORTED_FUNCTION BuildImageProgressUpdate_BuildFailed* AllocBuildImageProgressUpdate_BuildFailed();

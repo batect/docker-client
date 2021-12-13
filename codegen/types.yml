@@ -266,6 +266,16 @@
     - name: PullProgress
       type: PullImageProgressUpdate
 
+- name: BuildImageProgressUpdate_StepDownloadProgressUpdate
+  type: struct
+  fields:
+    - name: StepNumber
+      type: int64
+    - name: DownloadedBytes
+      type: int64
+    - name: TotalBytes
+      type: int64
+
 - name: BuildImageProgressUpdate_StepFinished
   type: struct
   fields:
@@ -289,6 +299,8 @@
       type: BuildImageProgressUpdate_StepOutput
     - name: StepPullProgressUpdate
       type: BuildImageProgressUpdate_StepPullProgressUpdate
+    - name: StepDownloadProgressUpdate
+      type: BuildImageProgressUpdate_StepDownloadProgressUpdate
     - name: StepFinished
       type: BuildImageProgressUpdate_StepFinished
     - name: BuildFailed

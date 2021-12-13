@@ -522,6 +522,20 @@ void FreeBuildImageProgressUpdate_StepPullProgressUpdate(BuildImageProgressUpdat
     free(value);
 }
 
+BuildImageProgressUpdate_StepDownloadProgressUpdate* AllocBuildImageProgressUpdate_StepDownloadProgressUpdate() {
+    BuildImageProgressUpdate_StepDownloadProgressUpdate* value = malloc(sizeof(BuildImageProgressUpdate_StepDownloadProgressUpdate));
+
+    return value;
+}
+
+void FreeBuildImageProgressUpdate_StepDownloadProgressUpdate(BuildImageProgressUpdate_StepDownloadProgressUpdate* value) {
+    if (value == NULL) {
+        return;
+    }
+
+    free(value);
+}
+
 BuildImageProgressUpdate_StepFinished* AllocBuildImageProgressUpdate_StepFinished() {
     BuildImageProgressUpdate_StepFinished* value = malloc(sizeof(BuildImageProgressUpdate_StepFinished));
 
@@ -558,6 +572,7 @@ BuildImageProgressUpdate* AllocBuildImageProgressUpdate() {
     value->StepStarting = NULL;
     value->StepOutput = NULL;
     value->StepPullProgressUpdate = NULL;
+    value->StepDownloadProgressUpdate = NULL;
     value->StepFinished = NULL;
     value->BuildFailed = NULL;
 
@@ -573,6 +588,7 @@ void FreeBuildImageProgressUpdate(BuildImageProgressUpdate* value) {
     FreeBuildImageProgressUpdate_StepStarting(value->StepStarting);
     FreeBuildImageProgressUpdate_StepOutput(value->StepOutput);
     FreeBuildImageProgressUpdate_StepPullProgressUpdate(value->StepPullProgressUpdate);
+    FreeBuildImageProgressUpdate_StepDownloadProgressUpdate(value->StepDownloadProgressUpdate);
     FreeBuildImageProgressUpdate_StepFinished(value->StepFinished);
     FreeBuildImageProgressUpdate_BuildFailed(value->BuildFailed);
     free(value);

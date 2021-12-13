@@ -28,6 +28,7 @@ public data class ImageBuildContextUploadProgress(val bytesUploaded: Long) : Ima
 public data class StepStarting(override val stepNumber: Long, val stepName: String) : ImageBuildStepProgressUpdate()
 public data class StepOutput(override val stepNumber: Long, val output: String) : ImageBuildStepProgressUpdate()
 public data class StepPullProgressUpdate(override val stepNumber: Long, val pullProgress: ImagePullProgressUpdate) : ImageBuildStepProgressUpdate()
+public data class StepDownloadProgressUpdate(override val stepNumber: Long, val bytesDownloaded: Long, val totalBytes: Long) : ImageBuildStepProgressUpdate()
 public data class StepFinished(override val stepNumber: Long) : ImageBuildStepProgressUpdate()
 public data class BuildFailed(val message: String) : ImageBuildProgressUpdate()
 public data class BuildComplete(val image: ImageReference) : ImageBuildProgressUpdate()
