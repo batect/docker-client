@@ -96,8 +96,6 @@ class DockerClientImagePullSpec : ShouldSpec({
             it.id shouldBe layerId
         }
 
-        progressUpdatesReceived shouldContain ImagePullProgressUpdate("Download complete", ImagePullProgressDetail(0, 0), layerId)
-
         progressUpdatesReceived.forAtLeastOne {
             it.message shouldBe "Extracting"
             it.detail shouldNotBe null
