@@ -418,7 +418,10 @@ class DockerClientImageBuildSpec : ShouldSpec({
             }
         }
 
-        exception.message shouldBe "manifest for batect/this-image-does-not-exist:1.0 not found: manifest unknown: manifest unknown"
+        exception.message shouldBeIn setOf(
+            "manifest for batect/this-image-does-not-exist:1.0 not found: manifest unknown: manifest unknown",
+            "pull access denied for batect/this-image-does-not-exist, repository does not exist or may require 'docker login': denied: requested access to the resource is denied"
+        )
 
         val outputText = output.readUtf8().trim()
         outputText shouldContain """^Step 1/2 : FROM batect/this-image-does-not-exist:1.0$""".toRegex(RegexOption.MULTILINE)
