@@ -16,6 +16,7 @@
 
 package batect.dockerclient
 
+import okio.FileSystem
 import okio.Path
 
 public data class ImageBuildSpec(
@@ -29,6 +30,12 @@ public data class ImageBuildSpec(
 ) {
     public class Builder(contextDirectory: Path) {
         private var spec = ImageBuildSpec(contextDirectory, contextDirectory.resolve("Dockerfile"))
+
+        init {
+            if (!FileSystem.SYSTEM.exists(spec.contextDirectory)) {
+                throw InvalidImageBuildSpecException("Context directory '${spec.contextDirectory}' does not exist.")
+            }
+        }
 
         public fun withDockerfile(path: Path): Builder {
             val resolvedPath = if (path.isAbsolute) path else spec.contextDirectory.resolve(path)
@@ -79,6 +86,16 @@ public data class ImageBuildSpec(
             return this
         }
 
-        public fun build(): ImageBuildSpec = spec
+        public fun build(): ImageBuildSpec {
+            if (!FileSystem.SYSTEM.exists(spec.pathToDockerfile)) {
+                throw InvalidImageBuildSpecException("Dockerfile '${spec.pathToDockerfile}' does not exist.")
+            }
+
+            if (spec.pathToDockerfile.relativeTo(spec.contextDirectory).segments.first() == "..") {
+                throw InvalidImageBuildSpecException("Dockerfile '${spec.pathToDockerfile}' is not a child of the context directory (${spec.contextDirectory}).")
+            }
+
+            return spec
+        }
     }
 }

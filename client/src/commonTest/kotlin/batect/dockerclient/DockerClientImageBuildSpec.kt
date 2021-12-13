@@ -476,11 +476,53 @@ class DockerClientImageBuildSpec : ShouldSpec({
         progressUpdatesReceived shouldEndWith BuildComplete(image)
     }
 
+    should("throw an exception when the provided context directory does not exist") {
+        val exception = shouldThrow<InvalidImageBuildSpecException> {
+            ImageBuildSpec.Builder("this-does-not-exist".toPath())
+        }
+
+        exception.message shouldBe "Context directory 'this-does-not-exist' does not exist."
+    }
+
+    should("throw an exception when the provided Dockerfile does not exist") {
+        val contextDirectory = rootTestImagesDirectory.resolve("basic-image")
+        val dockerfilePath = contextDirectory.resolve("my-other-dockerfile")
+
+        val exception = shouldThrow<InvalidImageBuildSpecException> {
+            ImageBuildSpec.Builder(contextDirectory)
+                .withDockerfile(dockerfilePath)
+                .build()
+        }
+
+        exception.message shouldBe "Dockerfile '$dockerfilePath' does not exist."
+    }
+
+    should("throw an exception when the default Dockerfile does not exist in the provided context directory") {
+        val contextDirectory = rootTestImagesDirectory.resolve("non-default-dockerfile")
+        val dockerfilePath = contextDirectory.resolve("Dockerfile")
+
+        val exception = shouldThrow<InvalidImageBuildSpecException> {
+            ImageBuildSpec.Builder(contextDirectory).build()
+        }
+
+        exception.message shouldBe "Dockerfile '$dockerfilePath' does not exist."
+    }
+
+    should("throw an exception when the Dockerfile is not in the context directory") {
+        val contextDirectory = rootTestImagesDirectory.resolve("basic-image")
+        val dockerfilePath = rootTestImagesDirectory.resolve("build-args").resolve("Dockerfile")
+
+        val exception = shouldThrow<InvalidImageBuildSpecException> {
+            ImageBuildSpec.Builder(contextDirectory)
+                .withDockerfile(dockerfilePath)
+                .build()
+        }
+
+        exception.message shouldBe "Dockerfile '$dockerfilePath' is not a child of the context directory ($contextDirectory)."
+    }
+
     // TODO: proxy environment variables - CLI does some magic for this
     // TODO: handle invalid values
-    // - context directory does not exist
-    // - Dockerfile does not exist
-    // - Dockerfile not in context directory
     // - image tag not valid identifier
     // - invalid build arg name
     // TODO: progress callback that throws an exception when processing a context upload progress event
