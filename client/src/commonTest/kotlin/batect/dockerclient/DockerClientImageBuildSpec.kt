@@ -521,10 +521,34 @@ class DockerClientImageBuildSpec : ShouldSpec({
         exception.message shouldBe "Dockerfile '$dockerfilePath' is not a child of the context directory ($contextDirectory)."
     }
 
+    should("throw an exception when attempting to build an image with an invalid image tag") {
+        val exception = shouldThrow<InvalidImageBuildSpecException> {
+            ImageBuildSpec.Builder(rootTestImagesDirectory.resolve("basic-image"))
+                .withImageTag("_nonsense")
+        }
+
+        exception.message shouldBe "Image tag '_nonsense' is not a valid Docker image tag: invalid reference format"
+    }
+
+    should("throw an exception when attempting to build an image with an invalid image tag in a list of image tags provided as a collection") {
+        val exception = shouldThrow<InvalidImageBuildSpecException> {
+            ImageBuildSpec.Builder(rootTestImagesDirectory.resolve("basic-image"))
+                .withImageTags(setOf("valid", "_nonsense", "also-valid"))
+        }
+
+        exception.message shouldBe "Image tag '_nonsense' is not a valid Docker image tag: invalid reference format"
+    }
+
+    should("throw an exception when attempting to build an image with an invalid image tag in a list of image tag arguments") {
+        val exception = shouldThrow<InvalidImageBuildSpecException> {
+            ImageBuildSpec.Builder(rootTestImagesDirectory.resolve("basic-image"))
+                .withImageTags("valid", "_nonsense", "also-valid")
+        }
+
+        exception.message shouldBe "Image tag '_nonsense' is not a valid Docker image tag: invalid reference format"
+    }
+
     // TODO: proxy environment variables - CLI does some magic for this
-    // TODO: handle invalid values
-    // - image tag not valid identifier
-    // - invalid build arg name
     // TODO: progress callback that throws an exception when processing a context upload progress event
     // TODO: progress callback that throws an exception when processing any other build event
 })

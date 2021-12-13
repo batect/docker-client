@@ -21,6 +21,7 @@ import (
 	"C"
 	"context"
 
+	"github.com/docker/distribution/reference"
 	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/client"
 )
@@ -67,4 +68,15 @@ func getImageReference(docker *client.Client, reference string) (ImageReference,
 	}
 
 	return newImageReference(dockerResponse.ID), nil
+}
+
+//export ValidateImageTag
+func ValidateImageTag(tag *C.char) Error {
+	_, err := reference.ParseNormalizedNamed(C.GoString(tag))
+
+	if err != nil {
+		return toError(err)
+	}
+
+	return nil
 }

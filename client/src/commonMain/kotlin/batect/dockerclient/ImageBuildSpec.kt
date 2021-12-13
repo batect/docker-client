@@ -69,12 +69,16 @@ public data class ImageBuildSpec(
         public fun withImageTag(tag: String): Builder = withImageTags(setOf(tag))
 
         public fun withImageTags(vararg tags: String): Builder {
+            tags.forEach { validateImageTag(it) }
+
             spec = spec.copy(imageTags = spec.imageTags + tags)
 
             return this
         }
 
         public fun withImageTags(tags: Collection<String>): Builder {
+            tags.forEach { validateImageTag(it) }
+
             spec = spec.copy(imageTags = spec.imageTags + tags)
 
             return this
@@ -99,3 +103,5 @@ public data class ImageBuildSpec(
         }
     }
 }
+
+internal expect fun validateImageTag(tag: String)
