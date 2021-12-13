@@ -264,7 +264,14 @@ internal actual class RealDockerClient actual constructor(configuration: DockerC
                 }
 
                 return callbackState.use { callback, callbackUserData ->
-                    BuildImage(clientHandle, allocBuildImageRequest(spec).ptr, stream.outputStreamHandle, callback, callbackUserData)!!.use { ret ->
+                    BuildImage(
+                        clientHandle,
+                        allocBuildImageRequest(spec).ptr,
+                        stream.outputStreamHandle,
+                        false, // FIXME: Only required while we're using the old Kotlin/Native memory model that does not support sharing values between threads.
+                        callback,
+                        callbackUserData
+                    )!!.use { ret ->
                         stream.run() // FIXME: This really should be done in parallel with the BuildImage call above, but Kotlin/Native does not yet support multithreaded coroutines
 
                         if (ret.pointed.Error != null) {

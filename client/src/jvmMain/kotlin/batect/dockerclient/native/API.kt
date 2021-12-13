@@ -31,7 +31,7 @@ internal interface API {
     fun GetDaemonVersionInformation(@In clientHandle: Long): GetDaemonVersionInformationReturn?
     fun DeleteImage(@In clientHandle: Long, @In ref: kotlin.String, @In force: Boolean): Error?
     fun GetImage(@In clientHandle: Long, @In ref: kotlin.String): GetImageReturn?
-    fun BuildImage(@In clientHandle: Long, @In request: BuildImageRequest, @In outputStreamHandle: Long, @In onProgressUpdate: BuildImageProgressCallback, @In callbackUserData: Pointer?): BuildImageReturn?
+    fun BuildImage(@In clientHandle: Long, @In request: BuildImageRequest, @In outputStreamHandle: Long, @In reportContextUploadProgressEvents: Boolean, @In onProgressUpdate: BuildImageProgressCallback, @In callbackUserData: Pointer?): BuildImageReturn?
     fun PullImage(@In clientHandle: Long, @In ref: kotlin.String, @In onProgressUpdate: PullImageProgressCallback, @In callbackUserData: Pointer?): PullImageReturn?
     fun CreateOutputPipe(): CreateOutputPipeReturn?
     fun DisposeOutputPipe(@In handle: Long): Error?

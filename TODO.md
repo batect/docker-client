@@ -32,6 +32,7 @@
 * Clean task for Golang wrapper project
 * Remove use of `allprojects` in root `build.gradle.kts` - use a custom plugin applied to all projects instead
   * Then should be able to remove use of `afterEvaluate` in `golang-wrapper/build.gradle.kts`
+* Re-enable context upload progress reporting on Kotlin/Native once new memory model can be used
 
 # APIs
 

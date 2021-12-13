@@ -228,7 +228,7 @@ internal actual class RealDockerClient actual constructor(configuration: DockerC
             return runBlocking(Dispatchers.IO) {
                 launch { stream.run() }
 
-                nativeAPI.BuildImage(clientHandle, BuildImageRequest(spec), stream.outputStreamHandle.toLong(), callback, null)!!.use { ret ->
+                nativeAPI.BuildImage(clientHandle, BuildImageRequest(spec), stream.outputStreamHandle.toLong(), true, callback, null)!!.use { ret ->
                     if (ret.error != null) {
                         if (ret.error!!.type.get() == "main.ProgressCallbackFailedError") {
                             throw ImageBuildFailedException(

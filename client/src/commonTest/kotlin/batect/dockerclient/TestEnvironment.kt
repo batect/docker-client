@@ -52,3 +52,6 @@ enum class OperatingSystem {
     Windows,
     MacOS
 }
+
+// FIXME: remove this once the new Kotlin/Native memory model can be used
+internal expect val multithreadingSupportedOnThisPlatform: Boolean

@@ -16,14 +16,4 @@
 
 package batect.dockerclient
 
-import jnr.ffi.Platform
-
-actual val testEnvironmentOperatingSystem: OperatingSystem =
-    when (val platform = Platform.getNativePlatform().os) {
-        Platform.OS.LINUX -> OperatingSystem.Linux
-        Platform.OS.DARWIN -> OperatingSystem.MacOS
-        Platform.OS.WINDOWS -> OperatingSystem.Windows
-        else -> throw UnsupportedOperationException("Unknown platform $platform")
-    }
-
-actual val multithreadingSupportedOnThisPlatform: Boolean = true
+actual val multithreadingSupportedOnThisPlatform: Boolean = false

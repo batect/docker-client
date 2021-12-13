@@ -44,7 +44,7 @@ var buildStepFinishedLineRegex = regexp.MustCompile(`^ ---> [0-9a-f]{12}\n$`)
 var buildSuccessfullyFinishedLineRegex = regexp.MustCompile(`^Successfully built [0-9a-f]{12}\n$`)
 
 //export BuildImage
-func BuildImage(clientHandle DockerClientHandle, request *C.BuildImageRequest, outputStreamHandle OutputStreamHandle, onProgressUpdate BuildImageProgressCallback, callbackUserData unsafe.Pointer) BuildImageReturn {
+func BuildImage(clientHandle DockerClientHandle, request *C.BuildImageRequest, outputStreamHandle OutputStreamHandle, reportContextUploadProgressEvents C.bool, onProgressUpdate BuildImageProgressCallback, callbackUserData unsafe.Pointer) BuildImageReturn {
 	defer closeOutputStream(outputStreamHandle)
 
 	docker := getClient(clientHandle)
@@ -69,8 +69,12 @@ func BuildImage(clientHandle DockerClientHandle, request *C.BuildImageRequest, o
 		ChownOpts:       &idtools.Identity{UID: 0, GID: 0},
 	})
 
-	contextUploadEventHandler := newContextUploadProgressHandler(onProgressUpdate, callbackUserData)
-	buildContext = progress.NewProgressReader(buildContext, contextUploadEventHandler, 0, "", "Sending build context to Docker daemon")
+	// This is only required while we're using the v1 Kotlin/Native memory model (as this invokes the callback from another thread).
+	// Once we're using the new memory model, we can just always report context upload progress events.
+	if bool(reportContextUploadProgressEvents) {
+		contextUploadEventHandler := newContextUploadProgressHandler(onProgressUpdate, callbackUserData)
+		buildContext = progress.NewProgressReader(buildContext, contextUploadEventHandler, 0, "", "Sending build context to Docker daemon")
+	}
 
 	if err != nil {
 		return newBuildImageReturn(nil, toError(err))

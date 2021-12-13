@@ -295,6 +295,6 @@ abstract class GenerateKotlinJVMMethods : DefaultTask() {
         """.trimIndent()
 
         private val functionDefinitionRegex: Regex = """extern(?: __declspec\(dllexport\))? (?<returnType>[a-zA-Z]+\*?) (?<functionName>[a-zA-Z]+)\((?<parameters>[a-zA-z,* ]+)?\);""".toRegex()
-        private val parameterDefinitionRegex: Regex = """(?<parameterType>[a-zA-Z_]+\*?) (?<parameterName>[a-zA-Z]+)""".toRegex()
+        private val parameterDefinitionRegex: Regex = """(?<parameterType>[a-zA-Z0-9_]+\*?) (?<parameterName>[a-zA-Z]+)""".toRegex()
     }
 }

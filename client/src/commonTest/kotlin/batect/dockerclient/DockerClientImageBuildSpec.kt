@@ -69,10 +69,14 @@ class DockerClientImageBuildSpec : ShouldSpec({
             Successfully built [0-9a-f]{12}
         """.trimIndent().toRegex()
 
-        progressUpdatesReceived shouldStartWith listOf(
-            ImageBuildContextUploadProgress(2048),
-            StepStarting(1, "FROM alpine:3.14.2"),
-        )
+        if (multithreadingSupportedOnThisPlatform) {
+            progressUpdatesReceived shouldStartWith listOf(
+                ImageBuildContextUploadProgress(2048),
+                StepStarting(1, "FROM alpine:3.14.2"),
+            )
+        } else {
+            progressUpdatesReceived shouldStartWith StepStarting(1, "FROM alpine:3.14.2")
+        }
 
         progressUpdatesReceived shouldEndWith listOf(
             StepFinished(1),
