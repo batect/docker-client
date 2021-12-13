@@ -23,6 +23,7 @@ import io.kotest.inspectors.forAtLeastOne
 import io.kotest.inspectors.forNone
 import io.kotest.matchers.collections.shouldBeIn
 import io.kotest.matchers.collections.shouldContain
+import io.kotest.matchers.collections.shouldContainAnyOf
 import io.kotest.matchers.collections.shouldEndWith
 import io.kotest.matchers.collections.shouldStartWith
 import io.kotest.matchers.longs.shouldBeLessThan
@@ -428,7 +429,11 @@ class DockerClientImageBuildSpec : ShouldSpec({
         outputText shouldNotContain """^Successfully built [0-9a-f]{12}$""".toRegex(RegexOption.MULTILINE)
 
         progressUpdatesReceived shouldContain StepStarting(1, "FROM batect/this-image-does-not-exist:1.0")
-        progressUpdatesReceived shouldContain BuildFailed("manifest for batect/this-image-does-not-exist:1.0 not found: manifest unknown: manifest unknown")
+
+        progressUpdatesReceived.shouldContainAnyOf(
+            BuildFailed("manifest for batect/this-image-does-not-exist:1.0 not found: manifest unknown: manifest unknown"),
+            BuildFailed("pull access denied for batect/this-image-does-not-exist, repository does not exist or may require 'docker login': denied: requested access to the resource is denied"),
+        )
 
         progressUpdatesReceived.forNone {
             it.shouldBeTypeOf<BuildComplete>()
