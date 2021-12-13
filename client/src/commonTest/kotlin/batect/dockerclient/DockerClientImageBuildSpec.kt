@@ -278,7 +278,22 @@ class DockerClientImageBuildSpec : ShouldSpec({
         progressUpdatesReceived shouldEndWith BuildComplete(image)
     }
 
-    // TODO: absolute path to Dockerfile
+    should("be able to build a Linux container image where the Dockerfile path is specified with an absolute path").onlyIfDockerDaemonSupportsLinuxContainers {
+        val contextDirectory = rootTestImagesDirectory.resolve("basic-image")
+        val spec = ImageBuildSpec.Builder(contextDirectory)
+            .withDockerfile(contextDirectory.resolve("Dockerfile"))
+            .build()
+
+        val output = Buffer()
+        val progressUpdatesReceived = mutableListOf<ImageBuildProgressUpdate>()
+
+        val image = client.buildImage(spec, SinkTextOutput(output)) { update ->
+            progressUpdatesReceived.add(update)
+        }
+
+        progressUpdatesReceived shouldEndWith BuildComplete(image)
+    }
+
     // TODO: .dockerignore
     // TODO: proxy environment variables - CLI does some magic for this
     // TODO: multi-stage Dockerfile with default target stage

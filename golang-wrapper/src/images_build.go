@@ -51,6 +51,12 @@ func BuildImage(clientHandle DockerClientHandle, request *C.BuildImageRequest, o
 	contextDir := C.GoString(request.ContextDirectory)
 	pathToDockerfile := C.GoString(request.PathToDockerfile)
 
+	contextDir, pathToDockerfile, err := build.GetContextFromLocalDir(contextDir, pathToDockerfile)
+
+	if err != nil {
+		return newBuildImageReturn(nil, toError(err))
+	}
+
 	excludes, err := build.ReadDockerignore(contextDir)
 
 	if err != nil {

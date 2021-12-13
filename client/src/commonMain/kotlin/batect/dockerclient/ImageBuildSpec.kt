@@ -17,21 +17,22 @@
 package batect.dockerclient
 
 import okio.Path
-import okio.Path.Companion.toPath
 
 public data class ImageBuildSpec(
     val contextDirectory: Path,
-    val pathToDockerfile: Path = "Dockerfile".toPath(),
+    val pathToDockerfile: Path,
     val buildArgs: Map<String, String> = emptyMap(),
     val imageTags: Set<String> = emptySet(),
     val alwaysPullBaseImages: Boolean = false,
     val noCache: Boolean = false
 ) {
     public class Builder(contextDirectory: Path) {
-        private var spec = ImageBuildSpec(contextDirectory)
+        private var spec = ImageBuildSpec(contextDirectory, contextDirectory.resolve("Dockerfile"))
 
         public fun withDockerfile(path: Path): Builder {
-            spec = spec.copy(pathToDockerfile = path)
+            val resolvedPath = if (path.isAbsolute) path else spec.contextDirectory.resolve(path)
+
+            spec = spec.copy(pathToDockerfile = resolvedPath)
 
             return this
         }
