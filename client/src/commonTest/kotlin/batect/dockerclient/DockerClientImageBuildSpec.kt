@@ -110,6 +110,29 @@ class DockerClientImageBuildSpec : ShouldSpec({
         """.trimIndent()
     }
 
+    should("be able to build a Linux container image with .dockerignore respected").onlyIfDockerDaemonSupportsLinuxContainers {
+        val spec = ImageBuildSpec.Builder(rootTestImagesDirectory.resolve("image-with-dockerignore"))
+            .withBuildArg("CACHE_BUSTER", Random.nextInt().toString())
+            .build()
+
+        val output = Buffer()
+        client.buildImage(spec, SinkTextOutput(output))
+
+        val outputText = output.readUtf8()
+
+        outputText shouldContain """
+            [
+              {"type":"directory","name":"/files","contents":[
+                {"type":"file","name":"Dockerfile","user":"root","group":"root","size":179},
+                {"type":"file","name":"root-file.txt","user":"root","group":"root","size":25},
+                {"type":"directory","name":"subdir","user":"root","group":"root","size":4096,"contents":[
+                  {"type":"file","name":"my-file.txt","user":"root","group":"root","size":28}
+                ]}
+              ]}
+            ]
+        """.trimIndent()
+    }
+
     should("be able to build a Linux container image with a non-default Dockerfile name").onlyIfDockerDaemonSupportsLinuxContainers {
         val spec = ImageBuildSpec.Builder(rootTestImagesDirectory.resolve("non-default-dockerfile"))
             .withDockerfile("subdirectory/my-dockerfile".toPath())
@@ -290,7 +313,6 @@ class DockerClientImageBuildSpec : ShouldSpec({
         progressUpdatesReceived shouldEndWith BuildComplete(image)
     }
 
-    // TODO: .dockerignore
     // TODO: proxy environment variables - CLI does some magic for this
     // TODO: multi-stage Dockerfile with default target stage
     // TODO: multi-stage Dockerfile with specified target stage
