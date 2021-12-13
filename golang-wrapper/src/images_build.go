@@ -37,6 +37,7 @@ import (
 
 var buildStepLineRegex = regexp.MustCompile(`^Step (\d+)/(\d+) : (.*)$`)
 var buildStepRunningInContainerLineRegex = regexp.MustCompile(`^ ---> Running in [0-9a-f]{12}\n$`)
+var removingIntermediateContainerLineRegex = regexp.MustCompile(`^Removing intermediate container [0-9a-f]{12}\n$`)
 var buildStepFinishedLineRegex = regexp.MustCompile(`^ ---> [0-9a-f]{12}\n$`)
 var buildSuccessfullyFinishedLineRegex = regexp.MustCompile(`^Successfully built [0-9a-f]{12}\n$`)
 
@@ -77,6 +78,7 @@ func BuildImage(clientHandle DockerClientHandle, request *C.BuildImageRequest, o
 		Tags:       fromStringArray(request.ImageTags, request.ImageTagsCount),
 		PullParent: bool(request.AlwaysPullBaseImages),
 		NoCache:    bool(request.NoCache),
+		Remove:     true,
 	}
 
 	response, err := docker.ImageBuild(context.Background(), buildContext, opts)
@@ -179,6 +181,10 @@ func (p *imageBuildResponseBodyParser) onBuildOutput(stream string) {
 	}
 
 	if !p.haveSeenMeaningfulOutputForCurrentStep && buildStepRunningInContainerLineRegex.MatchString(stream) {
+		return
+	}
+
+	if removingIntermediateContainerLineRegex.MatchString(stream) {
 		return
 	}
 

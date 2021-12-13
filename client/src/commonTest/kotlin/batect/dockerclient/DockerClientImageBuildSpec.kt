@@ -60,6 +60,7 @@ class DockerClientImageBuildSpec : ShouldSpec({
             Step 2/2 : RUN echo "Hello world!"
              ---> Running in [0-9a-f]{12}
             Hello world!
+            Removing intermediate container [0-9a-f]{12}
              ---> [0-9a-f]{12}
             Successfully built [0-9a-f]{12}
         """.trimIndent().toRegex()
@@ -180,6 +181,7 @@ class DockerClientImageBuildSpec : ShouldSpec({
             Step 2/2 : RUN echo "Hello world!"
              ---> Running in [0-9a-f]{12}
             Hello world!
+            Removing intermediate container [0-9a-f]{12}
              ---> [0-9a-f]{12}
             Successfully built [0-9a-f]{12}
             Step 1/2 : FROM alpine:\d+\.\d+.\d+
@@ -187,6 +189,7 @@ class DockerClientImageBuildSpec : ShouldSpec({
             Step 2/2 : RUN echo "Hello world!"
              ---> Running in [0-9a-f]{12}
             Hello world!
+            Removing intermediate container [0-9a-f]{12}
              ---> [0-9a-f]{12}
             Successfully built [0-9a-f]{12}
         """.trimIndent().toRegex()
