@@ -192,8 +192,6 @@ class DockerClientImageBuildSpec : ShouldSpec({
             it.pullProgress.id shouldBe layerId
         }
 
-        progressUpdatesReceived shouldContain StepPullProgressUpdate(1, ImagePullProgressUpdate("Download complete", ImagePullProgressDetail(0, 0), layerId))
-
         progressUpdatesReceived.forAtLeastOne {
             it.shouldBeTypeOf<StepPullProgressUpdate>()
             it.stepNumber shouldBe 1
