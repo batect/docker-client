@@ -39,12 +39,12 @@ import batect.dockerclient.native.DeleteNetwork
 import batect.dockerclient.native.DeleteVolume
 import batect.dockerclient.native.DisposeClient
 import batect.dockerclient.native.DockerClientHandle
+import batect.dockerclient.native.Error
 import batect.dockerclient.native.FreeBuildImageReturn
 import batect.dockerclient.native.FreeCreateClientReturn
 import batect.dockerclient.native.FreeCreateNetworkReturn
 import batect.dockerclient.native.FreeCreateVolumeReturn
 import batect.dockerclient.native.FreeError
-import batect.dockerclient.native.Error
 import batect.dockerclient.native.FreeGetDaemonVersionInformationReturn
 import batect.dockerclient.native.FreeGetImageReturn
 import batect.dockerclient.native.FreeGetNetworkByNameOrIDReturn
