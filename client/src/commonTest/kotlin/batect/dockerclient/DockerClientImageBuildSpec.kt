@@ -159,8 +159,6 @@ class DockerClientImageBuildSpec : ShouldSpec({
 
         outputText shouldContain """
             Step 1/1 : FROM gcr.io/distroless/static@sha256:aadea1b1f16af043a34491eec481d0132479382096ea34f608087b4bef3634be
-            gcr.io/distroless/static@sha256:aadea1b1f16af043a34491eec481d0132479382096ea34f608087b4bef3634be: Pulling from distroless/static
-            b49b96595fd4: Pulling fs layer
         """.trimIndent()
 
         outputText shouldContain """
