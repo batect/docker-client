@@ -30,7 +30,6 @@
 * Run tests with memory leak detector
 * Linter to catch when memory is not freed (eg. Golang code allocates struct that is used as callback parameter)
 * Clean task for Golang wrapper project
-* Automated check for memory leaks
 * Remove use of `allprojects` in root `build.gradle.kts` - use a custom plugin applied to all projects instead
   * Then should be able to remove use of `afterEvaluate` in `golang-wrapper/build.gradle.kts`
 
@@ -49,7 +48,7 @@
 
 * Images
   * Build
-    * Stream output while build is running (see TODO in native buildImage())
+    * Stream output while build is running, not just when build returns (see TODO in native buildImage())
     * Legacy builder
     * BuildKit
     * Scenarios to cover:
@@ -60,12 +59,7 @@
       * Dockerfile outside context directory
     * Features to cover:
       * Progress reporting
-        * Image pull
         * Context upload (legacy builder only)
-      * Build output
-      * Build args
-      * Force pull base image
-      * Image tags
       * Windows image build
     * Test that we can run a built image
 * Containers

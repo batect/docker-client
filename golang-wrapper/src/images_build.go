@@ -25,6 +25,7 @@ import (
 	"io"
 	"regexp"
 	"strconv"
+	"strings"
 	"unsafe"
 
 	"github.com/docker/cli/cli/command/image/build"
@@ -100,6 +101,7 @@ func BuildImage(clientHandle DockerClientHandle, request *C.BuildImageRequest, o
 type imageBuildResponseBodyParser struct {
 	imageID                                string
 	currentStep                            int64
+	currentStepIsPullStep                  bool
 	haveSeenMeaningfulOutputForCurrentStep bool
 	haveSeenStepFinishedLineForCurrentStep bool
 	outputStreamHandle                     OutputStreamHandle
@@ -120,6 +122,7 @@ func (p *imageBuildResponseBodyParser) Parse(response types.ImageBuildResponse) 
 	p.currentStep = int64(0)
 	p.haveSeenMeaningfulOutputForCurrentStep = false
 	p.haveSeenStepFinishedLineForCurrentStep = false
+	p.currentStepIsPullStep = false
 
 	output := getOutputStream(p.outputStreamHandle)
 	err := parseAndDisplayJSONMessagesStream(response.Body, output, p.onMessageReceived)
@@ -138,6 +141,10 @@ func (p *imageBuildResponseBodyParser) Parse(response types.ImageBuildResponse) 
 func (p *imageBuildResponseBodyParser) onMessageReceived(msg jsonmessage.JSONMessage) error {
 	if msg.Stream != "" {
 		p.onBuildOutput(msg.Stream)
+	}
+
+	if msg.Status != "" || msg.Progress != nil {
+		p.onProgress(msg)
 	}
 
 	if msg.Error != nil {
@@ -169,6 +176,7 @@ func (p *imageBuildResponseBodyParser) onBuildOutput(stream string) {
 		}
 
 		p.currentStep = newStep
+		p.currentStepIsPullStep = strings.HasPrefix(strings.ToUpper(stepName), "FROM ")
 		p.haveSeenMeaningfulOutputForCurrentStep = false
 		p.haveSeenStepFinishedLineForCurrentStep = false
 		p.onStepStarting(newStep, stepName)
@@ -203,6 +211,18 @@ func (p *imageBuildResponseBodyParser) onBuildOutput(stream string) {
 	p.onStepOutput(stream, p.currentStep)
 }
 
+func (p *imageBuildResponseBodyParser) onProgress(msg jsonmessage.JSONMessage) {
+	var progressDetail PullImageProgressDetail = nil
+
+	if msg.Progress != nil {
+		progressDetail = newPullImageProgressDetail(msg.Progress.Current, msg.Progress.Total)
+	}
+
+	progressUpdate := newPullImageProgressUpdate(msg.Status, progressDetail, msg.ID)
+
+	p.onImagePullProgress(progressUpdate, p.currentStep)
+}
+
 func (p *imageBuildResponseBodyParser) onBuildFailed(msg string) {
 	update := newBuildImageProgressUpdate(nil, nil, nil, nil, nil, newBuildImageProgressUpdate_BuildFailed(msg))
 
@@ -229,6 +249,14 @@ func (p *imageBuildResponseBodyParser) onStepFinished(currentStep int64) {
 
 func (p *imageBuildResponseBodyParser) onStepStarting(newStep int64, stepName string) {
 	update := newBuildImageProgressUpdate(nil, newBuildImageProgressUpdate_StepStarting(newStep, stepName), nil, nil, nil, nil)
+
+	defer C.FreeBuildImageProgressUpdate(update)
+
+	invokeBuildImageProgressCallback(p.onProgressUpdate, p.onProgressUpdateUserData, update)
+}
+
+func (p *imageBuildResponseBodyParser) onImagePullProgress(progressUpdate PullImageProgressUpdate, currentStep int64) {
+	update := newBuildImageProgressUpdate(nil, nil, nil, newBuildImageProgressUpdate_StepPullProgressUpdate(currentStep, progressUpdate), nil, nil)
 
 	defer C.FreeBuildImageProgressUpdate(update)
 
