@@ -24,7 +24,8 @@ public data class ImageBuildSpec(
     val buildArgs: Map<String, String> = emptyMap(),
     val imageTags: Set<String> = emptySet(),
     val alwaysPullBaseImages: Boolean = false,
-    val noCache: Boolean = false
+    val noCache: Boolean = false,
+    val targetBuildStage: String = ""
 ) {
     public class Builder(contextDirectory: Path) {
         private var spec = ImageBuildSpec(contextDirectory, contextDirectory.resolve("Dockerfile"))
@@ -68,6 +69,12 @@ public data class ImageBuildSpec(
 
         public fun withImageTags(tags: Collection<String>): Builder {
             spec = spec.copy(imageTags = spec.imageTags + tags)
+
+            return this
+        }
+
+        public fun withTargetBuildStage(targetBuildStage: String): Builder {
+            spec = spec.copy(targetBuildStage = targetBuildStage)
 
             return this
         }

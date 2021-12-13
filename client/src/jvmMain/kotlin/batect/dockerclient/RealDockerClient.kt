@@ -331,6 +331,7 @@ internal actual class RealDockerClient actual constructor(configuration: DockerC
         request.imageTags = jvm.imageTags
         request.alwaysPullBaseImages.set(jvm.alwaysPullBaseImages)
         request.noCache.set(jvm.noCache)
+        request.targetBuildStage.set(jvm.targetBuildStage)
 
         return request
     }

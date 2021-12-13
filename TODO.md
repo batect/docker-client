@@ -53,10 +53,6 @@
     * Legacy builder
     * BuildKit
     * Scenarios to cover:
-      * Dockerfile in non-standard location / with non-standard name
-      * Base image requires authentication
-      * Multi-stage build
-      * Multi-stage build with particular target stage
       * Dockerfile outside context directory
     * Features to cover:
       * Windows image build

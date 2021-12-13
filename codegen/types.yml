@@ -225,6 +225,8 @@
       type: boolean
     - name: NoCache
       type: boolean
+    - name: TargetBuildStage
+      type: string
 
 - name: BuildImageReturn
   type: struct

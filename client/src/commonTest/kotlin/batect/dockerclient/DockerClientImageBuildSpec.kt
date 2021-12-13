@@ -19,6 +19,7 @@ package batect.dockerclient
 import batect.dockerclient.io.SinkTextOutput
 import io.kotest.core.spec.style.ShouldSpec
 import io.kotest.inspectors.forAtLeastOne
+import io.kotest.inspectors.forNone
 import io.kotest.matchers.collections.shouldBeIn
 import io.kotest.matchers.collections.shouldContain
 import io.kotest.matchers.collections.shouldEndWith
@@ -313,9 +314,60 @@ class DockerClientImageBuildSpec : ShouldSpec({
         progressUpdatesReceived shouldEndWith BuildComplete(image)
     }
 
+    should("be able to build a multi-stage Linux container image").onlyIfDockerDaemonSupportsLinuxContainers {
+        val spec = ImageBuildSpec.Builder(rootTestImagesDirectory.resolve("multistage"))
+            .build()
+
+        val output = Buffer()
+        val progressUpdatesReceived = mutableListOf<ImageBuildProgressUpdate>()
+
+        val image = client.buildImage(spec, SinkTextOutput(output)) { update ->
+            progressUpdatesReceived.add(update)
+        }
+
+        val outputText = output.readUtf8().trim()
+        outputText shouldContain """^Step 1/4 : FROM alpine:3.14.2 AS other$""".toRegex(RegexOption.MULTILINE)
+        outputText shouldContain """^Step 2/4 : RUN touch /file-from-other$""".toRegex(RegexOption.MULTILINE)
+        outputText shouldContain """^Step 3/4 : FROM alpine:3.14.2$""".toRegex(RegexOption.MULTILINE)
+        outputText shouldContain """^Step 4/4 : COPY --from=other /file-from-other /received/file-from-other$""".toRegex(RegexOption.MULTILINE)
+        outputText shouldContain """^Successfully built [0-9a-f]{12}$""".toRegex(RegexOption.MULTILINE)
+
+        progressUpdatesReceived shouldContain StepStarting(1, "FROM alpine:3.14.2 AS other")
+        progressUpdatesReceived shouldContain StepStarting(2, "RUN touch /file-from-other")
+        progressUpdatesReceived shouldContain StepStarting(3, "FROM alpine:3.14.2")
+        progressUpdatesReceived shouldContain StepStarting(4, "COPY --from=other /file-from-other /received/file-from-other")
+        progressUpdatesReceived shouldEndWith BuildComplete(image)
+    }
+
+    should("be able to build a specific stage of a multi-stage Linux container image") {
+        val spec = ImageBuildSpec.Builder(rootTestImagesDirectory.resolve("multistage-with-failing-default-stage"))
+            .withTargetBuildStage("other")
+            .build()
+
+        val output = Buffer()
+        val progressUpdatesReceived = mutableListOf<ImageBuildProgressUpdate>()
+
+        val image = client.buildImage(spec, SinkTextOutput(output)) { update ->
+            progressUpdatesReceived.add(update)
+        }
+
+        val outputText = output.readUtf8().trim()
+        outputText shouldContain """^Step 1/2 : FROM alpine:3.14.2 AS other$""".toRegex(RegexOption.MULTILINE)
+        outputText shouldContain """^Step 2/2 : RUN touch /file-from-other$""".toRegex(RegexOption.MULTILINE)
+        outputText shouldContain """^Successfully built [0-9a-f]{12}$""".toRegex(RegexOption.MULTILINE)
+
+        progressUpdatesReceived shouldContain StepStarting(1, "FROM alpine:3.14.2 AS other")
+        progressUpdatesReceived shouldContain StepStarting(2, "RUN touch /file-from-other")
+
+        progressUpdatesReceived.forNone {
+            it.shouldBeTypeOf<StepStarting>()
+            it.stepName shouldBe "FROM alpine:3.14.2"
+        }
+
+        progressUpdatesReceived shouldEndWith BuildComplete(image)
+    }
+
     // TODO: proxy environment variables - CLI does some magic for this
-    // TODO: multi-stage Dockerfile with default target stage
-    // TODO: multi-stage Dockerfile with specified target stage
     // TODO: image build that fails due to command that exits with non-zero exit code
     // TODO: image build that fails due to non-existent base image
     // TODO: image build that downloads a file - report progress information

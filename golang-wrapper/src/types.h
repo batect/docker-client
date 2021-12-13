@@ -161,6 +161,7 @@ typedef struct {
     char** ImageTags;
     bool AlwaysPullBaseImages;
     bool NoCache;
+    char* TargetBuildStage;
 } BuildImageRequest;
 
 typedef struct {

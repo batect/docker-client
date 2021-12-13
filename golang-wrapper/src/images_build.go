@@ -118,6 +118,7 @@ func createImageBuildOptions(clientHandle DockerClientHandle, pathToDockerfile s
 		Tags:        fromStringArray(request.ImageTags, request.ImageTagsCount),
 		PullParent:  bool(request.AlwaysPullBaseImages),
 		NoCache:     bool(request.NoCache),
+		Target:      C.GoString(request.TargetBuildStage),
 		Remove:      true,
 		AuthConfigs: authConfigs,
 	}

@@ -326,6 +326,7 @@ func newBuildImageRequest(
     ImageTags []string,
     AlwaysPullBaseImages bool,
     NoCache bool,
+    TargetBuildStage string,
 ) BuildImageRequest {
     value := C.AllocBuildImageRequest()
     value.ContextDirectory = C.CString(ContextDirectory)
@@ -348,6 +349,7 @@ func newBuildImageRequest(
 
     value.AlwaysPullBaseImages = C.bool(AlwaysPullBaseImages)
     value.NoCache = C.bool(NoCache)
+    value.TargetBuildStage = C.CString(TargetBuildStage)
 
     return value
 }
