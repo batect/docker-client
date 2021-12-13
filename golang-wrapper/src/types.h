@@ -170,7 +170,6 @@ typedef struct {
 
 typedef struct {
     int64_t BytesUploaded;
-    int64_t TotalBytes;
 } BuildImageProgressUpdate_ImageBuildContextUploadProgress;
 
 typedef struct {

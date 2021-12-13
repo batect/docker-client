@@ -58,8 +58,6 @@
       * Multi-stage build with particular target stage
       * Dockerfile outside context directory
     * Features to cover:
-      * Progress reporting
-        * Context upload (legacy builder only)
       * Windows image build
     * Test that we can run a built image
 * Containers

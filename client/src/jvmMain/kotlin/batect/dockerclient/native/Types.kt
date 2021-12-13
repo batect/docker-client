@@ -379,7 +379,6 @@ internal class BuildImageProgressUpdate_ImageBuildContextUploadProgress(runtime:
     }
 
     val bytesUploaded = int64_t()
-    val totalBytes = int64_t()
 
     override fun close() {
         nativeAPI.FreeBuildImageProgressUpdate_ImageBuildContextUploadProgress(this)

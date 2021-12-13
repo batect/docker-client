@@ -33,6 +33,7 @@ import (
 	"github.com/docker/docker/pkg/archive"
 	"github.com/docker/docker/pkg/idtools"
 	"github.com/docker/docker/pkg/jsonmessage"
+	"github.com/docker/docker/pkg/progress"
 	"github.com/pkg/errors"
 )
 
@@ -67,6 +68,9 @@ func BuildImage(clientHandle DockerClientHandle, request *C.BuildImageRequest, o
 		ExcludePatterns: excludes,
 		ChownOpts:       &idtools.Identity{UID: 0, GID: 0},
 	})
+
+	contextUploadEventHandler := newContextUploadProgressHandler(onProgressUpdate, callbackUserData)
+	buildContext = progress.NewProgressReader(buildContext, contextUploadEventHandler, 0, "", "Sending build context to Docker daemon")
 
 	if err != nil {
 		return newBuildImageReturn(nil, toError(err))
@@ -289,6 +293,28 @@ func parseAndDisplayJSONMessagesStream(in io.Reader, out io.Writer, processor fu
 			return err
 		}
 	}
+}
+
+type contextUploadProgressHandler struct {
+	onProgressUpdate         BuildImageProgressCallback
+	onProgressUpdateUserData unsafe.Pointer
+}
+
+func newContextUploadProgressHandler(onProgressUpdate BuildImageProgressCallback, callbackUserData unsafe.Pointer) *contextUploadProgressHandler {
+	return &contextUploadProgressHandler{
+		onProgressUpdate:         onProgressUpdate,
+		onProgressUpdateUserData: callbackUserData,
+	}
+}
+
+func (h *contextUploadProgressHandler) WriteProgress(progress progress.Progress) error {
+	update := newBuildImageProgressUpdate(newBuildImageProgressUpdate_ImageBuildContextUploadProgress(progress.Current), nil, nil, nil, nil, nil)
+
+	defer C.FreeBuildImageProgressUpdate(update)
+
+	invokeBuildImageProgressCallback(h.onProgressUpdate, h.onProgressUpdateUserData, update)
+
+	return nil
 }
 
 func fromStringPairs(pairs **C.StringPair, count C.uint64_t) map[string]*string {

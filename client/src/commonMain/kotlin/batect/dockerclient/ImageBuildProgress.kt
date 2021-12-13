@@ -24,7 +24,7 @@ public sealed class ImageBuildStepProgressUpdate() : ImageBuildProgressUpdate() 
     public abstract val stepNumber: Long
 }
 
-public data class ImageBuildContextUploadProgress(val bytesUploaded: Long, val totalBytes: Long) : ImageBuildProgressUpdate()
+public data class ImageBuildContextUploadProgress(val bytesUploaded: Long) : ImageBuildProgressUpdate()
 public data class StepStarting(override val stepNumber: Long, val stepName: String) : ImageBuildStepProgressUpdate()
 public data class StepOutput(override val stepNumber: Long, val output: String) : ImageBuildStepProgressUpdate()
 public data class StepPullProgressUpdate(override val stepNumber: Long, val pullProgress: ImagePullProgressUpdate) : ImageBuildStepProgressUpdate()

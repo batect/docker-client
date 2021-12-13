@@ -281,7 +281,7 @@ internal actual class RealDockerClient actual constructor(configuration: DockerC
     }
 
     private fun ImageBuildContextUploadProgress(native: BuildImageProgressUpdate_ImageBuildContextUploadProgress): ImageBuildContextUploadProgress =
-        ImageBuildContextUploadProgress(native.bytesUploaded.get(), native.totalBytes.get())
+        ImageBuildContextUploadProgress(native.bytesUploaded.get())
 
     private fun StepStarting(native: BuildImageProgressUpdate_StepStarting): StepStarting =
         StepStarting(native.stepNumber.get(), native.stepName.get())

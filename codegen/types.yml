@@ -239,8 +239,6 @@
   fields:
     - name: BytesUploaded
       type: int64
-    - name: TotalBytes
-      type: int64
 
 - name: BuildImageProgressUpdate_StepStarting
   type: struct

@@ -69,7 +69,10 @@ class DockerClientImageBuildSpec : ShouldSpec({
             Successfully built [0-9a-f]{12}
         """.trimIndent().toRegex()
 
-        progressUpdatesReceived shouldStartWith StepStarting(1, "FROM alpine:3.14.2")
+        progressUpdatesReceived shouldStartWith listOf(
+            ImageBuildContextUploadProgress(2048),
+            StepStarting(1, "FROM alpine:3.14.2"),
+        )
 
         progressUpdatesReceived shouldEndWith listOf(
             StepFinished(1),
@@ -78,9 +81,6 @@ class DockerClientImageBuildSpec : ShouldSpec({
             StepFinished(2),
             BuildComplete(image)
         )
-
-        // TODO: assert on progress events
-        // - context upload
     }
 
     should("be able to build a Linux container image using files in the build context").onlyIfDockerDaemonSupportsLinuxContainers {
@@ -274,7 +274,8 @@ class DockerClientImageBuildSpec : ShouldSpec({
     // - Dockerfile not in context directory
     // - image tag not valid identifier
     // - invalid build arg name
-    // TODO: progress callback that throws an exception
+    // TODO: progress callback that throws an exception when processing a context upload progress event
+    // TODO: progress callback that throws an exception when processing any other build event
 })
 
 private fun DockerClient.removeBaseImagesIfPresent(dockerfile: Path) {

@@ -365,11 +365,9 @@ func newBuildImageReturn(
 
 func newBuildImageProgressUpdate_ImageBuildContextUploadProgress(
     BytesUploaded int64,
-    TotalBytes int64,
 ) BuildImageProgressUpdate_ImageBuildContextUploadProgress {
     value := C.AllocBuildImageProgressUpdate_ImageBuildContextUploadProgress()
     value.BytesUploaded = C.int64_t(BytesUploaded)
-    value.TotalBytes = C.int64_t(TotalBytes)
 
     return value
 }
