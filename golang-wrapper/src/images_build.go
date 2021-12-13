@@ -48,7 +48,6 @@ func BuildImage(clientHandle DockerClientHandle, request *C.BuildImageRequest, o
 	defer closeOutputStream(outputStreamHandle)
 
 	docker := getClient(clientHandle)
-
 	contextDir := C.GoString(request.ContextDirectory)
 	pathToDockerfile := C.GoString(request.PathToDockerfile)
 
@@ -80,16 +79,7 @@ func BuildImage(clientHandle DockerClientHandle, request *C.BuildImageRequest, o
 		return newBuildImageReturn(nil, toError(err))
 	}
 
-	opts := types.ImageBuildOptions{
-		Version:    types.BuilderV1,
-		Dockerfile: pathToDockerfile,
-		BuildArgs:  fromStringPairs(request.BuildArgs, request.BuildArgsCount),
-		Tags:       fromStringArray(request.ImageTags, request.ImageTagsCount),
-		PullParent: bool(request.AlwaysPullBaseImages),
-		NoCache:    bool(request.NoCache),
-		Remove:     true,
-	}
-
+	opts := createImageBuildOptions(clientHandle, pathToDockerfile, request)
 	response, err := docker.ImageBuild(context.Background(), buildContext, opts)
 
 	if err != nil {
@@ -104,6 +94,29 @@ func BuildImage(clientHandle DockerClientHandle, request *C.BuildImageRequest, o
 	}
 
 	return newBuildImageReturn(newImageReference(imageID), nil)
+}
+
+func createImageBuildOptions(clientHandle DockerClientHandle, pathToDockerfile string, request *C.BuildImageRequest) types.ImageBuildOptions {
+	configFile := getClientConfigFile(clientHandle)
+	creds, _ := configFile.GetAllCredentials() // The CLI ignores errors, so do we.
+	authConfigs := make(map[string]types.AuthConfig, len(creds))
+
+	for k, auth := range creds {
+		authConfigs[k] = types.AuthConfig(auth)
+	}
+
+	opts := types.ImageBuildOptions{
+		Version:     types.BuilderV1,
+		Dockerfile:  pathToDockerfile,
+		BuildArgs:   fromStringPairs(request.BuildArgs, request.BuildArgsCount),
+		Tags:        fromStringArray(request.ImageTags, request.ImageTagsCount),
+		PullParent:  bool(request.AlwaysPullBaseImages),
+		NoCache:     bool(request.NoCache),
+		Remove:      true,
+		AuthConfigs: authConfigs,
+	}
+
+	return opts
 }
 
 type imageBuildResponseBodyParser struct {

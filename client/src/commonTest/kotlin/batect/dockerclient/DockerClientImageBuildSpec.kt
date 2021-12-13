@@ -263,9 +263,23 @@ class DockerClientImageBuildSpec : ShouldSpec({
         """.trimIndent().toRegex()
     }
 
+    should("be able to build a Linux container image that uses a base image that requires authentication").onlyIfDockerDaemonSupportsLinuxContainers {
+        val spec = ImageBuildSpec.Builder(rootTestImagesDirectory.resolve("authenticated-base-image"))
+            .withBaseImageAlwaysPulled()
+            .build()
+
+        val output = Buffer()
+        val progressUpdatesReceived = mutableListOf<ImageBuildProgressUpdate>()
+
+        val image = client.buildImage(spec, SinkTextOutput(output)) { update ->
+            progressUpdatesReceived.add(update)
+        }
+
+        progressUpdatesReceived shouldEndWith BuildComplete(image)
+    }
+
     // TODO: absolute path to Dockerfile
     // TODO: .dockerignore
-    // TODO: base image that requires authentication
     // TODO: proxy environment variables - CLI does some magic for this
     // TODO: multi-stage Dockerfile with default target stage
     // TODO: multi-stage Dockerfile with specified target stage
