@@ -307,14 +307,14 @@ func parseAndDisplayJSONMessagesStream(in io.Reader, out io.Writer, processor fu
 			return err
 		}
 
+		if err := processor(msg); err != nil {
+			return err
+		}
+
 		if msg.Aux == nil {
 			if err := msg.Display(out, false); err != nil {
 				return err
 			}
-		}
-
-		if err := processor(msg); err != nil {
-			return err
 		}
 	}
 }

@@ -17,6 +17,7 @@
 package batect.dockerclient
 
 import batect.dockerclient.io.SinkTextOutput
+import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.core.spec.style.ShouldSpec
 import io.kotest.inspectors.forAtLeastOne
 import io.kotest.inspectors.forNone
@@ -28,6 +29,7 @@ import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
 import io.kotest.matchers.string.shouldContain
 import io.kotest.matchers.string.shouldMatch
+import io.kotest.matchers.string.shouldNotContain
 import io.kotest.matchers.types.shouldBeTypeOf
 import okio.Buffer
 import okio.FileSystem
@@ -367,9 +369,69 @@ class DockerClientImageBuildSpec : ShouldSpec({
         progressUpdatesReceived shouldEndWith BuildComplete(image)
     }
 
+    should("be able to build a Linux container image with a failing RUN step") {
+        val spec = ImageBuildSpec.Builder(rootTestImagesDirectory.resolve("failing-command"))
+            .build()
+
+        val output = Buffer()
+        val progressUpdatesReceived = mutableListOf<ImageBuildProgressUpdate>()
+
+        val exception = shouldThrow<ImageBuildFailedException> {
+            client.buildImage(spec, SinkTextOutput(output)) { update ->
+                progressUpdatesReceived.add(update)
+            }
+        }
+
+        exception.message shouldBe "The command '/bin/sh -c echo \"This command has failed!\" && exit 1' returned a non-zero code: 1"
+
+        val outputText = output.readUtf8().trim()
+        outputText shouldContain """^Step 1/2 : FROM alpine:3.14.2$""".toRegex(RegexOption.MULTILINE)
+
+        outputText shouldContain """
+            ^Step 2/2 : RUN echo "This command has failed!" && exit 1
+             ---> Running in [0-9a-f]{12}
+            This command has failed!$
+        """.trimIndent().toRegex(RegexOption.MULTILINE)
+
+        outputText shouldNotContain """^Successfully built [0-9a-f]{12}$""".toRegex(RegexOption.MULTILINE)
+
+        progressUpdatesReceived shouldContain StepStarting(1, "FROM alpine:3.14.2")
+        progressUpdatesReceived shouldContain StepStarting(2, "RUN echo \"This command has failed!\" && exit 1")
+        progressUpdatesReceived shouldContain BuildFailed("The command '/bin/sh -c echo \"This command has failed!\" && exit 1' returned a non-zero code: 1")
+
+        progressUpdatesReceived.forNone {
+            it.shouldBeTypeOf<BuildComplete>()
+        }
+    }
+
+    should("be able to build a Linux container image with a non-existent image") {
+        val spec = ImageBuildSpec.Builder(rootTestImagesDirectory.resolve("failing-base-image"))
+            .build()
+
+        val output = Buffer()
+        val progressUpdatesReceived = mutableListOf<ImageBuildProgressUpdate>()
+
+        val exception = shouldThrow<ImageBuildFailedException> {
+            client.buildImage(spec, SinkTextOutput(output)) { update ->
+                progressUpdatesReceived.add(update)
+            }
+        }
+
+        exception.message shouldBe "manifest for batect/this-image-does-not-exist:1.0 not found: manifest unknown: manifest unknown"
+
+        val outputText = output.readUtf8().trim()
+        outputText shouldContain """^Step 1/2 : FROM batect/this-image-does-not-exist:1.0$""".toRegex(RegexOption.MULTILINE)
+        outputText shouldNotContain """^Successfully built [0-9a-f]{12}$""".toRegex(RegexOption.MULTILINE)
+
+        progressUpdatesReceived shouldContain StepStarting(1, "FROM batect/this-image-does-not-exist:1.0")
+        progressUpdatesReceived shouldContain BuildFailed("manifest for batect/this-image-does-not-exist:1.0 not found: manifest unknown: manifest unknown")
+
+        progressUpdatesReceived.forNone {
+            it.shouldBeTypeOf<BuildComplete>()
+        }
+    }
+
     // TODO: proxy environment variables - CLI does some magic for this
-    // TODO: image build that fails due to command that exits with non-zero exit code
-    // TODO: image build that fails due to non-existent base image
     // TODO: image build that downloads a file - report progress information
     // TODO: handle invalid values
     // - context directory does not exist
