@@ -343,7 +343,7 @@ class DockerClientImageBuildSpec : ShouldSpec({
         progressUpdatesReceived shouldEndWith BuildComplete(image)
     }
 
-    should("be able to build a specific stage of a multi-stage Linux container image") {
+    should("be able to build a specific stage of a multi-stage Linux container image").onlyIfDockerDaemonSupportsLinuxContainers {
         val spec = ImageBuildSpec.Builder(rootTestImagesDirectory.resolve("multistage-with-failing-default-stage"))
             .withTargetBuildStage("other")
             .build()
@@ -371,7 +371,7 @@ class DockerClientImageBuildSpec : ShouldSpec({
         progressUpdatesReceived shouldEndWith BuildComplete(image)
     }
 
-    should("be able to build a Linux container image with a failing RUN step") {
+    should("be able to build a Linux container image with a failing RUN step").onlyIfDockerDaemonSupportsLinuxContainers {
         val spec = ImageBuildSpec.Builder(rootTestImagesDirectory.resolve("failing-command"))
             .build()
 
@@ -406,7 +406,7 @@ class DockerClientImageBuildSpec : ShouldSpec({
         }
     }
 
-    should("be able to build a Linux container image with a non-existent image") {
+    should("be able to build a Linux container image with a non-existent image").onlyIfDockerDaemonSupportsLinuxContainers {
         val spec = ImageBuildSpec.Builder(rootTestImagesDirectory.resolve("failing-base-image"))
             .build()
 
@@ -440,7 +440,7 @@ class DockerClientImageBuildSpec : ShouldSpec({
         }
     }
 
-    should("be able to build a Linux container image that downloads a file and report download progress") {
+    should("be able to build a Linux container image that downloads a file and report download progress").onlyIfDockerDaemonSupportsLinuxContainers {
         val spec = ImageBuildSpec.Builder(rootTestImagesDirectory.resolve("file-download"))
             .withNoBuildCache()
             .build()
