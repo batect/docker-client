@@ -341,10 +341,7 @@ private fun ImageBuildProgressUpdate(native: BuildImageProgressUpdate): ImageBui
 }
 
 private fun ImageBuildContextUploadProgress(native: BuildImageProgressUpdate_ImageBuildContextUploadProgress): ImageBuildContextUploadProgress =
-    ImageBuildContextUploadProgress(
-        native.BytesUploaded,
-        native.TotalBytes
-    )
+    ImageBuildContextUploadProgress(native.BytesUploaded)
 
 private fun StepStarting(native: BuildImageProgressUpdate_StepStarting): StepStarting =
     StepStarting(
