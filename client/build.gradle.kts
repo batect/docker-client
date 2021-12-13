@@ -90,12 +90,8 @@ kotlin {
             resources.srcDir(jvmLibsDir)
         }
 
-        val posixMain by creating {
-            dependsOn(nativeMain)
-        }
-
         val linuxMain by creating {
-            dependsOn(posixMain)
+            dependsOn(nativeMain)
         }
 
         val linuxX64Main by getting {
@@ -103,7 +99,7 @@ kotlin {
         }
 
         val macosMain by creating {
-            dependsOn(posixMain)
+            dependsOn(nativeMain)
         }
 
         val macosX64Main by getting {
@@ -140,12 +136,8 @@ kotlin {
             dependsOn(commonTest)
         }
 
-        val posixTest by creating {
-            dependsOn(nativeTest)
-        }
-
         val linuxTest by creating {
-            dependsOn(posixTest)
+            dependsOn(nativeTest)
         }
 
         val linuxX64Test by getting {
@@ -161,7 +153,7 @@ kotlin {
         }
 
         val macosTest by creating {
-            dependsOn(posixTest)
+            dependsOn(nativeTest)
         }
 
         val macosX64Test by getting {
