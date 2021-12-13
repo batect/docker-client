@@ -70,8 +70,8 @@ jobs:
         uses: actions/cache@v2.1.7
         with:
           path: ~/.konan
-          key: kotlin-native-${{ runner.os }}-${{ hashFiles('**/*.gradle.kts') }}
-          restore-keys: kotlin-native-${{ runner.os }}
+          key: kotlin-native-wrapper-${{ runner.os }}-${{ hashFiles('**/*.gradle.kts') }}
+          restore-keys: kotlin-native-wrapper-${{ runner.os }}
 
       - name: Build and test
         run: ./gradlew --parallel golang-wrapper:buildSharedLibs
@@ -163,8 +163,8 @@ jobs:
         uses: actions/cache@v2.1.7
         with:
           path: ~/.gradle/caches
-          key: gradle-kotlin-packages-${{ runner.os }}-${{ hashFiles('**/*.gradle.kts') }}
-          restore-keys: gradle-kotlin-packages-${{ runner.os }}
+          key: gradle-packages-${{ runner.os }}-${{ hashFiles('**/*.gradle.kts') }}
+          restore-keys: gradle-packages-${{ runner.os }}
 
       - name: Cache Kotlin/Native dependencies
         id: cache-kotlin-native
