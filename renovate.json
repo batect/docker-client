@@ -79,6 +79,11 @@
                 "^github.com/docker/docker",
                 "^github.com/moby/moby"
             ]
+        },
+        {
+            "matchManagers": ["docker"],
+            "matchPackageNames": ["batect/this-image-does-not-exist"],
+            "enabled": false
         }
     ]
 }
