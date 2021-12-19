@@ -46,6 +46,7 @@
 
 * Check that Golang code can return an empty list (eg. listing all volumes returns no volumes)
 * Autogenerate struct accessors for arrays in structs (eg. BuildImageRequest.BuildArgs)
+* Pass Go types (eg. strings) to callback methods without translation? Should be allowed by cgo's pointer rules and would save some memory copying
 
 * Images
   * Build
@@ -66,4 +67,5 @@
   * Stream events (for waiting for health check)
   * Inspect (for getting last health check result)
 * Exec
+  * Create
   * Run
