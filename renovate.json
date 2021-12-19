@@ -81,7 +81,7 @@
             ]
         },
         {
-            "matchManagers": ["docker"],
+            "matchDatasources": ["docker"],
             "matchPackageNames": ["batect/this-image-does-not-exist"],
             "enabled": false
         }
