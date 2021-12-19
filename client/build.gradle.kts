@@ -282,7 +282,7 @@ tasks.withType<AbstractTestTask>().configureEach {
     testLogging {
         showExceptions = true
         showStandardStreams = true
-        events = setOf(TestLogEvent.FAILED, TestLogEvent.SKIPPED)
+        events = setOf(TestLogEvent.FAILED, TestLogEvent.SKIPPED, TestLogEvent.STANDARD_ERROR, TestLogEvent.STANDARD_OUT)
         exceptionFormat = TestExceptionFormat.FULL
     }
 }
