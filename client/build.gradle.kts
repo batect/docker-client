@@ -84,7 +84,7 @@ kotlin {
             dependencies {
                 implementation("com.github.jnr:jnr-ffi:2.2.10")
                 implementation("com.github.jnr:jnr-posix:3.1.12")
-                implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.6.0-RC")
+                implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.6.0-RC3")
             }
 
             resources.srcDir(jvmLibsDir)
