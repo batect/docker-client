@@ -53,8 +53,7 @@
 
 * Images
   * Build
-    * Stream output while build is running, not just when build returns (see TODO in native buildImage())
-    * Legacy builder
+    * Kotlin/Native: Stream output while build is running, not just when build returns (see TODO in native buildImage())
     * BuildKit
     * Features to cover:
       * Windows image build

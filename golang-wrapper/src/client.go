@@ -36,10 +36,10 @@ import (
 
 //nolint:gochecknoglobals
 var (
-	clients               = map[uint64]*client.Client{}
-	configFilesForClients = map[uint64]*configfile.ConfigFile{}
-	clientsLock           = sync.RWMutex{}
-	nextClientIndex uint64 = 0
+	clients                      = map[uint64]*client.Client{}
+	configFilesForClients        = map[uint64]*configfile.ConfigFile{}
+	clientsLock                  = sync.RWMutex{}
+	nextClientIndex       uint64 = 0
 )
 
 //export CreateClient
@@ -96,7 +96,7 @@ func CreateClient(cfg *C.ClientConfiguration) CreateClientReturn {
 	configFilesForClients[clientIndex] = configFile
 	nextClientIndex++
 
-	return newCreateClientReturn(DockerClientHandle(clientIndex) , nil)
+	return newCreateClientReturn(DockerClientHandle(clientIndex), nil)
 }
 
 // The Docker client library does not expose a version of WithTLSClientConfig that allows us to set
@@ -185,4 +185,22 @@ func loadConfigFile(configPath string) (*configfile.ConfigFile, error) {
 	}
 
 	return configFile, nil
+}
+
+//export SetClientProxySettingsForTest
+func SetClientProxySettingsForTest(clientHandle DockerClientHandle) {
+	docker := getClient(clientHandle)
+	configFile := getClientConfigFile(clientHandle)
+	host := docker.DaemonHost()
+
+	if configFile.Proxies == nil {
+		configFile.Proxies = map[string]configfile.ProxyConfig{}
+	}
+
+	configFile.Proxies[host] = configfile.ProxyConfig{
+		HTTPProxy:  "https://http-proxy",
+		HTTPSProxy: "https://https-proxy",
+		NoProxy:    "https://no-proxy",
+		FTPProxy:   "https://ftp-proxy",
+	}
 }

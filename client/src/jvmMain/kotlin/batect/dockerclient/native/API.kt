@@ -27,6 +27,7 @@ import jnr.ffi.annotations.In
 internal interface API {
     fun CreateClient(@In cfg: ClientConfiguration): CreateClientReturn?
     fun DisposeClient(@In clientHandle: Long): Error?
+    fun SetClientProxySettingsForTest(@In clientHandle: Long)
     fun Ping(@In clientHandle: Long): PingReturn?
     fun GetDaemonVersionInformation(@In clientHandle: Long): GetDaemonVersionInformationReturn?
     fun DeleteImage(@In clientHandle: Long, @In ref: kotlin.String, @In force: Boolean): Error?

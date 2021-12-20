@@ -590,7 +590,28 @@ class DockerClientImageBuildSpec : ShouldSpec({
         exceptionThrownByPullMethod.cause shouldBe exceptionThrownByCallbackHandler
     }
 
-    // TODO: proxy environment variables - CLI does some magic for this
+    should("propagate configured proxy settings to the build").onlyIfDockerDaemonSupportsLinuxContainers {
+        setClientProxySettingsForTest(client)
+
+        val spec = ImageBuildSpec.Builder(rootTestImagesDirectory.resolve("proxy-reporter"))
+            .withNoBuildCache()
+            .build()
+
+        val output = Buffer()
+
+        client.buildImage(spec, SinkTextOutput(output))
+
+        val outputText = output.readUtf8().trim()
+
+        outputText shouldContain "Value of FTP_PROXY is https://ftp-proxy"
+        outputText shouldContain "Value of ftp_proxy is https://ftp-proxy"
+        outputText shouldContain "Value of HTTPS_PROXY is https://https-proxy"
+        outputText shouldContain "Value of https_proxy is https://https-proxy"
+        outputText shouldContain "Value of HTTP_PROXY is https://http-proxy"
+        outputText shouldContain "Value of http_proxy is https://http-proxy"
+        outputText shouldContain "Value of NO_PROXY is https://no-proxy"
+        outputText shouldContain "Value of no_proxy is https://no-proxy"
+    }
 })
 
 private fun DockerClient.removeBaseImagesIfPresent(dockerfile: Path) {
@@ -606,3 +627,5 @@ private fun readFileContents(path: Path): String =
     FileSystem.SYSTEM.read(path) {
         return readUtf8()
     }
+
+internal expect fun setClientProxySettingsForTest(client: DockerClient)

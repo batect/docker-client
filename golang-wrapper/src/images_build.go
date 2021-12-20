@@ -109,6 +109,7 @@ func BuildImage(clientHandle DockerClientHandle, request *C.BuildImageRequest, o
 }
 
 func createImageBuildOptions(clientHandle DockerClientHandle, pathToDockerfile string, request *C.BuildImageRequest) types.ImageBuildOptions {
+	docker := getClient(clientHandle)
 	configFile := getClientConfigFile(clientHandle)
 	creds, _ := configFile.GetAllCredentials() // The CLI ignores errors, so do we.
 	authConfigs := make(map[string]types.AuthConfig, len(creds))
@@ -120,7 +121,7 @@ func createImageBuildOptions(clientHandle DockerClientHandle, pathToDockerfile s
 	opts := types.ImageBuildOptions{
 		Version:     types.BuilderV1,
 		Dockerfile:  pathToDockerfile,
-		BuildArgs:   fromStringPairs(request.BuildArgs, request.BuildArgsCount),
+		BuildArgs:   configFile.ParseProxyConfig(docker.DaemonHost(), fromStringPairs(request.BuildArgs, request.BuildArgsCount)),
 		Tags:        fromStringArray(request.ImageTags, request.ImageTagsCount),
 		PullParent:  bool(request.AlwaysPullBaseImages),
 		NoCache:     bool(request.NoCache),

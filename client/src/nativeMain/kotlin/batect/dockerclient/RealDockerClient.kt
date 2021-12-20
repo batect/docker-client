@@ -66,7 +66,9 @@ import kotlinx.cinterop.staticCFunction
 import kotlinx.cinterop.toKString
 
 internal actual class RealDockerClient actual constructor(configuration: DockerClientConfiguration) : DockerClient, AutoCloseable {
-    private val clientHandle: DockerClientHandle = createClient(configuration)
+    // This property is internally visible so that tests can get this value to establish scenarios
+    // by communicating with the Golang wrapper.
+    internal val clientHandle: DockerClientHandle = createClient(configuration)
 
     private fun createClient(configuration: DockerClientConfiguration): DockerClientHandle {
         memScoped {
