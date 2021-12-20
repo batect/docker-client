@@ -12,10 +12,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+package replacements
+
 // This file is based on github.com/docker/docker/pkg/progress/progressreader.go,
 // but correctly propagates errors from progress.Output.WriteProgress() in updateProgress below.
-
-package replacements
 
 import (
 	"io"
