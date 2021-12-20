@@ -33,6 +33,9 @@
 * Remove use of `allprojects` in root `build.gradle.kts` - use a custom plugin applied to all projects instead
   * Then should be able to remove use of `afterEvaluate` in `golang-wrapper/build.gradle.kts`
 * Re-enable context upload progress reporting on Kotlin/Native once new memory model can be used
+* Fix broken publication of library
+  * Disabled due to Okio not supporting hierarchical project structure - https://github.com/square/okio/pull/980 needs bug fixes in Kotlin 1.6.20
+  * See compatibility table at https://kotlinlang.org/docs/migrating-multiplatform-project-to-14.html#migrate-to-the-hierarchical-project-structure
 
 # APIs
 
