@@ -126,6 +126,7 @@ func createImageBuildOptions(clientHandle DockerClientHandle, pathToDockerfile s
 		NoCache:     bool(request.NoCache),
 		Target:      C.GoString(request.TargetBuildStage),
 		Remove:      true,
+		ForceRemove: true,
 		AuthConfigs: authConfigs,
 	}
 
