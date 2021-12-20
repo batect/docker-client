@@ -31,7 +31,7 @@ import org.jetbrains.kotlin.konan.target.KonanTarget
 
 plugins {
     kotlin("multiplatform") version "1.6.0"
-    id("io.kotest.multiplatform") version "5.0.2"
+    id("io.kotest.multiplatform") version "5.0.3"
     id("com.diffplug.spotless")
     `maven-publish`
     signing
@@ -120,15 +120,15 @@ kotlin {
 
         val commonTest by getting {
             dependencies {
-                implementation("io.kotest:kotest-assertions-core:5.0.2")
-                implementation("io.kotest:kotest-framework-api:5.0.2")
-                implementation("io.kotest:kotest-framework-engine:5.0.2")
+                implementation("io.kotest:kotest-assertions-core:5.0.3")
+                implementation("io.kotest:kotest-framework-api:5.0.3")
+                implementation("io.kotest:kotest-framework-engine:5.0.3")
             }
         }
 
         val jvmTest by getting {
             dependencies {
-                implementation("io.kotest:kotest-runner-junit5:5.0.2")
+                implementation("io.kotest:kotest-runner-junit5:5.0.3")
             }
         }
 
