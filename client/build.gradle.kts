@@ -30,7 +30,7 @@ import org.jetbrains.kotlin.konan.target.Family
 import org.jetbrains.kotlin.konan.target.KonanTarget
 
 plugins {
-    kotlin("multiplatform") version "1.6.0"
+    kotlin("multiplatform") version "1.6.10"
     id("io.kotest.multiplatform") version "5.0.3"
     id("com.diffplug.spotless")
     `maven-publish`
