@@ -35,6 +35,8 @@ import (
 	"github.com/docker/docker/pkg/jsonmessage"
 	"github.com/docker/docker/pkg/progress"
 	"github.com/pkg/errors"
+
+	"github.com/batect/docker-client/golang-wrapper/src/replacements"
 )
 
 var buildStepLineRegex = regexp.MustCompile(`^Step (\d+)/(\d+) : (.*)$`)
@@ -74,21 +76,25 @@ func BuildImage(clientHandle DockerClientHandle, request *C.BuildImageRequest, o
 		ChownOpts:       &idtools.Identity{UID: 0, GID: 0},
 	})
 
+	if err != nil {
+		return newBuildImageReturn(nil, toError(err))
+	}
+
 	// This is only required while we're using the v1 Kotlin/Native memory model (as this invokes the callback from another thread).
 	// Once we're using the new memory model, we can just always report context upload progress events.
 	if bool(reportContextUploadProgressEvents) {
 		contextUploadEventHandler := newContextUploadProgressHandler(onProgressUpdate, callbackUserData)
-		buildContext = progress.NewProgressReader(buildContext, contextUploadEventHandler, 0, "", "Sending build context to Docker daemon")
-	}
-
-	if err != nil {
-		return newBuildImageReturn(nil, toError(err))
+		buildContext = replacements.NewProgressReader(buildContext, contextUploadEventHandler, 0, "", "Sending build context to Docker daemon")
 	}
 
 	opts := createImageBuildOptions(clientHandle, pathToDockerfile, request)
 	response, err := docker.ImageBuild(context.Background(), buildContext, opts)
 
 	if err != nil {
+		if errors.Is(err, ErrProgressCallbackFailed) {
+			return newBuildImageReturn(nil, toError(ErrProgressCallbackFailed))
+		}
+
 		return newBuildImageReturn(nil, toError(err))
 	}
 
@@ -270,7 +276,7 @@ func (p *imageBuildResponseBodyParser) onBuildFailed(msg string) error {
 	defer C.FreeBuildImageProgressUpdate(update)
 
 	if !invokeBuildImageProgressCallback(p.onProgressUpdate, p.onProgressUpdateUserData, update) {
-		return ProgressCallbackFailedError{}
+		return ErrProgressCallbackFailed
 	}
 
 	return nil
@@ -282,7 +288,7 @@ func (p *imageBuildResponseBodyParser) onStepOutput(output string, currentStep i
 	defer C.FreeBuildImageProgressUpdate(update)
 
 	if !invokeBuildImageProgressCallback(p.onProgressUpdate, p.onProgressUpdateUserData, update) {
-		return ProgressCallbackFailedError{}
+		return ErrProgressCallbackFailed
 	}
 
 	return nil
@@ -294,7 +300,7 @@ func (p *imageBuildResponseBodyParser) onStepFinished(currentStep int64) error {
 	defer C.FreeBuildImageProgressUpdate(update)
 
 	if !invokeBuildImageProgressCallback(p.onProgressUpdate, p.onProgressUpdateUserData, update) {
-		return ProgressCallbackFailedError{}
+		return ErrProgressCallbackFailed
 	}
 
 	return nil
@@ -306,7 +312,7 @@ func (p *imageBuildResponseBodyParser) onStepStarting(newStep int64, stepName st
 	defer C.FreeBuildImageProgressUpdate(update)
 
 	if !invokeBuildImageProgressCallback(p.onProgressUpdate, p.onProgressUpdateUserData, update) {
-		return ProgressCallbackFailedError{}
+		return ErrProgressCallbackFailed
 	}
 
 	return nil
@@ -318,7 +324,7 @@ func (p *imageBuildResponseBodyParser) onImagePullProgress(progressUpdate PullIm
 	defer C.FreeBuildImageProgressUpdate(update)
 
 	if !invokeBuildImageProgressCallback(p.onProgressUpdate, p.onProgressUpdateUserData, update) {
-		return ProgressCallbackFailedError{}
+		return ErrProgressCallbackFailed
 	}
 
 	return nil
@@ -330,7 +336,7 @@ func (p *imageBuildResponseBodyParser) onDownloadProgress(currentStep int64, dow
 	defer C.FreeBuildImageProgressUpdate(update)
 
 	if !invokeBuildImageProgressCallback(p.onProgressUpdate, p.onProgressUpdateUserData, update) {
-		return ProgressCallbackFailedError{}
+		return ErrProgressCallbackFailed
 	}
 
 	return nil
@@ -381,7 +387,9 @@ func (h *contextUploadProgressHandler) WriteProgress(progress progress.Progress)
 
 	defer C.FreeBuildImageProgressUpdate(update)
 
-	invokeBuildImageProgressCallback(h.onProgressUpdate, h.onProgressUpdateUserData, update)
+	if !invokeBuildImageProgressCallback(h.onProgressUpdate, h.onProgressUpdateUserData, update) {
+		return ErrProgressCallbackFailed
+	}
 
 	return nil
 }

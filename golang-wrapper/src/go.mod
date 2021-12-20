@@ -1,4 +1,4 @@
-module github.com/batect/docker-client/docker-client-wrapper
+module github.com/batect/docker-client/golang-wrapper/src
 
 go 1.17
 

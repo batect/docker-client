@@ -568,8 +568,29 @@ class DockerClientImageBuildSpec : ShouldSpec({
         exceptionThrownByPullMethod.cause shouldBe exceptionThrownByCallbackHandler
     }
 
+    should("gracefully handle a progress callback that throws an exception while uploading build context").onlyIfDockerDaemonSupportsLinuxContainersAnd(
+        multithreadingSupportedOnThisPlatform // FIXME: context upload progress reporting is not supported on Kotlin/Native yet.
+    ) {
+        val exceptionThrownByCallbackHandler = RuntimeException("This is an exception from the callback handler")
+
+        val exceptionThrownByPullMethod = shouldThrow<ImageBuildFailedException> {
+            val spec = ImageBuildSpec.Builder(rootTestImagesDirectory.resolve("basic-image"))
+                .build()
+
+            val output = Buffer()
+
+            client.buildImage(spec, SinkTextOutput(output)) { update ->
+                if (update is ImageBuildContextUploadProgress) {
+                    throw exceptionThrownByCallbackHandler
+                }
+            }
+        }
+
+        exceptionThrownByPullMethod.message shouldBe "Image build progress receiver threw an exception: $exceptionThrownByCallbackHandler"
+        exceptionThrownByPullMethod.cause shouldBe exceptionThrownByCallbackHandler
+    }
+
     // TODO: proxy environment variables - CLI does some magic for this
-    // TODO: progress callback that throws an exception when processing a context upload progress event
 })
 
 private fun DockerClient.removeBaseImagesIfPresent(dockerfile: Path) {
