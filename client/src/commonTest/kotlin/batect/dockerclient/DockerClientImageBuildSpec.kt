@@ -548,9 +548,28 @@ class DockerClientImageBuildSpec : ShouldSpec({
         exception.message shouldBe "Image tag '_nonsense' is not a valid Docker image tag: invalid reference format"
     }
 
+    should("gracefully handle a progress callback that throws an exception while building an image").onlyIfDockerDaemonSupportsLinuxContainers {
+        val exceptionThrownByCallbackHandler = RuntimeException("This is an exception from the callback handler")
+
+        val exceptionThrownByPullMethod = shouldThrow<ImageBuildFailedException> {
+            val spec = ImageBuildSpec.Builder(rootTestImagesDirectory.resolve("basic-image"))
+                .build()
+
+            val output = Buffer()
+
+            client.buildImage(spec, SinkTextOutput(output)) { update ->
+                if (update !is ImageBuildContextUploadProgress) {
+                    throw exceptionThrownByCallbackHandler
+                }
+            }
+        }
+
+        exceptionThrownByPullMethod.message shouldBe "Image build progress receiver threw an exception: $exceptionThrownByCallbackHandler"
+        exceptionThrownByPullMethod.cause shouldBe exceptionThrownByCallbackHandler
+    }
+
     // TODO: proxy environment variables - CLI does some magic for this
     // TODO: progress callback that throws an exception when processing a context upload progress event
-    // TODO: progress callback that throws an exception when processing any other build event
 })
 
 private fun DockerClient.removeBaseImagesIfPresent(dockerfile: Path) {

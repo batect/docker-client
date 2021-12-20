@@ -255,6 +255,12 @@ internal actual class RealDockerClient actual constructor(configuration: DockerC
                         stream.run() // FIXME: This really should be done in parallel with the BuildImage call above, but Kotlin/Native does not yet support multithreaded coroutines
 
                         if (ret.pointed.Error != null) {
+                            val errorType = ret.pointed.Error!!.pointed.Type!!.toKString()
+
+                            if (errorType == "main.ProgressCallbackFailedError") {
+                                throw ImageBuildFailedException("Image build progress receiver threw an exception: ${callbackState.exceptionThrown}", callbackState.exceptionThrown, errorType)
+                            }
+
                             throw ImageBuildFailedException(ret.pointed.Error!!.pointed)
                         }
 

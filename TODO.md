@@ -56,8 +56,6 @@
     * Stream output while build is running, not just when build returns (see TODO in native buildImage())
     * Legacy builder
     * BuildKit
-    * Scenarios to cover:
-      * Dockerfile outside context directory
     * Features to cover:
       * Windows image build
     * Test that we can run a built image

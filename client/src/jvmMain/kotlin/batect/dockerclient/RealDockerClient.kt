@@ -233,7 +233,7 @@ internal actual class RealDockerClient actual constructor(configuration: DockerC
                     if (ret.error != null) {
                         if (ret.error!!.type.get() == "main.ProgressCallbackFailedError") {
                             throw ImageBuildFailedException(
-                                "Image pull progress receiver threw an exception: $exceptionThrownInCallback",
+                                "Image build progress receiver threw an exception: $exceptionThrownInCallback",
                                 exceptionThrownInCallback
                             )
                         }
