@@ -69,7 +69,7 @@
         {
             "groupName": "Kotest",
             "matchManagers": ["gradle-lite"],
-            "matchPackagePatterns": ["^io\\.kotest:"]
+            "matchPackagePatterns": ["^io\\.kotest:", "^io\\.kotest\\."]
         },
         {
             "groupName": "Docker",
