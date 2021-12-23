@@ -28,7 +28,7 @@ repositories {
 
 dependencies {
     implementation(platform("org.jetbrains.kotlin:kotlin-bom"))
-    implementation("org.jetbrains.kotlinx:kotlinx-serialization-core:1.3.1")
+    implementation("org.jetbrains.kotlinx:kotlinx-serialization-core:1.3.2")
     implementation(gradleApi())
     implementation(gradleKotlinDsl())
     implementation("com.github.jnr:jnr-posix:3.1.14")
