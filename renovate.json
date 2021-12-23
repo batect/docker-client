@@ -44,6 +44,16 @@
             ],
             "datasourceTemplate": "github-tags",
             "depNameTemplate": "golang/go"
+        },
+        {
+            "fileMatch": [
+                ".gradle.kts$"
+            ],
+            "matchStrings": [
+                "val ktlintVersion = \"(?<currentValue>[\\d.]*?)\""
+            ],
+            "datasourceTemplate": "maven",
+            "depNameTemplate": "com.pinterest:ktlint"
         }
     ],
     "packageRules": [
