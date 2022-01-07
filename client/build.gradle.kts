@@ -83,7 +83,7 @@ kotlin {
         val jvmMain by getting {
             dependencies {
                 implementation("com.github.jnr:jnr-ffi:2.2.11")
-                implementation("com.github.jnr:jnr-posix:3.1.12")
+                implementation("com.github.jnr:jnr-posix:3.1.15")
                 implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.6.0")
             }
 
