@@ -32,7 +32,7 @@ dependencies {
     implementation(gradleApi())
     implementation(gradleKotlinDsl())
     implementation("com.github.jnr:jnr-posix:3.1.14")
-    implementation("com.charleskorn.kaml:kaml:0.38.0")
+    implementation("com.charleskorn.kaml:kaml:0.39.0")
 }
 
 java {
