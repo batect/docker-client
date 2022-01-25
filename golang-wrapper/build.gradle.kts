@@ -108,7 +108,7 @@ spotless {
 }
 
 val lint = tasks.register<GolangLint>("lint") {
-    golangCILintVersion.set("v1.43.0")
+    golangCILintVersion.set("v1.44.0")
 
     dependsOn(generateTypes)
 
