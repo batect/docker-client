@@ -14,7 +14,8 @@
   * Or at least connect it to same cache volumes used by Golang build if using Docker for Golang builds
 * Use Gradle version catalogs to manage versions
 * Test more environments:
-  * Podman
+  * Podman?
+  * Colima?
 * Bump minimum Docker client version to something more recent?
 * Migrate integration tests from main Batect codebase
 * Remove "work in progress" tag from repo description
@@ -25,8 +26,8 @@
   * https://awsteele.com/blog/2021/10/17/cgo-for-arm64-lambda-functions.html
   * https://dev.to/kristoff/zig-makes-go-cross-compilation-just-work-29ho
   * https://github.com/marketplace/actions/setup-zig
-  * With Zig `master` as of 2021-10-25, things work but require removing debug information from Golang binaries (`-ldflags` option to `go build` in `GolangBuild`). May be worth waiting for the next release of Zig after 0.8.1 (latest as at 2021-10-25).
   * If implemented: need to add a check that the version of Zig in use matches the expected version (similar to check for Golang version).
+  * Works with Zig 0.9.0, but requires https://github.com/golang/go/issues/43078 to remove need for wrapper scripts
 * Run tests with memory leak detector
 * Linter to catch when memory is not freed (eg. Golang code allocates struct that is used as callback parameter)
 * Clean task for Golang wrapper project
@@ -42,6 +43,7 @@
 * Client configuration
   * Add tests to verify that client configuration is actually applied - see TODO in DockerClientBuilderSpec
   * Throw exceptions early (eg. if files provided don't exist)
+  * Support for Docker config contexts
 * Timeouts for calls?
 * Cancellation for calls
   * Make all methods coroutines? https://kotlin.github.io/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines/suspend-cancellable-coroutine.html
@@ -49,7 +51,6 @@
 
 * Check that Golang code can return an empty list (eg. listing all volumes returns no volumes)
 * Autogenerate struct accessors for arrays in structs (eg. BuildImageRequest.BuildArgs)
-* Pass Go types (eg. strings) to callback methods without translation? Should be allowed by cgo's pointer rules and would save some memory copying
 
 * Images
   * Build
