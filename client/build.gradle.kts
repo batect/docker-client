@@ -22,9 +22,9 @@ import batect.dockerclient.buildtools.codegen.GenerateKotlinJVMTypes
 import org.gradle.api.tasks.testing.logging.TestExceptionFormat
 import org.gradle.api.tasks.testing.logging.TestLogEvent
 import org.jetbrains.kotlin.gradle.dsl.ExplicitApiMode
-import org.jetbrains.kotlin.gradle.plugin.KotlinPlatformType
 import org.jetbrains.kotlin.gradle.plugin.KotlinTarget
 import org.jetbrains.kotlin.gradle.plugin.mpp.KotlinNativeCompilation
+import org.jetbrains.kotlin.gradle.plugin.mpp.KotlinNativeTarget
 import org.jetbrains.kotlin.gradle.targets.native.tasks.KotlinNativeHostTest
 import org.jetbrains.kotlin.konan.target.Family
 import org.jetbrains.kotlin.konan.target.KonanTarget
@@ -172,29 +172,24 @@ kotlin {
         }
     }
 
-    targets.all {
+    targets.withType<KotlinNativeTarget>() {
         val target = this
 
-        if (target.platformType == KotlinPlatformType.native) {
-            addNativeCommonSourceSetDependencies()
+        addNativeCommonSourceSetDependencies()
 
-            target.compilations.named<KotlinNativeCompilation>("main") {
-                addDockerClientWrapperCinterop()
-            }
+        target.compilations.named<KotlinNativeCompilation>("main") {
+            addDockerClientWrapperCinterop()
+        }
 
-            val nativeTarget = target as org.jetbrains.kotlin.gradle.plugin.mpp.KotlinNativeTarget
-            val konanTarget = nativeTarget.konanTarget
-
-            setOf(
-                "compileKotlin${nativeTarget.name.capitalize()}",
-                "compileTestKotlin${nativeTarget.name.capitalize()}",
-                "${nativeTarget.name}MainKlibrary",
-                "${nativeTarget.name}TestKlibrary",
-                "linkDebugTest${nativeTarget.name.capitalize()}",
-            ).forEach { taskName ->
-                tasks.named(taskName) {
-                    onlyIf { konanTarget.isSupportedOnThisMachine }
-                }
+        setOf(
+            "compileKotlin${target.name.capitalize()}",
+            "compileTestKotlin${target.name.capitalize()}",
+            "${target.name}MainKlibrary",
+            "${target.name}TestKlibrary",
+            "linkDebugTest${target.name.capitalize()}",
+        ).forEach { taskName ->
+            tasks.named(taskName) {
+                onlyIf { target.konanTarget.isSupportedOnThisMachine }
             }
         }
     }
