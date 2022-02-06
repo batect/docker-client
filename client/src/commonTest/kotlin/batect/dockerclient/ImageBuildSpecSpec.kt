@@ -16,6 +16,7 @@
 
 package batect.dockerclient
 
+import io.kotest.assertions.throwables.shouldNotThrowAny
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.core.spec.style.ShouldSpec
 import io.kotest.matchers.shouldBe
@@ -33,6 +34,12 @@ class ImageBuildSpecSpec : ShouldSpec({
         exception.message shouldBe "Context directory 'this-does-not-exist' does not exist."
     }
 
+    should("not throw an exception if the provided context directory does exist") {
+        shouldNotThrowAny {
+            ImageBuildSpec.Builder(rootTestImagesDirectory.resolve("basic-image")).build()
+        }
+    }
+
     should("throw an exception when the provided Dockerfile does not exist") {
         val contextDirectory = rootTestImagesDirectory.resolve("basic-image")
         val dockerfilePath = contextDirectory.resolve("my-other-dockerfile")
@@ -44,6 +51,17 @@ class ImageBuildSpecSpec : ShouldSpec({
         }
 
         exception.message shouldBe "Dockerfile '$dockerfilePath' does not exist."
+    }
+
+    should("not throw an exception if the provided Dockerfile does exist") {
+        val contextDirectory = rootTestImagesDirectory.resolve("non-default-dockerfile")
+        val dockerfilePath = contextDirectory.resolve("subdirectory").resolve("my-dockerfile")
+
+        shouldNotThrowAny {
+            ImageBuildSpec.Builder(contextDirectory)
+                .withDockerfile(dockerfilePath)
+                .build()
+        }
     }
 
     should("throw an exception when the default Dockerfile does not exist in the provided context directory") {
