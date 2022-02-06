@@ -16,9 +16,16 @@
 
 package batect.dockerclient
 
-public data class PingResponse(
-    val apiVersion: String,
-    val osType: String,
-    val experimental: Boolean,
-    val builderVersion: BuilderVersion
-)
+public enum class BuilderVersion {
+    Legacy,
+    BuildKit;
+
+    internal companion object {
+        internal fun fromAPI(value: String): BuilderVersion =
+            when (value) {
+                "", "1" -> Legacy
+                "2" -> BuildKit
+                else -> throw IllegalArgumentException("Unknown builder version value '$value'")
+            }
+    }
+}
