@@ -34,7 +34,6 @@ import io.kotest.matchers.string.shouldMatch
 import io.kotest.matchers.string.shouldNotContain
 import io.kotest.matchers.types.shouldBeTypeOf
 import okio.Buffer
-import okio.FileSystem
 import okio.Path
 import okio.Path.Companion.toPath
 import kotlin.random.Random

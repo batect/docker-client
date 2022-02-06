@@ -22,7 +22,6 @@ import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
 import io.kotest.matchers.string.shouldEndWith
 import io.kotest.matchers.string.shouldStartWith
-import okio.FileSystem
 import okio.Path.Companion.toPath
 
 class DockerClientBuilderSpec : ShouldSpec({
