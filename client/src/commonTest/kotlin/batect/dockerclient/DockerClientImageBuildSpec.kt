@@ -38,11 +38,9 @@ import okio.FileSystem
 import okio.Path
 import okio.Path.Companion.toPath
 import kotlin.random.Random
-import kotlin.time.ExperimentalTime
 
-@ExperimentalTime
 class DockerClientImageBuildSpec : ShouldSpec({
-    val rootTestImagesDirectory: Path = FileSystem.SYSTEM.canonicalize("./src/commonTest/resources/images".toPath())
+    val rootTestImagesDirectory: Path = systemFileSystem.canonicalize("./src/commonTest/resources/images".toPath())
     val client = closeAfterTest(DockerClient.Builder().build())
 
     should("be able to build a basic Linux container image").onlyIfDockerDaemonSupportsLinuxContainers {
@@ -551,7 +549,7 @@ private fun DockerClient.removeBaseImagesIfPresent(dockerfile: Path) {
 }
 
 private fun readFileContents(path: Path): String =
-    FileSystem.SYSTEM.read(path) {
+    systemFileSystem.read(path) {
         return readUtf8()
     }
 

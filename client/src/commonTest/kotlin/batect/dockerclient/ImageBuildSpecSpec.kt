@@ -8,7 +8,7 @@ import okio.Path
 import okio.Path.Companion.toPath
 
 class ImageBuildSpecSpec : ShouldSpec({
-    val rootTestImagesDirectory: Path = FileSystem.SYSTEM.canonicalize("./src/commonTest/resources/images".toPath())
+    val rootTestImagesDirectory: Path = systemFileSystem.canonicalize("./src/commonTest/resources/images".toPath())
 
     should("throw an exception when the provided context directory does not exist") {
         val exception = shouldThrow<InvalidImageBuildSpecException> {
