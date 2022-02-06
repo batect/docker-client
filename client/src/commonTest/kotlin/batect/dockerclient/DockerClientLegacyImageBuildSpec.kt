@@ -44,6 +44,7 @@ class DockerClientImageBuildSpec : ShouldSpec({
 
     should("be able to build a basic Linux container image").onlyIfDockerDaemonSupportsLinuxContainers {
         val spec = ImageBuildSpec.Builder(rootTestImagesDirectory.resolve("basic-image"))
+            .withLegacyBuilder()
             .withNoBuildCache()
             .build()
 
@@ -91,6 +92,7 @@ class DockerClientImageBuildSpec : ShouldSpec({
 
     should("be able to build a Linux container image using files in the build context").onlyIfDockerDaemonSupportsLinuxContainers {
         val spec = ImageBuildSpec.Builder(rootTestImagesDirectory.resolve("image-with-context"))
+            .withLegacyBuilder()
             .withBuildArg("CACHE_BUSTER", Random.nextInt().toString())
             .build()
 
@@ -114,6 +116,7 @@ class DockerClientImageBuildSpec : ShouldSpec({
 
     should("be able to build a Linux container image with .dockerignore respected").onlyIfDockerDaemonSupportsLinuxContainers {
         val spec = ImageBuildSpec.Builder(rootTestImagesDirectory.resolve("image-with-dockerignore"))
+            .withLegacyBuilder()
             .withBuildArg("CACHE_BUSTER", Random.nextInt().toString())
             .build()
 
@@ -137,6 +140,7 @@ class DockerClientImageBuildSpec : ShouldSpec({
 
     should("be able to build a Linux container image with a non-default Dockerfile name").onlyIfDockerDaemonSupportsLinuxContainers {
         val spec = ImageBuildSpec.Builder(rootTestImagesDirectory.resolve("non-default-dockerfile"))
+            .withLegacyBuilder()
             .withDockerfile("subdirectory/my-dockerfile".toPath())
             .build()
 
@@ -149,6 +153,7 @@ class DockerClientImageBuildSpec : ShouldSpec({
 
     should("be able to build a Linux container image and pass build args to the build process").onlyIfDockerDaemonSupportsLinuxContainers {
         val spec = ImageBuildSpec.Builder(rootTestImagesDirectory.resolve("build-args"))
+            .withLegacyBuilder()
             .withNoBuildCache()
             .withBuildArg("FIRST_ARG", "first value")
             .withBuildArgs("SECOND_ARG" to "second value")
@@ -170,6 +175,7 @@ class DockerClientImageBuildSpec : ShouldSpec({
         client.removeBaseImagesIfPresent(dockerfile)
 
         val spec = ImageBuildSpec.Builder(contextDirectory)
+            .withLegacyBuilder()
             .withBaseImageAlwaysPulled()
             .build()
 
@@ -240,6 +246,7 @@ class DockerClientImageBuildSpec : ShouldSpec({
         client.deleteImageIfPresent(imageTag2)
 
         val spec = ImageBuildSpec.Builder(rootTestImagesDirectory.resolve("basic-image"))
+            .withLegacyBuilder()
             .withImageTag(imageTag1)
             .withImageTags(setOf(imageTag2))
             .build()
@@ -253,6 +260,7 @@ class DockerClientImageBuildSpec : ShouldSpec({
 
     should("be able to reuse a SinkTextOutput instance").onlyIfDockerDaemonSupportsLinuxContainers {
         val spec = ImageBuildSpec.Builder(rootTestImagesDirectory.resolve("basic-image"))
+            .withLegacyBuilder()
             .withNoBuildCache()
             .build()
 
@@ -285,6 +293,7 @@ class DockerClientImageBuildSpec : ShouldSpec({
 
     should("be able to build a Linux container image that uses a base image that requires authentication").onlyIfDockerDaemonSupportsLinuxContainers {
         val spec = ImageBuildSpec.Builder(rootTestImagesDirectory.resolve("authenticated-base-image"))
+            .withLegacyBuilder()
             .withBaseImageAlwaysPulled()
             .build()
 
@@ -301,6 +310,7 @@ class DockerClientImageBuildSpec : ShouldSpec({
     should("be able to build a Linux container image where the Dockerfile path is specified with an absolute path").onlyIfDockerDaemonSupportsLinuxContainers {
         val contextDirectory = rootTestImagesDirectory.resolve("basic-image")
         val spec = ImageBuildSpec.Builder(contextDirectory)
+            .withLegacyBuilder()
             .withDockerfile(contextDirectory.resolve("Dockerfile"))
             .build()
 
@@ -316,6 +326,7 @@ class DockerClientImageBuildSpec : ShouldSpec({
 
     should("be able to build a multi-stage Linux container image").onlyIfDockerDaemonSupportsLinuxContainers {
         val spec = ImageBuildSpec.Builder(rootTestImagesDirectory.resolve("multistage"))
+            .withLegacyBuilder()
             .build()
 
         val output = Buffer()
@@ -341,6 +352,7 @@ class DockerClientImageBuildSpec : ShouldSpec({
 
     should("be able to build a specific stage of a multi-stage Linux container image").onlyIfDockerDaemonSupportsLinuxContainers {
         val spec = ImageBuildSpec.Builder(rootTestImagesDirectory.resolve("multistage-with-failing-default-stage"))
+            .withLegacyBuilder()
             .withTargetBuildStage("other")
             .build()
 
@@ -369,6 +381,7 @@ class DockerClientImageBuildSpec : ShouldSpec({
 
     should("be able to build a Linux container image with a failing RUN step").onlyIfDockerDaemonSupportsLinuxContainers {
         val spec = ImageBuildSpec.Builder(rootTestImagesDirectory.resolve("failing-command"))
+            .withLegacyBuilder()
             .build()
 
         val output = Buffer()
@@ -404,6 +417,7 @@ class DockerClientImageBuildSpec : ShouldSpec({
 
     should("be able to build a Linux container image with a non-existent image").onlyIfDockerDaemonSupportsLinuxContainers {
         val spec = ImageBuildSpec.Builder(rootTestImagesDirectory.resolve("failing-base-image"))
+            .withLegacyBuilder()
             .build()
 
         val output = Buffer()
@@ -438,6 +452,7 @@ class DockerClientImageBuildSpec : ShouldSpec({
 
     should("be able to build a Linux container image that downloads a file and report download progress").onlyIfDockerDaemonSupportsLinuxContainers {
         val spec = ImageBuildSpec.Builder(rootTestImagesDirectory.resolve("file-download"))
+            .withLegacyBuilder()
             .withNoBuildCache()
             .build()
 
@@ -477,6 +492,7 @@ class DockerClientImageBuildSpec : ShouldSpec({
 
         val exceptionThrownByPullMethod = shouldThrow<ImageBuildFailedException> {
             val spec = ImageBuildSpec.Builder(rootTestImagesDirectory.resolve("basic-image"))
+                .withLegacyBuilder()
                 .build()
 
             val output = Buffer()
@@ -499,6 +515,7 @@ class DockerClientImageBuildSpec : ShouldSpec({
 
         val exceptionThrownByPullMethod = shouldThrow<ImageBuildFailedException> {
             val spec = ImageBuildSpec.Builder(rootTestImagesDirectory.resolve("basic-image"))
+                .withLegacyBuilder()
                 .build()
 
             val output = Buffer()
@@ -518,6 +535,7 @@ class DockerClientImageBuildSpec : ShouldSpec({
         setClientProxySettingsForTest(client)
 
         val spec = ImageBuildSpec.Builder(rootTestImagesDirectory.resolve("proxy-reporter"))
+            .withLegacyBuilder()
             .withNoBuildCache()
             .build()
 
