@@ -28,7 +28,7 @@
   * https://github.com/marketplace/actions/setup-zig
   * If implemented: need to add a check that the version of Zig in use matches the expected version (similar to check for Golang version).
   * Works with Zig 0.9.0, but requires https://github.com/golang/go/issues/43078 to remove need for wrapper scripts
-* Run tests with memory leak detector
+* Run tests with memory leak detector - eg. valgrind
 * Linter to catch when memory is not freed (eg. Golang code allocates struct that is used as callback parameter)
 * Clean task for Golang wrapper project
 * Remove use of `allprojects` in root `build.gradle.kts` - use a custom plugin applied to all projects instead
@@ -61,6 +61,7 @@
     * Test that we can run a built image
 * Containers
   * Create
+  * Start
   * Stop
   * Remove
   * Upload files
