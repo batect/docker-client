@@ -49,7 +49,7 @@ var buildSuccessfullyFinishedLineRegex = regexp.MustCompile(`^Successfully built
 func BuildImage(clientHandle DockerClientHandle, request *C.BuildImageRequest, outputStreamHandle OutputStreamHandle, reportContextUploadProgressEvents C.bool, onProgressUpdate BuildImageProgressCallback, callbackUserData unsafe.Pointer) BuildImageReturn {
 	defer closeOutputStream(outputStreamHandle)
 
-	docker := getClient(clientHandle)
+	docker := getDockerAPIClient(clientHandle)
 	contextDir := C.GoString(request.ContextDirectory)
 	pathToDockerfile := C.GoString(request.PathToDockerfile)
 
@@ -109,7 +109,7 @@ func BuildImage(clientHandle DockerClientHandle, request *C.BuildImageRequest, o
 }
 
 func createImageBuildOptions(clientHandle DockerClientHandle, pathToDockerfile string, request *C.BuildImageRequest) types.ImageBuildOptions {
-	docker := getClient(clientHandle)
+	docker := getDockerAPIClient(clientHandle)
 	configFile := getClientConfigFile(clientHandle)
 	creds, _ := configFile.GetAllCredentials() // The CLI ignores errors, so do we.
 	authConfigs := make(map[string]types.AuthConfig, len(creds))

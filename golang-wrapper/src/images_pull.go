@@ -40,7 +40,7 @@ import (
 
 //export PullImage
 func PullImage(clientHandle DockerClientHandle, ref *C.char, onProgressUpdate PullImageProgressCallback, callbackUserData unsafe.Pointer) PullImageReturn {
-	docker := getClient(clientHandle)
+	docker := getDockerAPIClient(clientHandle)
 
 	distributionRef, err := reference.ParseNormalizedNamed(C.GoString(ref))
 
@@ -66,8 +66,8 @@ func PullImage(clientHandle DockerClientHandle, ref *C.char, onProgressUpdate Pu
 	}
 
 	options := types.ImagePullOptions{
-		RegistryAuth:  encodedAuth,
-		All:           false,
+		RegistryAuth: encodedAuth,
+		All:          false,
 	}
 
 	cleanedReference := reference.FamiliarString(imgRefAndAuth.Reference())
@@ -98,7 +98,7 @@ func getAuthResolver(clientHandle DockerClientHandle) func(ctx context.Context, 
 }
 
 func electAuthServerForOfficialIndex(ctx context.Context, clientHandle DockerClientHandle) string {
-	docker := getClient(clientHandle)
+	docker := getDockerAPIClient(clientHandle)
 	info, err := docker.Info(ctx)
 
 	if err != nil || info.IndexServerAddress == "" {

@@ -36,11 +36,15 @@ import (
 
 //nolint:gochecknoglobals
 var (
-	clients                      = map[uint64]*client.Client{}
-	configFilesForClients        = map[uint64]*configfile.ConfigFile{}
-	clientsLock                  = sync.RWMutex{}
-	nextClientIndex       uint64 = 0
+	activeClients            = map[uint64]*activeClient{}
+	activeClientsLock        = sync.RWMutex{}
+	nextClientIndex   uint64 = 0
 )
+
+type activeClient struct {
+	dockerAPIClient *client.Client
+	configFile      *configfile.ConfigFile
+}
 
 //export CreateClient
 func CreateClient(cfg *C.ClientConfiguration) CreateClientReturn {
@@ -88,12 +92,16 @@ func CreateClient(cfg *C.ClientConfiguration) CreateClientReturn {
 		return newCreateClientReturn(0, toError(err))
 	}
 
-	clientsLock.Lock()
-	defer clientsLock.Unlock()
+	activeClientsLock.Lock()
+	defer activeClientsLock.Unlock()
 
 	clientIndex := nextClientIndex
-	clients[clientIndex] = c
-	configFilesForClients[clientIndex] = configFile
+
+	activeClients[clientIndex] = &activeClient{
+		dockerAPIClient: c,
+		configFile:      configFile,
+	}
+
 	nextClientIndex++
 
 	return newCreateClientReturn(DockerClientHandle(clientIndex), nil)
@@ -144,33 +152,32 @@ func directoryExists(path string) bool {
 
 //export DisposeClient
 func DisposeClient(clientHandle DockerClientHandle) Error {
-	clientsLock.Lock()
-	defer clientsLock.Unlock()
+	activeClientsLock.Lock()
+	defer activeClientsLock.Unlock()
 
 	idx := uint64(clientHandle)
 
-	if _, ok := clients[idx]; !ok {
+	if _, ok := activeClients[idx]; !ok {
 		return toError(ErrInvalidDockerClientHandle)
 	}
 
-	delete(clients, idx)
-	delete(configFilesForClients, idx)
+	delete(activeClients, idx)
 
 	return nil
 }
 
-func getClient(clientHandle DockerClientHandle) *client.Client {
-	clientsLock.RLock()
-	defer clientsLock.RUnlock()
+func getDockerAPIClient(clientHandle DockerClientHandle) *client.Client {
+	activeClientsLock.RLock()
+	defer activeClientsLock.RUnlock()
 
-	return clients[uint64(clientHandle)]
+	return activeClients[uint64(clientHandle)].dockerAPIClient
 }
 
 func getClientConfigFile(clientHandle DockerClientHandle) *configfile.ConfigFile {
-	clientsLock.RLock()
-	defer clientsLock.RUnlock()
+	activeClientsLock.RLock()
+	defer activeClientsLock.RUnlock()
 
-	return configFilesForClients[uint64(clientHandle)]
+	return activeClients[uint64(clientHandle)].configFile
 }
 
 func loadConfigFile(configPath string) (*configfile.ConfigFile, error) {
@@ -189,7 +196,7 @@ func loadConfigFile(configPath string) (*configfile.ConfigFile, error) {
 
 //export SetClientProxySettingsForTest
 func SetClientProxySettingsForTest(clientHandle DockerClientHandle) {
-	docker := getClient(clientHandle)
+	docker := getDockerAPIClient(clientHandle)
 	configFile := getClientConfigFile(clientHandle)
 	host := docker.DaemonHost()
 
