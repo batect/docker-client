@@ -415,6 +415,7 @@ BuildImageRequest* AllocBuildImageRequest() {
     value->BuildArgs = NULL;
     value->ImageTags = NULL;
     value->TargetBuildStage = NULL;
+    value->BuilderVersion = NULL;
     value->BuildArgsCount = 0;
     value->ImageTagsCount = 0;
 
@@ -439,6 +440,7 @@ void FreeBuildImageRequest(BuildImageRequest* value) {
 
     free(value->ImageTags);
     free(value->TargetBuildStage);
+    free(value->BuilderVersion);
     free(value);
 }
 

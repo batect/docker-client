@@ -118,6 +118,12 @@ public data class ImageBuildSpec(
             return spec
         }
     }
+
+    internal val builderApiVersion: String? = when (builder) {
+        BuilderVersion.Legacy -> "1"
+        BuilderVersion.BuildKit -> "2"
+        null -> null
+    }
 }
 
 internal expect fun validateImageTag(tag: String)

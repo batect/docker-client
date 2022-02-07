@@ -162,6 +162,7 @@ typedef struct {
     bool AlwaysPullBaseImages;
     bool NoCache;
     char* TargetBuildStage;
+    char* BuilderVersion;
 } BuildImageRequest;
 
 typedef struct {

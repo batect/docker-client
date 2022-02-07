@@ -227,6 +227,8 @@
       type: boolean
     - name: TargetBuildStage
       type: string
+    - name: BuilderVersion
+      type: string
 
 - name: BuildImageReturn
   type: struct

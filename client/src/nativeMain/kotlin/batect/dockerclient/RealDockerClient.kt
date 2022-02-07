@@ -296,6 +296,7 @@ internal actual class RealDockerClient actual constructor(configuration: DockerC
         request.AlwaysPullBaseImages = spec.alwaysPullBaseImages
         request.NoCache = spec.noCache
         request.TargetBuildStage = spec.targetBuildStage.cstr.ptr
+        request.BuilderVersion = spec.builderApiVersion?.cstr?.ptr
 
         return request
     }

@@ -353,6 +353,7 @@ internal class BuildImageRequest(runtime: Runtime) : Struct(runtime), AutoClosea
     val alwaysPullBaseImages = Boolean()
     val noCache = Boolean()
     val targetBuildStage = UTF8StringRef()
+    val builderVersion = UTF8StringRef()
 
     override fun close() {
         nativeAPI.FreeBuildImageRequest(this)

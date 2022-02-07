@@ -56,6 +56,9 @@
   * Build
     * Kotlin/Native: Stream output while build is running, not just when build returns (see TODO in native buildImage())
     * BuildKit
+      * Handle case where no explicit builder version is provided
+      * Fail if daemon does not support BuildKit
+      * Test output from DockerAuthProvider
     * Features to cover:
       * Windows image build
     * Test that we can run a built image
