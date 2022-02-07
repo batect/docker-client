@@ -38,7 +38,7 @@ import okio.Path
 import okio.Path.Companion.toPath
 import kotlin.random.Random
 
-class DockerClientImageBuildSpec : ShouldSpec({
+class DockerClientLegacyImageBuildSpec : ShouldSpec({
     val rootTestImagesDirectory: Path = systemFileSystem.canonicalize("./src/commonTest/resources/images".toPath())
     val client = closeAfterTest(DockerClient.Builder().build())
 
