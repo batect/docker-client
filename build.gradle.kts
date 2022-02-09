@@ -18,7 +18,7 @@ import java.nio.file.Files
 
 plugins {
     id("com.diffplug.spotless")
-    id("org.ajoberstar.reckon") version "0.13.1"
+    id("org.ajoberstar.reckon") version "0.13.2"
     id("io.github.gradle-nexus.publish-plugin") version "1.1.0"
 }
 
