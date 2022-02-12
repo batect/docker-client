@@ -39,6 +39,9 @@ plugins {
 
 repositories {
     mavenCentral()
+
+    // Only required for snapshot Kotest versions - remove this once we're using a stable version again.
+    maven("https://oss.sonatype.org/content/repositories/snapshots")
 }
 
 evaluationDependsOn(":golang-wrapper")
@@ -120,15 +123,15 @@ kotlin {
 
         val commonTest by getting {
             dependencies {
-                implementation("io.kotest:kotest-assertions-core:5.0.3")
-                implementation("io.kotest:kotest-framework-api:5.0.3")
-                implementation("io.kotest:kotest-framework-engine:5.1.0")
+                implementation("io.kotest:kotest-assertions-core:5.1.0.904-SNAPSHOT")
+                implementation("io.kotest:kotest-framework-api:5.1.0.904-SNAPSHOT")
+                implementation("io.kotest:kotest-framework-engine:5.1.0.904-SNAPSHOT")
             }
         }
 
         val jvmTest by getting {
             dependencies {
-                implementation("io.kotest:kotest-runner-junit5:5.1.0")
+                implementation("io.kotest:kotest-runner-junit5:5.1.0.904-SNAPSHOT")
             }
         }
 
@@ -245,6 +248,18 @@ val KonanTarget.isSupportedOnThisMachine: Boolean
         Family.MINGW -> buildIsRunningOnWindows
         else -> throw UnsupportedOperationException("Unknown target family: $family")
     }
+
+// Remove this once the new memory model is the default.
+kotlin.targets.withType(KotlinNativeTarget::class.java) {
+    binaries.all {
+        binaryOptions["memoryModel"] = "experimental"
+    }
+}
+
+// Only required while we're using a snapshot Kotest version - remove this once we're using a stable version again.
+kotest {
+    compilerPluginVersion.set("5.1.0.904-SNAPSHOT")
+}
 
 val testEnvironmentVariables = setOf(
     "DISABLE_DOCKER_DAEMON_TESTS",
