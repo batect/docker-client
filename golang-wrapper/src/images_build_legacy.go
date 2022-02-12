@@ -22,7 +22,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"io"
 	"regexp"
 	"strconv"
 	"strings"
@@ -80,10 +79,12 @@ func buildImageWithLegacyBuilder(clientHandle DockerClientHandle, request *image
 		return newBuildImageReturn(nil, toError(err))
 	}
 
+	progressCallback := newImageBuildProgressCallback(onProgressUpdate, callbackUserData)
+
 	// This is only required while we're using the v1 Kotlin/Native memory model (as Golang invokes the callback from another thread).
 	// Once we're using the new memory model, we can just always report context upload progress events.
 	if bool(reportContextUploadProgressEvents) {
-		contextUploadEventHandler := newContextUploadProgressHandler(onProgressUpdate, callbackUserData)
+		contextUploadEventHandler := newContextUploadProgressHandler(progressCallback)
 		buildContext = replacements.NewProgressReader(buildContext, contextUploadEventHandler, 0, "", "Sending build context to Docker daemon")
 	}
 
@@ -98,7 +99,7 @@ func buildImageWithLegacyBuilder(clientHandle DockerClientHandle, request *image
 		return newBuildImageReturn(nil, toError(err))
 	}
 
-	parser := newLegacyImageBuildResponseBodyParser(outputStreamHandle, onProgressUpdate, callbackUserData)
+	parser := newLegacyImageBuildResponseBodyParser(outputStreamHandle, progressCallback)
 	imageID, err := parser.Parse(response)
 
 	if err != nil {
@@ -133,10 +134,10 @@ type legacyImageBuildResponseBodyParser struct {
 	progressCallback                       *imageBuildProgressCallback
 }
 
-func newLegacyImageBuildResponseBodyParser(outputStreamHandle OutputStreamHandle, onProgressUpdate BuildImageProgressCallback, callbackUserData unsafe.Pointer) *legacyImageBuildResponseBodyParser {
+func newLegacyImageBuildResponseBodyParser(outputStreamHandle OutputStreamHandle, progressCallback *imageBuildProgressCallback) *legacyImageBuildResponseBodyParser {
 	return &legacyImageBuildResponseBodyParser{
 		outputStreamHandle: outputStreamHandle,
-		progressCallback:   newImageBuildProgressCallback(onProgressUpdate, callbackUserData),
+		progressCallback:   progressCallback,
 	}
 }
 
@@ -240,7 +241,7 @@ func (p *legacyImageBuildResponseBodyParser) onBuildOutput(stream string) error 
 
 	p.haveSeenMeaningfulOutputForCurrentStep = true
 
-	return p.progressCallback.onStepOutput(stream, p.currentStep)
+	return p.progressCallback.onStepOutput(p.currentStep, stream)
 }
 
 func (p *legacyImageBuildResponseBodyParser) onProgress(msg jsonmessage.JSONMessage) error {
@@ -253,60 +254,22 @@ func (p *legacyImageBuildResponseBodyParser) onProgress(msg jsonmessage.JSONMess
 
 		progressUpdate := newPullImageProgressUpdate(msg.Status, progressDetail, msg.ID)
 
-		return p.progressCallback.onImagePullProgress(progressUpdate, p.currentStep)
+		return p.progressCallback.onImagePullProgress(p.currentStep, progressUpdate)
 	}
 
 	return p.progressCallback.onDownloadProgress(p.currentStep, msg.Progress.Current, msg.Progress.Total)
 }
 
-// This function is based on jsonmessage.DisplayJSONMessagesStream, but allows us to process every message, not just those with
-// an aux value.
-func parseAndDisplayJSONMessagesStream(in io.Reader, out io.Writer, processor func(message jsonmessage.JSONMessage) error) error {
-	decoder := json.NewDecoder(in)
-
-	for {
-		var msg jsonmessage.JSONMessage
-
-		if err := decoder.Decode(&msg); err != nil {
-			if errors.Is(err, io.EOF) {
-				return nil
-			}
-
-			return err
-		}
-
-		if err := processor(msg); err != nil {
-			return err
-		}
-
-		if msg.Aux == nil {
-			if err := msg.Display(out, false); err != nil {
-				return err
-			}
-		}
-	}
-}
-
 type contextUploadProgressHandler struct {
-	onProgressUpdate         BuildImageProgressCallback
-	onProgressUpdateUserData unsafe.Pointer
+	progressCallback *imageBuildProgressCallback
 }
 
-func newContextUploadProgressHandler(onProgressUpdate BuildImageProgressCallback, callbackUserData unsafe.Pointer) *contextUploadProgressHandler {
+func newContextUploadProgressHandler(progressCallback *imageBuildProgressCallback) *contextUploadProgressHandler {
 	return &contextUploadProgressHandler{
-		onProgressUpdate:         onProgressUpdate,
-		onProgressUpdateUserData: callbackUserData,
+		progressCallback: progressCallback,
 	}
 }
 
 func (h *contextUploadProgressHandler) WriteProgress(progress progress.Progress) error {
-	update := newBuildImageProgressUpdate(newBuildImageProgressUpdate_ImageBuildContextUploadProgress(progress.Current), nil, nil, nil, nil, nil, nil)
-
-	defer C.FreeBuildImageProgressUpdate(update)
-
-	if !invokeBuildImageProgressCallback(h.onProgressUpdate, h.onProgressUpdateUserData, update) {
-		return ErrProgressCallbackFailed
-	}
-
-	return nil
+	return h.progressCallback.onContextUploadProgress(0, progress.Current)
 }

@@ -241,6 +241,8 @@
 - name: BuildImageProgressUpdate_ImageBuildContextUploadProgress
   type: struct
   fields:
+    - name: StepNumber
+      type: int64
     - name: BytesUploaded
       type: int64
 

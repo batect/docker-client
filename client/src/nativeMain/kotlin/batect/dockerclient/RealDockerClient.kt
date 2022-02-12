@@ -328,7 +328,7 @@ private fun ImagePullProgressDetail(native: PullImageProgressDetail): ImagePullP
     ImagePullProgressDetail(native.Current, native.Total)
 
 private fun ImageBuildProgressUpdate(native: BuildImageProgressUpdate): ImageBuildProgressUpdate = when {
-    native.ImageBuildContextUploadProgress != null -> ImageBuildContextUploadProgress(native.ImageBuildContextUploadProgress!!.pointed)
+    native.ImageBuildContextUploadProgress != null -> contextUploadProgress(native.ImageBuildContextUploadProgress!!.pointed)
     native.StepStarting != null -> StepStarting(native.StepStarting!!.pointed)
     native.StepOutput != null -> StepOutput(native.StepOutput!!.pointed)
     native.StepPullProgressUpdate != null -> StepPullProgressUpdate(native.StepPullProgressUpdate!!.pointed)
@@ -338,8 +338,11 @@ private fun ImageBuildProgressUpdate(native: BuildImageProgressUpdate): ImageBui
     else -> throw RuntimeException("${BuildImageProgressUpdate::class.qualifiedName} did not contain an update")
 }
 
-private fun ImageBuildContextUploadProgress(native: BuildImageProgressUpdate_ImageBuildContextUploadProgress): ImageBuildContextUploadProgress =
-    ImageBuildContextUploadProgress(native.BytesUploaded)
+private fun contextUploadProgress(native: BuildImageProgressUpdate_ImageBuildContextUploadProgress): ImageBuildProgressUpdate =
+    when (native.StepNumber) {
+        0L -> ImageBuildContextUploadProgress(native.BytesUploaded)
+        else -> StepContextUploadProgress(native.StepNumber, native.BytesUploaded)
+    }
 
 private fun StepStarting(native: BuildImageProgressUpdate_StepStarting): StepStarting =
     StepStarting(

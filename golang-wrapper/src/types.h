@@ -171,6 +171,7 @@ typedef struct {
 } BuildImageReturn;
 
 typedef struct {
+    int64_t StepNumber;
     int64_t BytesUploaded;
 } BuildImageProgressUpdate_ImageBuildContextUploadProgress;
 

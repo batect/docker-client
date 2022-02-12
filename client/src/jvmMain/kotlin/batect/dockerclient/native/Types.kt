@@ -380,6 +380,7 @@ internal class BuildImageProgressUpdate_ImageBuildContextUploadProgress(runtime:
         this.useMemory(pointer)
     }
 
+    val stepNumber = int64_t()
     val bytesUploaded = int64_t()
 
     override fun close() {

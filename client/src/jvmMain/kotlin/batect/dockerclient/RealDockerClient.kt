@@ -274,7 +274,7 @@ internal actual class RealDockerClient actual constructor(configuration: DockerC
         }
 
     private fun ImageBuildProgressUpdate(native: BuildImageProgressUpdate): ImageBuildProgressUpdate = when {
-        native.imageBuildContextUploadProgress != null -> ImageBuildContextUploadProgress(native.imageBuildContextUploadProgress!!)
+        native.imageBuildContextUploadProgress != null -> contextUploadProgress(native.imageBuildContextUploadProgress!!)
         native.stepStarting != null -> StepStarting(native.stepStarting!!)
         native.stepOutput != null -> StepOutput(native.stepOutput!!)
         native.stepPullProgressUpdate != null -> StepPullProgressUpdate(native.stepPullProgressUpdate!!)
@@ -284,8 +284,11 @@ internal actual class RealDockerClient actual constructor(configuration: DockerC
         else -> throw RuntimeException("${BuildImageProgressUpdate::class.qualifiedName} did not contain an update")
     }
 
-    private fun ImageBuildContextUploadProgress(native: BuildImageProgressUpdate_ImageBuildContextUploadProgress): ImageBuildContextUploadProgress =
-        ImageBuildContextUploadProgress(native.bytesUploaded.get())
+    private fun contextUploadProgress(native: BuildImageProgressUpdate_ImageBuildContextUploadProgress): ImageBuildProgressUpdate =
+        when (native.stepNumber.get()) {
+            0L -> ImageBuildContextUploadProgress(native.bytesUploaded.get())
+            else -> StepContextUploadProgress(native.stepNumber.get(), native.bytesUploaded.get())
+        }
 
     private fun StepStarting(native: BuildImageProgressUpdate_StepStarting): StepStarting =
         StepStarting(native.stepNumber.get(), native.stepName.get())

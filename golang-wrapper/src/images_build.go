@@ -19,12 +19,16 @@ import (
 		#include "types.h"
 	*/
 	"C"
+	"encoding/json"
+	"errors"
 	"fmt"
+	"io"
 	"unsafe"
 
 	"github.com/docker/cli/cli/config/configfile"
 	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/client"
+	"github.com/docker/docker/pkg/jsonmessage"
 )
 
 //export BuildImage
@@ -107,6 +111,34 @@ func createImageBuildOptions(docker *client.Client, configFile *configfile.Confi
 	return opts
 }
 
+// This function is based on jsonmessage.DisplayJSONMessagesStream, but allows us to process every message, not just those with
+// an aux value.
+func parseAndDisplayJSONMessagesStream(in io.Reader, out io.Writer, processor func(message jsonmessage.JSONMessage) error) error {
+	decoder := json.NewDecoder(in)
+
+	for {
+		var msg jsonmessage.JSONMessage
+
+		if err := decoder.Decode(&msg); err != nil {
+			if errors.Is(err, io.EOF) {
+				return nil
+			}
+
+			return err
+		}
+
+		if err := processor(msg); err != nil {
+			return err
+		}
+
+		if msg.Aux == nil {
+			if err := msg.Display(out, false); err != nil {
+				return err
+			}
+		}
+	}
+}
+
 type imageBuildProgressCallback struct {
 	onProgressUpdate         BuildImageProgressCallback
 	onProgressUpdateUserData unsafe.Pointer
@@ -131,7 +163,7 @@ func (p *imageBuildProgressCallback) onBuildFailed(msg string) error {
 	return nil
 }
 
-func (p *imageBuildProgressCallback) onStepOutput(output string, currentStep int64) error {
+func (p *imageBuildProgressCallback) onStepOutput(currentStep int64, output string) error {
 	update := newBuildImageProgressUpdate(nil, nil, newBuildImageProgressUpdate_StepOutput(currentStep, output), nil, nil, nil, nil)
 
 	defer C.FreeBuildImageProgressUpdate(update)
@@ -167,7 +199,7 @@ func (p *imageBuildProgressCallback) onStepStarting(newStep int64, stepName stri
 	return nil
 }
 
-func (p *imageBuildProgressCallback) onImagePullProgress(progressUpdate PullImageProgressUpdate, currentStep int64) error {
+func (p *imageBuildProgressCallback) onImagePullProgress(currentStep int64, progressUpdate PullImageProgressUpdate) error {
 	update := newBuildImageProgressUpdate(nil, nil, nil, newBuildImageProgressUpdate_StepPullProgressUpdate(currentStep, progressUpdate), nil, nil, nil)
 
 	defer C.FreeBuildImageProgressUpdate(update)
@@ -181,6 +213,18 @@ func (p *imageBuildProgressCallback) onImagePullProgress(progressUpdate PullImag
 
 func (p *imageBuildProgressCallback) onDownloadProgress(currentStep int64, downloadedBytes int64, totalBytes int64) error {
 	update := newBuildImageProgressUpdate(nil, nil, nil, nil, newBuildImageProgressUpdate_StepDownloadProgressUpdate(currentStep, downloadedBytes, totalBytes), nil, nil)
+
+	defer C.FreeBuildImageProgressUpdate(update)
+
+	if !invokeBuildImageProgressCallback(p.onProgressUpdate, p.onProgressUpdateUserData, update) {
+		return ErrProgressCallbackFailed
+	}
+
+	return nil
+}
+
+func (p *imageBuildProgressCallback) onContextUploadProgress(currentStep int64, currentBytes int64) error {
+	update := newBuildImageProgressUpdate(newBuildImageProgressUpdate_ImageBuildContextUploadProgress(currentStep, currentBytes), nil, nil, nil, nil, nil, nil)
 
 	defer C.FreeBuildImageProgressUpdate(update)
 

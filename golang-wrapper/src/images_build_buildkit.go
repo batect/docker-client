@@ -206,22 +206,32 @@ func (p *buildKitImageBuildResponseBodyParser) Parse(response types.ImageBuildRe
 	p.imageID = ""
 	output := getOutputStream(p.outputStreamHandle)
 
-	writeAux := func(msg jsonmessage.JSONMessage) {
+	processMessage := func(msg jsonmessage.JSONMessage) error {
 		switch msg.ID {
 		case "moby.image.id":
 			var result types.BuildResult
 
 			if err := json.Unmarshal(*msg.Aux, &result); err != nil {
-				// TODO: handle error
+				return err
 			}
 
 			p.imageID = result.ID
 		case "moby.buildkit.trace":
-			tracer.LogJSONMessage(msg)
+			if err := tracer.LogJSONMessage(msg); err != nil {
+				return err
+			}
 		}
+
+		if msg.Error != nil {
+			if err := tracer.progressCallback.onBuildFailed(msg.Error.Message); err != nil {
+				return err
+			}
+		}
+
+		return nil
 	}
 
-	if err := jsonmessage.DisplayJSONMessagesStream(response.Body, output, output.FD(), false, writeAux); err != nil {
+	if err := parseAndDisplayJSONMessagesStream(response.Body, output, processMessage); err != nil {
 		return "", err
 	}
 
@@ -229,20 +239,22 @@ func (p *buildKitImageBuildResponseBodyParser) Parse(response types.ImageBuildRe
 }
 
 type buildKitBuildTracer struct {
-	displayCh          chan *buildkitclient.SolveStatus
-	eg                 *errgroup.Group
-	outputStreamHandle OutputStreamHandle
-	progressCallback   *imageBuildProgressCallback
-	startedVertices    map[github_com_opencontainers_go_digest.Digest]interface{}
+	displayCh                  chan *buildkitclient.SolveStatus
+	eg                         *errgroup.Group
+	outputStreamHandle         OutputStreamHandle
+	progressCallback           *imageBuildProgressCallback
+	vertexDigestsToStepNumbers map[github_com_opencontainers_go_digest.Digest]int64
+	completedVertices          map[github_com_opencontainers_go_digest.Digest]interface{}
 }
 
 func newBuildKitBuildTracer(outputStreamHandle OutputStreamHandle, eg *errgroup.Group, onProgressUpdate BuildImageProgressCallback, onProgressUpdateUserData unsafe.Pointer) *buildKitBuildTracer {
 	return &buildKitBuildTracer{
-		displayCh:          make(chan *buildkitclient.SolveStatus),
-		eg:                 eg,
-		outputStreamHandle: outputStreamHandle,
-		progressCallback:   newImageBuildProgressCallback(onProgressUpdate, onProgressUpdateUserData),
-		startedVertices:    map[github_com_opencontainers_go_digest.Digest]interface{}{},
+		displayCh:                  make(chan *buildkitclient.SolveStatus),
+		eg:                         eg,
+		outputStreamHandle:         outputStreamHandle,
+		progressCallback:           newImageBuildProgressCallback(onProgressUpdate, onProgressUpdateUserData),
+		vertexDigestsToStepNumbers: map[github_com_opencontainers_go_digest.Digest]int64{},
+		completedVertices:          map[github_com_opencontainers_go_digest.Digest]interface{}{},
 	}
 }
 
@@ -267,21 +279,21 @@ func (t *buildKitBuildTracer) LogStatus(s *buildkitclient.SolveStatus) {
 	t.displayCh <- s
 }
 
-func (t *buildKitBuildTracer) LogJSONMessage(msg jsonmessage.JSONMessage) {
+func (t *buildKitBuildTracer) LogJSONMessage(msg jsonmessage.JSONMessage) error {
 	var dt []byte
 
 	if err := json.Unmarshal(*msg.Aux, &dt); err != nil {
-		return // The Docker CLI ignores all errors here, so we do the same.
+		return err
 	}
 
 	var resp controlapi.StatusResponse
 
 	if err := (&resp).Unmarshal(dt); err != nil {
-		return // The Docker CLI ignores all errors here, so we do the same.
+		return err
 	}
 
 	t.print(resp)
-	t.sendProgressUpdateNotifications(resp)
+	return t.sendProgressUpdateNotifications(resp)
 }
 
 func (t *buildKitBuildTracer) print(resp controlapi.StatusResponse) {
@@ -324,17 +336,70 @@ func (t *buildKitBuildTracer) print(resp controlapi.StatusResponse) {
 	t.displayCh <- &s
 }
 
-func (t *buildKitBuildTracer) sendProgressUpdateNotifications(resp controlapi.StatusResponse) {
+func (t *buildKitBuildTracer) sendProgressUpdateNotifications(resp controlapi.StatusResponse) error {
 	for _, v := range resp.Vertexes {
 		if !t.haveSeenVertex(v) {
-			t.startedVertices[v.Digest] = nil
-			t.progressCallback.onStepStarting(int64(len(t.startedVertices)), v.Name) // TODO: handle error
+			stepNumber := t.allocateStepNumber(v)
+			if err := t.progressCallback.onStepStarting(stepNumber, v.Name); err != nil {
+				return err
+			}
 		}
 	}
+
+	for _, s := range resp.Statuses {
+		stepNumber := t.vertexDigestsToStepNumbers[s.Vertex]
+
+		if s.Name == "transferring" {
+			if err := t.progressCallback.onContextUploadProgress(stepNumber, s.Current); err != nil {
+				return err
+			}
+		} else if s.Name != "" {
+			progressDetail := newPullImageProgressDetail(s.Current, s.Total)
+			progressUpdate := newPullImageProgressUpdate(s.Name, progressDetail, s.ID)
+
+			if err := t.progressCallback.onImagePullProgress(stepNumber, progressUpdate); err != nil {
+				return err
+			}
+		}
+	}
+
+	for _, l := range resp.Logs {
+		stepNumber := t.vertexDigestsToStepNumbers[l.Vertex]
+
+		if err := t.progressCallback.onStepOutput(stepNumber, string(l.Msg)); err != nil {
+			return err
+		}
+	}
+
+	for _, v := range resp.Vertexes {
+		if v.Completed != nil && !t.haveAlreadySeenVertexCompleted(v) {
+			stepNumber := t.vertexDigestsToStepNumbers[v.Digest]
+			t.completedVertices[v.Digest] = nil
+
+			if err := t.progressCallback.onStepFinished(stepNumber); err != nil {
+				return err
+			}
+		}
+	}
+
+	return nil
 }
 
 func (t *buildKitBuildTracer) haveSeenVertex(v *controlapi.Vertex) bool {
-	_, haveSeen := t.startedVertices[v.Digest]
+	_, haveSeen := t.vertexDigestsToStepNumbers[v.Digest]
 
 	return haveSeen
+}
+
+func (t *buildKitBuildTracer) allocateStepNumber(v *controlapi.Vertex) int64 {
+	stepNumber := int64(len(t.vertexDigestsToStepNumbers)) + 1
+	t.vertexDigestsToStepNumbers[v.Digest] = stepNumber
+
+	return stepNumber
+}
+
+func (t *buildKitBuildTracer) haveAlreadySeenVertexCompleted(v *controlapi.Vertex) bool {
+	_, present := t.completedVertices[v.Digest]
+
+	return present
 }

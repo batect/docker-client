@@ -19,19 +19,15 @@ package batect.dockerclient
 import batect.dockerclient.io.SinkTextOutput
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.core.spec.style.ShouldSpec
-import io.kotest.inspectors.forAtLeastOne
 import io.kotest.inspectors.forNone
 import io.kotest.matchers.collections.shouldContain
-import io.kotest.matchers.collections.shouldContainAnyOf
+import io.kotest.matchers.collections.shouldContainInOrder
 import io.kotest.matchers.collections.shouldEndWith
 import io.kotest.matchers.collections.shouldStartWith
-import io.kotest.matchers.longs.shouldBeLessThan
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
 import io.kotest.matchers.string.shouldContain
 import io.kotest.matchers.string.shouldMatch
-import io.kotest.matchers.string.shouldNotContain
-import io.kotest.matchers.string.shouldStartWith
 import io.kotest.matchers.types.shouldBeTypeOf
 import okio.Buffer
 import okio.Path
@@ -59,7 +55,7 @@ class DockerClientBuildKitImageBuildSpec : ShouldSpec({
 
         outputText shouldMatch """
             #1 \[internal] load build definition from Dockerfile
-            #1 transferring dockerfile: 36B done
+            #1 transferring dockerfile: 86B done
             #1 DONE \d+\.\d+s
 
             #2 \[internal] load .dockerignore
@@ -82,18 +78,20 @@ class DockerClientBuildKitImageBuildSpec : ShouldSpec({
             #6 DONE \d+\.\d+s
         """.trimIndent().toRegex()
 
-        if (multithreadingSupportedOnThisPlatform) {
-            progressUpdatesReceived shouldStartWith listOf(
-                ImageBuildContextUploadProgress(2048),
-                StepStarting(1, "[internal] load build definition from Dockerfile"),
-            )
-        } else {
-            progressUpdatesReceived shouldStartWith StepStarting(1, "[internal] load build definition from Dockerfile")
-        }
+        progressUpdatesReceived shouldStartWith listOf(
+            StepStarting(1, "[internal] load build definition from Dockerfile"),
+            StepContextUploadProgress(1, 0),
+        )
 
-        progressUpdatesReceived shouldEndWith listOf(
+        progressUpdatesReceived shouldContainInOrder listOf(
+            StepContextUploadProgress(1, 86),
             StepFinished(1),
             StepStarting(2, "[internal] load .dockerignore"),
+            StepContextUploadProgress(2, 0),
+        )
+
+        progressUpdatesReceived shouldEndWith listOf(
+            StepContextUploadProgress(2, 2),
             StepFinished(2),
             StepStarting(3, "[internal] load metadata for docker.io/library/alpine:3.14.2"),
             StepFinished(3),
@@ -102,6 +100,8 @@ class DockerClientBuildKitImageBuildSpec : ShouldSpec({
             StepStarting(5, "[2/2] RUN echo \"Hello world!\""),
             StepOutput(5, "Hello world!\n"),
             StepFinished(5),
+            StepStarting(6, "exporting to image"),
+            StepFinished(6),
             BuildComplete(image)
         )
     }
@@ -414,7 +414,8 @@ class DockerClientBuildKitImageBuildSpec : ShouldSpec({
         }
     }
 
-    should("be able to build a Linux container image that downloads a file and report download progress").onlyIfDockerDaemonSupportsLinuxContainers {
+    // Note that BuildKit does not support reporting progress information for file downloads.
+    should("be able to build a Linux container image that downloads a file").onlyIfDockerDaemonSupportsLinuxContainers {
         val spec = ImageBuildSpec.Builder(rootTestImagesDirectory.resolve("file-download"))
             .withBuildKitBuilder()
             .withNoBuildCache()
@@ -432,17 +433,8 @@ class DockerClientBuildKitImageBuildSpec : ShouldSpec({
         outputText shouldContain "#5 https://httpbin.org/drip?duration=1&numbytes=2048&code=200&delay=0"
         outputText shouldContain "#6 [2/2] ADD https://httpbin.org/drip?duration=1&numbytes=2048&code=200&delay=0 /file.txt"
 
-        progressUpdatesReceived shouldContain StepStarting(4, "[1/2] FROM alpine:3.14.2")
+        progressUpdatesReceived shouldContain StepStarting(4, "[1/2] FROM docker.io/library/alpine:3.14.2")
         progressUpdatesReceived shouldContain StepStarting(5, "https://httpbin.org/drip?duration=1&numbytes=2048&code=200&delay=0")
-
-        progressUpdatesReceived.forAtLeastOne {
-            it.shouldBeTypeOf<StepDownloadProgressUpdate>()
-            it.stepNumber shouldBe 5
-            it.bytesDownloaded shouldBeLessThan 2048
-            it.totalBytes shouldBe 2048
-        }
-
-        progressUpdatesReceived shouldContain StepDownloadProgressUpdate(2, 2048, 2048)
         progressUpdatesReceived shouldEndWith BuildComplete(image)
     }
 
