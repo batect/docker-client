@@ -130,15 +130,13 @@ type legacyImageBuildResponseBodyParser struct {
 	haveSeenMeaningfulOutputForCurrentStep bool
 	haveSeenStepFinishedLineForCurrentStep bool
 	outputStreamHandle                     OutputStreamHandle
-	onProgressUpdate                       BuildImageProgressCallback
-	onProgressUpdateUserData               unsafe.Pointer
+	progressCallback                       *imageBuildProgressCallback
 }
 
 func newLegacyImageBuildResponseBodyParser(outputStreamHandle OutputStreamHandle, onProgressUpdate BuildImageProgressCallback, callbackUserData unsafe.Pointer) *legacyImageBuildResponseBodyParser {
 	return &legacyImageBuildResponseBodyParser{
-		outputStreamHandle:       outputStreamHandle,
-		onProgressUpdate:         onProgressUpdate,
-		onProgressUpdateUserData: callbackUserData,
+		outputStreamHandle: outputStreamHandle,
+		progressCallback:   newImageBuildProgressCallback(onProgressUpdate, callbackUserData),
 	}
 }
 
@@ -156,7 +154,7 @@ func (p *legacyImageBuildResponseBodyParser) Parse(response types.ImageBuildResp
 	}
 
 	if p.imageID != "" {
-		if err := p.onStepFinished(p.currentStep); err != nil {
+		if err := p.progressCallback.onStepFinished(p.currentStep); err != nil {
 			return "", err
 		}
 	}
@@ -178,7 +176,7 @@ func (p *legacyImageBuildResponseBodyParser) onMessageReceived(msg jsonmessage.J
 	}
 
 	if msg.Error != nil {
-		if err := p.onBuildFailed(msg.Error.Message); err != nil {
+		if err := p.progressCallback.onBuildFailed(msg.Error.Message); err != nil {
 			return err
 		}
 	}
@@ -204,7 +202,7 @@ func (p *legacyImageBuildResponseBodyParser) onBuildOutput(stream string) error 
 		}
 
 		if p.currentStep != 0 {
-			if err := p.onStepFinished(p.currentStep); err != nil {
+			if err := p.progressCallback.onStepFinished(p.currentStep); err != nil {
 				return err
 			}
 		}
@@ -214,7 +212,7 @@ func (p *legacyImageBuildResponseBodyParser) onBuildOutput(stream string) error 
 		p.haveSeenMeaningfulOutputForCurrentStep = false
 		p.haveSeenStepFinishedLineForCurrentStep = false
 
-		return p.onStepStarting(newStep, stepName)
+		return p.progressCallback.onStepStarting(newStep, stepName)
 	}
 
 	if !p.haveSeenMeaningfulOutputForCurrentStep && stream == "\n" {
@@ -242,7 +240,7 @@ func (p *legacyImageBuildResponseBodyParser) onBuildOutput(stream string) error 
 
 	p.haveSeenMeaningfulOutputForCurrentStep = true
 
-	return p.onStepOutput(stream, p.currentStep)
+	return p.progressCallback.onStepOutput(stream, p.currentStep)
 }
 
 func (p *legacyImageBuildResponseBodyParser) onProgress(msg jsonmessage.JSONMessage) error {
@@ -255,82 +253,10 @@ func (p *legacyImageBuildResponseBodyParser) onProgress(msg jsonmessage.JSONMess
 
 		progressUpdate := newPullImageProgressUpdate(msg.Status, progressDetail, msg.ID)
 
-		return p.onImagePullProgress(progressUpdate, p.currentStep)
+		return p.progressCallback.onImagePullProgress(progressUpdate, p.currentStep)
 	}
 
-	return p.onDownloadProgress(p.currentStep, msg.Progress.Current, msg.Progress.Total)
-}
-
-func (p *legacyImageBuildResponseBodyParser) onBuildFailed(msg string) error {
-	update := newBuildImageProgressUpdate(nil, nil, nil, nil, nil, nil, newBuildImageProgressUpdate_BuildFailed(msg))
-
-	defer C.FreeBuildImageProgressUpdate(update)
-
-	if !invokeBuildImageProgressCallback(p.onProgressUpdate, p.onProgressUpdateUserData, update) {
-		return ErrProgressCallbackFailed
-	}
-
-	return nil
-}
-
-func (p *legacyImageBuildResponseBodyParser) onStepOutput(output string, currentStep int64) error {
-	update := newBuildImageProgressUpdate(nil, nil, newBuildImageProgressUpdate_StepOutput(currentStep, output), nil, nil, nil, nil)
-
-	defer C.FreeBuildImageProgressUpdate(update)
-
-	if !invokeBuildImageProgressCallback(p.onProgressUpdate, p.onProgressUpdateUserData, update) {
-		return ErrProgressCallbackFailed
-	}
-
-	return nil
-}
-
-func (p *legacyImageBuildResponseBodyParser) onStepFinished(currentStep int64) error {
-	update := newBuildImageProgressUpdate(nil, nil, nil, nil, nil, newBuildImageProgressUpdate_StepFinished(currentStep), nil)
-
-	defer C.FreeBuildImageProgressUpdate(update)
-
-	if !invokeBuildImageProgressCallback(p.onProgressUpdate, p.onProgressUpdateUserData, update) {
-		return ErrProgressCallbackFailed
-	}
-
-	return nil
-}
-
-func (p *legacyImageBuildResponseBodyParser) onStepStarting(newStep int64, stepName string) error {
-	update := newBuildImageProgressUpdate(nil, newBuildImageProgressUpdate_StepStarting(newStep, stepName), nil, nil, nil, nil, nil)
-
-	defer C.FreeBuildImageProgressUpdate(update)
-
-	if !invokeBuildImageProgressCallback(p.onProgressUpdate, p.onProgressUpdateUserData, update) {
-		return ErrProgressCallbackFailed
-	}
-
-	return nil
-}
-
-func (p *legacyImageBuildResponseBodyParser) onImagePullProgress(progressUpdate PullImageProgressUpdate, currentStep int64) error {
-	update := newBuildImageProgressUpdate(nil, nil, nil, newBuildImageProgressUpdate_StepPullProgressUpdate(currentStep, progressUpdate), nil, nil, nil)
-
-	defer C.FreeBuildImageProgressUpdate(update)
-
-	if !invokeBuildImageProgressCallback(p.onProgressUpdate, p.onProgressUpdateUserData, update) {
-		return ErrProgressCallbackFailed
-	}
-
-	return nil
-}
-
-func (p *legacyImageBuildResponseBodyParser) onDownloadProgress(currentStep int64, downloadedBytes int64, totalBytes int64) error {
-	update := newBuildImageProgressUpdate(nil, nil, nil, nil, newBuildImageProgressUpdate_StepDownloadProgressUpdate(currentStep, downloadedBytes, totalBytes), nil, nil)
-
-	defer C.FreeBuildImageProgressUpdate(update)
-
-	if !invokeBuildImageProgressCallback(p.onProgressUpdate, p.onProgressUpdateUserData, update) {
-		return ErrProgressCallbackFailed
-	}
-
-	return nil
+	return p.progressCallback.onDownloadProgress(p.currentStep, msg.Progress.Current, msg.Progress.Total)
 }
 
 // This function is based on jsonmessage.DisplayJSONMessagesStream, but allows us to process every message, not just those with

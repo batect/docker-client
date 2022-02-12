@@ -37,6 +37,7 @@ import (
 	"github.com/moby/buildkit/session/filesync"
 	"github.com/moby/buildkit/util/progress/progressui"
 	"github.com/moby/buildkit/util/progress/progresswriter"
+	github_com_opencontainers_go_digest "github.com/opencontainers/go-digest"
 	fsutiltypes "github.com/tonistiigi/fsutil/types"
 	"golang.org/x/sync/errgroup"
 )
@@ -53,7 +54,7 @@ func buildImageWithBuildKitBuilder(
 	docker := getDockerAPIClient(clientHandle)
 	configFile := getClientConfigFile(clientHandle)
 	eg, ctx := errgroup.WithContext(context.TODO())
-	tracer := newBuildKitBuildTracer(outputStreamHandle, eg)
+	tracer := newBuildKitBuildTracer(outputStreamHandle, eg, onProgressUpdate, callbackUserData)
 	sess, err := createSession(request, tracer)
 
 	if err != nil {
@@ -231,13 +232,17 @@ type buildKitBuildTracer struct {
 	displayCh          chan *buildkitclient.SolveStatus
 	eg                 *errgroup.Group
 	outputStreamHandle OutputStreamHandle
+	progressCallback   *imageBuildProgressCallback
+	startedVertices    map[github_com_opencontainers_go_digest.Digest]interface{}
 }
 
-func newBuildKitBuildTracer(outputStreamHandle OutputStreamHandle, eg *errgroup.Group) *buildKitBuildTracer {
+func newBuildKitBuildTracer(outputStreamHandle OutputStreamHandle, eg *errgroup.Group, onProgressUpdate BuildImageProgressCallback, onProgressUpdateUserData unsafe.Pointer) *buildKitBuildTracer {
 	return &buildKitBuildTracer{
 		displayCh:          make(chan *buildkitclient.SolveStatus),
 		eg:                 eg,
 		outputStreamHandle: outputStreamHandle,
+		progressCallback:   newImageBuildProgressCallback(onProgressUpdate, onProgressUpdateUserData),
+		startedVertices:    map[github_com_opencontainers_go_digest.Digest]interface{}{},
 	}
 }
 
@@ -275,6 +280,11 @@ func (t *buildKitBuildTracer) LogJSONMessage(msg jsonmessage.JSONMessage) {
 		return // The Docker CLI ignores all errors here, so we do the same.
 	}
 
+	t.print(resp)
+	t.sendProgressUpdateNotifications(resp)
+}
+
+func (t *buildKitBuildTracer) print(resp controlapi.StatusResponse) {
 	s := buildkitclient.SolveStatus{}
 
 	for _, v := range resp.Vertexes {
@@ -312,4 +322,19 @@ func (t *buildKitBuildTracer) LogJSONMessage(msg jsonmessage.JSONMessage) {
 	}
 
 	t.displayCh <- &s
+}
+
+func (t *buildKitBuildTracer) sendProgressUpdateNotifications(resp controlapi.StatusResponse) {
+	for _, v := range resp.Vertexes {
+		if !t.haveSeenVertex(v) {
+			t.startedVertices[v.Digest] = nil
+			t.progressCallback.onStepStarting(int64(len(t.startedVertices)), v.Name) // TODO: handle error
+		}
+	}
+}
+
+func (t *buildKitBuildTracer) haveSeenVertex(v *controlapi.Vertex) bool {
+	_, haveSeen := t.startedVertices[v.Digest]
+
+	return haveSeen
 }

@@ -106,3 +106,87 @@ func createImageBuildOptions(docker *client.Client, configFile *configfile.Confi
 
 	return opts
 }
+
+type imageBuildProgressCallback struct {
+	onProgressUpdate         BuildImageProgressCallback
+	onProgressUpdateUserData unsafe.Pointer
+}
+
+func newImageBuildProgressCallback(onProgressUpdate BuildImageProgressCallback, callbackUserData unsafe.Pointer) *imageBuildProgressCallback {
+	return &imageBuildProgressCallback{
+		onProgressUpdate:         onProgressUpdate,
+		onProgressUpdateUserData: callbackUserData,
+	}
+}
+
+func (p *imageBuildProgressCallback) onBuildFailed(msg string) error {
+	update := newBuildImageProgressUpdate(nil, nil, nil, nil, nil, nil, newBuildImageProgressUpdate_BuildFailed(msg))
+
+	defer C.FreeBuildImageProgressUpdate(update)
+
+	if !invokeBuildImageProgressCallback(p.onProgressUpdate, p.onProgressUpdateUserData, update) {
+		return ErrProgressCallbackFailed
+	}
+
+	return nil
+}
+
+func (p *imageBuildProgressCallback) onStepOutput(output string, currentStep int64) error {
+	update := newBuildImageProgressUpdate(nil, nil, newBuildImageProgressUpdate_StepOutput(currentStep, output), nil, nil, nil, nil)
+
+	defer C.FreeBuildImageProgressUpdate(update)
+
+	if !invokeBuildImageProgressCallback(p.onProgressUpdate, p.onProgressUpdateUserData, update) {
+		return ErrProgressCallbackFailed
+	}
+
+	return nil
+}
+
+func (p *imageBuildProgressCallback) onStepFinished(currentStep int64) error {
+	update := newBuildImageProgressUpdate(nil, nil, nil, nil, nil, newBuildImageProgressUpdate_StepFinished(currentStep), nil)
+
+	defer C.FreeBuildImageProgressUpdate(update)
+
+	if !invokeBuildImageProgressCallback(p.onProgressUpdate, p.onProgressUpdateUserData, update) {
+		return ErrProgressCallbackFailed
+	}
+
+	return nil
+}
+
+func (p *imageBuildProgressCallback) onStepStarting(newStep int64, stepName string) error {
+	update := newBuildImageProgressUpdate(nil, newBuildImageProgressUpdate_StepStarting(newStep, stepName), nil, nil, nil, nil, nil)
+
+	defer C.FreeBuildImageProgressUpdate(update)
+
+	if !invokeBuildImageProgressCallback(p.onProgressUpdate, p.onProgressUpdateUserData, update) {
+		return ErrProgressCallbackFailed
+	}
+
+	return nil
+}
+
+func (p *imageBuildProgressCallback) onImagePullProgress(progressUpdate PullImageProgressUpdate, currentStep int64) error {
+	update := newBuildImageProgressUpdate(nil, nil, nil, newBuildImageProgressUpdate_StepPullProgressUpdate(currentStep, progressUpdate), nil, nil, nil)
+
+	defer C.FreeBuildImageProgressUpdate(update)
+
+	if !invokeBuildImageProgressCallback(p.onProgressUpdate, p.onProgressUpdateUserData, update) {
+		return ErrProgressCallbackFailed
+	}
+
+	return nil
+}
+
+func (p *imageBuildProgressCallback) onDownloadProgress(currentStep int64, downloadedBytes int64, totalBytes int64) error {
+	update := newBuildImageProgressUpdate(nil, nil, nil, nil, newBuildImageProgressUpdate_StepDownloadProgressUpdate(currentStep, downloadedBytes, totalBytes), nil, nil)
+
+	defer C.FreeBuildImageProgressUpdate(update)
+
+	if !invokeBuildImageProgressCallback(p.onProgressUpdate, p.onProgressUpdateUserData, update) {
+		return ErrProgressCallbackFailed
+	}
+
+	return nil
+}
