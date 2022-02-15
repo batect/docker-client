@@ -215,6 +215,6 @@ abstract class GolangBuild @Inject constructor(private val execActionFactory: Ex
         }
 
     companion object {
-        private const val golangVersion = "1.17.6"
+        private const val golangVersion = "1.17.7"
     }
 }
