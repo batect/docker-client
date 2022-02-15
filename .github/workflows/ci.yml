@@ -55,7 +55,7 @@ jobs:
         if: ${{ runner.os != 'Linux' }} # We use a container on Linux.
         uses: actions/setup-go@v2.2.0
         with:
-          go-version: 1.17.6
+          go-version: 1.17.7
 
       - name: Cache packages
         id: cache-packages
@@ -156,7 +156,7 @@ jobs:
         if: ${{ runner.os != 'Linux' }} # We use a container on Linux.
         uses: actions/setup-go@v2.2.0
         with:
-          go-version: 1.17.6
+          go-version: 1.17.7
 
       - name: Cache packages
         id: cache-packages
@@ -340,7 +340,7 @@ jobs:
         if: ${{ runner.os != 'Linux' }} # We use a container on Linux.
         uses: actions/setup-go@v2.2.0
         with:
-          go-version: 1.17.6
+          go-version: 1.17.7
 
       - name: Cache packages
         id: cache-packages
