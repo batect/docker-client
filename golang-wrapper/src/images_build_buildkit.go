@@ -18,6 +18,7 @@ import "C"
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"net"
@@ -42,6 +43,8 @@ import (
 	"golang.org/x/sync/errgroup"
 )
 
+var errDockerAuthProviderDoesNotSupportLogging = errors.New("DockerAuthProvider does not support logging")
+
 func buildImageWithBuildKitBuilder(
 	clientHandle DockerClientHandle,
 	request *imageBuildRequest,
@@ -50,7 +53,6 @@ func buildImageWithBuildKitBuilder(
 	callbackUserData unsafe.Pointer,
 ) BuildImageReturn {
 	// TODO: check daemon supports BuildKit and fail early if it doesn't
-
 	docker := getDockerAPIClient(clientHandle)
 	configFile := getClientConfigFile(clientHandle)
 	eg, ctx := errgroup.WithContext(context.TODO())
@@ -115,8 +117,13 @@ func createSession(request *imageBuildRequest, tracer *buildKitBuildTracer) (*se
 
 	// At the time of writing, this Writer is just used for warning messages when loading the local config file, so we can safely ignore these messages.
 	authProvider := authprovider.NewDockerAuthProvider(io.Discard)
+	authProviderLogger, authProviderSupportsLogging := authProvider.(loggingAttachable)
 
-	authProvider.(loggingAttachable).SetLogger(func(s *buildkitclient.SolveStatus) {
+	if !authProviderSupportsLogging {
+		return nil, errDockerAuthProviderDoesNotSupportLogging
+	}
+
+	authProviderLogger.SetLogger(func(s *buildkitclient.SolveStatus) {
 		tracer.LogStatus(s)
 	})
 
@@ -128,6 +135,7 @@ func createSession(request *imageBuildRequest, tracer *buildKitBuildTracer) (*se
 func resetUIDAndGID(path string, stat *fsutiltypes.Stat) bool {
 	stat.Uid = 0
 	stat.Gid = 0
+
 	return true
 }
 
@@ -169,7 +177,7 @@ func runBuild(ctx context.Context, eg *errgroup.Group, docker *client.Client, op
 	})
 
 	parser := newBuildKitImageBuildResponseBodyParser(outputStreamHandle)
-	imageID, err := parser.Parse(response, tracer)
+	imageID, err := parser.Parse(response, tracer) //nolint:contextcheck
 
 	if err != nil {
 		return "", err
@@ -181,10 +189,11 @@ func runBuild(ctx context.Context, eg *errgroup.Group, docker *client.Client, op
 func waitForSuccessOrCancelBuild(ctx context.Context, docker *client.Client, opts types.ImageBuildOptions, done chan struct{}) error {
 	select {
 	case <-ctx.Done():
-		// We deliberately don't use 'ctx' as the context below - otherwise, the already cancelled context might interfere with the API call to cancel the build.
+		//nolint:contextcheck // We deliberately don't use 'ctx' as the context below - otherwise, the already cancelled context might interfere with the API call to cancel the build.
 		return docker.BuildCancel(context.Background(), opts.BuildID)
 	case <-done:
 	}
+
 	return nil
 }
 
@@ -200,7 +209,7 @@ func newBuildKitImageBuildResponseBodyParser(outputStreamHandle OutputStreamHand
 }
 
 func (p *buildKitImageBuildResponseBodyParser) Parse(response types.ImageBuildResponse, tracer *buildKitBuildTracer) (string, error) {
-	tracer.Start()
+	tracer.Start() //nolint:contextcheck
 	defer tracer.Stop()
 
 	p.imageID = ""
@@ -260,6 +269,7 @@ func newBuildKitBuildTracer(outputStreamHandle OutputStreamHandle, eg *errgroup.
 
 func (t *buildKitBuildTracer) Start() {
 	t.eg.Go(func() error {
+		//nolint:contextcheck // We deliberately don't use the build operation's context as the context below - otherwise, error messages might not be printed after the context is cancelled.
 		return t.run()
 	})
 }
@@ -293,9 +303,11 @@ func (t *buildKitBuildTracer) LogJSONMessage(msg jsonmessage.JSONMessage) error 
 	}
 
 	t.print(resp)
+
 	return t.sendProgressUpdateNotifications(resp)
 }
 
+//nolint:forbidigo // False positive.
 func (t *buildKitBuildTracer) print(resp controlapi.StatusResponse) {
 	s := buildkitclient.SolveStatus{}
 

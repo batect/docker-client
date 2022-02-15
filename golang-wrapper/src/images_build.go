@@ -21,7 +21,6 @@ import (
 	"C"
 	"encoding/json"
 	"errors"
-	"fmt"
 	"io"
 	"unsafe"
 
@@ -45,7 +44,7 @@ func BuildImage(clientHandle DockerClientHandle, request *C.BuildImageRequest, o
 		return buildImageWithBuildKitBuilder(clientHandle, fromCBuildImageRequest(request), outputStreamHandle, onProgressUpdate, callbackUserData)
 
 	default:
-		return newBuildImageReturn(nil, toError(fmt.Errorf("unknown builder version '%v'", builderVersion)))
+		return newBuildImageReturn(nil, toError(InvalidBuilderVersionError{builderVersion}))
 	}
 }
 

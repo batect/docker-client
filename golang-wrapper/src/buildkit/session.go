@@ -34,6 +34,7 @@ func GetBuildSharedKey(dir string) string {
 	return hex.EncodeToString(s[:])
 }
 
+//nolint // This function is taken directly from the Docker CLI and for ease of maintenance we want to keep it identical.
 func tryNodeIdentifier() string {
 	out := config.Dir() // return config dir as default on permission error
 	if err := os.MkdirAll(config.Dir(), 0700); err == nil {

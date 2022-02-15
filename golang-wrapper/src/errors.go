@@ -14,6 +14,8 @@
 
 package main
 
+import "fmt"
+
 var (
 	ErrInvalidDockerClientHandle = InvalidDockerClientHandleError{}
 	ErrProgressCallbackFailed    = ProgressCallbackFailedError{}
@@ -36,4 +38,12 @@ type InvalidOutputStreamHandleError struct{}
 
 func (e InvalidOutputStreamHandleError) Error() string {
 	return "invalid output stream handle"
+}
+
+type InvalidBuilderVersionError struct {
+	InvalidVersion string
+}
+
+func (e InvalidBuilderVersionError) Error() string {
+	return fmt.Sprintf("unknown builder version '%s'", e.InvalidVersion)
 }
