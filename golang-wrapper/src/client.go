@@ -110,7 +110,7 @@ func CreateClient(cfg *C.ClientConfiguration) CreateClientReturn {
 
 	nextClientIndex++
 
-	return newCreateClientReturn(DockerClientHandle(clientIndex), nil)
+	return newCreateClientReturn(clientIndex, nil)
 }
 
 // The Docker client library does not expose a version of WithTLSClientConfig that allows us to set
@@ -154,20 +154,6 @@ func directoryExists(path string) bool {
 	}
 
 	return false
-}
-
-func getServerInfo(docker *client.Client) (*command.ServerInfo, error) {
-	ping, err := docker.Ping(context.Background())
-
-	if err != nil {
-		return nil, err
-	}
-
-	return &command.ServerInfo{
-		HasExperimental: ping.Experimental,
-		OSType:          ping.OSType,
-		BuildkitVersion: ping.BuilderVersion,
-	}, nil
 }
 
 //export DisposeClient
