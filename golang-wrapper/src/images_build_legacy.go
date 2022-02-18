@@ -47,8 +47,8 @@ var buildStepFinishedLineRegex = regexp.MustCompile(`^ ---> [0-9a-f]{12}\n$`)
 var buildSuccessfullyFinishedLineRegex = regexp.MustCompile(`^Successfully built [0-9a-f]{12}\n$`)
 
 func buildImageWithLegacyBuilder(clientHandle DockerClientHandle, request *imageBuildRequest, outputStreamHandle OutputStreamHandle, reportContextUploadProgressEvents C.bool, onProgressUpdate BuildImageProgressCallback, callbackUserData unsafe.Pointer) BuildImageReturn {
-	docker := getDockerAPIClient(clientHandle)
-	configFile := getClientConfigFile(clientHandle)
+	docker := clientHandle.DockerAPIClient()
+	configFile := clientHandle.ClientConfigFile()
 	contextDir := request.ContextDirectory
 	pathToDockerfile := request.PathToDockerfile
 

@@ -27,7 +27,7 @@ import (
 
 //export CreateNetwork
 func CreateNetwork(clientHandle DockerClientHandle, name *C.char, driver *C.char) CreateNetworkReturn {
-	docker := getDockerAPIClient(clientHandle)
+	docker := clientHandle.DockerAPIClient()
 
 	opts := types.NetworkCreate{
 		CheckDuplicate: true,
@@ -47,7 +47,7 @@ func CreateNetwork(clientHandle DockerClientHandle, name *C.char, driver *C.char
 
 //export DeleteNetwork
 func DeleteNetwork(clientHandle DockerClientHandle, id *C.char) Error {
-	docker := getDockerAPIClient(clientHandle)
+	docker := clientHandle.DockerAPIClient()
 
 	err := docker.NetworkRemove(context.Background(), C.GoString(id))
 
@@ -56,7 +56,7 @@ func DeleteNetwork(clientHandle DockerClientHandle, id *C.char) Error {
 
 //export GetNetworkByNameOrID
 func GetNetworkByNameOrID(clientHandle DockerClientHandle, searchFor *C.char) GetNetworkByNameOrIDReturn {
-	docker := getDockerAPIClient(clientHandle)
+	docker := clientHandle.DockerAPIClient()
 
 	dockerResponse, err := docker.NetworkInspect(context.Background(), C.GoString(searchFor), types.NetworkInspectOptions{})
 

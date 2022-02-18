@@ -28,7 +28,7 @@ import (
 
 //export DeleteImage
 func DeleteImage(clientHandle DockerClientHandle, ref *C.char, force C.bool) Error {
-	docker := getDockerAPIClient(clientHandle)
+	docker := clientHandle.DockerAPIClient()
 
 	opts := types.ImageRemoveOptions{
 		Force: bool(force),
@@ -45,7 +45,7 @@ func DeleteImage(clientHandle DockerClientHandle, ref *C.char, force C.bool) Err
 
 //export GetImage
 func GetImage(clientHandle DockerClientHandle, ref *C.char) GetImageReturn {
-	docker := getDockerAPIClient(clientHandle)
+	docker := clientHandle.DockerAPIClient()
 
 	response, err := getImageReference(docker, C.GoString(ref))
 

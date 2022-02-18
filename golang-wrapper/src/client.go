@@ -19,6 +19,7 @@ import (
 		#include "types.h"
 	*/
 	"C"
+	"context"
 	"fmt"
 	"net"
 	"net/http"
@@ -26,6 +27,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/docker/cli/cli/command"
 	"github.com/docker/cli/cli/config"
 	"github.com/docker/cli/cli/config/configfile"
 	"github.com/docker/cli/cli/config/credentials"
@@ -36,14 +38,16 @@ import (
 
 //nolint:gochecknoglobals
 var (
-	activeClients            = map[uint64]*activeClient{}
-	activeClientsLock        = sync.RWMutex{}
-	nextClientIndex   uint64 = 0
+	activeClients                        = map[DockerClientHandle]*activeClient{}
+	activeClientsLock                    = sync.RWMutex{}
+	nextClientIndex   DockerClientHandle = 0
 )
 
 type activeClient struct {
 	dockerAPIClient *client.Client
 	configFile      *configfile.ConfigFile
+	serverInfo      *command.ServerInfo
+	serverInfoLock  *sync.RWMutex
 }
 
 //export CreateClient
@@ -100,6 +104,8 @@ func CreateClient(cfg *C.ClientConfiguration) CreateClientReturn {
 	activeClients[clientIndex] = &activeClient{
 		dockerAPIClient: c,
 		configFile:      configFile,
+		serverInfo:      nil,
+		serverInfoLock:  &sync.RWMutex{},
 	}
 
 	nextClientIndex++
@@ -150,34 +156,83 @@ func directoryExists(path string) bool {
 	return false
 }
 
+func getServerInfo(docker *client.Client) (*command.ServerInfo, error) {
+	ping, err := docker.Ping(context.Background())
+
+	if err != nil {
+		return nil, err
+	}
+
+	return &command.ServerInfo{
+		HasExperimental: ping.Experimental,
+		OSType:          ping.OSType,
+		BuildkitVersion: ping.BuilderVersion,
+	}, nil
+}
+
 //export DisposeClient
 func DisposeClient(clientHandle DockerClientHandle) Error {
 	activeClientsLock.Lock()
 	defer activeClientsLock.Unlock()
 
-	idx := uint64(clientHandle)
-
-	if _, ok := activeClients[idx]; !ok {
+	if _, ok := activeClients[clientHandle]; !ok {
 		return toError(ErrInvalidDockerClientHandle)
 	}
 
-	delete(activeClients, idx)
+	delete(activeClients, clientHandle)
 
 	return nil
 }
 
-func getDockerAPIClient(clientHandle DockerClientHandle) *client.Client {
+func getClient(h DockerClientHandle) *activeClient {
 	activeClientsLock.RLock()
 	defer activeClientsLock.RUnlock()
 
-	return activeClients[uint64(clientHandle)].dockerAPIClient
+	return activeClients[h]
 }
 
-func getClientConfigFile(clientHandle DockerClientHandle) *configfile.ConfigFile {
-	activeClientsLock.RLock()
-	defer activeClientsLock.RUnlock()
+func (h DockerClientHandle) DockerAPIClient() *client.Client {
+	return getClient(h).dockerAPIClient
+}
 
-	return activeClients[uint64(clientHandle)].configFile
+func (h DockerClientHandle) ClientConfigFile() *configfile.ConfigFile {
+	return getClient(h).configFile
+}
+
+func (h DockerClientHandle) ServerInfo() (*command.ServerInfo, error) {
+	c := getClient(h)
+
+	if info := c.getCachedServerInfo(); info != nil {
+		return info, nil
+	}
+
+	return c.updateCachedServerInfo()
+}
+
+func (c *activeClient) getCachedServerInfo() *command.ServerInfo {
+	c.serverInfoLock.RLock()
+	defer c.serverInfoLock.RUnlock()
+
+	return c.serverInfo
+}
+
+func (c *activeClient) updateCachedServerInfo() (*command.ServerInfo, error) {
+	c.serverInfoLock.Lock()
+	defer c.serverInfoLock.Unlock()
+
+	ping, err := c.dockerAPIClient.Ping(context.Background())
+
+	if err != nil {
+		return nil, err
+	}
+
+	c.serverInfo = &command.ServerInfo{
+		HasExperimental: ping.Experimental,
+		OSType:          ping.OSType,
+		BuildkitVersion: ping.BuilderVersion,
+	}
+
+	return c.serverInfo, nil
 }
 
 func loadConfigFile(configPath string) (*configfile.ConfigFile, error) {
@@ -196,8 +251,8 @@ func loadConfigFile(configPath string) (*configfile.ConfigFile, error) {
 
 //export SetClientProxySettingsForTest
 func SetClientProxySettingsForTest(clientHandle DockerClientHandle) {
-	docker := getDockerAPIClient(clientHandle)
-	configFile := getClientConfigFile(clientHandle)
+	docker := clientHandle.DockerAPIClient()
+	configFile := clientHandle.ClientConfigFile()
 	host := docker.DaemonHost()
 
 	if configFile.Proxies == nil {

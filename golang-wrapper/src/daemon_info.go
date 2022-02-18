@@ -24,7 +24,7 @@ import (
 
 //export Ping
 func Ping(clientHandle DockerClientHandle) PingReturn {
-	docker := getDockerAPIClient(clientHandle)
+	docker := clientHandle.DockerAPIClient()
 
 	dockerResponse, err := docker.Ping(context.Background())
 
@@ -44,7 +44,7 @@ func Ping(clientHandle DockerClientHandle) PingReturn {
 
 //export GetDaemonVersionInformation
 func GetDaemonVersionInformation(clientHandle DockerClientHandle) GetDaemonVersionInformationReturn {
-	docker := getDockerAPIClient(clientHandle)
+	docker := clientHandle.DockerAPIClient()
 
 	dockerResponse, err := docker.ServerVersion(context.Background())
 

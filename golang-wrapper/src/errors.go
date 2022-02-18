@@ -20,6 +20,7 @@ var (
 	ErrInvalidDockerClientHandle = InvalidDockerClientHandleError{}
 	ErrProgressCallbackFailed    = ProgressCallbackFailedError{}
 	ErrInvalidOutputStreamHandle = InvalidOutputStreamHandleError{}
+	ErrBuildKitNotSupported      = BuildKitNotSupportedError{}
 )
 
 type ProgressCallbackFailedError struct{}
@@ -46,4 +47,10 @@ type InvalidBuilderVersionError struct {
 
 func (e InvalidBuilderVersionError) Error() string {
 	return fmt.Sprintf("unknown builder version '%s'", e.InvalidVersion)
+}
+
+type BuildKitNotSupportedError struct{}
+
+func (e BuildKitNotSupportedError) Error() string {
+	return "the Docker deamon in use does not support BuildKit"
 }

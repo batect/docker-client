@@ -28,6 +28,7 @@ import (
 	"github.com/batect/docker-client/golang-wrapper/src/buildkit"
 	"github.com/docker/cli/cli/config/configfile"
 	"github.com/docker/docker/api/types"
+	"github.com/docker/docker/api/types/versions"
 	"github.com/docker/docker/client"
 	"github.com/docker/docker/pkg/jsonmessage"
 	"github.com/docker/docker/pkg/stringid"
@@ -52,9 +53,14 @@ func buildImageWithBuildKitBuilder(
 	onProgressUpdate BuildImageProgressCallback,
 	callbackUserData unsafe.Pointer,
 ) BuildImageReturn {
-	// TODO: check daemon supports BuildKit and fail early if it doesn't
-	docker := getDockerAPIClient(clientHandle)
-	configFile := getClientConfigFile(clientHandle)
+	if supported, err := supportsBuildKit(clientHandle); err != nil {
+		return newBuildImageReturn(nil, toError(err))
+	} else if !supported {
+		return newBuildImageReturn(nil, toError(ErrBuildKitNotSupported))
+	}
+
+	docker := clientHandle.DockerAPIClient()
+	configFile := clientHandle.ClientConfigFile()
 	eg, ctx := errgroup.WithContext(context.TODO())
 	tracer := newBuildKitBuildTracer(outputStreamHandle, eg, onProgressUpdate, callbackUserData)
 	sess, err := createSession(request, tracer)
@@ -85,6 +91,23 @@ func buildImageWithBuildKitBuilder(
 	}
 
 	return newBuildImageReturn(newImageReference(imageID), nil)
+}
+
+// This is based on isSessionSupported from github.com/docker/cli/cli/command/image/build_session.go
+func supportsBuildKit(clientHandle DockerClientHandle) (bool, error) {
+	docker := clientHandle.DockerAPIClient()
+
+	if versions.GreaterThanOrEqualTo(docker.ClientVersion(), "1.39") {
+		return true, nil
+	}
+
+	serverInfo, err := clientHandle.ServerInfo()
+
+	if err != nil {
+		return false, err
+	}
+
+	return serverInfo.HasExperimental && versions.GreaterThanOrEqualTo(docker.ClientVersion(), "1.31"), nil
 }
 
 type loggingAttachable interface {
