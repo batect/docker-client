@@ -32,10 +32,6 @@ import javax.inject.Inject
 abstract class GolangLint @Inject constructor(private val execActionFactory: ExecActionFactory) : DefaultTask() {
     @get:InputDirectory
     @get:PathSensitive(PathSensitivity.RELATIVE)
-    abstract val projectDirectory: DirectoryProperty
-
-    @get:InputDirectory
-    @get:PathSensitive(PathSensitivity.RELATIVE)
     abstract val sourceDirectory: DirectoryProperty
 
     @get:Input
@@ -50,7 +46,6 @@ abstract class GolangLint @Inject constructor(private val execActionFactory: Exe
     init {
         group = "verification"
 
-        projectDirectory.convention(project.layout.projectDirectory)
         sourceDirectory.convention(project.layout.projectDirectory.dir("src"))
 
         dockerImage.convention(
@@ -67,19 +62,17 @@ abstract class GolangLint @Inject constructor(private val execActionFactory: Exe
         val action = execActionFactory.newExecAction()
         action.workingDir = sourceDirectory.asFile.get()
 
-        val projectDirectoryPath = projectDirectory.get().asFile.toPath()
         val sourceDirectoryPath = sourceDirectory.get().asFile.toPath()
-        val sourceDirectoryInBuildEnvironment = "/code/" + projectDirectoryPath.relativize(sourceDirectoryPath)
 
         action.commandLine = listOf(
             "docker",
             "run",
             "--rm",
             "-i",
-            "-v", "$projectDirectoryPath:/code",
+            "-v", "$sourceDirectoryPath:/code",
             "-v", "docker-client-cache-lint:/go",
             "-e", "GOCACHE=/go/cache",
-            "-w", sourceDirectoryInBuildEnvironment,
+            "-w", "/code",
             dockerImage.get(),
             "golangci-lint", "run"
         )
