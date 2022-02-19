@@ -19,6 +19,7 @@ package batect.dockerclient
 import batect.dockerclient.io.SinkTextOutput
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.core.spec.style.ShouldSpec
+import io.kotest.inspectors.forAtLeastOne
 import io.kotest.inspectors.forNone
 import io.kotest.matchers.collections.shouldBeIn
 import io.kotest.matchers.collections.shouldContain
@@ -26,6 +27,7 @@ import io.kotest.matchers.collections.shouldContainAnyOf
 import io.kotest.matchers.collections.shouldContainInOrder
 import io.kotest.matchers.collections.shouldEndWith
 import io.kotest.matchers.collections.shouldStartWith
+import io.kotest.matchers.longs.shouldBeGreaterThan
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
 import io.kotest.matchers.string.shouldContain
@@ -87,8 +89,13 @@ class DockerClientBuildKitImageBuildSpec : ShouldSpec({
             StepContextUploadProgress(1, 0),
         )
 
+        progressUpdatesReceived.forAtLeastOne {
+            it.shouldBeTypeOf<StepContextUploadProgress>()
+            it.stepNumber shouldBe 1
+            it.bytesUploaded shouldBeGreaterThan 0
+        }
+
         progressUpdatesReceived shouldContainInOrder listOf(
-            StepContextUploadProgress(1, 86),
             StepFinished(1),
             StepStarting(2, "[internal] load .dockerignore"),
             StepContextUploadProgress(2, 0),
