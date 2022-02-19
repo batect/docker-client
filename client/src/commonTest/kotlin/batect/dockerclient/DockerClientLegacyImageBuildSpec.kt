@@ -166,13 +166,16 @@ class DockerClientLegacyImageBuildSpec : ShouldSpec({
     }
 
     should("be able to build a Linux container image and force the base image to be re-pulled").onlyIfDockerDaemonSupportsLinuxContainers {
+        val imageTag = "batect-docker-client-legacy-image-build-force-repull"
         val contextDirectory = rootTestImagesDirectory.resolve("force-repull-base-image")
         val dockerfile = contextDirectory.resolve("Dockerfile")
         client.removeBaseImagesIfPresent(dockerfile)
+        client.deleteImageIfPresent(imageTag)
 
         val spec = ImageBuildSpec.Builder(contextDirectory)
             .withLegacyBuilder()
             .withBaseImageAlwaysPulled()
+            .withImageTag(imageTag)
             .build()
 
         val output = Buffer()
@@ -185,17 +188,17 @@ class DockerClientLegacyImageBuildSpec : ShouldSpec({
         val outputText = output.readUtf8().trim()
 
         outputText shouldContain """
-            Step 1/1 : FROM gcr.io/distroless/static@sha256:aadea1b1f16af043a34491eec481d0132479382096ea34f608087b4bef3634be
+            Step 1/1 : FROM gcr.io/distroless/static@sha256:8ad6f3ec70dad966479b9fb48da991138c72ba969859098ec689d1450c2e6c97
         """.trimIndent()
 
         outputText shouldContain """
-            Digest: sha256:aadea1b1f16af043a34491eec481d0132479382096ea34f608087b4bef3634be
-            Status: Downloaded newer image for gcr.io/distroless/static@sha256:aadea1b1f16af043a34491eec481d0132479382096ea34f608087b4bef3634be
+            Digest: sha256:8ad6f3ec70dad966479b9fb48da991138c72ba969859098ec689d1450c2e6c97
+            Status: Downloaded newer image for gcr.io/distroless/static@sha256:8ad6f3ec70dad966479b9fb48da991138c72ba969859098ec689d1450c2e6c97
         """.trimIndent()
 
-        val imageReference = "gcr.io/distroless/static@sha256:aadea1b1f16af043a34491eec481d0132479382096ea34f608087b4bef3634be"
-        val layerId = "b49b96595fd4"
-        val layerSize = 657696
+        val imageReference = "gcr.io/distroless/static@sha256:8ad6f3ec70dad966479b9fb48da991138c72ba969859098ec689d1450c2e6c97"
+        val layerId = "dbcab61d5a5a"
+        val layerSize = 803833
 
         progressUpdatesReceived.forAtLeastOne {
             it.shouldBeTypeOf<StepPullProgressUpdate>()
@@ -227,8 +230,9 @@ class DockerClientLegacyImageBuildSpec : ShouldSpec({
 
         progressUpdatesReceived shouldEndWith listOf(
             StepPullProgressUpdate(1, ImagePullProgressUpdate("Pull complete", ImagePullProgressDetail(0, 0), layerId)),
-            StepPullProgressUpdate(1, ImagePullProgressUpdate("Digest: sha256:aadea1b1f16af043a34491eec481d0132479382096ea34f608087b4bef3634be", null, "")),
+            StepPullProgressUpdate(1, ImagePullProgressUpdate("Digest: sha256:8ad6f3ec70dad966479b9fb48da991138c72ba969859098ec689d1450c2e6c97", null, "")),
             StepPullProgressUpdate(1, ImagePullProgressUpdate("Status: Downloaded newer image for $imageReference", null, "")),
+            StepOutput(1, "Successfully tagged $imageTag:latest\n"),
             StepFinished(1),
             BuildComplete(image)
         )
