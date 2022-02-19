@@ -60,7 +60,7 @@ class DockerClientLegacyImageBuildSpec : ShouldSpec({
         outputText shouldMatch """
             Step 1/2 : FROM alpine:\d+\.\d+.\d+(
             \d+\.\d+.\d+: Pulling from library/alpine
-            ([a-f0-9]{12}: (Pulling fs layer|Verifying Checksum|Download complete|Extracting|Pull complete|Waiting)
+            ([a-f0-9]{12}: (Pulling fs layer|Verifying Checksum|Download complete|Extracting|Pull complete|Waiting|Already exists)
             )*Digest: sha256:[0-9a-f]{64}
             Status: Downloaded newer image for alpine:\d+\.\d+\.\d+)?
              ---> [0-9a-f]{12}
