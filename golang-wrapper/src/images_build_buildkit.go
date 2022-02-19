@@ -496,6 +496,17 @@ func (t *buildKitBuildTracer) sendProgressUpdateNotifications(resp controlapi.St
 
 func (t *buildKitBuildTracer) sendVertexNotifications(v *controlapi.Vertex, resp controlapi.StatusResponse, processedStatuses map[*controlapi.VertexStatus]interface{}, processedLogs map[*controlapi.VertexLog]interface{}) error {
 	if !t.haveSeenVertex(v) && v.Started != nil {
+		t.allocateStepNumber(v)
+
+		if err := t.sendVertexStartedNotification(v); err != nil {
+			return err
+		}
+	}
+
+	if t.haveAlreadySeenVertexCompleted(v) && v.Completed == nil {
+		// Step is restarting: sometimes BuildKit marks a vertex as complete, then starts it again.
+		delete(t.completedVertices, v.Digest)
+
 		if err := t.sendVertexStartedNotification(v); err != nil {
 			return err
 		}
@@ -531,7 +542,7 @@ func (t *buildKitBuildTracer) sendVertexNotifications(v *controlapi.Vertex, resp
 }
 
 func (t *buildKitBuildTracer) sendVertexStartedNotification(v *controlapi.Vertex) error {
-	stepNumber := t.allocateStepNumber(v)
+	stepNumber := t.getStepNumberForDigest(v.Digest)
 
 	if err := t.progressCallback.onStepStarting(stepNumber, v.Name); err != nil {
 		return err
