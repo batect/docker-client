@@ -66,7 +66,7 @@ class DockerClientBuildKitImageBuildSpec : ShouldSpec({
             #3 \[internal] load metadata for docker.io/library/alpine:3.14.2
             #3 DONE \d+\.\d+s
 
-            #4 \[1/2] FROM docker.io/library/alpine:3.14.2
+            #4 \[1/2] FROM docker.io/library/alpine:3.14.2(@sha256:e1c082e3d3c45cccac829840a25941e679c25d438cc8412c2fa221cf1a824e6a)?
             #4 (DONE \d+\.\d+s|CACHED)
 
             #5 \[2/2] RUN echo "Hello world!"
@@ -93,12 +93,19 @@ class DockerClientBuildKitImageBuildSpec : ShouldSpec({
             StepContextUploadProgress(2, 0),
         )
 
-        progressUpdatesReceived shouldEndWith listOf(
+        progressUpdatesReceived shouldContainInOrder listOf(
             StepContextUploadProgress(2, 2),
             StepFinished(2),
             StepStarting(3, "[internal] load metadata for docker.io/library/alpine:3.14.2"),
             StepFinished(3),
+        )
+
+        progressUpdatesReceived shouldContainAnyOf setOf(
             StepStarting(4, "[1/2] FROM docker.io/library/alpine:3.14.2"),
+            StepStarting(4, "[1/2] FROM docker.io/library/alpine:3.14.2@sha256:e1c082e3d3c45cccac829840a25941e679c25d438cc8412c2fa221cf1a824e6a"),
+        )
+
+        progressUpdatesReceived shouldEndWith listOf(
             StepFinished(4),
             StepStarting(5, "[2/2] RUN echo \"Hello world!\""),
             StepOutput(5, "Hello world!\n"),
@@ -311,7 +318,7 @@ class DockerClientBuildKitImageBuildSpec : ShouldSpec({
         outputTextLines shouldContain "#1 [internal] load build definition from Dockerfile"
         outputTextLines shouldContain "#2 [internal] load .dockerignore"
         outputTextLines shouldContain "#3 [internal] load metadata for docker.io/library/alpine:3.14.2"
-        outputTextLines shouldContain "#4 [other 1/2] FROM docker.io/library/alpine:3.14.2"
+        outputTextLines shouldContainAnyOf setOf("#4 [other 1/2] FROM docker.io/library/alpine:3.14.2", "#4 [other 1/2] FROM docker.io/library/alpine:3.14.2@sha256:e1c082e3d3c45cccac829840a25941e679c25d438cc8412c2fa221cf1a824e6a")
         outputTextLines shouldContain "#5 [other 2/2] RUN touch /file-from-other"
         outputTextLines shouldContain "#6 [stage-1 2/2] COPY --from=other /file-from-other /received/file-from-other"
         outputTextLines shouldContain "#7 exporting to image"
@@ -320,7 +327,7 @@ class DockerClientBuildKitImageBuildSpec : ShouldSpec({
         progressUpdatesReceived shouldContain StepStarting(1, "[internal] load build definition from Dockerfile")
         progressUpdatesReceived shouldContain StepStarting(2, "[internal] load .dockerignore")
         progressUpdatesReceived shouldContain StepStarting(3, "[internal] load metadata for docker.io/library/alpine:3.14.2")
-        progressUpdatesReceived shouldContain StepStarting(4, "[other 1/2] FROM docker.io/library/alpine:3.14.2")
+        progressUpdatesReceived shouldContainAnyOf setOf(StepStarting(4, "[other 1/2] FROM docker.io/library/alpine:3.14.2"), StepStarting(4, "#4 [other 1/2] FROM docker.io/library/alpine:3.14.2@sha256:e1c082e3d3c45cccac829840a25941e679c25d438cc8412c2fa221cf1a824e6a"))
         progressUpdatesReceived shouldContain StepStarting(5, "[other 2/2] RUN touch /file-from-other")
         progressUpdatesReceived shouldContain StepStarting(6, "[stage-1 2/2] COPY --from=other /file-from-other /received/file-from-other")
         progressUpdatesReceived shouldContain StepStarting(7, "exporting to image")
@@ -340,11 +347,11 @@ class DockerClientBuildKitImageBuildSpec : ShouldSpec({
             progressUpdatesReceived.add(update)
         }
 
-        val outputText = output.readUtf8().trim().lines()
-        outputText shouldContain "#4 [other 1/2] FROM docker.io/library/alpine:3.14.2"
-        outputText shouldContain "#5 [other 2/2] RUN touch /file-from-other"
+        val outputTextLines = output.readUtf8().trim().lines()
+        outputTextLines shouldContainAnyOf setOf("#4 [other 1/2] FROM docker.io/library/alpine:3.14.2", "#4 [other 1/2] FROM docker.io/library/alpine:3.14.2@sha256:e1c082e3d3c45cccac829840a25941e679c25d438cc8412c2fa221cf1a824e6a")
+        outputTextLines shouldContain "#5 [other 2/2] RUN touch /file-from-other"
 
-        progressUpdatesReceived shouldContain StepStarting(4, "[other 1/2] FROM docker.io/library/alpine:3.14.2")
+        progressUpdatesReceived shouldContainAnyOf setOf(StepStarting(4, "[other 1/2] FROM docker.io/library/alpine:3.14.2"), StepStarting(4, "#4 [other 1/2] FROM docker.io/library/alpine:3.14.2@sha256:e1c082e3d3c45cccac829840a25941e679c25d438cc8412c2fa221cf1a824e6a"))
         progressUpdatesReceived shouldContain StepStarting(5, "[other 2/2] RUN touch /file-from-other")
 
         progressUpdatesReceived.forNone {
@@ -383,7 +390,7 @@ class DockerClientBuildKitImageBuildSpec : ShouldSpec({
             ------$
         """.trimIndent().toRegex(RegexOption.MULTILINE)
 
-        progressUpdatesReceived shouldContain StepStarting(4, "[1/2] FROM docker.io/library/alpine:3.14.2")
+        progressUpdatesReceived shouldContainAnyOf setOf(StepStarting(4, "[other 1/2] FROM docker.io/library/alpine:3.14.2"), StepStarting(4, "#4 [other 1/2] FROM docker.io/library/alpine:3.14.2@sha256:e1c082e3d3c45cccac829840a25941e679c25d438cc8412c2fa221cf1a824e6a"))
         progressUpdatesReceived shouldContain StepStarting(5, "[2/2] RUN echo \"This command has failed!\" && exit 1")
         progressUpdatesReceived shouldContain BuildFailed("executor failed running [/bin/sh -c echo \"This command has failed!\" && exit 1]: exit code: 1")
 
@@ -434,11 +441,24 @@ class DockerClientBuildKitImageBuildSpec : ShouldSpec({
         }
 
         val outputText = output.readUtf8().trim().lines()
-        outputText shouldContainAnyOf setOf("#4 [1/2] FROM docker.io/library/alpine:3.14.2", "#5 [1/2] FROM docker.io/library/alpine:3.14.2")
+
+        outputText shouldContainAnyOf setOf(
+            "#4 [1/2] FROM docker.io/library/alpine:3.14.2",
+            "#4 [1/2] FROM docker.io/library/alpine:3.14.2@sha256:e1c082e3d3c45cccac829840a25941e679c25d438cc8412c2fa221cf1a824e6a",
+            "#5 [1/2] FROM docker.io/library/alpine:3.14.2",
+            "#5 [1/2] FROM docker.io/library/alpine:3.14.2@sha256:e1c082e3d3c45cccac829840a25941e679c25d438cc8412c2fa221cf1a824e6a",
+        )
+
         outputText shouldContainAnyOf setOf("#4 https://httpbin.org/drip?duration=1&numbytes=2048&code=200&delay=0", "#5 https://httpbin.org/drip?duration=1&numbytes=2048&code=200&delay=0")
         outputText shouldContain "#6 [2/2] ADD https://httpbin.org/drip?duration=1&numbytes=2048&code=200&delay=0 /file.txt"
 
-        progressUpdatesReceived shouldContainAnyOf setOf(StepStarting(4, "[1/2] FROM docker.io/library/alpine:3.14.2"), StepStarting(5, "[1/2] FROM docker.io/library/alpine:3.14.2"))
+        progressUpdatesReceived shouldContainAnyOf setOf(
+            StepStarting(4, "[1/2] FROM docker.io/library/alpine:3.14.2"),
+            StepStarting(4, "[1/2] FROM docker.io/library/alpine:3.14.2@sha256:e1c082e3d3c45cccac829840a25941e679c25d438cc8412c2fa221cf1a824e6a"),
+            StepStarting(5, "[1/2] FROM docker.io/library/alpine:3.14.2"),
+            StepStarting(5, "[1/2] FROM docker.io/library/alpine:3.14.2@sha256:e1c082e3d3c45cccac829840a25941e679c25d438cc8412c2fa221cf1a824e6a"),
+        )
+
         progressUpdatesReceived shouldContainAnyOf setOf(StepStarting(4, "https://httpbin.org/drip?duration=1&numbytes=2048&code=200&delay=0"), StepStarting(5, "https://httpbin.org/drip?duration=1&numbytes=2048&code=200&delay=0"))
         progressUpdatesReceived shouldEndWith BuildComplete(image)
     }
