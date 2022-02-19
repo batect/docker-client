@@ -250,7 +250,6 @@ internal actual class RealDockerClient actual constructor(configuration: DockerC
                         clientHandle,
                         allocBuildImageRequest(spec).ptr,
                         stream.outputStreamHandle,
-                        false, // FIXME: Only required while we're using the old Kotlin/Native memory model that does not support sharing values between threads.
                         callback,
                         callbackUserData
                     )!!.use { ret ->

@@ -46,7 +46,7 @@ var removingIntermediateContainerLineRegex = regexp.MustCompile(`^Removing inter
 var buildStepFinishedLineRegex = regexp.MustCompile(`^ ---> [0-9a-f]{12}\n$`)
 var buildSuccessfullyFinishedLineRegex = regexp.MustCompile(`^Successfully built [0-9a-f]{12}\n$`)
 
-func buildImageWithLegacyBuilder(clientHandle DockerClientHandle, request *imageBuildRequest, outputStreamHandle OutputStreamHandle, reportContextUploadProgressEvents C.bool, onProgressUpdate BuildImageProgressCallback, callbackUserData unsafe.Pointer) BuildImageReturn {
+func buildImageWithLegacyBuilder(clientHandle DockerClientHandle, request *imageBuildRequest, outputStreamHandle OutputStreamHandle, onProgressUpdate BuildImageProgressCallback, callbackUserData unsafe.Pointer) BuildImageReturn {
 	docker := clientHandle.DockerAPIClient()
 	configFile := clientHandle.ClientConfigFile()
 	contextDir := request.ContextDirectory
@@ -80,13 +80,8 @@ func buildImageWithLegacyBuilder(clientHandle DockerClientHandle, request *image
 	}
 
 	progressCallback := newImageBuildProgressCallback(onProgressUpdate, callbackUserData)
-
-	// This is only required while we're using the v1 Kotlin/Native memory model (as Golang invokes the callback from another thread).
-	// Once we're using the new memory model, we can just always report context upload progress events.
-	if bool(reportContextUploadProgressEvents) {
-		contextUploadEventHandler := newContextUploadProgressHandler(progressCallback)
-		buildContext = replacements.NewProgressReader(buildContext, contextUploadEventHandler, 0, "", "Sending build context to Docker daemon")
-	}
+	contextUploadEventHandler := newContextUploadProgressHandler(progressCallback)
+	buildContext = replacements.NewProgressReader(buildContext, contextUploadEventHandler, 0, "", "Sending build context to Docker daemon")
 
 	opts := createLegacyBuilderImageBuildOptions(docker, configFile, pathToDockerfile, request)
 	response, err := docker.ImageBuild(context.Background(), buildContext, opts)

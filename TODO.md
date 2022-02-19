@@ -59,7 +59,6 @@
       * Report image pull progress information
       * Handle case where no explicit builder version is provided
       * Test output from DockerAuthProvider
-      * Remove special case handling for image build context uploading on Kotlin/Native now that we're using the new memory model (search for multithreadingSupportedOnThisPlatform and reportContextUploadProgressEvents)
     * Features to cover:
       * Windows image build
     * Test that we can run a built image

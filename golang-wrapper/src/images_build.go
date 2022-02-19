@@ -31,14 +31,14 @@ import (
 )
 
 //export BuildImage
-func BuildImage(clientHandle DockerClientHandle, request *C.BuildImageRequest, outputStreamHandle OutputStreamHandle, reportContextUploadProgressEvents C.bool, onProgressUpdate BuildImageProgressCallback, callbackUserData unsafe.Pointer) BuildImageReturn {
+func BuildImage(clientHandle DockerClientHandle, request *C.BuildImageRequest, outputStreamHandle OutputStreamHandle, onProgressUpdate BuildImageProgressCallback, callbackUserData unsafe.Pointer) BuildImageReturn {
 	defer closeOutputStream(outputStreamHandle)
 
 	builderVersion := C.GoString(request.BuilderVersion)
 
 	switch builderVersion {
 	case string(types.BuilderV1):
-		return buildImageWithLegacyBuilder(clientHandle, fromCBuildImageRequest(request), outputStreamHandle, reportContextUploadProgressEvents, onProgressUpdate, callbackUserData)
+		return buildImageWithLegacyBuilder(clientHandle, fromCBuildImageRequest(request), outputStreamHandle, onProgressUpdate, callbackUserData)
 
 	case string(types.BuilderBuildKit):
 		return buildImageWithBuildKitBuilder(clientHandle, fromCBuildImageRequest(request), outputStreamHandle, onProgressUpdate, callbackUserData)

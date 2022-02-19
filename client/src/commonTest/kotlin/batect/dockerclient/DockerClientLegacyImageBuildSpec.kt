@@ -72,14 +72,10 @@ class DockerClientLegacyImageBuildSpec : ShouldSpec({
             Successfully built [0-9a-f]{12}
         """.trimIndent().toRegex()
 
-        if (multithreadingSupportedOnThisPlatform) {
-            progressUpdatesReceived shouldStartWith listOf(
-                ImageBuildContextUploadProgress(2048),
-                StepStarting(1, "FROM alpine:3.14.2"),
-            )
-        } else {
-            progressUpdatesReceived shouldStartWith StepStarting(1, "FROM alpine:3.14.2")
-        }
+        progressUpdatesReceived shouldStartWith listOf(
+            ImageBuildContextUploadProgress(2048),
+            StepStarting(1, "FROM alpine:3.14.2"),
+        )
 
         progressUpdatesReceived shouldEndWith listOf(
             StepFinished(1),
@@ -508,9 +504,7 @@ class DockerClientLegacyImageBuildSpec : ShouldSpec({
         exceptionThrownByPullMethod.cause shouldBe exceptionThrownByCallbackHandler
     }
 
-    should("gracefully handle a progress callback that throws an exception while uploading build context").onlyIfDockerDaemonSupportsLinuxContainersAnd(
-        multithreadingSupportedOnThisPlatform // FIXME: context upload progress reporting is not supported on Kotlin/Native yet.
-    ) {
+    should("gracefully handle a progress callback that throws an exception while uploading build context").onlyIfDockerDaemonSupportsLinuxContainers {
         val exceptionThrownByCallbackHandler = RuntimeException("This is an exception from the callback handler")
 
         val exceptionThrownByPullMethod = shouldThrow<ImageBuildFailedException> {
