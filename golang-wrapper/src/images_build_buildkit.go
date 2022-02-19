@@ -402,22 +402,24 @@ func (v *vertexSortingInterface) Less(i, j int) bool {
 	firstHasStepNumbering := strings.HasPrefix(first.Name, "[")
 	secondHasStepNumbering := strings.HasPrefix(second.Name, "[")
 
-	if !firstHasStepNumbering && !secondHasStepNumbering {
-		return false // Provided we use this with sort.Stable, this will retain the existing order.
-	} else if firstHasStepNumbering && !secondHasStepNumbering {
+	switch {
+	case !firstHasStepNumbering && !secondHasStepNumbering:
+		return false
+	case firstHasStepNumbering && !secondHasStepNumbering:
 		return true
-	} else if !firstHasStepNumbering && secondHasStepNumbering {
+	case !firstHasStepNumbering && secondHasStepNumbering:
 		return false
 	}
 
 	firstIsInternalStep := strings.HasPrefix(first.Name, "[internal] ")
 	secondIsInternalStep := strings.HasPrefix(second.Name, "[internal] ")
 
-	if firstIsInternalStep && secondIsInternalStep {
-		return false // Provided we use this with sort.Stable, this will retain the existing order.
-	} else if firstIsInternalStep && !secondIsInternalStep {
+	switch {
+	case firstIsInternalStep && secondIsInternalStep:
+		return false
+	case firstIsInternalStep && !secondIsInternalStep:
 		return true
-	} else if !firstIsInternalStep && secondIsInternalStep {
+	case !firstIsInternalStep && secondIsInternalStep:
 		return false
 	}
 
