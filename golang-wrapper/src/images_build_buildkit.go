@@ -42,7 +42,7 @@ import (
 	"github.com/moby/buildkit/session/filesync"
 	"github.com/moby/buildkit/util/progress/progressui"
 	"github.com/moby/buildkit/util/progress/progresswriter"
-	github_com_opencontainers_go_digest "github.com/opencontainers/go-digest"
+	digest "github.com/opencontainers/go-digest"
 	fsutiltypes "github.com/tonistiigi/fsutil/types"
 	"golang.org/x/sync/errgroup"
 )
@@ -278,8 +278,8 @@ type buildKitBuildTracer struct {
 	eg                         *errgroup.Group
 	outputStreamHandle         OutputStreamHandle
 	progressCallback           *imageBuildProgressCallback
-	vertexDigestsToStepNumbers map[github_com_opencontainers_go_digest.Digest]int64
-	completedVertices          map[github_com_opencontainers_go_digest.Digest]interface{}
+	vertexDigestsToStepNumbers map[digest.Digest]int64
+	completedVertices          map[digest.Digest]interface{}
 }
 
 func newBuildKitBuildTracer(outputStreamHandle OutputStreamHandle, eg *errgroup.Group, onProgressUpdate BuildImageProgressCallback, onProgressUpdateUserData unsafe.Pointer) *buildKitBuildTracer {
@@ -288,8 +288,8 @@ func newBuildKitBuildTracer(outputStreamHandle OutputStreamHandle, eg *errgroup.
 		eg:                         eg,
 		outputStreamHandle:         outputStreamHandle,
 		progressCallback:           newImageBuildProgressCallback(onProgressUpdate, onProgressUpdateUserData),
-		vertexDigestsToStepNumbers: map[github_com_opencontainers_go_digest.Digest]int64{},
-		completedVertices:          map[github_com_opencontainers_go_digest.Digest]interface{}{},
+		vertexDigestsToStepNumbers: map[digest.Digest]int64{},
+		completedVertices:          map[digest.Digest]interface{}{},
 	}
 }
 
@@ -391,11 +391,23 @@ func (v *vertexSortingInterface) Less(i, j int) bool {
 	first := v.vertices[i]
 	second := v.vertices[j]
 
+	if vertexReliesOnDigest(first, second.Digest) {
+		return false
+	}
+
+	if vertexReliesOnDigest(second, first.Digest) {
+		return true
+	}
+
 	firstHasStepNumbering := strings.HasPrefix(first.Name, "[")
 	secondHasStepNumbering := strings.HasPrefix(second.Name, "[")
 
-	if !firstHasStepNumbering || !secondHasStepNumbering {
+	if !firstHasStepNumbering && !secondHasStepNumbering {
 		return false // Provided we use this with sort.Stable, this will retain the existing order.
+	} else if firstHasStepNumbering && !secondHasStepNumbering {
+		return true
+	} else if !firstHasStepNumbering && secondHasStepNumbering {
+		return false
 	}
 
 	firstIsInternalStep := strings.HasPrefix(first.Name, "[internal] ")
@@ -417,6 +429,16 @@ func (v *vertexSortingInterface) Less(i, j int) bool {
 	}
 
 	return firstStep < secondStep
+}
+
+func vertexReliesOnDigest(v *controlapi.Vertex, digest digest.Digest) bool {
+	for _, d := range v.Inputs {
+		if d == digest {
+			return true
+		}
+	}
+
+	return false
 }
 
 func (v *vertexSortingInterface) extractStageNameAndStepNumber(vertexName string) (string, int) {
@@ -520,8 +542,18 @@ func (t *buildKitBuildTracer) sendVertexStartedNotification(v *controlapi.Vertex
 	return nil
 }
 
+func (t *buildKitBuildTracer) getStepNumberForDigest(d digest.Digest) int64 {
+	stepNumber, ok := t.vertexDigestsToStepNumbers[d]
+
+	if !ok {
+		panic(fmt.Sprintf("no step number found for digest '%s'", d))
+	}
+
+	return stepNumber
+}
+
 func (t *buildKitBuildTracer) sendVertexCompleteNotification(v *controlapi.Vertex) error {
-	stepNumber := t.vertexDigestsToStepNumbers[v.Digest]
+	stepNumber := t.getStepNumberForDigest(v.Digest)
 	t.completedVertices[v.Digest] = nil
 
 	if err := t.progressCallback.onStepFinished(stepNumber); err != nil {
@@ -532,7 +564,7 @@ func (t *buildKitBuildTracer) sendVertexCompleteNotification(v *controlapi.Verte
 }
 
 func (t *buildKitBuildTracer) sendLogNotification(l *controlapi.VertexLog) error {
-	stepNumber := t.vertexDigestsToStepNumbers[l.Vertex]
+	stepNumber := t.getStepNumberForDigest(l.Vertex)
 
 	if err := t.progressCallback.onStepOutput(stepNumber, string(l.Msg)); err != nil {
 		return err
@@ -542,7 +574,7 @@ func (t *buildKitBuildTracer) sendLogNotification(l *controlapi.VertexLog) error
 }
 
 func (t *buildKitBuildTracer) sendStatusNotification(s *controlapi.VertexStatus) error {
-	stepNumber := t.vertexDigestsToStepNumbers[s.Vertex]
+	stepNumber := t.getStepNumberForDigest(s.Vertex)
 
 	if s.Name == "transferring" {
 		if err := t.progressCallback.onContextUploadProgress(stepNumber, s.Current); err != nil {
