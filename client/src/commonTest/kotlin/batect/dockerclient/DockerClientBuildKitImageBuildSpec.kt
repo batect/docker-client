@@ -21,6 +21,7 @@ import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.core.spec.style.ShouldSpec
 import io.kotest.inspectors.forNone
 import io.kotest.matchers.collections.shouldContain
+import io.kotest.matchers.collections.shouldContainAnyOf
 import io.kotest.matchers.collections.shouldContainInOrder
 import io.kotest.matchers.collections.shouldEndWith
 import io.kotest.matchers.collections.shouldStartWith
@@ -55,7 +56,7 @@ class DockerClientBuildKitImageBuildSpec : ShouldSpec({
 
         outputText shouldMatch """
             #1 \[internal] load build definition from Dockerfile
-            #1 transferring dockerfile: 86B (\d+\.\d+s )?done
+            #1 transferring dockerfile: \d+B (\d+\.\d+s )?done
             #1 DONE \d+\.\d+s
 
             #2 \[internal] load .dockerignore
@@ -433,12 +434,14 @@ class DockerClientBuildKitImageBuildSpec : ShouldSpec({
         }
 
         val outputText = output.readUtf8().trim().lines()
-        outputText shouldContain "#4 [1/2] FROM docker.io/library/alpine:3.14.2"
-        outputText shouldContain "#5 https://httpbin.org/drip?duration=1&numbytes=2048&code=200&delay=0"
+        println(outputText)
+        outputText shouldContainAnyOf setOf("#4 [1/2] FROM docker.io/library/alpine:3.14.2", "#5 [1/2] FROM docker.io/library/alpine:3.14.2")
+        outputText shouldContainAnyOf setOf("#4 https://httpbin.org/drip?duration=1&numbytes=2048&code=200&delay=0", "#5 https://httpbin.org/drip?duration=1&numbytes=2048&code=200&delay=0")
         outputText shouldContain "#6 [2/2] ADD https://httpbin.org/drip?duration=1&numbytes=2048&code=200&delay=0 /file.txt"
 
-        progressUpdatesReceived shouldContain StepStarting(4, "[1/2] FROM docker.io/library/alpine:3.14.2")
-        progressUpdatesReceived shouldContain StepStarting(5, "https://httpbin.org/drip?duration=1&numbytes=2048&code=200&delay=0")
+        println(progressUpdatesReceived)
+        progressUpdatesReceived shouldContainAnyOf setOf(StepStarting(4, "[1/2] FROM docker.io/library/alpine:3.14.2"), StepStarting(5, "[1/2] FROM docker.io/library/alpine:3.14.2"))
+        progressUpdatesReceived shouldContainAnyOf setOf(StepStarting(4, "https://httpbin.org/drip?duration=1&numbytes=2048&code=200&delay=0"), StepStarting(5, "https://httpbin.org/drip?duration=1&numbytes=2048&code=200&delay=0"))
         progressUpdatesReceived shouldEndWith BuildComplete(image)
     }
 
