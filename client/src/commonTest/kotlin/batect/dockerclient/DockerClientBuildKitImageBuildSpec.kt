@@ -55,11 +55,11 @@ class DockerClientBuildKitImageBuildSpec : ShouldSpec({
 
         outputText shouldMatch """
             #1 \[internal] load build definition from Dockerfile
-            #1 transferring dockerfile: 86B done
+            #1 transferring dockerfile: 86B (\d+\.\d+s )?done
             #1 DONE \d+\.\d+s
 
             #2 \[internal] load .dockerignore
-            #2 transferring context: 2B done
+            #2 transferring context: 2B (\d+\.\d+s )?done
             #2 DONE \d+\.\d+s
 
             #3 \[internal] load metadata for docker.io/library/alpine:3.14.2
@@ -190,9 +190,9 @@ class DockerClientBuildKitImageBuildSpec : ShouldSpec({
         client.buildImage(spec, SinkTextOutput(output))
 
         val outputText = output.readUtf8()
-        outputText shouldContain """^#5 \d+\.\d+ First arg: first value$""".toRegex(RegexOption.MULTILINE)
-        outputText shouldContain """^#6 \d+\.\d+ Second arg: second value$""".toRegex(RegexOption.MULTILINE)
-        outputText shouldContain """^#7 \d+\.\d+ Third arg: third value$""".toRegex(RegexOption.MULTILINE)
+        outputText shouldContain """^#\d+ \d+\.\d+ First arg: first value$""".toRegex(RegexOption.MULTILINE)
+        outputText shouldContain """^#\d+ \d+\.\d+ Second arg: second value$""".toRegex(RegexOption.MULTILINE)
+        outputText shouldContain """^#\d+ \d+\.\d+ Third arg: third value$""".toRegex(RegexOption.MULTILINE)
     }
 
     should("be able to build a Linux container image and tag it").onlyIfDockerDaemonSupportsLinuxContainers {
@@ -229,11 +229,11 @@ class DockerClientBuildKitImageBuildSpec : ShouldSpec({
         val outputText = output.readUtf8().trim()
         val singleBuildOutputPattern = """
             #1 \[internal] load build definition from Dockerfile
-            #1 transferring dockerfile: 36B done
+            #1 transferring dockerfile: 36B (\d+\.\d+s )?done
             #1 DONE \d+\.\d+s
 
             #2 \[internal] load .dockerignore
-            #2 transferring context: 2B done
+            #2 transferring context: 2B (\d+\.\d+s )?done
             #2 DONE \d+\.\d+s
 
             #3 \[internal] load metadata for docker.io/library/alpine:3.14.2
