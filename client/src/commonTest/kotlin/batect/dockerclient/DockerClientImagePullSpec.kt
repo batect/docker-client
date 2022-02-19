@@ -64,7 +64,7 @@ class DockerClientImagePullSpec : ShouldSpec({
             val imageReferenceFromGet = client.getImage(image)
             imageReferenceFromPull shouldBe imageReferenceFromGet
 
-            client.deleteImage(imageReferenceFromPull)
+            client.deleteImage(imageReferenceFromPull, force = true)
             val imageReferenceAfterDelete = client.getImage(image)
             imageReferenceAfterDelete shouldBe null
         }
