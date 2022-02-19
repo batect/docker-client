@@ -486,7 +486,7 @@ class DockerClientLegacyImageBuildSpec : ShouldSpec({
     should("gracefully handle a progress callback that throws an exception while building an image").onlyIfDockerDaemonSupportsLinuxContainers {
         val exceptionThrownByCallbackHandler = RuntimeException("This is an exception from the callback handler")
 
-        val exceptionThrownByPullMethod = shouldThrow<ImageBuildFailedException> {
+        val exceptionThrownByBuildMethod = shouldThrow<ImageBuildFailedException> {
             val spec = ImageBuildSpec.Builder(rootTestImagesDirectory.resolve("basic-image"))
                 .withLegacyBuilder()
                 .build()
@@ -500,14 +500,14 @@ class DockerClientLegacyImageBuildSpec : ShouldSpec({
             }
         }
 
-        exceptionThrownByPullMethod.message shouldBe "Image build progress receiver threw an exception: $exceptionThrownByCallbackHandler"
-        exceptionThrownByPullMethod.cause shouldBe exceptionThrownByCallbackHandler
+        exceptionThrownByBuildMethod.message shouldBe "Image build progress receiver threw an exception: $exceptionThrownByCallbackHandler"
+        exceptionThrownByBuildMethod.cause shouldBe exceptionThrownByCallbackHandler
     }
 
     should("gracefully handle a progress callback that throws an exception while uploading build context").onlyIfDockerDaemonSupportsLinuxContainers {
         val exceptionThrownByCallbackHandler = RuntimeException("This is an exception from the callback handler")
 
-        val exceptionThrownByPullMethod = shouldThrow<ImageBuildFailedException> {
+        val exceptionThrownByBuildMethod = shouldThrow<ImageBuildFailedException> {
             val spec = ImageBuildSpec.Builder(rootTestImagesDirectory.resolve("basic-image"))
                 .withLegacyBuilder()
                 .build()
@@ -521,8 +521,8 @@ class DockerClientLegacyImageBuildSpec : ShouldSpec({
             }
         }
 
-        exceptionThrownByPullMethod.message shouldBe "Image build progress receiver threw an exception: $exceptionThrownByCallbackHandler"
-        exceptionThrownByPullMethod.cause shouldBe exceptionThrownByCallbackHandler
+        exceptionThrownByBuildMethod.message shouldBe "Image build progress receiver threw an exception: $exceptionThrownByCallbackHandler"
+        exceptionThrownByBuildMethod.cause shouldBe exceptionThrownByCallbackHandler
     }
 
     should("propagate configured proxy settings to the build").onlyIfDockerDaemonSupportsLinuxContainers {
