@@ -242,7 +242,7 @@ class DockerClientBuildKitImageBuildSpec : ShouldSpec({
             #3 \[internal] load metadata for docker.io/library/alpine:3.14.2
             #3 DONE \d+\.\d+s
 
-            #4 \[1/2] FROM docker.io/library/alpine:3.14.2
+            #4 \[1/2] FROM docker.io/library/alpine:3.14.2(@sha256:e1c082e3d3c45cccac829840a25941e679c25d438cc8412c2fa221cf1a824e6a)?
             #4 (DONE \d+\.\d+s|CACHED)
 
             #5 \[2/2] RUN echo "Hello world!"
