@@ -372,48 +372,116 @@ func (t *buildKitBuildTracer) print(resp controlapi.StatusResponse) {
 }
 
 func (t *buildKitBuildTracer) sendProgressUpdateNotifications(resp controlapi.StatusResponse) error {
+	processedStatuses := map[*controlapi.VertexStatus]interface{}{}
+	processedLogs := map[*controlapi.VertexLog]interface{}{}
+
 	for _, v := range resp.Vertexes {
-		if !t.haveSeenVertex(v) {
-			stepNumber := t.allocateStepNumber(v)
-			if err := t.progressCallback.onStepStarting(stepNumber, v.Name); err != nil {
-				return err
-			}
+		if err := t.sendVertexNotifications(v, resp, processedStatuses, processedLogs); err != nil {
+			return err
 		}
 	}
 
 	for _, s := range resp.Statuses {
-		stepNumber := t.vertexDigestsToStepNumbers[s.Vertex]
-
-		if s.Name == "transferring" {
-			if err := t.progressCallback.onContextUploadProgress(stepNumber, s.Current); err != nil {
-				return err
-			}
-		} else if s.Name != "" {
-			progressDetail := newPullImageProgressDetail(s.Current, s.Total)
-			progressUpdate := newPullImageProgressUpdate(s.Name, progressDetail, s.ID)
-
-			if err := t.progressCallback.onImagePullProgress(stepNumber, progressUpdate); err != nil {
+		if _, alreadyProcessed := processedStatuses[s]; !alreadyProcessed {
+			if err := t.sendStatusNotification(s); err != nil {
 				return err
 			}
 		}
 	}
 
 	for _, l := range resp.Logs {
-		stepNumber := t.vertexDigestsToStepNumbers[l.Vertex]
+		if _, alreadyProcessed := processedLogs[l]; !alreadyProcessed {
+			if err := t.sendLogNotification(l); err != nil {
+				return err
+			}
+		}
+	}
 
-		if err := t.progressCallback.onStepOutput(stepNumber, string(l.Msg)); err != nil {
+	return nil
+}
+
+func (t *buildKitBuildTracer) sendVertexNotifications(v *controlapi.Vertex, resp controlapi.StatusResponse, processedStatuses map[*controlapi.VertexStatus]interface{}, processedLogs map[*controlapi.VertexLog]interface{}) error {
+	if !t.haveSeenVertex(v) && v.Started != nil {
+		if err := t.sendVertexStartedNotification(v); err != nil {
 			return err
+		}
+	}
+
+	for _, s := range resp.Statuses {
+		if s.Vertex == v.Digest {
+			processedStatuses[s] = nil
+
+			if err := t.sendStatusNotification(s); err != nil {
+				return err
+			}
+		}
+	}
+
+	for _, l := range resp.Logs {
+		if l.Vertex == v.Digest {
+			processedLogs[l] = nil
+
+			if err := t.sendLogNotification(l); err != nil {
+				return err
+			}
 		}
 	}
 
 	for _, v := range resp.Vertexes {
 		if v.Completed != nil && !t.haveAlreadySeenVertexCompleted(v) {
-			stepNumber := t.vertexDigestsToStepNumbers[v.Digest]
-			t.completedVertices[v.Digest] = nil
-
-			if err := t.progressCallback.onStepFinished(stepNumber); err != nil {
+			if err := t.sendVertexCompleteNotification(v); err != nil {
 				return err
 			}
+		}
+	}
+
+	return nil
+}
+
+func (t *buildKitBuildTracer) sendVertexStartedNotification(v *controlapi.Vertex) error {
+	stepNumber := t.allocateStepNumber(v)
+
+	if err := t.progressCallback.onStepStarting(stepNumber, v.Name); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (t *buildKitBuildTracer) sendVertexCompleteNotification(v *controlapi.Vertex) error {
+	stepNumber := t.vertexDigestsToStepNumbers[v.Digest]
+	t.completedVertices[v.Digest] = nil
+
+	if err := t.progressCallback.onStepFinished(stepNumber); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (t *buildKitBuildTracer) sendLogNotification(l *controlapi.VertexLog) error {
+	stepNumber := t.vertexDigestsToStepNumbers[l.Vertex]
+
+	if err := t.progressCallback.onStepOutput(stepNumber, string(l.Msg)); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (t *buildKitBuildTracer) sendStatusNotification(s *controlapi.VertexStatus) error {
+	stepNumber := t.vertexDigestsToStepNumbers[s.Vertex]
+
+	if s.Name == "transferring" {
+		if err := t.progressCallback.onContextUploadProgress(stepNumber, s.Current); err != nil {
+			return err
+		}
+	} else if s.Name != "" {
+		progressDetail := newPullImageProgressDetail(s.Current, s.Total)
+		progressUpdate := newPullImageProgressUpdate(s.Name, progressDetail, s.ID)
+
+		if err := t.progressCallback.onImagePullProgress(stepNumber, progressUpdate); err != nil {
+			return err
 		}
 	}
 
