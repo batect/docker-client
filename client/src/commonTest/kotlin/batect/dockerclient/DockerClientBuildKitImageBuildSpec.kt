@@ -73,8 +73,10 @@ class DockerClientBuildKitImageBuildSpec : ShouldSpec({
             #5 DONE \d+\.\d+s
 
             #6 exporting to image
-            #6 exporting layers (\d+\.\d+s )?done
-            #6 writing image sha256:[0-9a-f]{64} done
+            (#6 exporting layers
+            )?#6 exporting layers (\d+\.\d+s )?done
+            (#6 writing image sha256:[0-9a-f]{64}
+            )?#6 writing image sha256:[0-9a-f]{64} done
             #6 DONE \d+\.\d+s
         """.trimIndent().toRegex()
 
@@ -247,8 +249,10 @@ class DockerClientBuildKitImageBuildSpec : ShouldSpec({
             #5 DONE \d+\.\d+s
 
             #6 exporting to image
-            #6 exporting layers (\d+\.\d+s )?done
-            #6 writing image sha256:[0-9a-f]{64} done
+            (#6 exporting layers
+            )?#6 exporting layers (\d+\.\d+s )?done
+            (#6 writing image sha256:[0-9a-f]{64}
+            )?#6 writing image sha256:[0-9a-f]{64} done
             #6 DONE \d+\.\d+s
         """.trimIndent()
 
