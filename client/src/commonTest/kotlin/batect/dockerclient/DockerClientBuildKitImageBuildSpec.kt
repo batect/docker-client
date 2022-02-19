@@ -20,7 +20,7 @@ import batect.dockerclient.io.SinkTextOutput
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.core.spec.style.ShouldSpec
 import io.kotest.inspectors.forNone
-import io.kotest.matchers.collections.shouldBeOneOf
+import io.kotest.matchers.collections.shouldBeIn
 import io.kotest.matchers.collections.shouldContain
 import io.kotest.matchers.collections.shouldContainAnyOf
 import io.kotest.matchers.collections.shouldContainInOrder
@@ -414,7 +414,7 @@ class DockerClientBuildKitImageBuildSpec : ShouldSpec({
             }
         }
 
-        exception.message shouldBeOneOf setOf(
+        exception.message shouldBeIn setOf(
             "failed to solve with frontend dockerfile.v0: failed to create LLB definition: docker.io/batect/this-image-does-not-exist:1.0: not found",
             "failed to solve with frontend dockerfile.v0: failed to create LLB definition: pull access denied, repository does not exist or may require authorization: server message: insufficient_scope: authorization failed"
         )
