@@ -58,7 +58,7 @@
     * BuildKit
       * Report image pull progress information
       * Handle case where no explicit builder version is provided
-      * Test output from DockerAuthProvider
+      * Fix issue running tests on JVM: blocked by https://github.com/jnr/jnr-ffi/pull/299
     * Features to cover:
       * Windows image build
     * Test that we can run a built image
