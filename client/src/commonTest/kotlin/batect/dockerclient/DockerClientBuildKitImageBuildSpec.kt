@@ -391,7 +391,7 @@ class DockerClientBuildKitImageBuildSpec : ShouldSpec({
             ------$
         """.trimIndent().toRegex(RegexOption.MULTILINE)
 
-        progressUpdatesReceived shouldContainAnyOf setOf(StepStarting(4, "[other 1/2] FROM docker.io/library/alpine:3.14.2"), StepStarting(4, "#4 [other 1/2] FROM docker.io/library/alpine:3.14.2@sha256:e1c082e3d3c45cccac829840a25941e679c25d438cc8412c2fa221cf1a824e6a"))
+        progressUpdatesReceived shouldContainAnyOf setOf(StepStarting(4, "[1/2] FROM docker.io/library/alpine:3.14.2"), StepStarting(4, "#4 [1/2] FROM docker.io/library/alpine:3.14.2@sha256:e1c082e3d3c45cccac829840a25941e679c25d438cc8412c2fa221cf1a824e6a"))
         progressUpdatesReceived shouldContain StepStarting(5, "[2/2] RUN echo \"This command has failed!\" && exit 1")
         progressUpdatesReceived shouldContain BuildFailed("executor failed running [/bin/sh -c echo \"This command has failed!\" && exit 1]: exit code: 1")
 
