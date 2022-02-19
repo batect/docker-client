@@ -23,6 +23,9 @@ import (
 	"io"
 	"net"
 	"path/filepath"
+	"sort"
+	"strconv"
+	"strings"
 	"unsafe"
 
 	"github.com/batect/docker-client/golang-wrapper/src/buildkit"
@@ -325,6 +328,7 @@ func (t *buildKitBuildTracer) LogJSONMessage(msg jsonmessage.JSONMessage) error 
 		return err
 	}
 
+	sortVerticesForDisplay(resp.Vertexes)
 	t.print(resp)
 
 	return t.sendProgressUpdateNotifications(resp)
@@ -369,6 +373,74 @@ func (t *buildKitBuildTracer) print(resp controlapi.StatusResponse) {
 	}
 
 	t.displayCh <- &s
+}
+
+func sortVerticesForDisplay(vertices []*controlapi.Vertex) {
+	sort.Stable(&vertexSortingInterface{vertices})
+}
+
+type vertexSortingInterface struct {
+	vertices []*controlapi.Vertex
+}
+
+func (v *vertexSortingInterface) Len() int {
+	return len(v.vertices)
+}
+
+func (v *vertexSortingInterface) Less(i, j int) bool {
+	first := v.vertices[i]
+	second := v.vertices[j]
+
+	firstHasStepNumbering := strings.HasPrefix(first.Name, "[")
+	secondHasStepNumbering := strings.HasPrefix(second.Name, "[")
+
+	if !firstHasStepNumbering || !secondHasStepNumbering {
+		return false // Provided we use this with sort.Stable, this will retain the existing order.
+	}
+
+	firstIsInternalStep := strings.HasPrefix(first.Name, "[internal] ")
+	secondIsInternalStep := strings.HasPrefix(second.Name, "[internal] ")
+
+	if firstIsInternalStep && secondIsInternalStep {
+		return false // Provided we use this with sort.Stable, this will retain the existing order.
+	} else if firstIsInternalStep && !secondIsInternalStep {
+		return true
+	} else if !firstIsInternalStep && secondIsInternalStep {
+		return false
+	}
+
+	firstStageName, firstStep := v.extractStageNameAndStepNumber(first.Name)
+	secondStageName, secondStep := v.extractStageNameAndStepNumber(second.Name)
+
+	if firstStageName != secondStageName {
+		return false // Provided we use this with sort.Stable, this will retain the existing order.
+	}
+
+	return firstStep < secondStep
+}
+
+func (v *vertexSortingInterface) extractStageNameAndStepNumber(vertexName string) (string, int) {
+	identifier := vertexName[1:strings.Index(vertexName, "] ")]
+	delimiter := strings.LastIndex(identifier, " ")
+	stageName := ""
+	stepCounter := identifier
+
+	if delimiter != -1 {
+		stageName = identifier[0:delimiter]
+		stepCounter = identifier[delimiter+1:]
+	}
+
+	step, err := strconv.Atoi(stepCounter[0:strings.Index(stepCounter, "/")])
+
+	if err != nil {
+		panic(err)
+	}
+
+	return stageName, step
+}
+
+func (v *vertexSortingInterface) Swap(i, j int) {
+	v.vertices[i], v.vertices[j] = v.vertices[j], v.vertices[i]
 }
 
 func (t *buildKitBuildTracer) sendProgressUpdateNotifications(resp controlapi.StatusResponse) error {
