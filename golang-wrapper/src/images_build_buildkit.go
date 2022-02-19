@@ -521,11 +521,9 @@ func (t *buildKitBuildTracer) sendVertexNotifications(v *controlapi.Vertex, resp
 		}
 	}
 
-	for _, v := range resp.Vertexes {
-		if v.Completed != nil && !t.haveAlreadySeenVertexCompleted(v) {
-			if err := t.sendVertexCompleteNotification(v); err != nil {
-				return err
-			}
+	if v.Completed != nil && !t.haveAlreadySeenVertexCompleted(v) {
+		if err := t.sendVertexCompleteNotification(v); err != nil {
+			return err
 		}
 	}
 
