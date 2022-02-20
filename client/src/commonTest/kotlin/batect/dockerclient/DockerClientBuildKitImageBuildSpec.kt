@@ -57,32 +57,49 @@ class DockerClientBuildKitImageBuildSpec : ShouldSpec({
 
         val outputText = output.readUtf8().trim()
 
-        outputText shouldMatch """
-            #1 \[internal] load build definition from Dockerfile
-            #1 transferring dockerfile: \d+B (\d+\.\d+s )?done
-            #1 DONE \d+\.\d+s
+        outputText shouldContain """
+            |#1 \[internal] load build definition from Dockerfile
+            |#1 transferring dockerfile: \d+B (\d+\.\d+s )?done
+            |#1 DONE \d+\.\d+s
+            |
+        """.trimMargin().toRegex()
 
-            #2 \[internal] load .dockerignore
-            #2 transferring context: 2B (\d+\.\d+s )?done
-            #2 DONE \d+\.\d+s
+        outputText shouldContain """
+            |#2 \[internal] load .dockerignore
+            |#2 transferring context: 2B (\d+\.\d+s )?done
+            |#2 DONE \d+\.\d+s
+            |
+        """.trimMargin().toRegex()
 
-            #3 \[internal] load metadata for docker.io/library/alpine:3.14.2
-            #3 DONE \d+\.\d+s
+        outputText shouldContain """
+            |#3 \[internal] load metadata for docker.io/library/alpine:3.14.2
+            |#3 DONE \d+\.\d+s
+            |
+        """.trimMargin().toRegex()
 
-            #4 \[1/2] FROM docker.io/library/alpine:3.14.2(@sha256:e1c082e3d3c45cccac829840a25941e679c25d438cc8412c2fa221cf1a824e6a)?
-            #4 (DONE \d+\.\d+s|CACHED)
+        outputText shouldContain """
+            |#(\d) \[1/2] FROM docker.io/library/alpine:3.14.2(@sha256:e1c082e3d3c45cccac829840a25941e679c25d438cc8412c2fa221cf1a824e6a)?
+            |(#\1 resolve docker.io/library/alpine:3.14.2@sha256:e1c082e3d3c45cccac829840a25941e679c25d438cc8412c2fa221cf1a824e6a done
+            |(#\1 .*
+            |)*)?#\1 (DONE \d+\.\d+s|CACHED)
+            |
+        """.trimMargin().toRegex()
 
-            #5 \[2/2] RUN echo "Hello world!"
-            #5 \d+\.\d+ Hello world!
-            #5 DONE \d+\.\d+s
+        outputText shouldContain """
+            |#(\d) \[2/2] RUN echo "Hello world!"
+            |#\1 \d+\.\d+ Hello world!
+            |#\1 DONE \d+\.\d+s
+            |
+        """.trimMargin().toRegex()
 
-            #6 exporting to image
-            (#6 exporting layers
-            )?#6 exporting layers (\d+\.\d+s )?done
-            (#6 writing image sha256:[0-9a-f]{64}
-            )?#6 writing image sha256:[0-9a-f]{64} done
-            #6 DONE \d+\.\d+s
-        """.trimIndent().toRegex()
+        outputText shouldContain """
+            |#(\d) exporting to image
+            |(#\1 exporting layers
+            |)?#\1 exporting layers (\d+\.\d+s )?done
+            |(#\1 writing image sha256:[0-9a-f]{64}
+            |)?#\1 writing image sha256:[0-9a-f]{64} done
+            |#\1 DONE \d+\.\d+s
+        """.trimMargin().toRegex()
 
         progressUpdatesReceived shouldStartWith listOf(
             StepStarting(1, "[internal] load build definition from Dockerfile"),
