@@ -1,1 +1,1 @@
-FROM gcr.io/distroless/static@sha256:8ad6f3ec70dad966479b9fb48da991138c72ba969859098ec689d1450c2e6c97
+FROM gcr.io/distroless/static@sha256:49f33fac9328ac595cb74bd02e6a186414191c969de0d8be34e6307c185acb8e

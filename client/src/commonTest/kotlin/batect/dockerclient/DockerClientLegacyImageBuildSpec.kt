@@ -188,16 +188,16 @@ class DockerClientLegacyImageBuildSpec : ShouldSpec({
         val outputText = output.readUtf8().trim()
 
         outputText shouldContain """
-            Step 1/1 : FROM gcr.io/distroless/static@sha256:8ad6f3ec70dad966479b9fb48da991138c72ba969859098ec689d1450c2e6c97
+            Step 1/1 : FROM gcr.io/distroless/static@sha256:49f33fac9328ac595cb74bd02e6a186414191c969de0d8be34e6307c185acb8e
         """.trimIndent()
 
         outputText shouldContain """
-            Digest: sha256:8ad6f3ec70dad966479b9fb48da991138c72ba969859098ec689d1450c2e6c97
-            Status: Downloaded newer image for gcr.io/distroless/static@sha256:8ad6f3ec70dad966479b9fb48da991138c72ba969859098ec689d1450c2e6c97
+            Digest: sha256:49f33fac9328ac595cb74bd02e6a186414191c969de0d8be34e6307c185acb8e
+            Status: Downloaded newer image for gcr.io/distroless/static@sha256:49f33fac9328ac595cb74bd02e6a186414191c969de0d8be34e6307c185acb8e
         """.trimIndent()
 
-        val imageReference = "gcr.io/distroless/static@sha256:8ad6f3ec70dad966479b9fb48da991138c72ba969859098ec689d1450c2e6c97"
-        val layerId = "dbcab61d5a5a"
+        val imageReference = "gcr.io/distroless/static@sha256:49f33fac9328ac595cb74bd02e6a186414191c969de0d8be34e6307c185acb8e"
+        val layerId = "2df365faf0e3"
         val layerSize = 803833
 
         progressUpdatesReceived.forAtLeastOne {
@@ -230,7 +230,7 @@ class DockerClientLegacyImageBuildSpec : ShouldSpec({
 
         progressUpdatesReceived shouldEndWith listOf(
             StepPullProgressUpdate(1, ImagePullProgressUpdate("Pull complete", ImagePullProgressDetail(0, 0), layerId)),
-            StepPullProgressUpdate(1, ImagePullProgressUpdate("Digest: sha256:8ad6f3ec70dad966479b9fb48da991138c72ba969859098ec689d1450c2e6c97", null, "")),
+            StepPullProgressUpdate(1, ImagePullProgressUpdate("Digest: sha256:49f33fac9328ac595cb74bd02e6a186414191c969de0d8be34e6307c185acb8e", null, "")),
             StepPullProgressUpdate(1, ImagePullProgressUpdate("Status: Downloaded newer image for $imageReference", null, "")),
             StepOutput(1, "Successfully tagged $imageTag:latest\n"),
             StepFinished(1),
