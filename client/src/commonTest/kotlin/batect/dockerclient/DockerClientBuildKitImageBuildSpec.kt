@@ -309,8 +309,8 @@ class DockerClientBuildKitImageBuildSpec : ShouldSpec({
 
             progressUpdatesReceived shouldEndWith listOf(
                 StepFinished(stepNumber),
-                StepStarting(stepNumber+1, "exporting to image"),
-                StepFinished(stepNumber+1),
+                StepStarting(stepNumber + 1, "exporting to image"),
+                StepFinished(stepNumber + 1),
                 BuildComplete(image)
             )
         }

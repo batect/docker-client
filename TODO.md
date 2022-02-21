@@ -37,6 +37,8 @@
 * Fix broken publication of library
   * Disabled due to Okio not supporting hierarchical project structure - https://github.com/square/okio/pull/980 needs bug fixes in Kotlin 1.6.20
   * See compatibility table at https://kotlinlang.org/docs/migrating-multiplatform-project-to-14.html#migrate-to-the-hierarchical-project-structure
+* Sample app
+  * Add snippets to readme
 
 # APIs
 
@@ -57,7 +59,6 @@
     * Kotlin/Native: Stream output while build is running, not just when build returns (see TODO in native buildImage())
       * Waiting for answer to question about Dispatchers.IO - does not exist on Kotlin/Native
     * BuildKit
-      * Handle case where no explicit builder version is provided
       * Fix issue running tests on JVM: blocked by https://github.com/jnr/jnr-ffi/pull/299
     * Test that we can run a built image
 * Containers

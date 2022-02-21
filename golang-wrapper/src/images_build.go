@@ -38,6 +38,16 @@ func BuildImage(clientHandle DockerClientHandle, request *C.BuildImageRequest, o
 
 	builderVersion := C.GoString(request.BuilderVersion)
 
+	if builderVersion == "" {
+		defaultVersion, err := clientHandle.DefaultBuilderVersion()
+
+		if err != nil {
+			return newBuildImageReturn(nil, toError(err))
+		}
+
+		builderVersion = string(defaultVersion)
+	}
+
 	switch builderVersion {
 	case string(types.BuilderV1):
 		return buildImageWithLegacyBuilder(clientHandle, fromCBuildImageRequest(request), outputStreamHandle, onProgressUpdate, callbackUserData)

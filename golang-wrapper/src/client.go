@@ -24,6 +24,7 @@ import (
 	"net"
 	"net/http"
 	"os"
+	"strconv"
 	"sync"
 	"time"
 
@@ -31,7 +32,9 @@ import (
 	"github.com/docker/cli/cli/config"
 	"github.com/docker/cli/cli/config/configfile"
 	"github.com/docker/cli/cli/config/credentials"
+	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/client"
+	"github.com/pkg/errors"
 
 	"github.com/docker/go-connections/tlsconfig"
 )
@@ -193,6 +196,32 @@ func (h DockerClientHandle) ServerInfo() (*command.ServerInfo, error) {
 	}
 
 	return c.updateCachedServerInfo()
+}
+
+// This is based on BuildKitEnabled() from github.com/docker/cli/cli/command/cli.go.
+func (h DockerClientHandle) DefaultBuilderVersion() (types.BuilderVersion, error) {
+	if buildkitEnv := os.Getenv("DOCKER_BUILDKIT"); buildkitEnv != "" {
+		buildkitEnabled, err := strconv.ParseBool(buildkitEnv)
+
+		if err != nil {
+			return "", errors.Wrap(err, "DOCKER_BUILDKIT environment variable expects boolean value")
+		}
+
+		if buildkitEnabled {
+			return types.BuilderBuildKit, nil
+		} else {
+			return types.BuilderV1, nil
+		}
+
+	}
+
+	info, err := h.ServerInfo()
+
+	if err != nil {
+		return "", err
+	}
+
+	return info.BuildkitVersion, nil
 }
 
 func (c *activeClient) getCachedServerInfo() *command.ServerInfo {
