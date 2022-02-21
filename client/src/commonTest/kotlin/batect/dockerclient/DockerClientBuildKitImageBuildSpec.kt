@@ -26,7 +26,6 @@ import io.kotest.matchers.collections.shouldContain
 import io.kotest.matchers.collections.shouldContainAnyOf
 import io.kotest.matchers.collections.shouldContainInOrder
 import io.kotest.matchers.collections.shouldEndWith
-import io.kotest.matchers.collections.shouldStartWith
 import io.kotest.matchers.longs.shouldBeGreaterThan
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
