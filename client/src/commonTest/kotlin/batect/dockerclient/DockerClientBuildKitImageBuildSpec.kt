@@ -257,8 +257,6 @@ class DockerClientBuildKitImageBuildSpec : ShouldSpec({
                 progressUpdatesReceived.add(update)
             }
 
-            println(progressUpdatesReceived)
-
             val outputText = output.readUtf8().trim()
             val imageReference = "ghcr.io/batect/docker-client:buildkit-image-build-pull-progress@sha256:8a6789a0ff3df495ee00c05ecd89825305b37003b6b2fc1178afc23d7d186e23"
 
@@ -291,8 +289,6 @@ class DockerClientBuildKitImageBuildSpec : ShouldSpec({
                 it.pullProgress.id shouldBe layerId
             }
 
-            println("downloading OK")
-
             progressUpdatesReceived.filterIsInstance<StepPullProgressUpdate>().forAtLeastOne {
                 it.shouldBeTypeOf<StepPullProgressUpdate>()
                 it.stepNumber shouldBe progressUpdateStepNumber
@@ -301,8 +297,6 @@ class DockerClientBuildKitImageBuildSpec : ShouldSpec({
                 it.pullProgress.detail!!.total shouldBe 0
                 it.pullProgress.id shouldBe layerId
             }
-
-            println("extract OK")
 
             progressUpdatesReceived.filterIsInstance<StepPullProgressUpdate>().forAtLeastOne {
                 it.shouldBeTypeOf<StepPullProgressUpdate>()
