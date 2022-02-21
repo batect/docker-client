@@ -18,7 +18,7 @@ import java.nio.file.Files
 
 plugins {
     id("com.diffplug.spotless")
-    id("org.ajoberstar.reckon") version "0.13.1"
+    id("org.ajoberstar.reckon") version "0.16.1"
     id("io.github.gradle-nexus.publish-plugin") version "1.1.0"
 }
 
@@ -78,7 +78,7 @@ allprojects {
 
         val isKotlinProject = plugins.hasPlugin("org.jetbrains.kotlin.multiplatform")
         val kotlinLicenseHeader = "/*\n${licenseText.trimEnd().lines().joinToString("\n") { "    $it".trimEnd() }}\n*/\n\n"
-        val ktlintVersion = "0.43.2"
+        val ktlintVersion = "0.44.0"
 
         spotless {
             encoding("UTF-8")
