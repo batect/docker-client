@@ -276,7 +276,7 @@ class DockerClientBuildKitImageBuildSpec : ShouldSpec({
             outputText shouldContain """#$stepNumber DONE \d+\.\d+s""".trimIndent().toRegex()
 
             val layerId = "sha256:0c85f017ab24df430248de7f3859b83fb16b763e93e419bc105d7caa810e4ea1"
-            val layerSize = 136
+            val layerSize = 136L
 
             progressUpdatesReceived.forAtLeastOne {
                 it.shouldBeTypeOf<StepPullProgressUpdate>()
