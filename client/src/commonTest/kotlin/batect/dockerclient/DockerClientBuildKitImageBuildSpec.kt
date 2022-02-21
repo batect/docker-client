@@ -101,9 +101,10 @@ class DockerClientBuildKitImageBuildSpec : ShouldSpec({
             |#\1 DONE \d+\.\d+s
         """.trimMargin().toRegex()
 
-        progressUpdatesReceived shouldStartWith listOf(
+        progressUpdatesReceived shouldContainInOrder listOf(
             StepStarting(1, "[internal] load build definition from Dockerfile"),
             StepContextUploadProgress(1, 0),
+            StepFinished(1),
         )
 
         progressUpdatesReceived.forAtLeastOne {
@@ -113,14 +114,13 @@ class DockerClientBuildKitImageBuildSpec : ShouldSpec({
         }
 
         progressUpdatesReceived shouldContainInOrder listOf(
-            StepFinished(1),
             StepStarting(2, "[internal] load .dockerignore"),
             StepContextUploadProgress(2, 0),
+            StepContextUploadProgress(2, 2),
+            StepFinished(2),
         )
 
         progressUpdatesReceived shouldContainInOrder listOf(
-            StepContextUploadProgress(2, 2),
-            StepFinished(2),
             StepStarting(3, "[internal] load metadata for docker.io/library/alpine:3.14.2"),
             StepFinished(3),
         )
