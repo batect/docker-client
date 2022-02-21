@@ -429,7 +429,14 @@ class DockerClientBuildKitImageBuildSpec : ShouldSpec({
         outputTextLines shouldContain "#1 [internal] load build definition from Dockerfile"
         outputTextLines shouldContain "#2 [internal] load .dockerignore"
         outputTextLines shouldContain "#3 [internal] load metadata for docker.io/library/alpine:3.14.2"
-        outputTextLines shouldContainAnyOf setOf("#4 [other 1/2] FROM docker.io/library/alpine:3.14.2", "#4 [other 1/2] FROM docker.io/library/alpine:3.14.2@sha256:e1c082e3d3c45cccac829840a25941e679c25d438cc8412c2fa221cf1a824e6a")
+
+        outputTextLines shouldContainAnyOf setOf(
+            "#4 [other 1/2] FROM docker.io/library/alpine:3.14.2",
+            "#4 [other 1/2] FROM docker.io/library/alpine:3.14.2@sha256:e1c082e3d3c45cccac829840a25941e679c25d438cc8412c2fa221cf1a824e6a",
+            "#4 [stage-1 1/2] FROM docker.io/library/alpine:3.14.2",
+            "#4 [stage-1 1/2] FROM docker.io/library/alpine:3.14.2@sha256:e1c082e3d3c45cccac829840a25941e679c25d438cc8412c2fa221cf1a824e6a"
+        )
+
         outputTextLines shouldContain "#5 [other 2/2] RUN touch /file-from-other"
         outputTextLines shouldContain "#6 [stage-1 2/2] COPY --from=other /file-from-other /received/file-from-other"
         outputTextLines shouldContain "#7 exporting to image"
