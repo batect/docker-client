@@ -220,7 +220,11 @@ func (h DockerClientHandle) DefaultBuilderVersion() (types.BuilderVersion, error
 		return "", err
 	}
 
-	return info.BuildkitVersion, nil
+	if info.BuildkitVersion == types.BuilderBuildKit {
+		return types.BuilderBuildKit, nil
+	}
+
+	return types.BuilderV1, nil
 }
 
 func (c *activeClient) getCachedServerInfo() *command.ServerInfo {
