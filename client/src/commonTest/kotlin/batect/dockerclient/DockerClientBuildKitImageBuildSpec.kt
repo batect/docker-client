@@ -78,7 +78,7 @@ class DockerClientBuildKitImageBuildSpec : ShouldSpec({
 
         outputText shouldContain """
             |#(\d) \[1/2] FROM docker.io/library/alpine:3.14.2(@sha256:e1c082e3d3c45cccac829840a25941e679c25d438cc8412c2fa221cf1a824e6a)?
-            |(#\1 resolve docker.io/library/alpine:3.14.2@sha256:e1c082e3d3c45cccac829840a25941e679c25d438cc8412c2fa221cf1a824e6a done
+            |(#\1 resolve docker.io/library/alpine:3.14.2@sha256:e1c082e3d3c45cccac829840a25941e679c25d438cc8412c2fa221cf1a824e6a (\d+\.\d+s )?done
             |(#\1 .*
             |)*)?#\1 (DONE \d+\.\d+s|CACHED)
             |
@@ -640,7 +640,7 @@ private fun String.findStepNumberForStep(step: String): Long {
     val regex = """^#\d+ \[.*] ${Regex.escape(step)}$""".toRegex()
 
     val match = this.lines()
-        .singleOrNull { it.matches(regex) }
+        .firstOrNull() { it.matches(regex) }
 
     if (match == null) {
         throw RuntimeException("Could not find step '$step' in output: $this")
