@@ -273,7 +273,7 @@ class DockerClientBuildKitImageBuildSpec : ShouldSpec({
             outputText shouldContain """#$stepNumber sha256:0c85f017ab24df430248de7f3859b83fb16b763e93e419bc105d7caa810e4ea1 136B / 136B (\d+\.\d+s )?done""".toRegex()
 
             outputText shouldContain """
-                #$stepNumber extracting sha256:0c85f017ab24df430248de7f3859b83fb16b763e93e419bc105d7caa810e4ea1 done
+                #$stepNumber extracting sha256:0c85f017ab24df430248de7f3859b83fb16b763e93e419bc105d7caa810e4ea1 (\d+\.\d+s )?done
                 #$stepNumber DONE \d+\.\d+s
             """.trimIndent().toRegex()
 
