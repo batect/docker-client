@@ -165,77 +165,82 @@ class DockerClientLegacyImageBuildSpec : ShouldSpec({
         outputText.lines() shouldContain "Third arg: third value"
     }
 
-    should("be able to build a Linux container image and force the base image to be re-pulled").onlyIfDockerDaemonSupportsLinuxContainers {
-        val imageTag = "batect-docker-client-legacy-image-build-force-repull"
-        val contextDirectory = rootTestImagesDirectory.resolve("force-repull-base-image")
+    context("using a base image not present on the machine") {
+        val imageTag = "batect-docker-client-image-build-pull-progress"
+        val contextDirectory = rootTestImagesDirectory.resolve("pull-progress")
         val dockerfile = contextDirectory.resolve("Dockerfile")
-        client.removeBaseImagesIfPresent(dockerfile)
-        client.deleteImageIfPresent(imageTag)
 
-        val spec = ImageBuildSpec.Builder(contextDirectory)
-            .withLegacyBuilder()
-            .withBaseImageAlwaysPulled()
-            .withImageTag(imageTag)
-            .build()
-
-        val output = Buffer()
-        val progressUpdatesReceived = mutableListOf<ImageBuildProgressUpdate>()
-
-        val image = client.buildImage(spec, SinkTextOutput(output)) { update ->
-            progressUpdatesReceived.add(update)
+        beforeEach {
+            client.deleteImageIfPresent(imageTag)
+            client.removeBaseImagesIfPresent(dockerfile)
         }
 
-        val outputText = output.readUtf8().trim()
+        should("be able to build a Linux container image and report image pull progress").onlyIfDockerDaemonSupportsLinuxContainers {
+            val spec = ImageBuildSpec.Builder(contextDirectory)
+                .withLegacyBuilder()
+                .withBaseImageAlwaysPulled()
+                .withImageTag(imageTag)
+                .build()
 
-        outputText shouldContain """
-            Step 1/1 : FROM gcr.io/distroless/static@sha256:49f33fac9328ac595cb74bd02e6a186414191c969de0d8be34e6307c185acb8e
-        """.trimIndent()
+            val output = Buffer()
+            val progressUpdatesReceived = mutableListOf<ImageBuildProgressUpdate>()
 
-        outputText shouldContain """
-            Digest: sha256:49f33fac9328ac595cb74bd02e6a186414191c969de0d8be34e6307c185acb8e
-            Status: Downloaded newer image for gcr.io/distroless/static@sha256:49f33fac9328ac595cb74bd02e6a186414191c969de0d8be34e6307c185acb8e
-        """.trimIndent()
+            val image = client.buildImage(spec, SinkTextOutput(output)) { update ->
+                progressUpdatesReceived.add(update)
+            }
 
-        val imageReference = "gcr.io/distroless/static@sha256:49f33fac9328ac595cb74bd02e6a186414191c969de0d8be34e6307c185acb8e"
-        val layerId = "2df365faf0e3"
-        val layerSize = 803833
+            val outputText = output.readUtf8().trim()
+            val imageReference = "ghcr.io/batect/docker-client:legacy-image-build-pull-progress@sha256:a4b51dce3a4b2cc09a2d517c2239b763a84d28e9ab66ce051f2006262f454a24"
 
-        progressUpdatesReceived.forAtLeastOne {
-            it.shouldBeTypeOf<StepPullProgressUpdate>()
-            it.stepNumber shouldBe 1
-            it.pullProgress.message shouldBe "Pulling from distroless/static"
-            it.pullProgress.detail shouldBe null
-            it.pullProgress.id shouldBeIn setOf(imageReference, imageReference.substringAfter('@')) // Older versions of Docker only return the digest here
+            outputText shouldContain """
+                Step 1/1 : FROM $imageReference
+            """.trimIndent()
+
+            outputText shouldContain """
+                Digest: sha256:a4b51dce3a4b2cc09a2d517c2239b763a84d28e9ab66ce051f2006262f454a24
+                Status: Downloaded newer image for $imageReference
+            """.trimIndent()
+
+            val layerId = "8efaa767dfab"
+            val layerSize = 136
+
+            progressUpdatesReceived.forAtLeastOne {
+                it.shouldBeTypeOf<StepPullProgressUpdate>()
+                it.stepNumber shouldBe 1
+                it.pullProgress.message shouldBe "Pulling from batect/docker-client"
+                it.pullProgress.detail shouldBe null
+                it.pullProgress.id shouldBeIn setOf(imageReference, imageReference.substringAfter('@')) // Older versions of Docker only return the digest here
+            }
+
+            progressUpdatesReceived shouldContain StepPullProgressUpdate(1, ImagePullProgressUpdate("Pulling fs layer", ImagePullProgressDetail(0, 0), layerId))
+
+            progressUpdatesReceived.forAtLeastOne {
+                it.shouldBeTypeOf<StepPullProgressUpdate>()
+                it.stepNumber shouldBe 1
+                it.pullProgress.message shouldBe "Download complete"
+                it.pullProgress.detail shouldNotBe null
+                it.pullProgress.detail!!.total shouldBe 0
+                it.pullProgress.id shouldBe layerId
+            }
+
+            progressUpdatesReceived.forAtLeastOne {
+                it.shouldBeTypeOf<StepPullProgressUpdate>()
+                it.stepNumber shouldBe 1
+                it.pullProgress.message shouldBe "Extracting"
+                it.pullProgress.detail shouldNotBe null
+                it.pullProgress.detail!!.total shouldBe layerSize
+                it.pullProgress.id shouldBe layerId
+            }
+
+            progressUpdatesReceived shouldEndWith listOf(
+                StepPullProgressUpdate(1, ImagePullProgressUpdate("Pull complete", ImagePullProgressDetail(0, 0), layerId)),
+                StepPullProgressUpdate(1, ImagePullProgressUpdate("Digest: sha256:a4b51dce3a4b2cc09a2d517c2239b763a84d28e9ab66ce051f2006262f454a24", null, "")),
+                StepPullProgressUpdate(1, ImagePullProgressUpdate("Status: Downloaded newer image for $imageReference", null, "")),
+                StepOutput(1, "Successfully tagged $imageTag:latest\n"),
+                StepFinished(1),
+                BuildComplete(image)
+            )
         }
-
-        progressUpdatesReceived shouldContain StepPullProgressUpdate(1, ImagePullProgressUpdate("Pulling fs layer", ImagePullProgressDetail(0, 0), layerId))
-
-        progressUpdatesReceived.forAtLeastOne {
-            it.shouldBeTypeOf<StepPullProgressUpdate>()
-            it.stepNumber shouldBe 1
-            it.pullProgress.message shouldBe "Downloading"
-            it.pullProgress.detail shouldNotBe null
-            it.pullProgress.detail!!.total shouldBe layerSize
-            it.pullProgress.id shouldBe layerId
-        }
-
-        progressUpdatesReceived.forAtLeastOne {
-            it.shouldBeTypeOf<StepPullProgressUpdate>()
-            it.stepNumber shouldBe 1
-            it.pullProgress.message shouldBe "Extracting"
-            it.pullProgress.detail shouldNotBe null
-            it.pullProgress.detail!!.total shouldBe layerSize
-            it.pullProgress.id shouldBe layerId
-        }
-
-        progressUpdatesReceived shouldEndWith listOf(
-            StepPullProgressUpdate(1, ImagePullProgressUpdate("Pull complete", ImagePullProgressDetail(0, 0), layerId)),
-            StepPullProgressUpdate(1, ImagePullProgressUpdate("Digest: sha256:49f33fac9328ac595cb74bd02e6a186414191c969de0d8be34e6307c185acb8e", null, "")),
-            StepPullProgressUpdate(1, ImagePullProgressUpdate("Status: Downloaded newer image for $imageReference", null, "")),
-            StepOutput(1, "Successfully tagged $imageTag:latest\n"),
-            StepFinished(1),
-            BuildComplete(image)
-        )
     }
 
     should("be able to build a Linux container image and tag it").onlyIfDockerDaemonSupportsLinuxContainers {
@@ -556,11 +561,30 @@ class DockerClientLegacyImageBuildSpec : ShouldSpec({
 
 private fun DockerClient.removeBaseImagesIfPresent(dockerfile: Path) {
     val dockerfileContent = readFileContents(dockerfile)
-    val fromRegex = """^FROM ([a-zA-Z0-9./_-]+(:[a-zA-Z0-9./_-]+))?$""".toRegex(RegexOption.MULTILINE)
+    val fromRegex = """^FROM ([a-zA-Z0-9./_-]+(:[a-zA-Z0-9./_-]+)?(@sha256:[0-9a-f]{64})?)$""".toRegex(RegexOption.MULTILINE)
+
 
     fromRegex.findAll(dockerfileContent).forEach { match ->
-        deleteImageIfPresent(match.groupValues[1])
+        val reference = match.groupValues[1]
+        deleteImageIfPresent(reference)
+
+        val withoutTag = imageReferenceWithoutTag(reference)
+
+        if (withoutTag != null) {
+            deleteImageIfPresent(withoutTag)
+        }
     }
+}
+
+private fun imageReferenceWithoutTag(imageReference: String): String? {
+    val tagStartIndex = imageReference.substringBefore('@').lastIndexOf(':')
+    val digestStartIndex = imageReference.lastIndexOf('@')
+
+    if (tagStartIndex == -1 || digestStartIndex == -1) {
+        return null
+    }
+
+    return imageReference.substring(0, tagStartIndex - 1) + imageReference.substring(digestStartIndex)
 }
 
 private fun readFileContents(path: Path): String =
