@@ -643,17 +643,16 @@ class DockerClientBuildKitImageBuildSpec : ShouldSpec({
 })
 
 private fun String.findStepNumberForStep(step: String): Long {
-    val regex = """^#\d+ \[.*] ${Regex.escape(step)}$""".toRegex()
+    val regex = """^#(\d+) \[.*] ${Regex.escape(step)}$""".toRegex()
 
     val match = this.lines()
-        .firstOrNull() { it.matches(regex) }
+        .firstNotNullOfOrNull { regex.matchEntire(it) }
 
     if (match == null) {
         throw RuntimeException("Could not find step '$step' in output: $this")
     }
 
-    return match.substringBefore(' ').substringAfter('#')
-        .toLong()
+    return match.groupValues[1].toLong()
 }
 
 private fun readFileContents(path: Path): String =
