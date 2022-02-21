@@ -252,6 +252,14 @@ internal actual class RealDockerClient actual constructor(configuration: DockerC
         }
     }
 
+    override fun pruneImageBuildCache() {
+        nativeAPI.PruneImageBuildCache(clientHandle).use { error ->
+            if (error != null) {
+                throw ImageBuildCachePruneFailedException(error)
+            }
+        }
+    }
+
     override fun close() {
         nativeAPI.DisposeClient(clientHandle).use { error ->
             if (error != null) {

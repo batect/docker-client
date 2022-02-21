@@ -55,12 +55,10 @@
 * Images
   * Build
     * Kotlin/Native: Stream output while build is running, not just when build returns (see TODO in native buildImage())
+      * Waiting for answer to question about Dispatchers.IO - does not exist on Kotlin/Native
     * BuildKit
-      * Report image pull progress information
       * Handle case where no explicit builder version is provided
       * Fix issue running tests on JVM: blocked by https://github.com/jnr/jnr-ffi/pull/299
-    * Features to cover:
-      * Windows image build
     * Test that we can run a built image
 * Containers
   * Create

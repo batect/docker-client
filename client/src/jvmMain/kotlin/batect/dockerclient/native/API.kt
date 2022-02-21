@@ -34,6 +34,7 @@ internal interface API {
     fun GetImage(@In clientHandle: Long, @In ref: kotlin.String): GetImageReturn?
     fun ValidateImageTag(@In tag: kotlin.String): Error?
     fun BuildImage(@In clientHandle: Long, @In request: BuildImageRequest, @In outputStreamHandle: Long, @In onProgressUpdate: BuildImageProgressCallback, @In callbackUserData: Pointer?): BuildImageReturn?
+    fun PruneImageBuildCache(@In clientHandle: Long): Error?
     fun PullImage(@In clientHandle: Long, @In ref: kotlin.String, @In onProgressUpdate: PullImageProgressCallback, @In callbackUserData: Pointer?): PullImageReturn?
     fun CreateOutputPipe(): CreateOutputPipeReturn?
     fun DisposeOutputPipe(@In handle: Long): Error?

@@ -239,7 +239,6 @@ func (p *buildKitImageBuildResponseBodyParser) Parse(response types.ImageBuildRe
 	defer tracer.Stop()
 
 	p.imageID = ""
-	output := getOutputStream(p.outputStreamHandle)
 
 	processMessage := func(msg jsonmessage.JSONMessage) error {
 		switch msg.ID {
@@ -266,7 +265,8 @@ func (p *buildKitImageBuildResponseBodyParser) Parse(response types.ImageBuildRe
 		return nil
 	}
 
-	if err := parseAndDisplayJSONMessagesStream(response.Body, output, processMessage); err != nil {
+	// We use io.Discard below because all output is handled by BuildKit's trace messages.
+	if err := parseAndDisplayJSONMessagesStream(response.Body, io.Discard, processMessage); err != nil {
 		return "", err
 	}
 
@@ -592,8 +592,10 @@ func (t *buildKitBuildTracer) sendStatusNotification(s *controlapi.VertexStatus)
 			return err
 		}
 	} else if s.Name != "" {
+		cleanID := strings.TrimPrefix(s.ID, "extracting ")
+
 		progressDetail := newPullImageProgressDetail(s.Current, s.Total)
-		progressUpdate := newPullImageProgressUpdate(s.Name, progressDetail, s.ID)
+		progressUpdate := newPullImageProgressUpdate(s.Name, progressDetail, cleanID)
 
 		if err := t.progressCallback.onImagePullProgress(stepNumber, progressUpdate); err != nil {
 			return err

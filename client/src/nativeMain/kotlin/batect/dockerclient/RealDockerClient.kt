@@ -42,6 +42,7 @@ import batect.dockerclient.native.GetImage
 import batect.dockerclient.native.GetNetworkByNameOrID
 import batect.dockerclient.native.ListAllVolumes
 import batect.dockerclient.native.Ping
+import batect.dockerclient.native.PruneImageBuildCache
 import batect.dockerclient.native.PullImage
 import batect.dockerclient.native.PullImageProgressDetail
 import batect.dockerclient.native.PullImageProgressUpdate
@@ -272,6 +273,12 @@ internal actual class RealDockerClient actual constructor(configuration: DockerC
                     }
                 }
             }
+        }
+    }
+
+    public override fun pruneImageBuildCache() {
+        PruneImageBuildCache(clientHandle).ifFailed { error ->
+            throw ImageBuildCachePruneFailedException(error.pointed)
         }
     }
 

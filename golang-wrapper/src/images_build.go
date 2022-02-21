@@ -19,6 +19,7 @@ import (
 		#include "types.h"
 	*/
 	"C"
+	"context"
 	"encoding/json"
 	"errors"
 	"io"
@@ -26,6 +27,7 @@ import (
 
 	"github.com/docker/cli/cli/config/configfile"
 	"github.com/docker/docker/api/types"
+	"github.com/docker/docker/api/types/filters"
 	"github.com/docker/docker/client"
 	"github.com/docker/docker/pkg/jsonmessage"
 )
@@ -232,4 +234,19 @@ func (p *imageBuildProgressCallback) onContextUploadProgress(currentStep int64, 
 	}
 
 	return nil
+}
+
+//export PruneImageBuildCache
+func PruneImageBuildCache(clientHandle DockerClientHandle) Error {
+	docker := clientHandle.DockerAPIClient()
+
+	opts := types.BuildCachePruneOptions{
+		All:         false,
+		KeepStorage: 0,
+		Filters:     filters.Args{},
+	}
+
+	_, err := docker.BuildCachePrune(context.Background(), opts)
+
+	return toError(err)
 }

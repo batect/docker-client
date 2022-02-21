@@ -230,6 +230,92 @@ class DockerClientBuildKitImageBuildSpec : ShouldSpec({
         outputText shouldContain """^#\d+ \d+\.\d+ Third arg: third value$""".toRegex(RegexOption.MULTILINE)
     }
 
+    context("using a base image not present on the machine") {
+        val imageTag = "batect-docker-client-buildkit-image-build-pull-progress"
+        val contextDirectory = rootTestImagesDirectory.resolve("buildkit-pull-progress")
+        val dockerfile = contextDirectory.resolve("Dockerfile")
+
+        beforeEach {
+            client.deleteImageIfPresent(imageTag)
+            client.removeBaseImagesIfPresent(dockerfile)
+
+            // BuildKit still caches too aggressively with the 'no build cache' and 'always pull' options - this appears to be the only way to ensure that the image is really pulled as part of this test.
+            client.pruneImageBuildCache()
+        }
+
+        should("be able to build a Linux container image and report image pull progress").onlyIfDockerDaemonSupportsLinuxContainers {
+            val spec = ImageBuildSpec.Builder(contextDirectory)
+                .withBuildKitBuilder()
+                .withBaseImageAlwaysPulled()
+                .withNoBuildCache()
+                .withImageTag(imageTag)
+                .build()
+
+            val output = Buffer()
+            val progressUpdatesReceived = mutableListOf<ImageBuildProgressUpdate>()
+
+            val image = client.buildImage(spec, SinkTextOutput(output)) { update ->
+                progressUpdatesReceived.add(update)
+            }
+
+            val outputText = output.readUtf8().trim()
+            val imageReference = "ghcr.io/batect/docker-client:buildkit-image-build-pull-progress@sha256:8a6789a0ff3df495ee00c05ecd89825305b37003b6b2fc1178afc23d7d186e23"
+
+            outputText shouldContain """
+                #(\d+) \[1/1] FROM $imageReference
+                #\1 resolve $imageReference done.*
+            """.trimIndent().toRegex()
+
+            val stepNumber = outputText.findStepNumberForStep("FROM $imageReference")
+
+            outputText shouldContain """#$stepNumber sha256:8a6789a0ff3df495ee00c05ecd89825305b37003b6b2fc1178afc23d7d186e23 523B / 523B (\d+\.\d+s )?done""".toRegex()
+            outputText shouldContain """#$stepNumber sha256:704eee611c18ef00a526edb37f0e25d467e86b07c427fdb4af9964300bcd2a7e 459B / 459B (\d+\.\d+s )?done""".toRegex()
+            outputText shouldContain """#$stepNumber sha256:0c85f017ab24df430248de7f3859b83fb16b763e93e419bc105d7caa810e4ea1 136B / 136B (\d+\.\d+s )?done""".toRegex()
+
+            outputText shouldContain """
+                #$stepNumber extracting sha256:0c85f017ab24df430248de7f3859b83fb16b763e93e419bc105d7caa810e4ea1 done
+                #$stepNumber DONE \d+\.\d+s
+            """.trimIndent().toRegex()
+
+            val layerId = "sha256:0c85f017ab24df430248de7f3859b83fb16b763e93e419bc105d7caa810e4ea1"
+            val layerSize = 136
+
+            progressUpdatesReceived.forAtLeastOne {
+                it.shouldBeTypeOf<StepPullProgressUpdate>()
+                it.stepNumber shouldBe stepNumber
+                it.pullProgress.message shouldBe "downloading"
+                it.pullProgress.detail shouldNotBe null
+                it.pullProgress.detail!!.total shouldBe layerSize
+                it.pullProgress.id shouldBe layerId
+            }
+
+            progressUpdatesReceived.forAtLeastOne {
+                it.shouldBeTypeOf<StepPullProgressUpdate>()
+                it.stepNumber shouldBe stepNumber
+                it.pullProgress.message shouldBe "extract"
+                it.pullProgress.detail shouldNotBe null
+                it.pullProgress.detail!!.total shouldBe 0
+                it.pullProgress.id shouldBe layerId
+            }
+
+            progressUpdatesReceived.forAtLeastOne {
+                it.shouldBeTypeOf<StepPullProgressUpdate>()
+                it.stepNumber shouldBe stepNumber
+                it.pullProgress.message shouldBe "done"
+                it.pullProgress.detail shouldNotBe null
+                it.pullProgress.detail!!.total shouldBe layerSize
+                it.pullProgress.id shouldBe layerId
+            }
+
+            progressUpdatesReceived shouldEndWith listOf(
+                StepFinished(stepNumber),
+                StepStarting(stepNumber+1, "exporting to image"),
+                StepFinished(stepNumber+1),
+                BuildComplete(image)
+            )
+        }
+    }
+
     should("be able to build a Linux container image and tag it").onlyIfDockerDaemonSupportsLinuxContainers {
         val imageTag1 = "batect-docker-client/image-build-test:1"
         val imageTag2 = "batect-docker-client/image-build-test:2"
@@ -540,7 +626,7 @@ class DockerClientBuildKitImageBuildSpec : ShouldSpec({
     }
 })
 
-private fun String.findStepNumberForStep(step: String): Int {
+private fun String.findStepNumberForStep(step: String): Long {
     val regex = """^#\d+ \[.*] ${Regex.escape(step)}$""".toRegex()
 
     val match = this.lines()
@@ -551,7 +637,7 @@ private fun String.findStepNumberForStep(step: String): Int {
     }
 
     return match.substringBefore(' ').substringAfter('#')
-        .toInt()
+        .toLong()
 }
 
 private fun readFileContents(path: Path): String =

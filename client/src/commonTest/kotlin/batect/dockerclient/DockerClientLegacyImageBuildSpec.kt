@@ -166,8 +166,8 @@ class DockerClientLegacyImageBuildSpec : ShouldSpec({
     }
 
     context("using a base image not present on the machine") {
-        val imageTag = "batect-docker-client-image-build-pull-progress"
-        val contextDirectory = rootTestImagesDirectory.resolve("pull-progress")
+        val imageTag = "batect-docker-client-legacy-image-build-pull-progress"
+        val contextDirectory = rootTestImagesDirectory.resolve("legacy-pull-progress")
         val dockerfile = contextDirectory.resolve("Dockerfile")
 
         beforeEach {
@@ -559,7 +559,7 @@ class DockerClientLegacyImageBuildSpec : ShouldSpec({
     }
 })
 
-private fun DockerClient.removeBaseImagesIfPresent(dockerfile: Path) {
+internal fun DockerClient.removeBaseImagesIfPresent(dockerfile: Path) {
     val dockerfileContent = readFileContents(dockerfile)
     val fromRegex = """^FROM ([a-zA-Z0-9./_-]+(:[a-zA-Z0-9./_-]+)?(@sha256:[0-9a-f]{64})?)$""".toRegex(RegexOption.MULTILINE)
 
