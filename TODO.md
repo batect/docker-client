@@ -59,7 +59,7 @@
     * Kotlin/Native: Stream output while build is running, not just when build returns (see TODO in native buildImage())
       * Waiting for answer to question about Dispatchers.IO - does not exist on Kotlin/Native
     * BuildKit
-      * Fix issue running tests on JVM: blocked by https://github.com/jnr/jnr-ffi/pull/299
+      * Fix issue running tests on JVM: blocked by https://github.com/jnr/jnr-ffi/pull/299, re-enable JVM tests on CI once this is resolved
       * Support for SSH passthrough
       * Support for secrets
     * Test that we can run a built image
