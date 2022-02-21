@@ -212,7 +212,6 @@ func (h DockerClientHandle) DefaultBuilderVersion() (types.BuilderVersion, error
 		} else {
 			return types.BuilderV1, nil
 		}
-
 	}
 
 	info, err := h.ServerInfo()
