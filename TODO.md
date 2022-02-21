@@ -60,6 +60,8 @@
       * Waiting for answer to question about Dispatchers.IO - does not exist on Kotlin/Native
     * BuildKit
       * Fix issue running tests on JVM: blocked by https://github.com/jnr/jnr-ffi/pull/299
+      * Support for SSH passthrough
+      * Support for secrets
     * Test that we can run a built image
 * Containers
   * Create
