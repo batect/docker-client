@@ -267,20 +267,24 @@ class DockerClientBuildKitImageBuildSpec : ShouldSpec({
                 #\1 resolve $imageReference (\d+\.\d+s )?done.*
             """.trimIndent().toRegex()
 
-            val stepNumber = outputText.findStepNumberForStep("FROM $imageReference")
+            val outputStepNumber = outputText.findStepNumberForStep("FROM $imageReference")
 
-            outputText shouldContain """#$stepNumber sha256:8a6789a0ff3df495ee00c05ecd89825305b37003b6b2fc1178afc23d7d186e23 523B / 523B (\d+\.\d+s )?done""".toRegex()
-            outputText shouldContain """#$stepNumber sha256:704eee611c18ef00a526edb37f0e25d467e86b07c427fdb4af9964300bcd2a7e 459B / 459B (\d+\.\d+s )?done""".toRegex()
-            outputText shouldContain """#$stepNumber sha256:0c85f017ab24df430248de7f3859b83fb16b763e93e419bc105d7caa810e4ea1 136B / 136B (\d+\.\d+s )?done""".toRegex()
-            outputText shouldContain """#$stepNumber extracting sha256:0c85f017ab24df430248de7f3859b83fb16b763e93e419bc105d7caa810e4ea1 (\d+\.\d+s )?done""".toRegex()
-            outputText shouldContain """#$stepNumber DONE \d+\.\d+s""".trimIndent().toRegex()
+            outputText shouldContain """#$outputStepNumber sha256:8a6789a0ff3df495ee00c05ecd89825305b37003b6b2fc1178afc23d7d186e23 523B / 523B (\d+\.\d+s )?done""".toRegex()
+            outputText shouldContain """#$outputStepNumber sha256:704eee611c18ef00a526edb37f0e25d467e86b07c427fdb4af9964300bcd2a7e 459B / 459B (\d+\.\d+s )?done""".toRegex()
+            outputText shouldContain """#$outputStepNumber sha256:0c85f017ab24df430248de7f3859b83fb16b763e93e419bc105d7caa810e4ea1 136B / 136B (\d+\.\d+s )?done""".toRegex()
+            outputText shouldContain """#$outputStepNumber extracting sha256:0c85f017ab24df430248de7f3859b83fb16b763e93e419bc105d7caa810e4ea1 (\d+\.\d+s )?done""".toRegex()
+            outputText shouldContain """#$outputStepNumber DONE \d+\.\d+s""".trimIndent().toRegex()
 
             val layerId = "sha256:0c85f017ab24df430248de7f3859b83fb16b763e93e419bc105d7caa810e4ea1"
             val layerSize = 136L
+            val progressUpdateStepNumber = progressUpdatesReceived
+                .filterIsInstance<StepStarting>()
+                .first { it.stepName == "[1/1] FROM $imageReference" }
+                .stepNumber
 
             progressUpdatesReceived.filterIsInstance<StepPullProgressUpdate>().forAtLeastOne {
                 it.shouldBeTypeOf<StepPullProgressUpdate>()
-                it.stepNumber shouldBe stepNumber
+                it.stepNumber shouldBe progressUpdateStepNumber
                 it.pullProgress.message shouldBe "downloading"
                 it.pullProgress.detail shouldNotBe null
                 it.pullProgress.detail!!.total shouldBe layerSize
@@ -291,7 +295,7 @@ class DockerClientBuildKitImageBuildSpec : ShouldSpec({
 
             progressUpdatesReceived.filterIsInstance<StepPullProgressUpdate>().forAtLeastOne {
                 it.shouldBeTypeOf<StepPullProgressUpdate>()
-                it.stepNumber shouldBe stepNumber
+                it.stepNumber shouldBe progressUpdateStepNumber
                 it.pullProgress.message shouldBe "extract"
                 it.pullProgress.detail shouldNotBe null
                 it.pullProgress.detail!!.total shouldBe 0
@@ -302,7 +306,7 @@ class DockerClientBuildKitImageBuildSpec : ShouldSpec({
 
             progressUpdatesReceived.filterIsInstance<StepPullProgressUpdate>().forAtLeastOne {
                 it.shouldBeTypeOf<StepPullProgressUpdate>()
-                it.stepNumber shouldBe stepNumber
+                it.stepNumber shouldBe progressUpdateStepNumber
                 it.pullProgress.message shouldBe "done"
                 it.pullProgress.detail shouldNotBe null
                 it.pullProgress.detail!!.total shouldBe layerSize
@@ -310,9 +314,9 @@ class DockerClientBuildKitImageBuildSpec : ShouldSpec({
             }
 
             progressUpdatesReceived shouldEndWith listOf(
-                StepFinished(stepNumber),
-                StepStarting(stepNumber + 1, "exporting to image"),
-                StepFinished(stepNumber + 1),
+                StepFinished(progressUpdateStepNumber),
+                StepStarting(progressUpdateStepNumber + 1, "exporting to image"),
+                StepFinished(progressUpdateStepNumber + 1),
                 BuildComplete(image)
             )
         }
