@@ -278,7 +278,7 @@ class DockerClientBuildKitImageBuildSpec : ShouldSpec({
             val layerId = "sha256:0c85f017ab24df430248de7f3859b83fb16b763e93e419bc105d7caa810e4ea1"
             val layerSize = 136L
 
-            progressUpdatesReceived.forAtLeastOne {
+            progressUpdatesReceived.filterIsInstance<StepPullProgressUpdate>().forAtLeastOne {
                 it.shouldBeTypeOf<StepPullProgressUpdate>()
                 it.stepNumber shouldBe stepNumber
                 it.pullProgress.message shouldBe "downloading"
@@ -289,7 +289,7 @@ class DockerClientBuildKitImageBuildSpec : ShouldSpec({
 
             println("downloading OK")
 
-            progressUpdatesReceived.forAtLeastOne {
+            progressUpdatesReceived.filterIsInstance<StepPullProgressUpdate>().forAtLeastOne {
                 it.shouldBeTypeOf<StepPullProgressUpdate>()
                 it.stepNumber shouldBe stepNumber
                 it.pullProgress.message shouldBe "extract"
@@ -300,7 +300,7 @@ class DockerClientBuildKitImageBuildSpec : ShouldSpec({
 
             println("extract OK")
 
-            progressUpdatesReceived.forAtLeastOne {
+            progressUpdatesReceived.filterIsInstance<StepPullProgressUpdate>().forAtLeastOne {
                 it.shouldBeTypeOf<StepPullProgressUpdate>()
                 it.stepNumber shouldBe stepNumber
                 it.pullProgress.message shouldBe "done"
