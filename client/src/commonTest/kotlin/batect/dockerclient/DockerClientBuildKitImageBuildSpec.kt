@@ -501,7 +501,13 @@ class DockerClientBuildKitImageBuildSpec : ShouldSpec({
             }
         }
 
-        exception.message shouldBe "executor failed running [/bin/sh -c echo \"This command has failed!\" && exit 1]: exit code: 1"
+        exception.message shouldBeIn setOf(
+            // Recent versions of Docker use this error message:
+            "executor failed running [/bin/sh -c echo \"This command has failed!\" && exit 1]: exit code: 1",
+
+            // Docker 19.03 uses this error message:
+            "failed to solve with frontend dockerfile.v0: failed to build LLB: executor failed running [/bin/sh -c echo \"This command has failed!\" && exit 1]: runc did not terminate sucessfully"
+        )
 
         val outputText = output.readUtf8().trim()
 
@@ -517,7 +523,11 @@ class DockerClientBuildKitImageBuildSpec : ShouldSpec({
 
         progressUpdatesReceived shouldContainAnyOf setOf(StepStarting(4, "[1/2] FROM docker.io/library/alpine:3.14.2"), StepStarting(4, "[1/2] FROM docker.io/library/alpine:3.14.2@sha256:e1c082e3d3c45cccac829840a25941e679c25d438cc8412c2fa221cf1a824e6a"))
         progressUpdatesReceived shouldContain StepStarting(5, "[2/2] RUN echo \"This command has failed!\" && exit 1")
-        progressUpdatesReceived shouldContain BuildFailed("executor failed running [/bin/sh -c echo \"This command has failed!\" && exit 1]: exit code: 1")
+
+        progressUpdatesReceived shouldContainAnyOf setOf(
+            BuildFailed("executor failed running [/bin/sh -c echo \"This command has failed!\" && exit 1]: exit code: 1"),
+            BuildFailed("failed to solve with frontend dockerfile.v0: failed to build LLB: executor failed running [/bin/sh -c echo \"This command has failed!\" && exit 1]: runc did not terminate sucessfully"),
+        )
 
         progressUpdatesReceived.forNone {
             it.shouldBeTypeOf<BuildComplete>()
@@ -539,8 +549,12 @@ class DockerClientBuildKitImageBuildSpec : ShouldSpec({
         }
 
         exception.message shouldBeIn setOf(
+            // Recent versions of Docker use these error messages:
             "failed to solve with frontend dockerfile.v0: failed to create LLB definition: docker.io/batect/this-image-does-not-exist:1.0: not found",
-            "failed to solve with frontend dockerfile.v0: failed to create LLB definition: pull access denied, repository does not exist or may require authorization: server message: insufficient_scope: authorization failed"
+            "failed to solve with frontend dockerfile.v0: failed to create LLB definition: pull access denied, repository does not exist or may require authorization: server message: insufficient_scope: authorization failed",
+
+            // Docker 19.03 uses this error message:
+            "failed to solve with frontend dockerfile.v0: failed to build LLB: failed to load cache key: pull access denied, repository does not exist or may require authorization: server message: insufficient_scope: authorization failed"
         )
 
         val outputText = output.readUtf8().trim()
@@ -549,7 +563,8 @@ class DockerClientBuildKitImageBuildSpec : ShouldSpec({
         progressUpdatesReceived shouldContain StepStarting(3, "[internal] load metadata for docker.io/batect/this-image-does-not-exist:1.0")
         progressUpdatesReceived shouldContainAnyOf setOf(
             BuildFailed("failed to solve with frontend dockerfile.v0: failed to create LLB definition: docker.io/batect/this-image-does-not-exist:1.0: not found"),
-            BuildFailed("failed to solve with frontend dockerfile.v0: failed to create LLB definition: pull access denied, repository does not exist or may require authorization: server message: insufficient_scope: authorization failed")
+            BuildFailed("failed to solve with frontend dockerfile.v0: failed to create LLB definition: pull access denied, repository does not exist or may require authorization: server message: insufficient_scope: authorization failed"),
+            BuildFailed("failed to solve with frontend dockerfile.v0: failed to build LLB: failed to load cache key: pull access denied, repository does not exist or may require authorization: server message: insufficient_scope: authorization failed")
         )
 
         progressUpdatesReceived.forNone {
