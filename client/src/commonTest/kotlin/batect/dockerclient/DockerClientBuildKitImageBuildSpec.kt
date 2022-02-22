@@ -512,12 +512,12 @@ class DockerClientBuildKitImageBuildSpec : ShouldSpec({
         val outputText = output.readUtf8().trim()
 
         outputText shouldContain """
-            ^#5 \[2/2] RUN echo "This command has failed!" && exit 1
-            #5 \d+\.\d+ This command has failed!
-            #5 ERROR: executor failed running \[/bin/sh -c echo "This command has failed!" && exit 1]: exit code: 1
+            ^#(\d+) \[2/2] RUN echo "This command has failed!" && exit 1
+            #\1 \d+\.\d+ This command has failed!
+            #\1 ERROR: executor failed running \[/bin/sh -c echo "This command has failed!" && exit 1]: (exit code: 1|runc did not terminate sucessfully)
             ------
              > \[2/2] RUN echo "This command has failed!" && exit 1:
-            #5 \d+\.\d+ This command has failed!
+            #\1 \d+\.\d+ This command has failed!
             ------$
         """.trimIndent().toRegex(RegexOption.MULTILINE)
 
