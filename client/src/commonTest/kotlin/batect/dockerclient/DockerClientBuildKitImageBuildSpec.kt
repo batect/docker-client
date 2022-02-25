@@ -349,34 +349,11 @@ class DockerClientBuildKitImageBuildSpec : ShouldSpec({
 
         val outputText = output.readUtf8().trim()
 
-        val firstStepPattern = """
-            #1 \[internal] load build definition from Dockerfile
-            #1 transferring dockerfile: 36B (\d+\.\d+s )?done
-            #1 DONE \d+\.\d+s
-
-        """.trimIndent()
-
-        val secondStepPattern = """
-            #2 \[internal] load .dockerignore
-            #2 transferring context: 2B (\d+\.\d+s )?done
-            #2 DONE \d+\.\d+s
-
-        """.trimIndent()
-
         val singleBuildOutputPattern = """
-            (#4 [auth] sharing credentials for registry-1.docker.io
-            #4 DONE 0.0s
-
-            )?#\d \[internal] load metadata for docker.io/library/alpine:3.14.2
-            #\d DONE \d+\.\d+s
-
-            #\d \[1/2] FROM docker.io/library/alpine:3.14.2(@sha256:e1c082e3d3c45cccac829840a25941e679c25d438cc8412c2fa221cf1a824e6a)?
-            #\d (DONE \d+\.\d+s|CACHED)
-
-            #\d \[2/2] RUN echo "Hello world!"
-            #\d \d+\.\d+ Hello world!
-            #\d DONE \d+\.\d+s
-
+            [\S\s]*#1 \[internal] load build definition from Dockerfile
+            #1 transferring dockerfile: \d+B (\d+\.\d+s )?done
+            #1 DONE \d+\.\d+s
+            [\S\s]*
             #\d exporting to image
             (#\d exporting layers
             )?#\d exporting layers (\d+\.\d+s )?done
@@ -385,8 +362,7 @@ class DockerClientBuildKitImageBuildSpec : ShouldSpec({
             #\d DONE \d+\.\d+s
         """.trimIndent()
 
-        // Why do we have to accept the first two steps in either order? Docker 19.03 is unpredictable in which order the steps are printed.
-        outputText shouldMatch """(($firstStepPattern$secondStepPattern|$secondStepPattern$firstStepPattern)$singleBuildOutputPattern\s*){2}""".toRegex()
+        outputText shouldMatch """($singleBuildOutputPattern\s*){2}""".toRegex()
     }
 
     should("be able to build a Linux container image that uses a base image that requires authentication").onlyIfDockerDaemonSupportsLinuxContainers {
