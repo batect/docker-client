@@ -387,16 +387,22 @@ func (v *vertexSortingInterface) Len() int {
 	return len(v.vertices)
 }
 
+const (
+	preserveOrder    = false // Provided we use this with sort.Stable, this will retain the existing order.
+	firstSortsFirst  = true
+	secondSortsFirst = false
+)
+
 func (v *vertexSortingInterface) Less(i, j int) bool {
 	first := v.vertices[i]
 	second := v.vertices[j]
 
 	if vertexReliesOnDigest(first, second.Digest) {
-		return false
+		return secondSortsFirst
 	}
 
 	if vertexReliesOnDigest(second, first.Digest) {
-		return true
+		return firstSortsFirst
 	}
 
 	firstHasStepNumbering := strings.HasPrefix(first.Name, "[")
@@ -404,11 +410,11 @@ func (v *vertexSortingInterface) Less(i, j int) bool {
 
 	switch {
 	case !firstHasStepNumbering && !secondHasStepNumbering:
-		return false
+		return preserveOrder
 	case firstHasStepNumbering && !secondHasStepNumbering:
-		return true
+		return firstSortsFirst
 	case !firstHasStepNumbering && secondHasStepNumbering:
-		return false
+		return secondSortsFirst
 	}
 
 	firstIsInternalStep := strings.HasPrefix(first.Name, "[internal] ")
@@ -416,21 +422,35 @@ func (v *vertexSortingInterface) Less(i, j int) bool {
 
 	switch {
 	case firstIsInternalStep && secondIsInternalStep:
-		return false
+		return v.sortInternalSteps(first.Name, second.Name)
 	case firstIsInternalStep && !secondIsInternalStep:
-		return true
+		return firstSortsFirst
 	case !firstIsInternalStep && secondIsInternalStep:
-		return false
+		return secondSortsFirst
 	}
 
 	firstStageName, firstStep := v.extractStageNameAndStepNumber(first.Name)
 	secondStageName, secondStep := v.extractStageNameAndStepNumber(second.Name)
 
 	if firstStageName != secondStageName {
-		return false // Provided we use this with sort.Stable, this will retain the existing order.
+		return preserveOrder
 	}
 
 	return firstStep < secondStep
+}
+
+func (v *vertexSortingInterface) sortInternalSteps(firstName string, secondName string) bool {
+	loadDockerfile := "[internal] load build definition "
+
+	if strings.HasPrefix(firstName, loadDockerfile) {
+		return firstSortsFirst
+	}
+
+	if strings.HasPrefix(secondName, loadDockerfile) {
+		return secondSortsFirst
+	}
+
+	return preserveOrder
 }
 
 func vertexReliesOnDigest(v *controlapi.Vertex, digest digest.Digest) bool {

@@ -57,16 +57,16 @@ class DockerClientBuildKitImageBuildSpec : ShouldSpec({
         val outputText = output.readUtf8().trim()
 
         outputText shouldContain """
-            |#(\d+) \[internal] load build definition from Dockerfile
-            |#\1 transferring dockerfile: \d+B (\d+\.\d+s )?done
-            |#\1 DONE \d+\.\d+s
+            |#1 \[internal] load build definition from Dockerfile
+            |#1 transferring dockerfile: \d+B (\d+\.\d+s )?done
+            |#1 DONE \d+\.\d+s
             |
         """.trimMargin().toRegex()
 
         outputText shouldContain """
-            |#(\d+) \[internal] load .dockerignore
-            |#\1 transferring context: 2B (\d+\.\d+s )?done
-            |#\1 DONE \d+\.\d+s
+            |#2 \[internal] load .dockerignore
+            |#2 transferring context: 2B (\d+\.\d+s )?done
+            |#2 DONE \d+\.\d+s
             |
         """.trimMargin().toRegex()
 
@@ -350,9 +350,9 @@ class DockerClientBuildKitImageBuildSpec : ShouldSpec({
         val outputText = output.readUtf8().trim()
 
         val singleBuildOutputPattern = """
-            [\S\s]*#\d \[internal] load build definition from Dockerfile
-            #\d transferring dockerfile: \d+B (\d+\.\d+s )?done
-            #\d DONE \d+\.\d+s
+            [\S\s]*#1 \[internal] load build definition from Dockerfile
+            #1 transferring dockerfile: \d+B (\d+\.\d+s )?done
+            #1 DONE \d+\.\d+s
             [\S\s]*
             #\d exporting to image
             (#\d exporting layers
