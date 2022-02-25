@@ -348,34 +348,45 @@ class DockerClientBuildKitImageBuildSpec : ShouldSpec({
         client.buildImage(spec, sink)
 
         val outputText = output.readUtf8().trim()
-        val singleBuildOutputPattern = """
+
+        val firstStepPattern = """
             #1 \[internal] load build definition from Dockerfile
             #1 transferring dockerfile: 36B (\d+\.\d+s )?done
             #1 DONE \d+\.\d+s
 
+        """.trimIndent()
+
+        val secondStepPattern = """
             #2 \[internal] load .dockerignore
             #2 transferring context: 2B (\d+\.\d+s )?done
             #2 DONE \d+\.\d+s
 
-            #3 \[internal] load metadata for docker.io/library/alpine:3.14.2
-            #3 DONE \d+\.\d+s
-
-            #4 \[1/2] FROM docker.io/library/alpine:3.14.2(@sha256:e1c082e3d3c45cccac829840a25941e679c25d438cc8412c2fa221cf1a824e6a)?
-            #4 (DONE \d+\.\d+s|CACHED)
-
-            #5 \[2/2] RUN echo "Hello world!"
-            #5 \d+\.\d+ Hello world!
-            #5 DONE \d+\.\d+s
-
-            #6 exporting to image
-            (#6 exporting layers
-            )?#6 exporting layers (\d+\.\d+s )?done
-            (#6 writing image sha256:[0-9a-f]{64}
-            )?#6 writing image sha256:[0-9a-f]{64} done
-            #6 DONE \d+\.\d+s
         """.trimIndent()
 
-        outputText shouldMatch """($singleBuildOutputPattern\s*){2}""".toRegex()
+        val singleBuildOutputPattern = """
+            (#4 [auth] sharing credentials for registry-1.docker.io
+            #4 DONE 0.0s
+
+            )?#\d \[internal] load metadata for docker.io/library/alpine:3.14.2
+            #\d DONE \d+\.\d+s
+
+            #\d \[1/2] FROM docker.io/library/alpine:3.14.2(@sha256:e1c082e3d3c45cccac829840a25941e679c25d438cc8412c2fa221cf1a824e6a)?
+            #\d (DONE \d+\.\d+s|CACHED)
+
+            #\d \[2/2] RUN echo "Hello world!"
+            #\d \d+\.\d+ Hello world!
+            #\d DONE \d+\.\d+s
+
+            #\d exporting to image
+            (#\d exporting layers
+            )?#\d exporting layers (\d+\.\d+s )?done
+            (#\d writing image sha256:[0-9a-f]{64}
+            )?#\d writing image sha256:[0-9a-f]{64} done
+            #\d DONE \d+\.\d+s
+        """.trimIndent()
+
+        // Why do we have to accept the first two steps in either order? Docker 19.03 is unpredictable in which order the steps are printed.
+        outputText shouldMatch """(($firstStepPattern$secondStepPattern|$secondStepPattern$firstStepPattern)$singleBuildOutputPattern\s*){2}""".toRegex()
     }
 
     should("be able to build a Linux container image that uses a base image that requires authentication").onlyIfDockerDaemonSupportsLinuxContainers {
@@ -465,12 +476,20 @@ class DockerClientBuildKitImageBuildSpec : ShouldSpec({
             progressUpdatesReceived.add(update)
         }
 
-        val outputTextLines = output.readUtf8().trim().lines()
-        outputTextLines shouldContainAnyOf setOf("#4 [other 1/2] FROM docker.io/library/alpine:3.14.2", "#4 [other 1/2] FROM docker.io/library/alpine:3.14.2@sha256:e1c082e3d3c45cccac829840a25941e679c25d438cc8412c2fa221cf1a824e6a")
+        val outputText = output.readUtf8().trim()
+        val outputTextLines = outputText.lines()
+        outputText shouldContain """^#\d \[other 1/2] FROM docker.io/library/alpine:3.14.2(@sha256:e1c082e3d3c45cccac829840a25941e679c25d438cc8412c2fa221cf1a824e6a)?$""".toRegex(RegexOption.MULTILINE)
         outputTextLines shouldContain "#5 [other 2/2] RUN touch /file-from-other"
 
-        progressUpdatesReceived shouldContainAnyOf setOf(StepStarting(4, "[other 1/2] FROM docker.io/library/alpine:3.14.2"), StepStarting(4, "[other 1/2] FROM docker.io/library/alpine:3.14.2@sha256:e1c082e3d3c45cccac829840a25941e679c25d438cc8412c2fa221cf1a824e6a"))
-        progressUpdatesReceived shouldContain StepStarting(5, "[other 2/2] RUN touch /file-from-other")
+        progressUpdatesReceived.forAtLeastOne {
+            it.shouldBeTypeOf<StepStarting>()
+            it.stepName shouldMatch """\[other 1/2] FROM docker.io/library/alpine:3.14.2(@sha256:e1c082e3d3c45cccac829840a25941e679c25d438cc8412c2fa221cf1a824e6a)?""".toRegex()
+        }
+
+        progressUpdatesReceived.forAtLeastOne {
+            it.shouldBeTypeOf<StepStarting>()
+            it.stepName shouldBe "[other 2/2] RUN touch /file-from-other"
+        }
 
         progressUpdatesReceived.forNone {
             it.shouldBeTypeOf<StepStarting>()
@@ -579,26 +598,22 @@ class DockerClientBuildKitImageBuildSpec : ShouldSpec({
             progressUpdatesReceived.add(update)
         }
 
-        val outputText = output.readUtf8().trim().lines()
+        val outputText = output.readUtf8().trim()
 
-        outputText shouldContainAnyOf setOf(
-            "#4 [1/2] FROM docker.io/library/alpine:3.14.2",
-            "#4 [1/2] FROM docker.io/library/alpine:3.14.2@sha256:e1c082e3d3c45cccac829840a25941e679c25d438cc8412c2fa221cf1a824e6a",
-            "#5 [1/2] FROM docker.io/library/alpine:3.14.2",
-            "#5 [1/2] FROM docker.io/library/alpine:3.14.2@sha256:e1c082e3d3c45cccac829840a25941e679c25d438cc8412c2fa221cf1a824e6a",
-        )
+        outputText shouldContain """^#\d \[1/2] FROM docker.io/library/alpine:3.14.2(@sha256:e1c082e3d3c45cccac829840a25941e679c25d438cc8412c2fa221cf1a824e6a)?$""".toRegex(RegexOption.MULTILINE)
+        outputText shouldContain """^#\d https://httpbin.org/drip\?duration=1&numbytes=2048&code=200&delay=0""".toRegex(RegexOption.MULTILINE)
+        outputText shouldContain """^#\d \[2/2] ADD https://httpbin.org/drip\?duration=1&numbytes=2048&code=200&delay=0 /file.txt""".toRegex(RegexOption.MULTILINE)
 
-        outputText shouldContainAnyOf setOf("#4 https://httpbin.org/drip?duration=1&numbytes=2048&code=200&delay=0", "#5 https://httpbin.org/drip?duration=1&numbytes=2048&code=200&delay=0")
-        outputText shouldContain "#6 [2/2] ADD https://httpbin.org/drip?duration=1&numbytes=2048&code=200&delay=0 /file.txt"
+        progressUpdatesReceived.forAtLeastOne {
+            it.shouldBeTypeOf<StepStarting>()
+            it.stepName shouldMatch """\[1/2] FROM docker.io/library/alpine:3.14.2(@sha256:e1c082e3d3c45cccac829840a25941e679c25d438cc8412c2fa221cf1a824e6a)?""".toRegex()
+        }
 
-        progressUpdatesReceived shouldContainAnyOf setOf(
-            StepStarting(4, "[1/2] FROM docker.io/library/alpine:3.14.2"),
-            StepStarting(4, "[1/2] FROM docker.io/library/alpine:3.14.2@sha256:e1c082e3d3c45cccac829840a25941e679c25d438cc8412c2fa221cf1a824e6a"),
-            StepStarting(5, "[1/2] FROM docker.io/library/alpine:3.14.2"),
-            StepStarting(5, "[1/2] FROM docker.io/library/alpine:3.14.2@sha256:e1c082e3d3c45cccac829840a25941e679c25d438cc8412c2fa221cf1a824e6a"),
-        )
+        progressUpdatesReceived.forAtLeastOne {
+            it.shouldBeTypeOf<StepStarting>()
+            it.stepName shouldBe "https://httpbin.org/drip?duration=1&numbytes=2048&code=200&delay=0"
+        }
 
-        progressUpdatesReceived shouldContainAnyOf setOf(StepStarting(4, "https://httpbin.org/drip?duration=1&numbytes=2048&code=200&delay=0"), StepStarting(5, "https://httpbin.org/drip?duration=1&numbytes=2048&code=200&delay=0"))
         progressUpdatesReceived shouldEndWith BuildComplete(image)
     }
 
