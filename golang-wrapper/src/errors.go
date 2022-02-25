@@ -14,10 +14,13 @@
 
 package main
 
+import "fmt"
+
 var (
 	ErrInvalidDockerClientHandle = InvalidDockerClientHandleError{}
 	ErrProgressCallbackFailed    = ProgressCallbackFailedError{}
 	ErrInvalidOutputStreamHandle = InvalidOutputStreamHandleError{}
+	ErrBuildKitNotSupported      = BuildKitNotSupportedError{}
 )
 
 type ProgressCallbackFailedError struct{}
@@ -36,4 +39,18 @@ type InvalidOutputStreamHandleError struct{}
 
 func (e InvalidOutputStreamHandleError) Error() string {
 	return "invalid output stream handle"
+}
+
+type InvalidBuilderVersionError struct {
+	InvalidVersion string
+}
+
+func (e InvalidBuilderVersionError) Error() string {
+	return fmt.Sprintf("unknown builder version '%s'", e.InvalidVersion)
+}
+
+type BuildKitNotSupportedError struct{}
+
+func (e BuildKitNotSupportedError) Error() string {
+	return "the Docker deamon in use does not support BuildKit"
 }

@@ -36,6 +36,7 @@ public interface DockerClient : AutoCloseable {
     public fun getImage(name: String): ImageReference?
 
     public fun buildImage(spec: ImageBuildSpec, output: TextOutput, onProgressUpdate: ImageBuildProgressReceiver = {}): ImageReference
+    public fun pruneImageBuildCache()
 
     public class Builder internal constructor(internal val factory: DockerClientFactory) {
         public constructor() : this({ config -> RealDockerClient(config) })

@@ -25,7 +25,7 @@ import io.kotest.matchers.string.shouldStartWith
 import okio.Path.Companion.toPath
 
 class DockerClientBuilderSpec : ShouldSpec({
-    val rootTestCertificatesDirectory = systemFileSystem.canonicalize("./src/commonTest/resources/dummyClientCertificates".toPath())
+    val rootTestCertificatesDirectory = systemFileSystem.canonicalize("./src/commonTest/resources/dummy-client-certificates".toPath())
 
     val operatingSystemFileNotFoundMessage = when (testEnvironmentOperatingSystem) {
         OperatingSystem.Windows -> "The system cannot find the file specified."

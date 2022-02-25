@@ -328,6 +328,7 @@ func newBuildImageRequest(
     AlwaysPullBaseImages bool,
     NoCache bool,
     TargetBuildStage string,
+    BuilderVersion string,
 ) BuildImageRequest {
     value := C.AllocBuildImageRequest()
     value.ContextDirectory = C.CString(ContextDirectory)
@@ -351,6 +352,7 @@ func newBuildImageRequest(
     value.AlwaysPullBaseImages = C.bool(AlwaysPullBaseImages)
     value.NoCache = C.bool(NoCache)
     value.TargetBuildStage = C.CString(TargetBuildStage)
+    value.BuilderVersion = C.CString(BuilderVersion)
 
     return value
 }
@@ -367,9 +369,11 @@ func newBuildImageReturn(
 }
 
 func newBuildImageProgressUpdate_ImageBuildContextUploadProgress(
+    StepNumber int64,
     BytesUploaded int64,
 ) BuildImageProgressUpdate_ImageBuildContextUploadProgress {
     value := C.AllocBuildImageProgressUpdate_ImageBuildContextUploadProgress()
+    value.StepNumber = C.int64_t(StepNumber)
     value.BytesUploaded = C.int64_t(BytesUploaded)
 
     return value

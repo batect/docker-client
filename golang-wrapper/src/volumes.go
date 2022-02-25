@@ -27,7 +27,7 @@ import (
 
 //export CreateVolume
 func CreateVolume(clientHandle DockerClientHandle, name *C.char) CreateVolumeReturn {
-	docker := getDockerAPIClient(clientHandle)
+	docker := clientHandle.DockerAPIClient()
 
 	request := volume.VolumeCreateBody{
 		Name: C.GoString(name),
@@ -46,7 +46,7 @@ func CreateVolume(clientHandle DockerClientHandle, name *C.char) CreateVolumeRet
 
 //export DeleteVolume
 func DeleteVolume(clientHandle DockerClientHandle, name *C.char) Error {
-	docker := getDockerAPIClient(clientHandle)
+	docker := clientHandle.DockerAPIClient()
 
 	err := docker.VolumeRemove(context.Background(), C.GoString(name), false)
 
@@ -55,7 +55,7 @@ func DeleteVolume(clientHandle DockerClientHandle, name *C.char) Error {
 
 //export ListAllVolumes
 func ListAllVolumes(clientHandle DockerClientHandle) ListAllVolumesReturn {
-	docker := getDockerAPIClient(clientHandle)
+	docker := clientHandle.DockerAPIClient()
 
 	dockerResponse, err := docker.VolumeList(context.Background(), filters.NewArgs())
 

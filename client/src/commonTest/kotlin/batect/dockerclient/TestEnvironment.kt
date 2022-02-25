@@ -17,6 +17,7 @@
 package batect.dockerclient
 
 import io.kotest.core.spec.style.scopes.RootTestWithConfigBuilder
+import io.kotest.core.spec.style.scopes.TestWithConfigBuilder
 import io.kotest.core.test.TestContext
 import okio.FileSystem
 
@@ -32,10 +33,10 @@ private val dockerDaemonPresent: Boolean
     get() = getEnvironmentVariable("DISABLE_DOCKER_DAEMON_TESTS") != "1"
 
 internal fun RootTestWithConfigBuilder.onlyIfDockerDaemonSupportsLinuxContainers(test: suspend TestContext.() -> Unit) =
-    this.onlyIfDockerDaemonSupportsLinuxContainersAnd(true, test)
+    this.config(enabledIf = { dockerDaemonPresent && testEnvironmentContainerOperatingSystem == ContainerOperatingSystem.Linux }, test = test)
 
-internal fun RootTestWithConfigBuilder.onlyIfDockerDaemonSupportsLinuxContainersAnd(condition: Boolean, test: suspend TestContext.() -> Unit) =
-    this.config(enabledIf = { dockerDaemonPresent && testEnvironmentContainerOperatingSystem == ContainerOperatingSystem.Linux && condition }, test = test)
+internal suspend fun TestWithConfigBuilder.onlyIfDockerDaemonSupportsLinuxContainers(test: suspend TestContext.() -> Unit) =
+    this.config(enabledIf = { dockerDaemonPresent && testEnvironmentContainerOperatingSystem == ContainerOperatingSystem.Linux }, test = test)
 
 internal fun RootTestWithConfigBuilder.onlyIfDockerDaemonSupportsWindowsContainers(test: suspend TestContext.() -> Unit) =
     this.config(enabledIf = { dockerDaemonPresent && testEnvironmentContainerOperatingSystem == ContainerOperatingSystem.Windows }, test = test)
@@ -61,6 +62,3 @@ enum class OperatingSystem {
     Windows,
     MacOS
 }
-
-// FIXME: remove this once the new Kotlin/Native memory model can be used
-internal expect val multithreadingSupportedOnThisPlatform: Boolean

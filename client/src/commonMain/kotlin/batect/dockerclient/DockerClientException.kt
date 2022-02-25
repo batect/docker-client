@@ -96,6 +96,12 @@ public expect class ImageBuildFailedException(
     golangErrorType: String? = null
 ) : DockerClientException
 
+public expect class ImageBuildCachePruneFailedException(
+    message: String,
+    cause: Throwable? = null,
+    golangErrorType: String? = null
+) : DockerClientException
+
 public class InvalidImageBuildSpecException(
     message: String,
     cause: Throwable? = null

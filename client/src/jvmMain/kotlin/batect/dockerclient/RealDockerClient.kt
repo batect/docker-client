@@ -231,7 +231,7 @@ internal actual class RealDockerClient actual constructor(configuration: DockerC
             return runBlocking(Dispatchers.IO) {
                 launch { stream.run() }
 
-                nativeAPI.BuildImage(clientHandle, BuildImageRequest(spec), stream.outputStreamHandle.toLong(), true, callback, null)!!.use { ret ->
+                nativeAPI.BuildImage(clientHandle, BuildImageRequest(spec), stream.outputStreamHandle.toLong(), callback, null)!!.use { ret ->
                     if (ret.error != null) {
                         if (ret.error!!.type.get() == "main.ProgressCallbackFailedError") {
                             throw ImageBuildFailedException(
@@ -248,6 +248,14 @@ internal actual class RealDockerClient actual constructor(configuration: DockerC
 
                     imageReference
                 }
+            }
+        }
+    }
+
+    override fun pruneImageBuildCache() {
+        nativeAPI.PruneImageBuildCache(clientHandle).use { error ->
+            if (error != null) {
+                throw ImageBuildCachePruneFailedException(error)
             }
         }
     }
@@ -274,7 +282,7 @@ internal actual class RealDockerClient actual constructor(configuration: DockerC
         }
 
     private fun ImageBuildProgressUpdate(native: BuildImageProgressUpdate): ImageBuildProgressUpdate = when {
-        native.imageBuildContextUploadProgress != null -> ImageBuildContextUploadProgress(native.imageBuildContextUploadProgress!!)
+        native.imageBuildContextUploadProgress != null -> contextUploadProgress(native.imageBuildContextUploadProgress!!)
         native.stepStarting != null -> StepStarting(native.stepStarting!!)
         native.stepOutput != null -> StepOutput(native.stepOutput!!)
         native.stepPullProgressUpdate != null -> StepPullProgressUpdate(native.stepPullProgressUpdate!!)
@@ -284,8 +292,11 @@ internal actual class RealDockerClient actual constructor(configuration: DockerC
         else -> throw RuntimeException("${BuildImageProgressUpdate::class.qualifiedName} did not contain an update")
     }
 
-    private fun ImageBuildContextUploadProgress(native: BuildImageProgressUpdate_ImageBuildContextUploadProgress): ImageBuildContextUploadProgress =
-        ImageBuildContextUploadProgress(native.bytesUploaded.get())
+    private fun contextUploadProgress(native: BuildImageProgressUpdate_ImageBuildContextUploadProgress): ImageBuildProgressUpdate =
+        when (native.stepNumber.get()) {
+            0L -> ImageBuildContextUploadProgress(native.bytesUploaded.get())
+            else -> StepContextUploadProgress(native.stepNumber.get(), native.bytesUploaded.get())
+        }
 
     private fun StepStarting(native: BuildImageProgressUpdate_StepStarting): StepStarting =
         StepStarting(native.stepNumber.get(), native.stepName.get())
@@ -339,6 +350,7 @@ internal actual class RealDockerClient actual constructor(configuration: DockerC
         request.alwaysPullBaseImages.set(jvm.alwaysPullBaseImages)
         request.noCache.set(jvm.noCache)
         request.targetBuildStage.set(jvm.targetBuildStage)
+        request.builderVersion.set(jvm.builderApiVersion)
 
         return request
     }

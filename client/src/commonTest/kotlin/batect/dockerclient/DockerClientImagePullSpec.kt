@@ -64,50 +64,60 @@ class DockerClientImagePullSpec : ShouldSpec({
             val imageReferenceFromGet = client.getImage(image)
             imageReferenceFromPull shouldBe imageReferenceFromGet
 
-            client.deleteImage(imageReferenceFromPull)
+            client.deleteImage(imageReferenceFromPull, force = true)
             val imageReferenceAfterDelete = client.getImage(image)
             imageReferenceAfterDelete shouldBe null
         }
     }
 
-    should("report progress information while pulling a Linux image").onlyIfDockerDaemonSupportsLinuxContainers {
-        val image = defaultLinuxTestImage
-        val progressUpdatesReceived = mutableListOf<ImagePullProgressUpdate>()
+    context("pulling an image that does not exist on the local machine") {
+        // Recreate this image with 'resources/base-images/recreate.sh'.
+        val image = "ghcr.io/batect/docker-client:image-pull-progress@sha256:ed32e6eb4f059d2ac57e47413855d737db00c21f39edb0a5845c3a30a18a7263"
+        val imageWithoutTag = "ghcr.io/batect/docker-client@sha256:ed32e6eb4f059d2ac57e47413855d737db00c21f39edb0a5845c3a30a18a7263"
 
-        client.pullImage(image) { update ->
-            progressUpdatesReceived.add(update)
+        beforeAny {
+            client.deleteImageIfPresent(image)
+            client.deleteImageIfPresent(imageWithoutTag)
         }
 
-        val layerId = "b49b96595fd4"
-        val layerSize = 657696
+        should("report progress information while pulling an image").onlyIfDockerDaemonSupportsLinuxContainers {
+            val progressUpdatesReceived = mutableListOf<ImagePullProgressUpdate>()
 
-        progressUpdatesReceived.forAtLeastOne {
-            it.message shouldBe "Pulling from distroless/static"
-            it.detail shouldBe null
-            it.id shouldBeIn setOf(image, image.substringAfter('@')) // Older versions of Docker only return the digest here
+            client.pullImage(image) { update ->
+                progressUpdatesReceived.add(update)
+            }
+
+            val layerId = "0f17b32804d3"
+            val layerSize = 127
+
+            progressUpdatesReceived.forAtLeastOne {
+                it.message shouldBe "Pulling from batect/docker-client"
+                it.detail shouldBe null
+                it.id shouldBeIn setOf(imageWithoutTag, imageWithoutTag.substringAfter('@')) // Older versions of Docker only return the digest here
+            }
+
+            progressUpdatesReceived shouldContain ImagePullProgressUpdate("Pulling fs layer", ImagePullProgressDetail(0, 0), layerId)
+
+            progressUpdatesReceived.forAtLeastOne {
+                it.message shouldBe "Download complete"
+                it.detail shouldNotBe null
+                it.detail!!.total shouldBe 0
+                it.id shouldBe layerId
+            }
+
+            progressUpdatesReceived.forAtLeastOne {
+                it.message shouldBe "Extracting"
+                it.detail shouldNotBe null
+                it.detail!!.total shouldBe layerSize
+                it.id shouldBe layerId
+            }
+
+            progressUpdatesReceived shouldEndWith listOf(
+                ImagePullProgressUpdate("Pull complete", ImagePullProgressDetail(0, 0), layerId),
+                ImagePullProgressUpdate("Digest: sha256:ed32e6eb4f059d2ac57e47413855d737db00c21f39edb0a5845c3a30a18a7263", null, ""),
+                ImagePullProgressUpdate("Status: Downloaded newer image for $imageWithoutTag", null, "")
+            )
         }
-
-        progressUpdatesReceived shouldContain ImagePullProgressUpdate("Pulling fs layer", ImagePullProgressDetail(0, 0), layerId)
-
-        progressUpdatesReceived.forAtLeastOne {
-            it.message shouldBe "Downloading"
-            it.detail shouldNotBe null
-            it.detail!!.total shouldBe layerSize
-            it.id shouldBe layerId
-        }
-
-        progressUpdatesReceived.forAtLeastOne {
-            it.message shouldBe "Extracting"
-            it.detail shouldNotBe null
-            it.detail!!.total shouldBe layerSize
-            it.id shouldBe layerId
-        }
-
-        progressUpdatesReceived shouldEndWith listOf(
-            ImagePullProgressUpdate("Pull complete", ImagePullProgressDetail(0, 0), layerId),
-            ImagePullProgressUpdate("Digest: sha256:aadea1b1f16af043a34491eec481d0132479382096ea34f608087b4bef3634be", null, ""),
-            ImagePullProgressUpdate("Status: Downloaded newer image for $image", null, "")
-        )
     }
 
     should("gracefully handle a progress callback that throws an exception while pulling an image").onlyIfDockerDaemonSupportsLinuxContainers {

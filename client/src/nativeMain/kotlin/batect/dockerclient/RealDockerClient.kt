@@ -42,6 +42,7 @@ import batect.dockerclient.native.GetImage
 import batect.dockerclient.native.GetNetworkByNameOrID
 import batect.dockerclient.native.ListAllVolumes
 import batect.dockerclient.native.Ping
+import batect.dockerclient.native.PruneImageBuildCache
 import batect.dockerclient.native.PullImage
 import batect.dockerclient.native.PullImageProgressDetail
 import batect.dockerclient.native.PullImageProgressUpdate
@@ -250,7 +251,6 @@ internal actual class RealDockerClient actual constructor(configuration: DockerC
                         clientHandle,
                         allocBuildImageRequest(spec).ptr,
                         stream.outputStreamHandle,
-                        false, // FIXME: Only required while we're using the old Kotlin/Native memory model that does not support sharing values between threads.
                         callback,
                         callbackUserData
                     )!!.use { ret ->
@@ -276,6 +276,12 @@ internal actual class RealDockerClient actual constructor(configuration: DockerC
         }
     }
 
+    public override fun pruneImageBuildCache() {
+        PruneImageBuildCache(clientHandle).ifFailed { error ->
+            throw ImageBuildCachePruneFailedException(error.pointed)
+        }
+    }
+
     private fun MemScope.allocBuildImageRequest(spec: ImageBuildSpec): BuildImageRequest {
         val request = alloc<BuildImageRequest>()
         request.ContextDirectory = spec.contextDirectory.toString().cstr.ptr
@@ -296,6 +302,7 @@ internal actual class RealDockerClient actual constructor(configuration: DockerC
         request.AlwaysPullBaseImages = spec.alwaysPullBaseImages
         request.NoCache = spec.noCache
         request.TargetBuildStage = spec.targetBuildStage.cstr.ptr
+        request.BuilderVersion = spec.builderApiVersion?.cstr?.ptr
 
         return request
     }
@@ -327,7 +334,7 @@ private fun ImagePullProgressDetail(native: PullImageProgressDetail): ImagePullP
     ImagePullProgressDetail(native.Current, native.Total)
 
 private fun ImageBuildProgressUpdate(native: BuildImageProgressUpdate): ImageBuildProgressUpdate = when {
-    native.ImageBuildContextUploadProgress != null -> ImageBuildContextUploadProgress(native.ImageBuildContextUploadProgress!!.pointed)
+    native.ImageBuildContextUploadProgress != null -> contextUploadProgress(native.ImageBuildContextUploadProgress!!.pointed)
     native.StepStarting != null -> StepStarting(native.StepStarting!!.pointed)
     native.StepOutput != null -> StepOutput(native.StepOutput!!.pointed)
     native.StepPullProgressUpdate != null -> StepPullProgressUpdate(native.StepPullProgressUpdate!!.pointed)
@@ -337,8 +344,11 @@ private fun ImageBuildProgressUpdate(native: BuildImageProgressUpdate): ImageBui
     else -> throw RuntimeException("${BuildImageProgressUpdate::class.qualifiedName} did not contain an update")
 }
 
-private fun ImageBuildContextUploadProgress(native: BuildImageProgressUpdate_ImageBuildContextUploadProgress): ImageBuildContextUploadProgress =
-    ImageBuildContextUploadProgress(native.BytesUploaded)
+private fun contextUploadProgress(native: BuildImageProgressUpdate_ImageBuildContextUploadProgress): ImageBuildProgressUpdate =
+    when (native.StepNumber) {
+        0L -> ImageBuildContextUploadProgress(native.BytesUploaded)
+        else -> StepContextUploadProgress(native.StepNumber, native.BytesUploaded)
+    }
 
 private fun StepStarting(native: BuildImageProgressUpdate_StepStarting): StepStarting =
     StepStarting(

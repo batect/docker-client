@@ -25,5 +25,3 @@ actual val testEnvironmentOperatingSystem: OperatingSystem =
         Platform.OS.WINDOWS -> OperatingSystem.Windows
         else -> throw UnsupportedOperationException("Unknown platform $platform")
     }
-
-actual val multithreadingSupportedOnThisPlatform: Boolean = true

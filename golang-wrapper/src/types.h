@@ -162,6 +162,7 @@ typedef struct {
     bool AlwaysPullBaseImages;
     bool NoCache;
     char* TargetBuildStage;
+    char* BuilderVersion;
 } BuildImageRequest;
 
 typedef struct {
@@ -170,6 +171,7 @@ typedef struct {
 } BuildImageReturn;
 
 typedef struct {
+    int64_t StepNumber;
     int64_t BytesUploaded;
 } BuildImageProgressUpdate_ImageBuildContextUploadProgress;
 

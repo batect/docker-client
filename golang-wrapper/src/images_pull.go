@@ -40,7 +40,7 @@ import (
 
 //export PullImage
 func PullImage(clientHandle DockerClientHandle, ref *C.char, onProgressUpdate PullImageProgressCallback, callbackUserData unsafe.Pointer) PullImageReturn {
-	docker := getDockerAPIClient(clientHandle)
+	docker := clientHandle.DockerAPIClient()
 
 	distributionRef, err := reference.ParseNormalizedNamed(C.GoString(ref))
 
@@ -91,14 +91,14 @@ func getAuthResolver(clientHandle DockerClientHandle) func(ctx context.Context, 
 		}
 
 		// The CLI ignores errors, so we do the same.
-		auth, _ := getClientConfigFile(clientHandle).GetAuthConfig(configKey)
+		auth, _ := clientHandle.ClientConfigFile().GetAuthConfig(configKey)
 
 		return types.AuthConfig(auth)
 	}
 }
 
 func electAuthServerForOfficialIndex(ctx context.Context, clientHandle DockerClientHandle) string {
-	docker := getDockerAPIClient(clientHandle)
+	docker := clientHandle.DockerAPIClient()
 	info, err := docker.Info(ctx)
 
 	if err != nil || info.IndexServerAddress == "" {
