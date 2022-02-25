@@ -92,7 +92,10 @@
         },
         {
             "matchDatasources": ["docker"],
-            "matchPackageNames": ["batect/this-image-does-not-exist"],
+            "matchPackagePatterns": [
+                "^batect/this-image-does-not-exist",
+                "^ghcr.io/batect/docker-client"
+            ],
             "enabled": false
         }
     ]
