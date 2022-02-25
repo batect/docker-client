@@ -350,9 +350,9 @@ class DockerClientBuildKitImageBuildSpec : ShouldSpec({
         val outputText = output.readUtf8().trim()
 
         val singleBuildOutputPattern = """
-            [\S\s]*#1 \[internal] load build definition from Dockerfile
-            #1 transferring dockerfile: \d+B (\d+\.\d+s )?done
-            #1 DONE \d+\.\d+s
+            [\S\s]*#\d \[internal] load build definition from Dockerfile
+            #\d transferring dockerfile: \d+B (\d+\.\d+s )?done
+            #\d DONE \d+\.\d+s
             [\S\s]*
             #\d exporting to image
             (#\d exporting layers
