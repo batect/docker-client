@@ -21,6 +21,7 @@ import io.kotest.core.spec.style.ShouldSpec
 import io.kotest.inspectors.forAtLeastOne
 import io.kotest.matchers.collections.shouldBeIn
 import io.kotest.matchers.collections.shouldContain
+import io.kotest.matchers.collections.shouldContainAnyOf
 import io.kotest.matchers.collections.shouldEndWith
 import io.kotest.matchers.collections.shouldStartWith
 import io.kotest.matchers.shouldBe
@@ -88,7 +89,7 @@ class DockerClientImagePullSpec : ShouldSpec({
             }
 
             val layerId = "0f17b32804d3"
-            val layerSize = 127
+            val layerSize = 127L
 
             progressUpdatesReceived.forAtLeastOne {
                 it.message shouldBe "Pulling from batect/docker-client"
@@ -98,12 +99,12 @@ class DockerClientImagePullSpec : ShouldSpec({
 
             progressUpdatesReceived shouldContain ImagePullProgressUpdate("Pulling fs layer", ImagePullProgressDetail(0, 0), layerId)
 
-            progressUpdatesReceived.forAtLeastOne {
-                it.message shouldBe "Download complete"
-                it.detail shouldNotBe null
-                it.detail!!.total shouldBe 0
-                it.id shouldBe layerId
-            }
+            // Docker does some rate limiting of progress updates, so to make this test more resilient to this non-determinism, we
+            // consider the test passing if at least one of these updates is posted.
+            progressUpdatesReceived shouldContainAnyOf setOf(
+                ImagePullProgressUpdate("Downloading", ImagePullProgressDetail(0, layerSize), layerId),
+                ImagePullProgressUpdate("Download complete", ImagePullProgressDetail(0, 0), layerId)
+            )
 
             progressUpdatesReceived.forAtLeastOne {
                 it.message shouldBe "Extracting"
