@@ -97,6 +97,17 @@
                 "^ghcr.io/batect/docker-client"
             ],
             "enabled": false
+        },
+        {
+            "matchDatasources": ["docker"],
+            "matchPaths": [
+                "client/src/commonTest/resources/images/basic-image/Dockerfile",
+                "client/src/commonTest/resources/images/multistage/Dockerfile",
+                "client/src/commonTest/resources/images/multistage-with-failing-default-stage/Dockerfile",
+                "client/src/commonTest/resources/images/failing-command/Dockerfile",
+                "client/src/commonTest/resources/images/file-download/Dockerfile"
+            ],
+            "enabled": false
         }
     ]
 }
