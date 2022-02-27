@@ -47,7 +47,7 @@
         },
         {
             "fileMatch": [
-                ".gradle.kts$"
+                "FormattingConventionPlugin.kt$"
             ],
             "matchStrings": [
                 "val ktlintVersion = \"(?<currentValue>[\\d.]*?)\""

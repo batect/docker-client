@@ -35,6 +35,8 @@ plugins {
     id("com.diffplug.spotless")
     `maven-publish`
     signing
+
+    id("batect.dockerclient.buildtools.formatting")
 }
 
 repositories {
@@ -353,10 +355,8 @@ val dependOnGeneratedCode = setOf(
 
 dependOnGeneratedCode.forEach { task -> tasks.named(task) { dependsOn(generateJvm) } }
 
-afterEvaluate {
-    tasks.named("spotlessKotlin") {
-        dependsOn(generateJvm)
-    }
+tasks.named("spotlessKotlin") {
+    dependsOn(generateJvm)
 }
 
 // Generate dummy Javadoc JAR to make Sonatype happy: see https://github.com/Kotlin/dokka/issues/1753#issuecomment-784173735

@@ -20,6 +20,8 @@ plugins {
     kotlin("jvm") version "1.6.10"
     kotlin("plugin.serialization") version "1.6.10"
     id("com.diffplug.spotless") version "6.3.0"
+
+    `java-gradle-plugin`
 }
 
 repositories {
@@ -33,6 +35,7 @@ dependencies {
     implementation(gradleKotlinDsl())
     implementation("com.github.jnr:jnr-posix:3.1.15")
     implementation("com.charleskorn.kaml:kaml:0.40.0")
+    implementation("com.diffplug.spotless:spotless-plugin-gradle:6.3.0")
 }
 
 java {
@@ -55,5 +58,14 @@ spotless {
 
         ktlint()
         licenseHeader(kotlinLicenseHeader)
+    }
+}
+
+gradlePlugin {
+    plugins {
+        create("docker-client-formatting-convention") {
+            id = "batect.dockerclient.buildtools.formatting"
+            implementationClass = "batect.dockerclient.buildtools.formatting.FormattingConventionPlugin"
+        }
     }
 }

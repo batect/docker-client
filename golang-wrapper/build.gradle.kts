@@ -24,6 +24,7 @@ import java.nio.file.Files
 
 plugins {
     id("com.diffplug.spotless")
+    id("batect.dockerclient.buildtools.formatting")
 }
 
 repositories {
@@ -135,8 +136,6 @@ tasks.named("spotlessGolang") {
     mustRunAfter(lint)
 }
 
-afterEvaluate {
-    tasks.named("spotlessKotlinGradle") {
-        mustRunAfter(lint)
-    }
+tasks.named("spotlessKotlinGradle") {
+    mustRunAfter(lint)
 }

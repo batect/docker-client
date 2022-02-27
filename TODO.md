@@ -13,6 +13,7 @@
 * golangci-lint task: don't use Docker, just download and cache binary for current OS (allows us to reuse local Golang build cache)
   * Or at least connect it to same cache volumes used by Golang build if using Docker for Golang builds
 * Use Gradle version catalogs to manage versions
+  * Use this to manage ktlint version in buildSrc/build.gradle.kts and FormattingConventionPlugin
 * Test more environments:
   * Podman?
   * Colima?
@@ -31,8 +32,6 @@
 * Run tests with memory leak detector - eg. valgrind
 * Linter to catch when memory is not freed (eg. Golang code allocates struct that is used as callback parameter)
 * Clean task for Golang wrapper project
-* Remove use of `allprojects` in root `build.gradle.kts` - use a custom plugin applied to all projects instead
-  * Then should be able to remove use of `afterEvaluate` in `golang-wrapper/build.gradle.kts`
 * Re-enable context upload progress reporting on Kotlin/Native once new memory model can be used
 * Fix broken publication of library
   * Disabled due to Okio not supporting hierarchical project structure - https://github.com/square/okio/pull/980 needs bug fixes in Kotlin 1.6.20
