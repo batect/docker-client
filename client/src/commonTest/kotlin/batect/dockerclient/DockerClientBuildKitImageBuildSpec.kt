@@ -58,7 +58,8 @@ class DockerClientBuildKitImageBuildSpec : ShouldSpec({
 
         outputText shouldContain """
             |#(\d+) \[internal] load build definition from Dockerfile
-            |#\1 transferring dockerfile: \d+B (\d+\.\d+s )?done
+            |(#\1 transferring dockerfile:
+            |)?#\1 transferring dockerfile: \d+B (\d+\.\d+s )?done
             |#\1 DONE \d+\.\d+s
             |
         """.trimMargin().toRegex()
@@ -367,7 +368,8 @@ class DockerClientBuildKitImageBuildSpec : ShouldSpec({
 
         val singleBuildOutputPattern = """
             [\S\s]*#\d \[internal] load build definition from Dockerfile
-            #\d transferring dockerfile: \d+B (\d+\.\d+s )?done
+            (#\d transferring dockerfile:
+            )?#\d transferring dockerfile: \d+B (\d+\.\d+s )?done
             #\d DONE \d+\.\d+s
             [\S\s]*
             #\d exporting to image
@@ -428,8 +430,8 @@ class DockerClientBuildKitImageBuildSpec : ShouldSpec({
 
         val outputText = output.readUtf8().trim()
 
-        outputText shouldContain """^#1 \[internal] load build definition from Dockerfile$""".toRegex(RegexOption.MULTILINE)
-        outputText shouldContain """^#2 \[internal] load .dockerignore$""".toRegex(RegexOption.MULTILINE)
+        outputText shouldContain """^#\d \[internal] load build definition from Dockerfile$""".toRegex(RegexOption.MULTILINE)
+        outputText shouldContain """^#\d \[internal] load .dockerignore$""".toRegex(RegexOption.MULTILINE)
         outputText shouldContain """^#3 \[internal] load metadata for docker.io/library/alpine:3.14.2$""".toRegex(RegexOption.MULTILINE)
         outputText shouldContain """^#\d \[(other|stage-1) 1/2] FROM docker.io/library/alpine:3.14.2(@sha256:e1c082e3d3c45cccac829840a25941e679c25d438cc8412c2fa221cf1a824e6a)?$""".toRegex(RegexOption.MULTILINE)
         outputText shouldContain """^#\d \[other 2/2] RUN touch /file-from-other$""".toRegex(RegexOption.MULTILINE)
@@ -437,8 +439,16 @@ class DockerClientBuildKitImageBuildSpec : ShouldSpec({
         outputText shouldContain """^#\d exporting to image$""".toRegex(RegexOption.MULTILINE)
         outputText shouldContain """^#\d writing image sha256:[0-9a-f]{64} done$""".toRegex(RegexOption.MULTILINE)
 
-        progressUpdatesReceived shouldContain StepStarting(1, "[internal] load build definition from Dockerfile")
-        progressUpdatesReceived shouldContain StepStarting(2, "[internal] load .dockerignore")
+        progressUpdatesReceived.forAtLeastOne {
+            it.shouldBeTypeOf<StepStarting>()
+            it.stepName shouldBe "[internal] load build definition from Dockerfile"
+        }
+
+        progressUpdatesReceived.forAtLeastOne {
+            it.shouldBeTypeOf<StepStarting>()
+            it.stepName shouldBe "[internal] load .dockerignore"
+        }
+
         progressUpdatesReceived shouldContain StepStarting(3, "[internal] load metadata for docker.io/library/alpine:3.14.2")
 
         progressUpdatesReceived.forAtLeastOne {
