@@ -100,23 +100,39 @@ class DockerClientBuildKitImageBuildSpec : ShouldSpec({
             |#\1 DONE \d+\.\d+s
         """.trimMargin().toRegex()
 
+        progressUpdatesReceived.forAtLeastOne {
+            it.shouldBeTypeOf<StepStarting>()
+            it.stepName shouldBe "[internal] load build definition from Dockerfile"
+        }
+
+        val dockerfileLoadStep = progressUpdatesReceived.filterIsInstance<StepStarting>()
+            .first { it.stepName == "[internal] load build definition from Dockerfile" }
+
         progressUpdatesReceived shouldContainInOrder listOf(
-            StepStarting(1, "[internal] load build definition from Dockerfile"),
-            StepContextUploadProgress(1, 0),
-            StepFinished(1),
+            StepStarting(dockerfileLoadStep.stepNumber, "[internal] load build definition from Dockerfile"),
+            StepContextUploadProgress(dockerfileLoadStep.stepNumber, 0),
+            StepFinished(dockerfileLoadStep.stepNumber),
         )
 
         progressUpdatesReceived.forAtLeastOne {
             it.shouldBeTypeOf<StepContextUploadProgress>()
-            it.stepNumber shouldBe 1
+            it.stepNumber shouldBe dockerfileLoadStep.stepNumber
             it.bytesUploaded shouldBeGreaterThan 0
         }
 
+        progressUpdatesReceived.forAtLeastOne {
+            it.shouldBeTypeOf<StepStarting>()
+            it.stepName shouldBe "[internal] load .dockerignore"
+        }
+
+        val dockerignoreLoadStep = progressUpdatesReceived.filterIsInstance<StepStarting>()
+            .first { it.stepName == "[internal] load .dockerignore" }
+
         progressUpdatesReceived shouldContainInOrder listOf(
-            StepStarting(2, "[internal] load .dockerignore"),
-            StepContextUploadProgress(2, 0),
-            StepContextUploadProgress(2, 2),
-            StepFinished(2),
+            StepStarting(dockerignoreLoadStep.stepNumber, "[internal] load .dockerignore"),
+            StepContextUploadProgress(dockerignoreLoadStep.stepNumber, 0),
+            StepContextUploadProgress(dockerignoreLoadStep.stepNumber, 2),
+            StepFinished(dockerignoreLoadStep.stepNumber),
         )
 
         progressUpdatesReceived shouldContainInOrder listOf(
@@ -350,9 +366,9 @@ class DockerClientBuildKitImageBuildSpec : ShouldSpec({
         val outputText = output.readUtf8().trim()
 
         val singleBuildOutputPattern = """
-            [\S\s]*#1 \[internal] load build definition from Dockerfile
-            #1 transferring dockerfile: \d+B (\d+\.\d+s )?done
-            #1 DONE \d+\.\d+s
+            [\S\s]*#\d \[internal] load build definition from Dockerfile
+            #\d transferring dockerfile: \d+B (\d+\.\d+s )?done
+            #\d DONE \d+\.\d+s
             [\S\s]*
             #\d exporting to image
             (#\d exporting layers
