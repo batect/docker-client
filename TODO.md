@@ -32,12 +32,12 @@
 * Run tests with memory leak detector - eg. valgrind
 * Linter to catch when memory is not freed (eg. Golang code allocates struct that is used as callback parameter)
 * Clean task for Golang wrapper project
-* Re-enable context upload progress reporting on Kotlin/Native once new memory model can be used
 * Fix broken publication of library
   * Disabled due to Okio not supporting hierarchical project structure - https://github.com/square/okio/pull/980 needs bug fixes in Kotlin 1.6.20
   * See compatibility table at https://kotlinlang.org/docs/migrating-multiplatform-project-to-14.html#migrate-to-the-hierarchical-project-structure
 * Sample app
   * Add snippets to readme
+* Remove use of Kotest snapshot version once new release is published with support for Kotlin/Native's new memory model
 
 # APIs
 

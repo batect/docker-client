@@ -15,8 +15,8 @@
 */
 
 plugins {
-    id("org.ajoberstar.reckon") version "0.16.1"
-    id("io.github.gradle-nexus.publish-plugin") version "1.1.0"
+    alias(libs.plugins.reckon)
+    alias(libs.plugins.publish)
     id("batect.dockerclient.buildtools.formatting")
 }
 

@@ -1,10 +1,16 @@
 [versions]
-spotless = "6.3.0"
+kotest = "5.1.0.909-SNAPSHOT"
+kotlin = "1.6.10"
 ktlint = "0.44.0"
+spotless = "6.3.0"
 
 [libraries]
-spotless = { group = "com.diffplug.spotless", name = "spotless-plugin-gradle", version.ref = "spotless" }
 ktlint = { group = "com.pinterest", name = "ktlint", version.ref = "ktlint" }
+spotless = { group = "com.diffplug.spotless", name = "spotless-plugin-gradle", version.ref = "spotless" }
 
 [plugins]
+kotest-multiplatform = { id = "io.kotest.multiplatform", version = "5.1.0" } # TODO: use version.ref = "kotest" once we're using a stable version everywhere again
+kotlin-multiplatform = { id = "org.jetbrains.kotlin.multiplatform", version.ref = "kotlin" }
+publish = { id = "io.github.gradle-nexus.publish-plugin", version = "1.1.0" }
+reckon = { id = "org.ajoberstar.reckon", version = "0.16.1" }
 spotless = { id = "com.diffplug.spotless", version.ref = "spotless" }

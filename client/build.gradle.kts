@@ -30,8 +30,8 @@ import org.jetbrains.kotlin.konan.target.Family
 import org.jetbrains.kotlin.konan.target.KonanTarget
 
 plugins {
-    kotlin("multiplatform") version "1.6.10"
-    id("io.kotest.multiplatform") version "5.1.0"
+    alias(libs.plugins.kotlin.multiplatform)
+    alias(libs.plugins.kotest.multiplatform)
     `maven-publish`
     signing
 
@@ -259,7 +259,7 @@ kotlin.targets.withType(KotlinNativeTarget::class.java) {
 
 // Only required while we're using a snapshot Kotest version - remove this once we're using a stable version again.
 kotest {
-    compilerPluginVersion.set("5.1.0.904-SNAPSHOT")
+    compilerPluginVersion.set(libs.versions.kotest)
 }
 
 val testEnvironmentVariables = setOf(
