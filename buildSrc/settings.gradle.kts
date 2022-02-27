@@ -14,7 +14,10 @@
     limitations under the License.
 */
 
-rootProject.name = "docker-client"
-
-include("golang-wrapper")
-include("client")
+dependencyResolutionManagement {
+    versionCatalogs {
+        create("libs") {
+            from(files("../gradle/libs.versions.toml"))
+        }
+    }
+}

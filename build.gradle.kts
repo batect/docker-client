@@ -15,7 +15,6 @@
 */
 
 plugins {
-    id("com.diffplug.spotless")
     id("org.ajoberstar.reckon") version "0.16.1"
     id("io.github.gradle-nexus.publish-plugin") version "1.1.0"
     id("batect.dockerclient.buildtools.formatting")

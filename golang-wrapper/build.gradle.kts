@@ -23,7 +23,6 @@ import batect.dockerclient.buildtools.codegen.GenerateGolangTypes
 import java.nio.file.Files
 
 plugins {
-    id("com.diffplug.spotless")
     id("batect.dockerclient.buildtools.formatting")
 }
 

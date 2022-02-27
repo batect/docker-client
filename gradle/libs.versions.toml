@@ -1,0 +1,8 @@
+[versions]
+spotless = "6.3.0"
+
+[libraries]
+spotless = { group = "com.diffplug.spotless", name = "spotless-plugin-gradle", version.ref = "spotless" }
+
+[plugins]
+spotless = { id = "com.diffplug.spotless", version.ref = "spotless" }

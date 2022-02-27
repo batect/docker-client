@@ -17,6 +17,7 @@
 package batect.dockerclient.buildtools.formatting
 
 import com.diffplug.gradle.spotless.SpotlessExtension
+import com.diffplug.gradle.spotless.SpotlessPlugin
 import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.gradle.kotlin.dsl.configure
@@ -24,7 +25,12 @@ import java.nio.file.Files
 
 class FormattingConventionPlugin : Plugin<Project> {
     override fun apply(target: Project) {
+        applySpotless(target)
         configureSpotless(target)
+    }
+
+    private fun applySpotless(target: Project) {
+        target.plugins.apply(SpotlessPlugin::class.java)
     }
 
     private fun configureSpotless(target: Project) {

@@ -19,7 +19,7 @@ import java.nio.file.Files
 plugins {
     kotlin("jvm") version "1.6.10"
     kotlin("plugin.serialization") version "1.6.10"
-    id("com.diffplug.spotless") version "6.3.0"
+    alias(libs.plugins.spotless)
 
     `java-gradle-plugin`
 }
@@ -35,7 +35,7 @@ dependencies {
     implementation(gradleKotlinDsl())
     implementation("com.github.jnr:jnr-posix:3.1.15")
     implementation("com.charleskorn.kaml:kaml:0.40.0")
-    implementation("com.diffplug.spotless:spotless-plugin-gradle:6.3.0")
+    implementation(libs.spotless)
 }
 
 java {
@@ -50,7 +50,7 @@ spotless {
 
     kotlinGradle {
         ktlint()
-        licenseHeader(kotlinLicenseHeader, "plugins|rootProject|import")
+        licenseHeader(kotlinLicenseHeader, "plugins|rootProject|import|dependencyResolutionManagement")
     }
 
     kotlin {
