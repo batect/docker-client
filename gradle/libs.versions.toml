@@ -1,8 +1,10 @@
 [versions]
 spotless = "6.3.0"
+ktlint = "0.44.0"
 
 [libraries]
 spotless = { group = "com.diffplug.spotless", name = "spotless-plugin-gradle", version.ref = "spotless" }
+ktlint = { group = "com.pinterest", name = "ktlint", version.ref = "ktlint" }
 
 [plugins]
 spotless = { id = "com.diffplug.spotless", version.ref = "spotless" }

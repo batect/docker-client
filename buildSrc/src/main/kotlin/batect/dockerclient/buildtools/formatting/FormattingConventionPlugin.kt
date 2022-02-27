@@ -20,7 +20,9 @@ import com.diffplug.gradle.spotless.SpotlessExtension
 import com.diffplug.gradle.spotless.SpotlessPlugin
 import org.gradle.api.Plugin
 import org.gradle.api.Project
+import org.gradle.api.artifacts.VersionCatalogsExtension
 import org.gradle.kotlin.dsl.configure
+import org.gradle.kotlin.dsl.getByType
 import java.nio.file.Files
 
 class FormattingConventionPlugin : Plugin<Project> {
@@ -37,7 +39,7 @@ class FormattingConventionPlugin : Plugin<Project> {
         val licenseText = Files.readString(target.rootProject.projectDir.resolve("gradle").resolve("license.txt").toPath())!!
         val isKotlinProject = target.plugins.hasPlugin("org.jetbrains.kotlin.multiplatform")
         val kotlinLicenseHeader = "/*\n${licenseText.trimEnd().lines().joinToString("\n") { "    $it".trimEnd() }}\n*/\n\n"
-        val ktlintVersion = "0.44.0"
+        val ktlintVersion = getKtlintVersion(target)
 
         target.configure<SpotlessExtension> {
             encoding("UTF-8")
@@ -56,5 +58,12 @@ class FormattingConventionPlugin : Plugin<Project> {
                 }
             }
         }
+    }
+
+    private fun getKtlintVersion(target: Project): String {
+        val catalogs = target.extensions.getByType<VersionCatalogsExtension>()
+        val libs = catalogs.named("libs")
+
+        return libs.findVersion("ktlint").get().requiredVersion
     }
 }

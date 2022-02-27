@@ -44,16 +44,6 @@
             ],
             "datasourceTemplate": "github-tags",
             "depNameTemplate": "golang/go"
-        },
-        {
-            "fileMatch": [
-                "FormattingConventionPlugin.kt$"
-            ],
-            "matchStrings": [
-                "val ktlintVersion = \"(?<currentValue>[\\d.]*?)\""
-            ],
-            "datasourceTemplate": "maven",
-            "depNameTemplate": "com.pinterest:ktlint"
         }
     ],
     "packageRules": [

@@ -49,14 +49,14 @@ spotless {
     encoding("UTF-8")
 
     kotlinGradle {
-        ktlint()
+        ktlint(libs.versions.ktlint.get())
         licenseHeader(kotlinLicenseHeader, "plugins|rootProject|import|dependencyResolutionManagement")
     }
 
     kotlin {
         target(fileTree("src").include("**/*.kt"))
 
-        ktlint()
+        ktlint(libs.versions.ktlint.get())
         licenseHeader(kotlinLicenseHeader)
     }
 }

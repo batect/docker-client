@@ -259,7 +259,7 @@ abstract class GenerateGolangTypes : DefaultTask() {
                 |
                 |    for i, v := range $fieldName {
                 |        C.Set${fieldType.elementType.yamlName}ArrayElement(value.$fieldName, C.uint64_t(i), ${golangConverterToCType("v", fieldType.elementType)})
-	            |    }
+                |    }
                 |
                 """.trimMargin()
             is CallbackType -> throw UnsupportedOperationException("Embedding callback types in structs is not supported. Field $fieldName of ${structType.name} contains callback type ${fieldType.name}.")
