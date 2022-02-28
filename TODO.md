@@ -12,8 +12,6 @@
 * Go build: ensure Golang version is as expected (or download and cache binary)
 * golangci-lint task: don't use Docker, just download and cache binary for current OS (allows us to reuse local Golang build cache)
   * Or at least connect it to same cache volumes used by Golang build if using Docker for Golang builds
-* Use Gradle version catalogs to manage versions
-  * Use this to manage ktlint version in buildSrc/build.gradle.kts and FormattingConventionPlugin
 * Test more environments:
   * Podman?
   * Colima?

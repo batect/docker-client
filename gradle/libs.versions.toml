@@ -5,12 +5,24 @@ ktlint = "0.44.0"
 spotless = "6.3.0"
 
 [libraries]
+jnr-ffi = { group = "com.github.jnr", name = "jnr-ffi", version = "2.2.11" }
+jnr-posix = { group = "com.github.jnr", name = "jnr-posix", version = "3.1.15" }
+okio = { group = "com.squareup.okio", name = "okio", version = "3.0.0" }
+kaml = { group = "com.charleskorn.kaml", name = "kaml", version = "0.40.0" }
+kotest-assertions-core = { group = "io.kotest", name = "kotest-assertions-core", version.ref = "kotest" }
+kotest-framework-api = { group = "io.kotest", name = "kotest-framework-api", version.ref = "kotest" }
+kotest-framework-engine = { group = "io.kotest", name = "kotest-framework-engine", version.ref = "kotest" }
+kotest-runner-junit5 = { group = "io.kotest", name = "kotest-runner-junit5", version.ref = "kotest" }
+kotlinx-coroutines-core = { group = "org.jetbrains.kotlinx", name = "kotlinx-coroutines-core", version = "1.6.0" }
+kotlinx-serialization-core = { group = "org.jetbrains.kotlinx", name = "kotlinx-serialization-core", version = "1.3.2" }
 ktlint = { group = "com.pinterest", name = "ktlint", version.ref = "ktlint" }
 spotless = { group = "com.diffplug.spotless", name = "spotless-plugin-gradle", version.ref = "spotless" }
 
 [plugins]
 kotest-multiplatform = { id = "io.kotest.multiplatform", version = "5.1.0" } # TODO: use version.ref = "kotest" once we're using a stable version everywhere again
+kotlin-jvm = { id = "org.jetbrains.kotlin.jvm", version.ref = "kotlin" }
 kotlin-multiplatform = { id = "org.jetbrains.kotlin.multiplatform", version.ref = "kotlin" }
+kotlin-plugin-serialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlin" }
 publish = { id = "io.github.gradle-nexus.publish-plugin", version = "1.1.0" }
 reckon = { id = "org.ajoberstar.reckon", version = "0.16.1" }
 spotless = { id = "com.diffplug.spotless", version.ref = "spotless" }

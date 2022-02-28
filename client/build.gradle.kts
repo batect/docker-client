@@ -76,7 +76,7 @@ kotlin {
     sourceSets {
         val commonMain by getting {
             dependencies {
-                implementation("com.squareup.okio:okio:3.0.0")
+                implementation(libs.okio)
             }
         }
 
@@ -86,9 +86,9 @@ kotlin {
 
         val jvmMain by getting {
             dependencies {
-                implementation("com.github.jnr:jnr-ffi:2.2.11")
-                implementation("com.github.jnr:jnr-posix:3.1.15")
-                implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.6.0")
+                implementation(libs.jnr.ffi)
+                implementation(libs.jnr.posix)
+                implementation(libs.kotlinx.coroutines.core)
             }
 
             resources.srcDir(jvmLibsDir)
@@ -124,15 +124,15 @@ kotlin {
 
         val commonTest by getting {
             dependencies {
-                implementation("io.kotest:kotest-assertions-core:5.1.0.909-SNAPSHOT")
-                implementation("io.kotest:kotest-framework-api:5.1.0.909-SNAPSHOT")
-                implementation("io.kotest:kotest-framework-engine:5.1.0.909-SNAPSHOT")
+                implementation(libs.kotest.assertions.core)
+                implementation(libs.kotest.framework.api)
+                implementation(libs.kotest.framework.engine)
             }
         }
 
         val jvmTest by getting {
             dependencies {
-                implementation("io.kotest:kotest-runner-junit5:5.1.0.909-SNAPSHOT")
+                implementation(libs.kotest.runner.junit5)
             }
         }
 

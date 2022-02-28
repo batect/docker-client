@@ -17,8 +17,8 @@
 import java.nio.file.Files
 
 plugins {
-    kotlin("jvm") version "1.6.10"
-    kotlin("plugin.serialization") version "1.6.10"
+    alias(libs.plugins.kotlin.jvm)
+    alias(libs.plugins.kotlin.plugin.serialization)
     alias(libs.plugins.spotless)
 
     `java-gradle-plugin`
@@ -30,11 +30,11 @@ repositories {
 
 dependencies {
     implementation(platform("org.jetbrains.kotlin:kotlin-bom"))
-    implementation("org.jetbrains.kotlinx:kotlinx-serialization-core:1.3.2")
+    implementation(libs.kotlinx.serialization.core)
     implementation(gradleApi())
     implementation(gradleKotlinDsl())
-    implementation("com.github.jnr:jnr-posix:3.1.15")
-    implementation("com.charleskorn.kaml:kaml:0.40.0")
+    implementation(libs.jnr.posix)
+    implementation(libs.kaml)
     implementation(libs.spotless)
 }
 
