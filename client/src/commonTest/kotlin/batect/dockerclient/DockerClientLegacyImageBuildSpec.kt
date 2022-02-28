@@ -202,7 +202,7 @@ class DockerClientLegacyImageBuildSpec : ShouldSpec({
             """.trimIndent()
 
             val layerId = "8efaa767dfab"
-            val layerSize = 136
+            val layerSize = 136L
 
             progressUpdatesReceived.forAtLeastOne {
                 it.shouldBeTypeOf<StepPullProgressUpdate>()
@@ -214,14 +214,13 @@ class DockerClientLegacyImageBuildSpec : ShouldSpec({
 
             progressUpdatesReceived shouldContain StepPullProgressUpdate(1, ImagePullProgressUpdate("Pulling fs layer", ImagePullProgressDetail(0, 0), layerId))
 
-            progressUpdatesReceived.forAtLeastOne {
-                it.shouldBeTypeOf<StepPullProgressUpdate>()
-                it.stepNumber shouldBe 1
-                it.pullProgress.message shouldBe "Download complete"
-                it.pullProgress.detail shouldNotBe null
-                it.pullProgress.detail!!.total shouldBe 0
-                it.pullProgress.id shouldBe layerId
-            }
+            // Docker does some rate limiting of progress updates, so to make this test more resilient to this non-determinism, we
+            // consider the test passing if at least one of these updates is posted.
+            progressUpdatesReceived shouldContainAnyOf setOf(
+                StepPullProgressUpdate(1, ImagePullProgressUpdate("Downloading", ImagePullProgressDetail(0, layerSize), layerId)),
+                StepPullProgressUpdate(1, ImagePullProgressUpdate("Downloading", ImagePullProgressDetail(layerSize, layerSize), layerId)),
+                StepPullProgressUpdate(1, ImagePullProgressUpdate("Download complete", ImagePullProgressDetail(0, 0), layerId))
+            )
 
             progressUpdatesReceived.forAtLeastOne {
                 it.shouldBeTypeOf<StepPullProgressUpdate>()
