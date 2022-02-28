@@ -17,13 +17,13 @@
 import batect.dockerclient.buildtools.Architecture
 import batect.dockerclient.buildtools.BinaryType
 import batect.dockerclient.buildtools.GolangBuild
-import batect.dockerclient.buildtools.GolangLint
 import batect.dockerclient.buildtools.OperatingSystem
 import batect.dockerclient.buildtools.codegen.GenerateGolangTypes
 import java.nio.file.Files
 
 plugins {
     id("batect.dockerclient.buildtools.formatting")
+    id("batect.dockerclient.buildtools.golang")
 }
 
 repositories {
@@ -107,9 +107,11 @@ spotless {
     }
 }
 
-val lint = tasks.register<GolangLint>("lint") {
-    golangCILintVersion.set("v1.44.0")
+golang {
+    golangCILintToolVersion.set("v1.44.0")
+}
 
+val lint = tasks.named("lint") {
     dependsOn(generateTypes)
 
     mustRunAfter(buildSharedLibs)

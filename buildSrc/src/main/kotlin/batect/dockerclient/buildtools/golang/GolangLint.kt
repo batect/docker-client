@@ -14,7 +14,7 @@
     limitations under the License.
 */
 
-package batect.dockerclient.buildtools
+package batect.dockerclient.buildtools.golang
 
 import org.gradle.api.DefaultTask
 import org.gradle.api.file.DirectoryProperty
@@ -46,15 +46,11 @@ abstract class GolangLint @Inject constructor(private val execActionFactory: Exe
     init {
         group = "verification"
 
-        sourceDirectory.convention(project.layout.projectDirectory.dir("src"))
-
         dockerImage.convention(
             project.provider {
                 "golangci/golangci-lint:${golangCILintVersion.get()}"
             }
         )
-
-        upToDateCheckFilePath.convention(project.layout.buildDirectory.file("lint/upToDate"))
     }
 
     @TaskAction

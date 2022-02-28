@@ -67,5 +67,10 @@ gradlePlugin {
             id = "batect.dockerclient.buildtools.formatting"
             implementationClass = "batect.dockerclient.buildtools.formatting.FormattingConventionPlugin"
         }
+
+        create("docker-client-golang") {
+            id = "batect.dockerclient.buildtools.golang"
+            implementationClass = "batect.dockerclient.buildtools.golang.GolangPlugin"
+        }
     }
 }
