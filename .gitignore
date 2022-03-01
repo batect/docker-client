@@ -2,4 +2,4 @@
 .gradle/
 .idea/
 build/
-buildSrc/src/test/resources/verify-checksum-test-fixtures/userHome/
+buildSrc/src/test/resources/*-test-fixtures/userHome/

@@ -36,6 +36,7 @@ repositories {
 dependencies {
     implementation(platform("org.jetbrains.kotlin:kotlin-bom"))
     implementation(libs.kotlinx.serialization.core)
+    implementation(libs.kotlinx.serialization.json)
     implementation(gradleApi())
     implementation(gradleKotlinDsl())
     implementation(libs.jnr.posix)
@@ -43,6 +44,8 @@ dependencies {
     implementation(libs.spotless)
     implementation(libs.gradle.download.plugin)
     implementation(libs.okio)
+    implementation(libs.commons.compress)
+    implementation(libs.xz)
 
     testImplementation(libs.kotest.assertions.core)
     testImplementation(libs.kotest.framework.api)
@@ -100,6 +103,11 @@ gradlePlugin {
         create("docker-client-golang") {
             id = "batect.dockerclient.buildtools.golang"
             implementationClass = "batect.dockerclient.buildtools.golang.GolangPlugin"
+        }
+
+        create("docker-client-zig") {
+            id = "batect.dockerclient.buildtools.zig"
+            implementationClass = "batect.dockerclient.buildtools.zig.ZigPlugin"
         }
     }
 }

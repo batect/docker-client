@@ -14,21 +14,10 @@
     limitations under the License.
 */
 
-package batect.dockerclient.buildtools
+package batect.dockerclient.buildtools.zig
 
-import jnr.ffi.Platform
+import org.gradle.api.provider.Property
 
-enum class OperatingSystem(val zigName: String) {
-    Darwin("macos"),
-    Linux("linux"),
-    Windows("windows");
-
-    companion object {
-        val current: OperatingSystem = when (val os = Platform.getNativePlatform().os) {
-            Platform.OS.DARWIN -> Darwin
-            Platform.OS.LINUX -> Linux
-            Platform.OS.WINDOWS -> Windows
-            else -> throw IllegalArgumentException("Unknown operating system $os.")
-        }
-    }
+abstract class ZigPluginExtension {
+    abstract val zigVersion: Property<String>
 }

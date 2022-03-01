@@ -24,6 +24,7 @@ import java.nio.file.Files
 plugins {
     id("batect.dockerclient.buildtools.formatting")
     id("batect.dockerclient.buildtools.golang")
+    id("batect.dockerclient.buildtools.zig")
 }
 
 repositories {
@@ -109,6 +110,10 @@ spotless {
 
 golang {
     golangCILintToolVersion.set("v1.44.0")
+}
+
+zig {
+    zigVersion.set("0.9.1")
 }
 
 val lint = tasks.named("lint") {

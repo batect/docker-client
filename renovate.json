@@ -31,6 +31,16 @@
         },
         {
             "fileMatch": [
+                ".gradle.kts$"
+            ],
+            "matchStrings": [
+                "zigVersion\\.set\\(\"(?<currentValue>v[\\d.]+)\"\\)"
+            ],
+            "datasourceTemplate": "github-releases",
+            "depNameTemplate": "ziglang/zig"
+        },
+        {
+            "fileMatch": [
                 "^.github/workflows/ci.yml$"
             ],
             "matchStrings": [

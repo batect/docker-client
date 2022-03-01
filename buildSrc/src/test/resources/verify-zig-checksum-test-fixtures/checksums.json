@@ -1,0 +1,13 @@
+{
+    "0.9.1": {
+        "date": "2022-02-14",
+        "docs": "https://ziglang.org/documentation/0.9.1/",
+        "stdDocs": "https://ziglang.org/documentation/0.9.1/std/",
+        "notes": "https://ziglang.org/download/0.9.1/release-notes.html",
+        "x86_64-linux": {
+            "tarball": "https://ziglang.org/download/0.9.1/zig-linux-x86_64-0.9.1.tar.xz",
+            "shasum": "f427b9be3bcbad6d06551760ccb02ac02861cd0e3a0f8015e46d284ca78031d8",
+            "size": "41011464"
+        }
+    }
+}

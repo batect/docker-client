@@ -1,10 +1,12 @@
 [versions]
 kotest = "5.1.0.909-SNAPSHOT"
 kotlin = "1.6.10"
+kotlinx-serialization = "1.3.2"
 ktlint = "0.44.0"
 spotless = "6.3.0"
 
 [libraries]
+commons-compress = { group = "org.apache.commons", name = "commons-compress", version = "1.21" }
 gradle-download-plugin = { group = "de.undercouch", name = "gradle-download-task", version = "5.0.1" }
 jnr-ffi = { group = "com.github.jnr", name = "jnr-ffi", version = "2.2.11" }
 jnr-posix = { group = "com.github.jnr", name = "jnr-posix", version = "3.1.15" }
@@ -15,9 +17,11 @@ kotest-framework-api = { group = "io.kotest", name = "kotest-framework-api", ver
 kotest-framework-engine = { group = "io.kotest", name = "kotest-framework-engine", version.ref = "kotest" }
 kotest-runner-junit5 = { group = "io.kotest", name = "kotest-runner-junit5", version.ref = "kotest" }
 kotlinx-coroutines-core = { group = "org.jetbrains.kotlinx", name = "kotlinx-coroutines-core", version = "1.6.0" }
-kotlinx-serialization-core = { group = "org.jetbrains.kotlinx", name = "kotlinx-serialization-core", version = "1.3.2" }
+kotlinx-serialization-core = { group = "org.jetbrains.kotlinx", name = "kotlinx-serialization-core", version.ref = "kotlinx-serialization" }
+kotlinx-serialization-json = { group = "org.jetbrains.kotlinx", name = "kotlinx-serialization-json", version.ref = "kotlinx-serialization" }
 ktlint = { group = "com.pinterest", name = "ktlint", version.ref = "ktlint" }
 spotless = { group = "com.diffplug.spotless", name = "spotless-plugin-gradle", version.ref = "spotless" }
+xz = { group = "org.tukaani", name = "xz", version = "1.9" }
 
 [plugins]
 kotest-multiplatform = { id = "io.kotest.multiplatform", version = "5.1.0" } # TODO: use version.ref = "kotest" once we're using a stable version everywhere again
