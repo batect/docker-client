@@ -279,7 +279,7 @@ class DockerClientBuildKitImageBuildSpec : ShouldSpec({
 
             outputText shouldContain """
                 #(\d+) \[1/1] FROM $imageReference
-                #\1 resolve $imageReference (\d+\.\d+s )?done.*
+                #\1 resolve $imageReference
             """.trimIndent().toRegex()
 
             val outputStepNumber = outputText.findStepNumberForStep("FROM $imageReference")
