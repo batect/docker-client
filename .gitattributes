@@ -11,6 +11,7 @@
 *.md             text       eol=lf
 *.mod            text       eol=lf
 *.sh             text       eol=lf
+*.txt            text       eol=lf
 *.yml            text       eol=lf
 Dockerfile       text       eol=lf
 LICENSE          text       eol=lf
