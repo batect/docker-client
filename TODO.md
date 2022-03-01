@@ -10,8 +10,6 @@
 * Readme
   * Add examples
 * Go build: ensure Golang version is as expected (or download and cache binary)
-* golangci-lint task: don't use Docker, just download and cache binary for current OS (allows us to reuse local Golang build cache)
-  * Or at least connect it to same cache volumes used by Golang build if using Docker for Golang builds
 * Test more environments:
   * Podman?
   * Colima?

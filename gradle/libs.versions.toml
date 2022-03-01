@@ -5,6 +5,7 @@ ktlint = "0.44.0"
 spotless = "6.3.0"
 
 [libraries]
+gradle-download-plugin = { group = "de.undercouch", name = "gradle-download-task", version = "5.0.1" }
 jnr-ffi = { group = "com.github.jnr", name = "jnr-ffi", version = "2.2.11" }
 jnr-posix = { group = "com.github.jnr", name = "jnr-posix", version = "3.1.15" }
 okio = { group = "com.squareup.okio", name = "okio", version = "3.0.0" }

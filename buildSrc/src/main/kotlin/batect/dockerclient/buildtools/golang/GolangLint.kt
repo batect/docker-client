@@ -20,13 +20,14 @@ import org.gradle.api.DefaultTask
 import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.provider.Property
-import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.InputDirectory
+import org.gradle.api.tasks.InputFile
 import org.gradle.api.tasks.OutputFile
 import org.gradle.api.tasks.PathSensitive
 import org.gradle.api.tasks.PathSensitivity
 import org.gradle.api.tasks.TaskAction
 import org.gradle.process.internal.ExecActionFactory
+import java.io.File
 import javax.inject.Inject
 
 abstract class GolangLint @Inject constructor(private val execActionFactory: ExecActionFactory) : DefaultTask() {
@@ -34,23 +35,15 @@ abstract class GolangLint @Inject constructor(private val execActionFactory: Exe
     @get:PathSensitive(PathSensitivity.RELATIVE)
     abstract val sourceDirectory: DirectoryProperty
 
-    @get:Input
-    abstract val golangCILintVersion: Property<String>
-
-    @get:Input
-    abstract val dockerImage: Property<String>
+    @get:InputFile
+    @get:PathSensitive(PathSensitivity.NONE)
+    abstract val executablePath: Property<File>
 
     @get:OutputFile
     abstract val upToDateCheckFilePath: RegularFileProperty
 
     init {
         group = "verification"
-
-        dockerImage.convention(
-            project.provider {
-                "golangci/golangci-lint:${golangCILintVersion.get()}"
-            }
-        )
     }
 
     @TaskAction
@@ -58,19 +51,9 @@ abstract class GolangLint @Inject constructor(private val execActionFactory: Exe
         val action = execActionFactory.newExecAction()
         action.workingDir = sourceDirectory.asFile.get()
 
-        val sourceDirectoryPath = sourceDirectory.get().asFile.toPath()
-
         action.commandLine = listOf(
-            "docker",
-            "run",
-            "--rm",
-            "-i",
-            "-v", "$sourceDirectoryPath:/code",
-            "-v", "docker-client-cache-lint:/go",
-            "-e", "GOCACHE=/go/cache",
-            "-w", "/code",
-            dockerImage.get(),
-            "golangci-lint", "run"
+            executablePath.get().toString(),
+            "run"
         )
 
         action.execute().assertNormalExitValue()

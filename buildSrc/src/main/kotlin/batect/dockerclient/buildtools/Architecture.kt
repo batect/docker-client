@@ -16,11 +16,22 @@
 
 package batect.dockerclient.buildtools
 
+import jnr.ffi.Platform
+
 enum class Architecture(
     val golangName: String,
     val jnrName: String // Name as per jnr.ffi.Platform.OS constants
 ) {
     X86("386", "I386"),
     X64("amd64", "X86_64"),
-    Arm64("arm64", "AARCH64")
+    Arm64("arm64", "AARCH64");
+
+    companion object {
+        val current: Architecture = when (val arch = Platform.getNativePlatform().cpu) {
+            Platform.CPU.I386 -> X86
+            Platform.CPU.X86_64 -> X64
+            Platform.CPU.AARCH64 -> Arm64
+            else -> throw IllegalArgumentException("Unknown architecture $arch.")
+        }
+    }
 }

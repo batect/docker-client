@@ -16,8 +16,19 @@
 
 package batect.dockerclient.buildtools
 
+import jnr.ffi.Platform
+
 enum class OperatingSystem {
     Darwin,
     Linux,
-    Windows
+    Windows;
+
+    companion object {
+        val current: OperatingSystem = when (val os = Platform.getNativePlatform().os) {
+            Platform.OS.DARWIN -> Darwin
+            Platform.OS.LINUX -> Linux
+            Platform.OS.WINDOWS -> Windows
+            else -> throw IllegalArgumentException("Unknown operating system $os.")
+        }
+    }
 }

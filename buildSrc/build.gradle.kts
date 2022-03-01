@@ -14,6 +14,8 @@
     limitations under the License.
 */
 
+import org.gradle.api.tasks.testing.logging.TestExceptionFormat
+import org.gradle.api.tasks.testing.logging.TestLogEvent
 import java.nio.file.Files
 
 plugins {
@@ -26,6 +28,9 @@ plugins {
 
 repositories {
     mavenCentral()
+
+    // Only required for snapshot Kotest versions - remove this once we're using a stable version again.
+    maven("https://oss.sonatype.org/content/repositories/snapshots")
 }
 
 dependencies {
@@ -36,10 +41,30 @@ dependencies {
     implementation(libs.jnr.posix)
     implementation(libs.kaml)
     implementation(libs.spotless)
+    implementation(libs.gradle.download.plugin)
+    implementation(libs.okio)
+
+    testImplementation(libs.kotest.assertions.core)
+    testImplementation(libs.kotest.framework.api)
+    testImplementation(libs.kotest.framework.engine)
+    testImplementation(libs.kotest.runner.junit5)
 }
 
 java {
     targetCompatibility = JavaVersion.VERSION_1_8
+}
+
+tasks.withType<Test>() {
+    useJUnitPlatform()
+}
+
+tasks.withType<AbstractTestTask>().configureEach {
+    testLogging {
+        showExceptions = true
+        showStandardStreams = true
+        events = setOf(TestLogEvent.FAILED, TestLogEvent.SKIPPED, TestLogEvent.STANDARD_ERROR, TestLogEvent.STANDARD_OUT)
+        exceptionFormat = TestExceptionFormat.FULL
+    }
 }
 
 val licenseText = Files.readString(project.projectDir.resolve("..").resolve("gradle").resolve("license.txt").toPath())!!
@@ -59,6 +84,10 @@ spotless {
         ktlint(libs.versions.ktlint.get())
         licenseHeader(kotlinLicenseHeader)
     }
+}
+
+tasks.named("spotlessKotlinCheck") {
+    mustRunAfter("test")
 }
 
 gradlePlugin {

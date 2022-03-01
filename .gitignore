@@ -1,4 +1,5 @@
+.DS_Store
 .gradle/
 .idea/
 build/
-.DS_Store
+buildSrc/src/test/resources/verify-checksum-test-fixtures/userHome/
