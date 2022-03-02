@@ -184,19 +184,19 @@ jobs:
       # for all operating systems in the .jar produced for the JVM, regardless of the system that the .jar is
       # built on.
       - name: Fetch Linux wrapper libraries
-        uses: actions/download-artifact@v2.1.0
+        uses: actions/download-artifact@v3.0.0
         with:
           name: wrapper-libs-linux
           path: golang-wrapper/build/libs
 
       - name: Fetch macOS wrapper libraries
-        uses: actions/download-artifact@v2.1.0
+        uses: actions/download-artifact@v3.0.0
         with:
           name: wrapper-libs-macos
           path: golang-wrapper/build/libs
 
       - name: Fetch Windows wrapper libraries
-        uses: actions/download-artifact@v2.1.0
+        uses: actions/download-artifact@v3.0.0
         with:
           name: wrapper-libs-windows
           path: golang-wrapper/build/libs
@@ -365,19 +365,19 @@ jobs:
       # for all operating systems in the .jar produced for the JVM, regardless of the system that the .jar is
       # built on.
       - name: Fetch Linux wrapper libraries
-        uses: actions/download-artifact@v2.1.0
+        uses: actions/download-artifact@v3.0.0
         with:
           name: wrapper-libs-linux
           path: golang-wrapper/build/libs
 
       - name: Fetch macOS wrapper libraries
-        uses: actions/download-artifact@v2.1.0
+        uses: actions/download-artifact@v3.0.0
         with:
           name: wrapper-libs-macos
           path: golang-wrapper/build/libs
 
       - name: Fetch Windows wrapper libraries
-        uses: actions/download-artifact@v2.1.0
+        uses: actions/download-artifact@v3.0.0
         with:
           name: wrapper-libs-windows
           path: golang-wrapper/build/libs
