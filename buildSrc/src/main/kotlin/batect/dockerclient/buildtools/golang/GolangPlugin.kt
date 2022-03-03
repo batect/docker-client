@@ -98,8 +98,8 @@ class GolangPlugin : Plugin<Project> {
 
     private fun registerLintDownloadTasks(target: Project, extension: GolangPluginExtension): Provider<File> {
         val extensionProvider = target.provider { extension }
-        val rootUrl = extension.golangCILintVersion.map { "https://github.com/golangci/golangci-lint/releases/download/$it" }
-        val filePrefix = extension.golangCILintVersion.map { "golangci-lint-${it.removePrefix("v")}" }
+        val rootUrl = extension.golangCILintVersion.map { "https://github.com/golangci/golangci-lint/releases/download/v$it" }
+        val filePrefix = extension.golangCILintVersion.map { "golangci-lint-$it" }
 
         val downloadArchive = target.tasks.register<Download>("downloadGolangCILintArchive") {
             val archiveFileName = filePrefix.map { "$it-${OperatingSystem.current.name.lowercase()}-${Architecture.current.golangName}.$archiveFileExtension" }

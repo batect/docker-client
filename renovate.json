@@ -24,7 +24,7 @@
                 ".gradle.kts$"
             ],
             "matchStrings": [
-                "golangCILintVersion\\.set\\(\"(?<currentValue>v[\\d.]+)\"\\)"
+                "golangCILintVersion\\.set\\(\"(?<currentValue>[\\d.]+)\"\\)"
             ],
             "datasourceTemplate": "github-releases",
             "depNameTemplate": "golangci/golangci-lint"
@@ -34,7 +34,7 @@
                 ".gradle.kts$"
             ],
             "matchStrings": [
-                "zigVersion\\.set\\(\"(?<currentValue>v[\\d.]+)\"\\)"
+                "zigVersion\\.set\\(\"(?<currentValue>[\\d.]+)\"\\)"
             ],
             "datasourceTemplate": "github-releases",
             "depNameTemplate": "ziglang/zig"
