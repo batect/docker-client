@@ -25,37 +25,30 @@ import org.gradle.kotlin.dsl.create
 import org.gradle.testfixtures.ProjectBuilder
 import java.nio.file.Paths
 
-class VerifyChecksumFromMultiChecksumFileSpec : ShouldSpec({
-    val testFixturesPath = Paths.get("src", "test", "resources", "verify-checksum-from-multi-checksum-file-test-fixtures").toAbsolutePath()
+class VerifyChecksumFromSingleChecksumFileSpec : ShouldSpec({
+    val testFixturesPath = Paths.get("src", "test", "resources", "verify-checksum-from-single-checksum-file-test-fixtures").toAbsolutePath()
 
-    fun createTask(targetFileName: String): VerifyChecksumFromMultiChecksumFile {
+    fun createTask(targetFileName: String): VerifyChecksumFromSingleChecksumFile {
         val project = ProjectBuilder.builder()
             .withProjectDir(testFixturesPath.toFile())
             .build()
 
-        return project.tasks.create<VerifyChecksumFromMultiChecksumFile>("testVerifyChecksum") {
-            checksumFile.set(project.file("checksums.txt"))
+        return project.tasks.create<VerifyChecksumFromSingleChecksumFile>("testVerifyChecksum") {
+            checksumFile.set(project.file("checksum.txt"))
             fileToVerify.set(project.file(targetFileName))
         }
     }
 
     should("pass when file and checksum match") {
-        val task = createTask("file-1.txt")
+        val task = createTask("matching.txt")
 
         shouldNotThrowAny { task.run() }
     }
 
     should("fail when file does not match checksum") {
-        val task = createTask("file-2.txt")
+        val task = createTask("not-matching.txt")
 
         val exception = shouldThrow<ChecksumVerificationFailedException> { task.run() }
-        exception.message shouldBe "file-2.txt is expected to have checksum 58d27a5dec87fc697c160b4e46ecbfd6abfee3c1e64a968b4a66ef61703eb73f, but has checksum 11b5da548eba9ff3e5934f8ceafe9916d9055d99488794599872586173249909."
-    }
-
-    should("fail when checksum file does not have a corresponding checksum") {
-        val task = createTask("file-3.txt")
-
-        val exception = shouldThrow<ChecksumVerificationFailedException> { task.run() }
-        exception.message shouldBe "There is no checksum for file-3.txt in ${testFixturesPath.resolve("checksums.txt")}."
+        exception.message shouldBe "not-matching.txt is expected to have checksum 2e1b7cbd2af81da37243e5529b304e4e3dab6fc272e154f9128fdfba8ebffd8d, but has checksum d109110bade85113b836991fe0d2565c000d8b61257ea29f71177e8a01eab786."
     }
 })

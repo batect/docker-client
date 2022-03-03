@@ -26,7 +26,7 @@ import org.gradle.api.tasks.PathSensitivity
 import org.gradle.api.tasks.TaskAction
 import java.nio.file.Files
 
-abstract class VerifyChecksumFromMultiChecksumFile : DefaultTask() {
+abstract class VerifyChecksumFromSingleChecksumFile : DefaultTask() {
     @get:InputFile
     @get:PathSensitive(PathSensitivity.NONE)
     abstract val checksumFile: RegularFileProperty
@@ -37,23 +37,27 @@ abstract class VerifyChecksumFromMultiChecksumFile : DefaultTask() {
 
     @TaskAction
     fun run() {
-        val checksumFileValue = checksumFile.get().asFile
-        val checksums = checksumFileValue
-            .readLines()
-            .associate { it.substringAfter("  ") to it.substringBefore("  ") }
-
-        val fileToVerifyValue = fileToVerify.get().asFile
-        val fileName = fileToVerifyValue.name
-
-        val expectedChecksum = checksums.getOrElse(fileName) {
-            throw ChecksumVerificationFailedException("There is no checksum for $fileName in $checksumFileValue.")
-        }
-
-        val actualBytes = ByteString.of(*Files.readAllBytes(fileToVerifyValue.toPath()))
-        val actualChecksum = actualBytes.sha256().hex()
+        val expectedChecksum = loadExpectedChecksum()
+        val actualChecksum = computeActualChecksum()
 
         if (actualChecksum != expectedChecksum) {
+            val fileName = fileToVerify.get().asFile.name
+
             throw ChecksumVerificationFailedException("$fileName is expected to have checksum $expectedChecksum, but has checksum $actualChecksum.")
         }
+    }
+
+    private fun loadExpectedChecksum(): String {
+
+        return checksumFile.get().asFile
+            .readText(Charsets.UTF_8)
+            .trim()
+    }
+
+    private fun computeActualChecksum(): String {
+        val path = fileToVerify.get().asFile.toPath()
+        val actualBytes = ByteString.of(*Files.readAllBytes(path))
+
+        return actualBytes.sha256().hex()
     }
 }

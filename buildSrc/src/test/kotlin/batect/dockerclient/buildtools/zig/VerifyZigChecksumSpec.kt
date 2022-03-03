@@ -16,7 +16,7 @@
 
 package batect.dockerclient.buildtools.zig
 
-import batect.dockerclient.buildtools.golang.ChecksumVerificationFailedException
+import batect.dockerclient.buildtools.ChecksumVerificationFailedException
 import io.kotest.assertions.throwables.shouldNotThrowAny
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.core.spec.style.ShouldSpec
