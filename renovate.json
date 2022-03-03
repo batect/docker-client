@@ -24,7 +24,7 @@
                 ".gradle.kts$"
             ],
             "matchStrings": [
-                "golangCILintToolVersion\\.set\\(\"(?<currentValue>v[\\d.]+)\"\\)"
+                "golangCILintVersion\\.set\\(\"(?<currentValue>v[\\d.]+)\"\\)"
             ],
             "datasourceTemplate": "github-releases",
             "depNameTemplate": "golangci/golangci-lint"
@@ -41,10 +41,10 @@
         },
         {
             "fileMatch": [
-                "^.github/workflows/ci.yml$"
+                ".gradle.kts$"
             ],
             "matchStrings": [
-                "go-version: (?<currentValue>[\\d.]+)"
+                "golangVersion\\.set\\(\"(?<currentValue>v[\\d.]+)\"\\)"
             ],
             "datasourceTemplate": "github-tags",
             "depNameTemplate": "golang/go"

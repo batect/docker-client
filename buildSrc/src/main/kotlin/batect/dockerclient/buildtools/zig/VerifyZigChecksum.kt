@@ -29,9 +29,11 @@ import org.gradle.api.tasks.InputFile
 import org.gradle.api.tasks.PathSensitive
 import org.gradle.api.tasks.PathSensitivity
 import org.gradle.api.tasks.TaskAction
+import org.gradle.work.DisableCachingByDefault
 import java.io.File
 import java.nio.file.Files
 
+@DisableCachingByDefault(because = "Not worth caching")
 abstract class VerifyZigChecksum : DefaultTask() {
     @get:InputFile
     @get:PathSensitive(PathSensitivity.NONE)

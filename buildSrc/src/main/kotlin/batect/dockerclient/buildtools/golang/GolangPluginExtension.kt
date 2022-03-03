@@ -21,5 +21,6 @@ import org.gradle.api.provider.Property
 
 abstract class GolangPluginExtension {
     abstract val sourceDirectory: DirectoryProperty
-    abstract val golangCILintToolVersion: Property<String>
+    abstract val golangVersion: Property<String>
+    abstract val golangCILintVersion: Property<String>
 }

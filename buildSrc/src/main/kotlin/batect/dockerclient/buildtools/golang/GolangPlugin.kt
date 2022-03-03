@@ -32,8 +32,60 @@ class GolangPlugin : Plugin<Project> {
     override fun apply(target: Project) {
         val extension = createExtension(target)
 
+        registerGolangDownloadTasks(target, extension)
+
         val linterExecutable = registerLintDownloadTasks(target, extension)
         registerLintTask(target, extension, linterExecutable)
+    }
+
+    private fun registerGolangDownloadTasks(target: Project, extension: GolangPluginExtension) {
+        val archiveFileName = extension.golangVersion.map { "go$it.${OperatingSystem.current.name.lowercase()}-${Architecture.current.golangName}.$archiveFileExtension" }
+        val rootUrl = "https://dl.google.com/go"
+
+        val downloadArchive = target.tasks.register<Download>("downloadGolangArchive") {
+            src(archiveFileName.map { "$rootUrl/$it" })
+            dest(target.layout.buildDirectory.file(archiveFileName.map { "tools/downloads/${this.name}/$it" }))
+            overwrite(false)
+        }
+
+        val downloadChecksumFile = target.tasks.register<Download>("downloadGolangChecksum") {
+            val checksumFileName = archiveFileName.map { "$it.sha256" }
+
+            src(checksumFileName.map { "$rootUrl/$it" })
+            dest(target.layout.buildDirectory.file(checksumFileName.map { "tools/downloads/${this.name}/$it" }))
+            overwrite(false)
+        }
+
+        val verifyChecksum = target.tasks.register<VerifyChecksumFromSingleChecksumFile>("verifyGolangChecksum") {
+            checksumFile.set(target.layout.file(downloadChecksumFile.map { it.dest }))
+            fileToVerify.set(target.layout.file(downloadArchive.map { it.dest }))
+        }
+
+        target.tasks.register<Copy>("extractGolang") {
+            dependsOn(downloadArchive)
+            dependsOn(verifyChecksum)
+
+            val targetDirectory = target.layout.buildDirectory.dir(extension.golangVersion.map { "tools/golang-$it" })
+
+            // Gradle always reads the entire archive, even if it hasn't changed, which can be quite time-consuming -
+            // this allows us to skip that if we're 90% sure it's not necessary.
+            onlyIf { downloadArchive.get().didWork || !targetDirectory.get().asFile.exists() }
+
+            val source = when (OperatingSystem.current) {
+                OperatingSystem.Windows -> target.zipTree(downloadArchive.map { it.dest })
+                else -> target.tarTree(downloadArchive.map { it.dest })
+            }
+
+            from(source) {
+                eachFile {
+                    it.relativePath = RelativePath(true, *it.relativePath.segments.drop(1).toTypedArray())
+                }
+
+                includeEmptyDirs = false
+            }
+
+            into(targetDirectory)
+        }
     }
 
     private fun createExtension(target: Project): GolangPluginExtension {
@@ -46,15 +98,10 @@ class GolangPlugin : Plugin<Project> {
 
     private fun registerLintDownloadTasks(target: Project, extension: GolangPluginExtension): Provider<File> {
         val extensionProvider = target.provider { extension }
-        val rootUrl = extension.golangCILintToolVersion.map { "https://github.com/golangci/golangci-lint/releases/download/$it" }
-        val filePrefix = extension.golangCILintToolVersion.map { "golangci-lint-${it.removePrefix("v")}" }
+        val rootUrl = extension.golangCILintVersion.map { "https://github.com/golangci/golangci-lint/releases/download/$it" }
+        val filePrefix = extension.golangCILintVersion.map { "golangci-lint-${it.removePrefix("v")}" }
 
         val downloadArchive = target.tasks.register<Download>("downloadGolangCILintArchive") {
-            val archiveFileExtension = when (OperatingSystem.current) {
-                OperatingSystem.Windows -> "zip"
-                else -> "tar.gz"
-            }
-
             val archiveFileName = filePrefix.map { "$it-${OperatingSystem.current.name.lowercase()}-${Architecture.current.golangName}.$archiveFileExtension" }
 
             src(extensionProvider.map { "${rootUrl.get()}/${archiveFileName.get()}" })
@@ -83,7 +130,12 @@ class GolangPlugin : Plugin<Project> {
         val extractExecutable = target.tasks.register<Copy>("extractGolangCILintExecutable") {
             dependsOn(verifyChecksum)
 
-            from(target.tarTree(downloadArchive.map { it.dest })) {
+            val source = when (OperatingSystem.current) {
+                OperatingSystem.Windows -> target.zipTree(downloadArchive.map { it.dest })
+                else -> target.tarTree(downloadArchive.map { it.dest })
+            }
+
+            from(source) {
                 include("**/$executableName")
 
                 eachFile {
@@ -93,7 +145,9 @@ class GolangPlugin : Plugin<Project> {
                 includeEmptyDirs = false
             }
 
-            into(target.layout.buildDirectory.dir("tools/bin/golangci-lint"))
+            val targetDirectory = target.layout.buildDirectory.dir(extension.golangCILintVersion.map { "tools/golangci-lint-$it" })
+
+            into(targetDirectory)
         }
 
         return extractExecutable.map { it.outputs.files.singleFile.resolve(executableName) }
@@ -105,5 +159,10 @@ class GolangPlugin : Plugin<Project> {
             sourceDirectory.set(extension.sourceDirectory)
             upToDateCheckFilePath.set(target.layout.buildDirectory.file("lint/upToDate"))
         }
+    }
+
+    private val archiveFileExtension = when (OperatingSystem.current) {
+        OperatingSystem.Windows -> "zip"
+        else -> "tar.gz"
     }
 }
