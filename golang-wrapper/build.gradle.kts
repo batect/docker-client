@@ -16,9 +16,9 @@
 
 import batect.dockerclient.buildtools.Architecture
 import batect.dockerclient.buildtools.BinaryType
-import batect.dockerclient.buildtools.GolangBuild
 import batect.dockerclient.buildtools.OperatingSystem
 import batect.dockerclient.buildtools.codegen.GenerateGolangTypes
+import batect.dockerclient.buildtools.golang.GolangBuild
 import java.nio.file.Files
 
 plugins {

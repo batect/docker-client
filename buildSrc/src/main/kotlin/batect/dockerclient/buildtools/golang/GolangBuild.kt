@@ -14,8 +14,11 @@
     limitations under the License.
 */
 
-package batect.dockerclient.buildtools
+package batect.dockerclient.buildtools.golang
 
+import batect.dockerclient.buildtools.Architecture
+import batect.dockerclient.buildtools.BinaryType
+import batect.dockerclient.buildtools.OperatingSystem
 import jnr.posix.POSIXFactory
 import org.gradle.api.DefaultTask
 import org.gradle.api.file.DirectoryProperty

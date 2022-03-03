@@ -15,10 +15,10 @@
 */
 
 import batect.dockerclient.buildtools.CheckJarContents
-import batect.dockerclient.buildtools.GolangBuild
 import batect.dockerclient.buildtools.codegen.GenerateGolangTypes
 import batect.dockerclient.buildtools.codegen.GenerateKotlinJVMMethods
 import batect.dockerclient.buildtools.codegen.GenerateKotlinJVMTypes
+import batect.dockerclient.buildtools.golang.GolangBuild
 import org.gradle.api.tasks.testing.logging.TestExceptionFormat
 import org.gradle.api.tasks.testing.logging.TestLogEvent
 import org.jetbrains.kotlin.gradle.dsl.ExplicitApiMode
