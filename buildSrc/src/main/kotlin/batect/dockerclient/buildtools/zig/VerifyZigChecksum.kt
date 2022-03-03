@@ -16,7 +16,7 @@
 
 package batect.dockerclient.buildtools.zig
 
-import batect.dockerclient.buildtools.ChecksumVerificationFailedException
+import batect.dockerclient.buildtools.golang.ChecksumVerificationFailedException
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive

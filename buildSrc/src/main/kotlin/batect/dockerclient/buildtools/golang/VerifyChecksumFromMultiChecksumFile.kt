@@ -14,7 +14,7 @@
     limitations under the License.
 */
 
-package batect.dockerclient.buildtools
+package batect.dockerclient.buildtools.golang
 
 import okio.ByteString
 import org.gradle.api.DefaultTask
@@ -25,7 +25,7 @@ import org.gradle.api.tasks.PathSensitivity
 import org.gradle.api.tasks.TaskAction
 import java.nio.file.Files
 
-abstract class VerifyChecksum : DefaultTask() {
+abstract class VerifyChecksumFromMultiChecksumFile : DefaultTask() {
     @get:InputFile
     @get:PathSensitive(PathSensitivity.NONE)
     abstract val checksumFile: RegularFileProperty

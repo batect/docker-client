@@ -14,7 +14,7 @@
     limitations under the License.
 */
 
-package batect.dockerclient.buildtools
+package batect.dockerclient.buildtools.golang
 
 import io.kotest.assertions.throwables.shouldNotThrowAny
 import io.kotest.assertions.throwables.shouldThrow
@@ -24,15 +24,15 @@ import org.gradle.kotlin.dsl.create
 import org.gradle.testfixtures.ProjectBuilder
 import java.nio.file.Paths
 
-class VerifyChecksumSpec : ShouldSpec({
-    val testFixturesPath = Paths.get("src", "test", "resources", "verify-checksum-test-fixtures").toAbsolutePath()
+class VerifyChecksumFromMultiChecksumFileSpec : ShouldSpec({
+    val testFixturesPath = Paths.get("src", "test", "resources", "verify-checksum-from-multi-checksum-file-test-fixtures").toAbsolutePath()
 
-    fun createTask(targetFileName: String): VerifyChecksum {
+    fun createTask(targetFileName: String): VerifyChecksumFromMultiChecksumFile {
         val project = ProjectBuilder.builder()
             .withProjectDir(testFixturesPath.toFile())
             .build()
 
-        return project.tasks.create<VerifyChecksum>("testVerifyChecksum") {
+        return project.tasks.create<VerifyChecksumFromMultiChecksumFile>("testVerifyChecksum") {
             checksumFile.set(project.file("checksums.txt"))
             fileToVerify.set(project.file(targetFileName))
         }

@@ -18,7 +18,6 @@ package batect.dockerclient.buildtools.golang
 
 import batect.dockerclient.buildtools.Architecture
 import batect.dockerclient.buildtools.OperatingSystem
-import batect.dockerclient.buildtools.VerifyChecksum
 import de.undercouch.gradle.tasks.download.Download
 import org.gradle.api.Plugin
 import org.gradle.api.Project
@@ -71,7 +70,7 @@ class GolangPlugin : Plugin<Project> {
             overwrite(false)
         }
 
-        val verifyChecksum = target.tasks.register<VerifyChecksum>("verifyGolangCILintChecksum") {
+        val verifyChecksum = target.tasks.register<VerifyChecksumFromMultiChecksumFile>("verifyGolangCILintChecksum") {
             checksumFile.set(target.layout.file(downloadChecksumFile.map { it.dest }))
             fileToVerify.set(target.layout.file(downloadArchive.map { it.dest }))
         }
