@@ -23,7 +23,7 @@ import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.gradle.api.file.RelativePath
 import org.gradle.api.provider.Provider
-import org.gradle.api.tasks.Copy
+import org.gradle.api.tasks.Sync
 import org.gradle.kotlin.dsl.create
 import org.gradle.kotlin.dsl.register
 import java.io.File
@@ -61,7 +61,7 @@ class GolangPlugin : Plugin<Project> {
             fileToVerify.set(target.layout.file(downloadArchive.map { it.dest }))
         }
 
-        target.tasks.register<Copy>("extractGolang") {
+        target.tasks.register<Sync>("extractGolang") {
             dependsOn(downloadArchive)
             dependsOn(verifyChecksum)
 
@@ -127,7 +127,7 @@ class GolangPlugin : Plugin<Project> {
             else -> "golangci-lint"
         }
 
-        val extractExecutable = target.tasks.register<Copy>("extractGolangCILintExecutable") {
+        val extractExecutable = target.tasks.register<Sync>("extractGolangCILintExecutable") {
             dependsOn(verifyChecksum)
 
             val source = when (OperatingSystem.current) {

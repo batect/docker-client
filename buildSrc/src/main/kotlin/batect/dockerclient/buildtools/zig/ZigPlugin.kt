@@ -24,7 +24,7 @@ import org.gradle.api.Project
 import org.gradle.api.file.RelativePath
 import org.gradle.api.internal.file.FileResolver
 import org.gradle.api.internal.resources.DefaultResourceResolver
-import org.gradle.api.tasks.Copy
+import org.gradle.api.tasks.Sync
 import org.gradle.internal.nativeintegration.filesystem.FileSystem
 import org.gradle.kotlin.dsl.create
 import org.gradle.kotlin.dsl.register
@@ -72,7 +72,7 @@ class ZigPlugin @Inject constructor(fileResolver: FileResolver, fileSystem: File
             zigPlatformName.set("${Architecture.current.zigName}-${OperatingSystem.current.zigName}")
         }
 
-        target.tasks.register<Copy>("extractZig") {
+        target.tasks.register<Sync>("extractZig") {
             dependsOn(downloadArchive)
             dependsOn(verifyChecksum)
 

@@ -23,7 +23,6 @@
   * https://awsteele.com/blog/2021/10/17/cgo-for-arm64-lambda-functions.html
   * https://dev.to/kristoff/zig-makes-go-cross-compilation-just-work-29ho
   * https://github.com/marketplace/actions/setup-zig
-  * If implemented: need to add a check that the version of Zig in use matches the expected version (similar to check for Golang version).
   * Works with Zig 0.9.0, but requires https://github.com/golang/go/issues/43078 to remove need for wrapper scripts
   * Remove setup-go action in CI
   * Cache downloaded tools on CI?
