@@ -17,10 +17,10 @@
 package batect.dockerclient.buildtools.zig
 
 import batect.dockerclient.buildtools.ChecksumVerificationFailedException
+import batect.dockerclient.buildtools.VerifyChecksum
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
-import okio.ByteString
 import org.gradle.api.DefaultTask
 import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.provider.Property
@@ -30,11 +30,12 @@ import org.gradle.api.tasks.PathSensitive
 import org.gradle.api.tasks.PathSensitivity
 import org.gradle.api.tasks.TaskAction
 import org.gradle.work.DisableCachingByDefault
+import org.gradle.workers.WorkerExecutor
 import java.io.File
-import java.nio.file.Files
+import javax.inject.Inject
 
 @DisableCachingByDefault(because = "Not worth caching")
-abstract class VerifyZigChecksum : DefaultTask() {
+abstract class VerifyZigChecksum @Inject constructor(private val workerExecutor: WorkerExecutor) : DefaultTask() {
     @get:InputFile
     @get:PathSensitive(PathSensitivity.NONE)
     abstract val checksumFile: RegularFileProperty
@@ -51,11 +52,9 @@ abstract class VerifyZigChecksum : DefaultTask() {
 
     @TaskAction
     fun run() {
-        val expectedChecksum = findExpectedChecksum(checksumFile.get().asFile)
-        val actualChecksum = computeActualChecksum()
-
-        if (actualChecksum != expectedChecksum) {
-            throw ChecksumVerificationFailedException("${fileToVerify.get().asFile} is expected to have checksum $expectedChecksum, but has checksum $actualChecksum.")
+        workerExecutor.noIsolation().submit(VerifyChecksum::class.java) {
+            it.expectedChecksum.set(findExpectedChecksum(checksumFile.get().asFile))
+            it.fileToVerify.set(fileToVerify)
         }
     }
 
@@ -79,12 +78,5 @@ abstract class VerifyZigChecksum : DefaultTask() {
         } as JsonPrimitive
 
         return checksum.content
-    }
-
-    private fun computeActualChecksum(): String {
-        val fileToVerify = fileToVerify.get().asFile
-        val actualBytes = ByteString.of(*Files.readAllBytes(fileToVerify.toPath()))
-
-        return actualBytes.sha256().hex()
     }
 }

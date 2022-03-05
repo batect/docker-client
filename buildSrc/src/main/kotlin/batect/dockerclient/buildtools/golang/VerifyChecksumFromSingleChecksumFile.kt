@@ -16,8 +16,7 @@
 
 package batect.dockerclient.buildtools.golang
 
-import batect.dockerclient.buildtools.ChecksumVerificationFailedException
-import okio.ByteString
+import batect.dockerclient.buildtools.VerifyChecksum
 import org.gradle.api.DefaultTask
 import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.tasks.InputFile
@@ -25,10 +24,11 @@ import org.gradle.api.tasks.PathSensitive
 import org.gradle.api.tasks.PathSensitivity
 import org.gradle.api.tasks.TaskAction
 import org.gradle.work.DisableCachingByDefault
-import java.nio.file.Files
+import org.gradle.workers.WorkerExecutor
+import javax.inject.Inject
 
 @DisableCachingByDefault(because = "Not worth caching")
-abstract class VerifyChecksumFromSingleChecksumFile : DefaultTask() {
+abstract class VerifyChecksumFromSingleChecksumFile @Inject constructor(private val workerExecutor: WorkerExecutor) : DefaultTask() {
     @get:InputFile
     @get:PathSensitive(PathSensitivity.NONE)
     abstract val checksumFile: RegularFileProperty
@@ -39,27 +39,15 @@ abstract class VerifyChecksumFromSingleChecksumFile : DefaultTask() {
 
     @TaskAction
     fun run() {
-        val expectedChecksum = loadExpectedChecksum()
-        val actualChecksum = computeActualChecksum()
-
-        if (actualChecksum != expectedChecksum) {
-            val fileName = fileToVerify.get().asFile.name
-
-            throw ChecksumVerificationFailedException("$fileName is expected to have checksum $expectedChecksum, but has checksum $actualChecksum.")
+        workerExecutor.noIsolation().submit(VerifyChecksum::class.java) {
+            it.expectedChecksum.set(loadExpectedChecksum())
+            it.fileToVerify.set(fileToVerify)
         }
     }
 
     private fun loadExpectedChecksum(): String {
-
         return checksumFile.get().asFile
             .readText(Charsets.UTF_8)
             .trim()
-    }
-
-    private fun computeActualChecksum(): String {
-        val path = fileToVerify.get().asFile.toPath()
-        val actualBytes = ByteString.of(*Files.readAllBytes(path))
-
-        return actualBytes.sha256().hex()
     }
 }

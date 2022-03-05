@@ -16,39 +16,34 @@
 
 package batect.dockerclient.buildtools.golang
 
-import batect.dockerclient.buildtools.ChecksumVerificationFailedException
 import io.kotest.assertions.throwables.shouldNotThrowAny
-import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.core.spec.style.ShouldSpec
 import io.kotest.matchers.shouldBe
-import org.gradle.kotlin.dsl.create
-import org.gradle.testfixtures.ProjectBuilder
+import io.kotest.matchers.string.shouldContain
+import org.gradle.testkit.runner.GradleRunner
+import org.gradle.testkit.runner.TaskOutcome
 import java.nio.file.Paths
 
 class VerifyChecksumFromSingleChecksumFileSpec : ShouldSpec({
-    val testFixturesPath = Paths.get("src", "test", "resources", "verify-checksum-from-single-checksum-file-test-fixtures").toAbsolutePath()
-
-    fun createTask(targetFileName: String): VerifyChecksumFromSingleChecksumFile {
-        val project = ProjectBuilder.builder()
-            .withProjectDir(testFixturesPath.toFile())
-            .build()
-
-        return project.tasks.create<VerifyChecksumFromSingleChecksumFile>("testVerifyChecksum") {
-            checksumFile.set(project.file("checksum.txt"))
-            fileToVerify.set(project.file(targetFileName))
-        }
-    }
+    val testFixturesPath = Paths.get("src", "test", "resources", "verify-checksum-from-single-checksum-file-test-fixtures").toAbsolutePath().toFile()
 
     should("pass when file and checksum match") {
-        val task = createTask("matching.txt")
+        val runner = GradleRunner.create()
+            .withProjectDir(testFixturesPath)
+            .withArguments("verifyMatchingFile")
+            .withPluginClasspath()
 
-        shouldNotThrowAny { task.run() }
+        shouldNotThrowAny { runner.build() }
     }
 
     should("fail when file does not match checksum") {
-        val task = createTask("not-matching.txt")
+        val result = GradleRunner.create()
+            .withProjectDir(testFixturesPath)
+            .withArguments("verifyNonMatchingFile")
+            .withPluginClasspath()
+            .buildAndFail()
 
-        val exception = shouldThrow<ChecksumVerificationFailedException> { task.run() }
-        exception.message shouldBe "not-matching.txt is expected to have checksum 2e1b7cbd2af81da37243e5529b304e4e3dab6fc272e154f9128fdfba8ebffd8d, but has checksum d109110bade85113b836991fe0d2565c000d8b61257ea29f71177e8a01eab786."
+        result.task(":verifyNonMatchingFile")!!.outcome shouldBe TaskOutcome.FAILED
+        result.output shouldContain "non-matching.txt is expected to have checksum 2e1b7cbd2af81da37243e5529b304e4e3dab6fc272e154f9128fdfba8ebffd8d, but has checksum d109110bade85113b836991fe0d2565c000d8b61257ea29f71177e8a01eab786."
     }
 })

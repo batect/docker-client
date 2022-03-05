@@ -47,6 +47,7 @@ dependencies {
     implementation(libs.commons.compress)
     implementation(libs.xz)
 
+    testImplementation(gradleTestKit())
     testImplementation(libs.kotest.assertions.core)
     testImplementation(libs.kotest.framework.api)
     testImplementation(libs.kotest.framework.engine)
