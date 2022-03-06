@@ -438,7 +438,7 @@ class DockerClientBuildKitImageBuildSpec : ShouldSpec({
         outputText shouldContain """^#\d \[other 2/2] RUN touch /file-from-other$""".toRegex(RegexOption.MULTILINE)
         outputText shouldContain """^#\d \[stage-1 2/2] COPY --from=other /file-from-other /received/file-from-other$""".toRegex(RegexOption.MULTILINE)
         outputText shouldContain """^#\d exporting to image$""".toRegex(RegexOption.MULTILINE)
-        outputText shouldContain """^#\d writing image sha256:[0-9a-f]{64} done$""".toRegex(RegexOption.MULTILINE)
+        outputText shouldContain """^#\d writing image sha256:[0-9a-f]{64} (\d+\.\d+s )?done$""".toRegex(RegexOption.MULTILINE)
 
         progressUpdatesReceived.forAtLeastOne {
             it.shouldBeTypeOf<StepStarting>()
