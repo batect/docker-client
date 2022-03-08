@@ -4,7 +4,7 @@ go 1.17
 
 require (
 	github.com/docker/cli v20.10.12+incompatible
-	github.com/docker/distribution v2.8.0+incompatible
+	github.com/docker/distribution v2.8.1+incompatible
 	github.com/docker/docker v20.10.10+incompatible
 	github.com/docker/go-connections v0.4.0
 	github.com/moby/buildkit v0.9.3
