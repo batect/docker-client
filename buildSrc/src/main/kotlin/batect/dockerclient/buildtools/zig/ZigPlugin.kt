@@ -78,9 +78,11 @@ class ZigPlugin @Inject constructor(fileResolver: FileResolver, fileSystem: File
 
             val targetDirectory = target.layout.buildDirectory.dir(extension.zigVersion.map { "tools/zig-$it" })
 
-            // Gradle always reads the entire archive, even if it hasn't changed, which can be quite time-consuming -
+            // Gradle always reads the entire archive, even if it hasn't changed, which can be quite time-consuming, especially if Sophos is active -
             // this allows us to skip that if we're 90% sure it's not necessary.
+            // See https://gradle-community.slack.com/archives/CALL1EXGT/p1646637432358399?thread_ts=1646520443.914959&cid=CALL1EXGT for further discussion.
             onlyIf { downloadArchive.get().didWork || !targetDirectory.get().asFile.exists() }
+            doNotTrackState("Tracking state takes 80+ seconds on my machine, workaround in place")
 
             val source = when (OperatingSystem.current) {
                 OperatingSystem.Windows -> target.zipTree(downloadArchive.map { it.dest })
