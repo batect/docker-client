@@ -17,10 +17,12 @@
 package batect.dockerclient.buildtools.golang
 
 import org.gradle.api.file.DirectoryProperty
+import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.provider.Property
 
 abstract class GolangPluginExtension {
     abstract val sourceDirectory: DirectoryProperty
     abstract val golangVersion: Property<String>
     abstract val golangCILintVersion: Property<String>
+    abstract val golangCompilerExecutable: RegularFileProperty
 }

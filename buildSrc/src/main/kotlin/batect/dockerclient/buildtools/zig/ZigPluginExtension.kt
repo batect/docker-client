@@ -16,8 +16,10 @@
 
 package batect.dockerclient.buildtools.zig
 
+import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.provider.Property
 
 abstract class ZigPluginExtension {
     abstract val zigVersion: Property<String>
+    abstract val zigCompilerExecutable: RegularFileProperty
 }

@@ -21,26 +21,37 @@ import batect.dockerclient.buildtools.OperatingSystem
 import de.undercouch.gradle.tasks.download.Download
 import org.gradle.api.Plugin
 import org.gradle.api.Project
+import org.gradle.api.file.RegularFile
 import org.gradle.api.file.RelativePath
 import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.Sync
 import org.gradle.kotlin.dsl.create
 import org.gradle.kotlin.dsl.register
-import java.io.File
 
 class GolangPlugin : Plugin<Project> {
     override fun apply(target: Project) {
         val extension = createExtension(target)
 
-        registerGolangDownloadTasks(target, extension)
+        val compilerExecutable = registerGolangDownloadTasks(target, extension)
+        extension.golangCompilerExecutable.set(compilerExecutable)
 
         val linterExecutable = registerLintDownloadTasks(target, extension)
         registerLintTask(target, extension, linterExecutable)
     }
 
-    private fun registerGolangDownloadTasks(target: Project, extension: GolangPluginExtension) {
-        val archiveFileName = extension.golangVersion.map { "go$it.${OperatingSystem.current.name.lowercase()}-${Architecture.current.golangName}.$archiveFileExtension" }
+    private fun createExtension(target: Project): GolangPluginExtension {
+        val extension = target.extensions.create<GolangPluginExtension>("golang")
+
+        extension.sourceDirectory.convention(target.layout.projectDirectory.dir("src"))
+
+        return extension
+    }
+
+    private fun registerGolangDownloadTasks(target: Project, extension: GolangPluginExtension): Provider<RegularFile> {
         val rootUrl = "https://dl.google.com/go"
+        val archiveFileName = extension.golangVersion
+            .map { "go$it.${OperatingSystem.current.name.lowercase()}-${Architecture.current.golangName}.$archiveFileExtension" }
+
 
         val downloadArchive = target.tasks.register<Download>("downloadGolangArchive") {
             src(archiveFileName.map { "$rootUrl/$it" })
@@ -61,7 +72,7 @@ class GolangPlugin : Plugin<Project> {
             fileToVerify.set(target.layout.file(downloadArchive.map { it.dest }))
         }
 
-        target.tasks.register<Sync>("extractGolang") {
+        val extractGolang = target.tasks.register<Sync>("extractGolang") {
             dependsOn(downloadArchive)
             dependsOn(verifyChecksum)
 
@@ -88,17 +99,16 @@ class GolangPlugin : Plugin<Project> {
 
             into(targetDirectory)
         }
+
+        val executableName = when (OperatingSystem.current) {
+            OperatingSystem.Windows -> "go.exe"
+            else -> "go"
+        }
+
+        return target.layout.file(extractGolang.map { it.destinationDir.resolve("bin").resolve(executableName) })
     }
 
-    private fun createExtension(target: Project): GolangPluginExtension {
-        val extension = target.extensions.create<GolangPluginExtension>("golang")
-
-        extension.sourceDirectory.convention(target.layout.projectDirectory.dir("src"))
-
-        return extension
-    }
-
-    private fun registerLintDownloadTasks(target: Project, extension: GolangPluginExtension): Provider<File> {
+    private fun registerLintDownloadTasks(target: Project, extension: GolangPluginExtension): Provider<RegularFile> {
         val extensionProvider = target.provider { extension }
         val rootUrl = extension.golangCILintVersion.map { "https://github.com/golangci/golangci-lint/releases/download/v$it" }
         val filePrefix = extension.golangCILintVersion.map { "golangci-lint-$it" }
@@ -152,10 +162,10 @@ class GolangPlugin : Plugin<Project> {
             into(targetDirectory)
         }
 
-        return extractExecutable.map { it.outputs.files.singleFile.resolve(executableName) }
+        return target.layout.file(extractExecutable.map { it.outputs.files.singleFile.resolve(executableName) })
     }
 
-    private fun registerLintTask(target: Project, extension: GolangPluginExtension, executable: Provider<File>) {
+    private fun registerLintTask(target: Project, extension: GolangPluginExtension, executable: Provider<RegularFile>) {
         target.tasks.register<GolangLint>("lint") {
             executablePath.set(executable)
             sourceDirectory.set(extension.sourceDirectory)

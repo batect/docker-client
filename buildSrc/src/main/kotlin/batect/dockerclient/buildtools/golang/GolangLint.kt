@@ -19,7 +19,6 @@ package batect.dockerclient.buildtools.golang
 import org.gradle.api.DefaultTask
 import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.file.RegularFileProperty
-import org.gradle.api.provider.Property
 import org.gradle.api.tasks.InputDirectory
 import org.gradle.api.tasks.InputFile
 import org.gradle.api.tasks.OutputFile
@@ -27,7 +26,6 @@ import org.gradle.api.tasks.PathSensitive
 import org.gradle.api.tasks.PathSensitivity
 import org.gradle.api.tasks.TaskAction
 import org.gradle.process.internal.ExecActionFactory
-import java.io.File
 import javax.inject.Inject
 
 abstract class GolangLint @Inject constructor(private val execActionFactory: ExecActionFactory) : DefaultTask() {
@@ -37,7 +35,7 @@ abstract class GolangLint @Inject constructor(private val execActionFactory: Exe
 
     @get:InputFile
     @get:PathSensitive(PathSensitivity.NONE)
-    abstract val executablePath: Property<File>
+    abstract val executablePath: RegularFileProperty
 
     @get:OutputFile
     abstract val upToDateCheckFilePath: RegularFileProperty

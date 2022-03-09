@@ -21,9 +21,11 @@ import batect.dockerclient.buildtools.OperatingSystem
 import de.undercouch.gradle.tasks.download.Download
 import org.gradle.api.Plugin
 import org.gradle.api.Project
+import org.gradle.api.file.RegularFile
 import org.gradle.api.file.RelativePath
 import org.gradle.api.internal.file.FileResolver
 import org.gradle.api.internal.resources.DefaultResourceResolver
+import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.Sync
 import org.gradle.internal.nativeintegration.filesystem.FileSystem
 import org.gradle.kotlin.dsl.create
@@ -36,14 +38,15 @@ class ZigPlugin @Inject constructor(fileResolver: FileResolver, fileSystem: File
     override fun apply(target: Project) {
         val extension = createExtension(target)
 
-        registerDownloadTasks(target, extension)
+        val zigExecutablePath = registerDownloadTasks(target, extension)
+        extension.zigCompilerExecutable.set(zigExecutablePath)
     }
 
     private fun createExtension(target: Project): ZigPluginExtension {
         return target.extensions.create("zig")
     }
 
-    private fun registerDownloadTasks(target: Project, extension: ZigPluginExtension) {
+    private fun registerDownloadTasks(target: Project, extension: ZigPluginExtension): Provider<RegularFile> {
         val archiveFileExtension = when (OperatingSystem.current) {
             OperatingSystem.Windows -> "zip"
             else -> "tar.xz"
@@ -72,7 +75,7 @@ class ZigPlugin @Inject constructor(fileResolver: FileResolver, fileSystem: File
             zigPlatformName.set("${Architecture.current.zigName}-${OperatingSystem.current.zigName}")
         }
 
-        target.tasks.register<Sync>("extractZig") {
+        val extractZig = target.tasks.register<Sync>("extractZig") {
             dependsOn(downloadArchive)
             dependsOn(verifyChecksum)
 
@@ -99,5 +102,12 @@ class ZigPlugin @Inject constructor(fileResolver: FileResolver, fileSystem: File
 
             into(targetDirectory)
         }
+
+        val executableName = when (OperatingSystem.current) {
+            OperatingSystem.Windows -> "zig.exe"
+            else -> "zig"
+        }
+
+        return target.layout.file(extractZig.map { it.destinationDir.resolve(executableName) })
     }
 }
