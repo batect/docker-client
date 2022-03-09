@@ -52,7 +52,6 @@ class GolangPlugin : Plugin<Project> {
         val archiveFileName = extension.golangVersion
             .map { "go$it.${OperatingSystem.current.name.lowercase()}-${Architecture.current.golangName}.$archiveFileExtension" }
 
-
         val downloadArchive = target.tasks.register<Download>("downloadGolangArchive") {
             src(archiveFileName.map { "$rootUrl/$it" })
             dest(target.layout.buildDirectory.file(archiveFileName.map { "tools/downloads/${this.name}/$it" }))
