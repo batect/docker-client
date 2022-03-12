@@ -1,12 +1,9 @@
 # Project setup
 
 * Demo / sample project
-* GitHub Actions pipeline
-  * Build all publications in platform jobs and then publish in one job, rather than OS-specific publish jobs?
 * License checking
   * Gradle dependencies
   * Golang dependencies
-* Integration testing setup?
 * Readme
   * Add examples
 * Go build: ensure Golang version is as expected (or download and cache binary)
@@ -20,7 +17,6 @@
 * KDoc comments for public API
   * Enforce this somehow?
 * Go build: use Zig for compilation?
-  * Cache Golang packages on CI
   * Share Golang and Zig build cache between tasks in same CI build run?
 * Run tests with memory leak detector - eg. valgrind
 * Linter to catch when memory is not freed (eg. Golang code allocates struct that is used as callback parameter)
@@ -34,6 +30,7 @@
 * Run Golang builds in parallel - use the worker API to enable this: https://docs.gradle.org/current/userguide/custom_tasks.html#worker_api
   * May also want to apply this to the Golang linting task and checksum verification tasks as well
 * Configure golangci-lint version in GolangPluginExtension without 'v' prefix
+* Use more recent JDK version on CI?
 
 # APIs
 

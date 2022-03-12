@@ -35,13 +35,20 @@ jobs:
           java-version: 11
           distribution: adopt
 
-      - name: Cache packages
-        id: cache-packages
+      - name: Cache Gradle-managed packages
+        id: cache-gradle-packages
         uses: actions/cache@v2.1.7
         with:
           path: ~/.gradle/caches
           key: gradle-wrapper-packages-${{ runner.os }}-${{ hashFiles('**/*.gradle.kts', 'gradle/libs.versions.toml') }}
           restore-keys: gradle-wrapper-packages-${{ runner.os }}
+
+      - name: Cache Golang packages
+        id: cache-golang-packages
+        uses: actions/cache@v2.1.7
+        with:
+          path: ~/go
+          key: go-wrapper-packages-${{ runner.os }}-${{ hashFiles('golang-wrapper/src/go.*') }}
 
       - name: Cache Kotlin/Native dependencies
         id: cache-kotlin-native
@@ -65,7 +72,7 @@ jobs:
         run: ./gradlew --stop && sleep 5 # HACK: wait for Gradle to shut down to prevent failures like https://github.com/batect/docker-client/runs/4576861141?check_suite_focus=true
 
       - name: Clean up dependencies before caching
-        if: steps.cache-packages.outputs.cache-hit != 'true'
+        if: steps.cache-gradle-packages.outputs.cache-hit != 'true'
         run: |
           rm -f  $HOME/.gradle/caches/modules-2/modules-2.lock
           rm -fr $HOME/.gradle/caches/*/plugin-resolution/
@@ -137,13 +144,20 @@ jobs:
           java-version: 11
           distribution: adopt
 
-      - name: Cache packages
-        id: cache-packages
+      - name: Cache Gradle-managed packages
+        id: cache-gradle-packages
         uses: actions/cache@v2.1.7
         with:
           path: ~/.gradle/caches
           key: gradle-packages-${{ runner.os }}-${{ hashFiles('**/*.gradle.kts', 'gradle/libs.versions.toml') }}
           restore-keys: gradle-packages-${{ runner.os }}
+
+      - name: Cache Golang packages
+        id: cache-golang-packages
+        uses: actions/cache@v2.1.7
+        with:
+          path: ~/go
+          key: go-packages-${{ runner.os }}-${{ hashFiles('golang-wrapper/src/go.*') }}
 
       - name: Cache Kotlin/Native dependencies
         id: cache-kotlin-native
@@ -200,7 +214,7 @@ jobs:
         run: ./gradlew --stop && sleep 5 # HACK: wait for Gradle to shut down to prevent failures like https://github.com/batect/docker-client/runs/4576861141?check_suite_focus=true
 
       - name: Clean up dependencies before caching
-        if: steps.cache-packages.outputs.cache-hit != 'true'
+        if: steps.cache-gradle-packages.outputs.cache-hit != 'true'
         run: |
           rm -f  $HOME/.gradle/caches/modules-2/modules-2.lock
           rm -fr $HOME/.gradle/caches/*/plugin-resolution/
@@ -232,21 +246,28 @@ jobs:
           java-version: 11
           distribution: adopt
 
-      - name: Cache packages
-        id: cache-packages
+      - name: Cache Gradle-managed packages
+        id: cache-gradle-packages
         uses: actions/cache@v2.1.7
         with:
           path: ~/.gradle/caches
-          key: gradle-wrapper-packages-${{ runner.os }}-${{ hashFiles('**/*.gradle.kts', 'gradle/libs.versions.toml') }}
-          restore-keys: gradle-wrapper-packages-${{ runner.os }}
+          key: gradle-lint-packages-${{ runner.os }}-${{ hashFiles('**/*.gradle.kts', 'gradle/libs.versions.toml') }}
+          restore-keys: gradle-lint-packages-${{ runner.os }}
+
+      - name: Cache Golang packages
+        id: cache-golang-packages
+        uses: actions/cache@v2.1.7
+        with:
+          path: ~/go
+          key: go-lint-packages-${{ runner.os }}-${{ hashFiles('golang-wrapper/src/go.*') }}
 
       - name: Cache Kotlin/Native dependencies
         id: cache-kotlin-native
         uses: actions/cache@v2.1.7
         with:
           path: ~/.konan
-          key: kotlin-native-${{ runner.os }}-${{ hashFiles('**/*.gradle.kts', 'gradle/libs.versions.toml') }}
-          restore-keys: kotlin-native-${{ runner.os }}
+          key: kotlin-native-lint-${{ runner.os }}-${{ hashFiles('**/*.gradle.kts', 'gradle/libs.versions.toml') }}
+          restore-keys: kotlin-native-lint-${{ runner.os }}
 
       - name: Cache tools
         id: cache-tools
@@ -262,7 +283,7 @@ jobs:
         run: ./gradlew --stop && sleep 5 # HACK: wait for Gradle to shut down to prevent failures like https://github.com/batect/docker-client/runs/4576861141?check_suite_focus=true
 
       - name: Clean up dependencies before caching
-        if: steps.cache-packages.outputs.cache-hit != 'true'
+        if: steps.cache-gradle-packages.outputs.cache-hit != 'true'
         run: |
           rm -f  $HOME/.gradle/caches/modules-2/modules-2.lock
           rm -fr $HOME/.gradle/caches/*/plugin-resolution/
@@ -304,13 +325,20 @@ jobs:
           java-version: 11
           distribution: adopt
 
-      - name: Cache packages
-        id: cache-packages
+      - name: Cache Gradle-managed packages
+        id: cache-gradle-packages
         uses: actions/cache@v2.1.7
         with:
           path: ~/.gradle/caches
           key: gradle-kotlin-packages-${{ runner.os }}-${{ hashFiles('**/*.gradle.kts', 'gradle/libs.versions.toml') }}
           restore-keys: gradle-kotlin-packages-${{ runner.os }}
+
+      - name: Cache Golang packages
+        id: cache-golang-packages
+        uses: actions/cache@v2.1.7
+        with:
+          path: ~/go
+          key: go-packages-${{ runner.os }}-${{ hashFiles('golang-wrapper/src/go.*') }}
 
       - name: Cache Kotlin/Native dependencies
         id: cache-kotlin-native
@@ -361,7 +389,7 @@ jobs:
         run: ./gradlew --stop && sleep 5 # HACK: wait for Gradle to shut down to prevent failures like https://github.com/batect/docker-client/runs/4576861141?check_suite_focus=true
 
       - name: Clean up dependencies before caching
-        if: steps.cache-packages.outputs.cache-hit != 'true'
+        if: steps.cache-gradle-packages.outputs.cache-hit != 'true'
         run: |
           rm -f  $HOME/.gradle/caches/modules-2/modules-2.lock
           rm -fr $HOME/.gradle/caches/*/plugin-resolution/
