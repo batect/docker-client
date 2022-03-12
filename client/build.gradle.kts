@@ -287,6 +287,7 @@ tasks.named<Test>("jvmTest") {
     }
 
     environment("GODEBUG", "cgocheck=2")
+    systemProperty("kotest.assertions.collection.print.size", "-1")
 }
 
 tasks.withType<KotlinNativeHostTest>().configureEach {
@@ -297,6 +298,7 @@ tasks.withType<KotlinNativeHostTest>().configureEach {
     }
 
     environment("GODEBUG", "cgocheck=2")
+    environment("kotest_assertions_collection_print_size", "-1")
 }
 
 tasks.withType<AbstractTestTask>().configureEach {
