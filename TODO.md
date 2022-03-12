@@ -18,6 +18,8 @@
   * Enforce this somehow?
 * Go build: use Zig for compilation?
   * Share Golang and Zig build cache between tasks in same CI build run?
+  * Set ZIG_LOCAL_CACHE_DIR to the same thing for all builds?
+  * Cache value of macOS SDK root (currently run xcrun every time the value is used)
 * Run tests with memory leak detector - eg. valgrind
 * Linter to catch when memory is not freed (eg. Golang code allocates struct that is used as callback parameter)
 * Fix broken publication of library
@@ -51,6 +53,7 @@
       * Waiting for answer to question about Dispatchers.IO - does not exist on Kotlin/Native
     * BuildKit
       * Fix issue running tests on JVM: blocked by https://github.com/jnr/jnr-ffi/pull/299, re-enable JVM tests on CI once this is resolved
+      * Deal with steps formatted like `[ 1/12] FROM docker.io/...` (notice leading space before '1') when sorting steps
       * Support for SSH passthrough
       * Support for secrets
     * Test that we can run a built image
