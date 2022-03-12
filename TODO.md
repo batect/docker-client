@@ -32,6 +32,7 @@
 * Remove use of Kotest snapshot version once new release is published with support for Kotlin/Native's new memory model
 * Configure golangci-lint version in GolangPluginExtension without 'v' prefix
 * Use more recent JDK version on CI?
+* Use https://github.com/square/kotlinpoet/ to generate Kotlin code rather than current string concatenation approach?
 
 # APIs
 
