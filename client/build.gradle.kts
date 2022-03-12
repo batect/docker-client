@@ -186,11 +186,17 @@ kotlin {
             "compileTestKotlin${target.name.capitalize()}",
             "${target.name}MainKlibrary",
             "${target.name}TestKlibrary",
-            "linkDebugTest${target.name.capitalize()}",
         ).forEach { taskName ->
             tasks.named(taskName) {
                 onlyIf { target.konanTarget.isSupportedOnThisMachine }
             }
+        }
+
+        // I'm not sure where the culprit lies, but this task fails on macOS hosts for non-macOS targets.
+        // (Linux and Windows can run this just fine for each other's targets.)
+        // Given we can't run the linked executable on non-matching hosts, there's little point in doing this anyway.
+        tasks.named("linkDebugTest${target.name.capitalize()}") {
+            onlyIf { target.konanTarget.isSameOperatingSystemAsHost }
         }
     }
 }
@@ -243,6 +249,14 @@ val KonanTarget.isSupportedOnThisMachine: Boolean
         Family.OSX -> OperatingSystem.current().isMacOsX
         Family.LINUX -> true
         Family.MINGW -> true
+        else -> throw UnsupportedOperationException("Unknown target family: $family")
+    }
+
+val KonanTarget.isSameOperatingSystemAsHost: Boolean
+    get() = when (this.family) {
+        Family.OSX -> OperatingSystem.current().isMacOsX
+        Family.LINUX -> OperatingSystem.current().isLinux
+        Family.MINGW -> OperatingSystem.current().isWindows
         else -> throw UnsupportedOperationException("Unknown target family: $family")
     }
 
