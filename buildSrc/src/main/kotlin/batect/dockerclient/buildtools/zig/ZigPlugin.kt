@@ -39,7 +39,7 @@ class ZigPlugin @Inject constructor(fileResolver: FileResolver, fileSystem: File
         val extension = createExtension(target)
 
         val zigExecutablePath = registerDownloadTasks(target, extension)
-        extension.zigCompilerExecutable.set(zigExecutablePath)
+        extension.zigCompilerExecutablePath.set(zigExecutablePath)
     }
 
     private fun createExtension(target: Project): ZigPluginExtension {

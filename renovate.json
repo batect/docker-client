@@ -48,16 +48,6 @@
             ],
             "datasourceTemplate": "github-tags",
             "depNameTemplate": "golang/go"
-        },
-        {
-            "fileMatch": [
-                "GolangBuild.kt$"
-            ],
-            "matchStrings": [
-                "val golangVersion = \"(?<currentValue>[\\d.]+)\""
-            ],
-            "datasourceTemplate": "github-tags",
-            "depNameTemplate": "golang/go"
         }
     ],
     "packageRules": [

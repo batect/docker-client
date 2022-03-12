@@ -18,13 +18,12 @@ import batect.dockerclient.buildtools.Architecture
 import batect.dockerclient.buildtools.BinaryType
 import batect.dockerclient.buildtools.OperatingSystem
 import batect.dockerclient.buildtools.codegen.GenerateGolangTypes
-import batect.dockerclient.buildtools.golang.GolangBuild
+import batect.dockerclient.buildtools.golang.crosscompilation.GolangBuild
 import java.nio.file.Files
 
 plugins {
     id("batect.dockerclient.buildtools.formatting")
-    id("batect.dockerclient.buildtools.golang")
-    id("batect.dockerclient.buildtools.zig")
+    id("batect.dockerclient.buildtools.golang.crosscompilation")
 }
 
 repositories {
@@ -47,7 +46,6 @@ val targets = setOf(
 )
 
 val srcDir = projectDir.resolve("src")
-val libsDir = buildDir.resolve("libs")
 
 val generateTypes = tasks.register<GenerateGolangTypes>("generateTypes")
 
@@ -64,9 +62,6 @@ targets.forEach { target ->
         targetArchitecture.set(target.architecture)
         targetOperatingSystem.set(target.operatingSystem)
         targetBinaryType.set(BinaryType.Shared)
-        libraryName.set(baseName)
-
-        dependsOn(generateTypes)
     }
 
     buildSharedLibs.configure { dependsOn(buildSharedLib) }
@@ -75,12 +70,15 @@ targets.forEach { target ->
         targetArchitecture.set(target.architecture)
         targetOperatingSystem.set(target.operatingSystem)
         targetBinaryType.set(BinaryType.Archive)
-        libraryName.set(baseName)
-
-        dependsOn(generateTypes)
     }
 
     buildArchiveLibs.configure { dependsOn(buildArchiveLib) }
+}
+
+tasks.withType<GolangBuild> {
+    libraryName.set(baseName)
+
+    dependsOn(generateTypes)
 }
 
 val assemble = tasks.register("assemble") {
@@ -121,9 +119,8 @@ val lint = tasks.named("lint") {
     dependsOn(generateTypes)
 
     mustRunAfter(buildSharedLibs)
-    mustRunAfter(buildSharedLibs.map { it.taskDependencies })
     mustRunAfter(buildArchiveLibs)
-    mustRunAfter(buildArchiveLibs.map { it.taskDependencies })
+    mustRunAfter(tasks.withType<GolangBuild>())
 }
 
 tasks.register("check") {

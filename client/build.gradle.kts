@@ -18,9 +18,10 @@ import batect.dockerclient.buildtools.CheckJarContents
 import batect.dockerclient.buildtools.codegen.GenerateGolangTypes
 import batect.dockerclient.buildtools.codegen.GenerateKotlinJVMMethods
 import batect.dockerclient.buildtools.codegen.GenerateKotlinJVMTypes
-import batect.dockerclient.buildtools.golang.GolangBuild
+import batect.dockerclient.buildtools.golang.crosscompilation.GolangBuild
 import org.gradle.api.tasks.testing.logging.TestExceptionFormat
 import org.gradle.api.tasks.testing.logging.TestLogEvent
+import org.gradle.internal.os.OperatingSystem
 import org.jetbrains.kotlin.gradle.dsl.ExplicitApiMode
 import org.jetbrains.kotlin.gradle.plugin.KotlinTarget
 import org.jetbrains.kotlin.gradle.plugin.mpp.KotlinNativeCompilation
@@ -49,11 +50,6 @@ evaluationDependsOn(":golang-wrapper")
 
 val golangWrapperProject = project(":golang-wrapper")
 val jvmLibsDir = buildDir.resolve("resources").resolve("jvm")
-
-val buildIsRunningOnLinux = org.gradle.internal.os.OperatingSystem.current().isLinux
-val buildIsRunningOnMac = org.gradle.internal.os.OperatingSystem.current().isMacOsX
-val buildIsRunningOnWindows = org.gradle.internal.os.OperatingSystem.current().isWindows
-val shouldRunCommonNativeTasksOnThisMachine = buildIsRunningOnLinux
 
 kotlin {
     jvm {
@@ -244,9 +240,9 @@ val KonanTarget.golangOSName: String
 
 val KonanTarget.isSupportedOnThisMachine: Boolean
     get() = when (this.family) {
-        Family.OSX -> buildIsRunningOnMac
-        Family.LINUX -> buildIsRunningOnLinux
-        Family.MINGW -> buildIsRunningOnWindows
+        Family.OSX -> OperatingSystem.current().isMacOsX
+        Family.LINUX -> true
+        Family.MINGW -> true
         else -> throw UnsupportedOperationException("Unknown target family: $family")
     }
 
@@ -349,14 +345,11 @@ val generateJvm = tasks.register("generateJvm") {
 val dependOnGeneratedCode = setOf(
     "compileKotlinJvm",
     "jvmSourcesJar",
-    "sourcesJar"
+    "sourcesJar",
+    "spotlessKotlin"
 )
 
 dependOnGeneratedCode.forEach { task -> tasks.named(task) { dependsOn(generateJvm) } }
-
-tasks.named("spotlessKotlin") {
-    dependsOn(generateJvm)
-}
 
 // Generate dummy Javadoc JAR to make Sonatype happy: see https://github.com/Kotlin/dokka/issues/1753#issuecomment-784173735
 val javadocJar by tasks.register<Jar>("javadocJar") {
@@ -365,17 +358,6 @@ val javadocJar by tasks.register<Jar>("javadocJar") {
 
 publishing {
     publications {
-        // This block does two things:
-        // - it limits Linux publications to only be published from Linux (Kotlin/Native supports cross-compilation of Linux targets from macOS and Windows)
-        // - it ensures that the main multiplatform publication and the JVM publication are only published from Linux on CI
-        matching { it.name.startsWith("linux") || it.name == "kotlinMultiplatform" || it.name == "jvm" }.all {
-            onlyPublishIf(buildIsRunningOnLinux)
-        }
-
-        matching { it.name.startsWith("mingw") }.all {
-            onlyPublishIf(buildIsRunningOnWindows)
-        }
-
         named<MavenPublication>("jvm") {
             artifact(javadocJar)
         }
@@ -408,36 +390,6 @@ publishing {
                 }
             }
         }
-    }
-}
-
-fun Publication.onlyPublishIf(condition: Boolean) {
-    val publication = this
-
-    tasks.withType<AbstractPublishToMaven>()
-        .matching { it.publication == publication }
-        .all {
-            val task = this
-
-            task.onlyIf { condition }
-        }
-
-    tasks.withType<GenerateModuleMetadata>()
-        .matching { it.publication.get() == publication }
-        .all {
-            val task = this
-
-            task.onlyIf { condition }
-        }
-}
-
-tasks.named("allMetadataJar") {
-    onlyIf { shouldRunCommonNativeTasksOnThisMachine }
-}
-
-afterEvaluate {
-    tasks.named("compileNativeMainKotlinMetadata") {
-        onlyIf { shouldRunCommonNativeTasksOnThisMachine }
     }
 }
 

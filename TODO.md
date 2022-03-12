@@ -20,12 +20,6 @@
 * KDoc comments for public API
   * Enforce this somehow?
 * Go build: use Zig for compilation?
-  * https://awsteele.com/blog/2021/10/17/cgo-for-arm64-lambda-functions.html
-  * https://dev.to/kristoff/zig-makes-go-cross-compilation-just-work-29ho
-  * https://github.com/marketplace/actions/setup-zig
-  * Works with Zig 0.9.0, but requires https://github.com/golang/go/issues/43078 to remove need for wrapper scripts
-  * Remove setup-go action in CI
-  * Cache downloaded tools on CI?
   * Cache Golang packages on CI
   * Share Golang and Zig build cache between tasks in same CI build run?
 * Run tests with memory leak detector - eg. valgrind

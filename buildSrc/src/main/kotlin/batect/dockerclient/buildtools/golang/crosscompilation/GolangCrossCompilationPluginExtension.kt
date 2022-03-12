@@ -14,15 +14,11 @@
     limitations under the License.
 */
 
-package batect.dockerclient.buildtools.golang
+package batect.dockerclient.buildtools.golang.crosscompilation
 
 import org.gradle.api.file.DirectoryProperty
-import org.gradle.api.file.RegularFileProperty
-import org.gradle.api.provider.Property
 
-abstract class GolangPluginExtension {
-    abstract val sourceDirectory: DirectoryProperty
-    abstract val golangVersion: Property<String>
-    abstract val golangCILintVersion: Property<String>
-    abstract val golangCompilerExecutablePath: RegularFileProperty
+abstract class GolangCrossCompilationPluginExtension {
+    abstract val outputDirectory: DirectoryProperty
+    abstract val macOSSystemRootDirectory: DirectoryProperty
 }

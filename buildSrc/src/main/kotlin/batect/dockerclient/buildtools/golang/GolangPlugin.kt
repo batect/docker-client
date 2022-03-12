@@ -33,7 +33,7 @@ class GolangPlugin : Plugin<Project> {
         val extension = createExtension(target)
 
         val compilerExecutable = registerGolangDownloadTasks(target, extension)
-        extension.golangCompilerExecutable.set(compilerExecutable)
+        extension.golangCompilerExecutablePath.set(compilerExecutable)
 
         val linterExecutable = registerLintDownloadTasks(target, extension)
         registerLintTask(target, extension, linterExecutable)
