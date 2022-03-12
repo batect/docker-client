@@ -57,6 +57,7 @@
       * Deal with steps formatted like `[ 1/12] FROM docker.io/...` (notice leading space before '1') when sorting steps
       * Support for SSH passthrough
       * Support for secrets
+      * Add support for warnings (added in BuildKit 0.10.0)
     * Test that we can run a built image
 * Containers
   * Create
