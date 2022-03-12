@@ -102,7 +102,11 @@ class GolangCrossCompilationPlugin @Inject constructor(private val execActionFac
         return extension
     }
 
-    private fun findMacOSSystemRoot(): File {
+    private fun findMacOSSystemRoot(): File? {
+        if (OperatingSystem.current != OperatingSystem.Darwin) {
+            return null
+        }
+
         val action = execActionFactory.newExecAction()
         val outputStream = ByteArrayOutputStream()
         action.commandLine = listOf("xcrun", "--show-sdk-path")
