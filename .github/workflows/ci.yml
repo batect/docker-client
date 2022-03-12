@@ -56,7 +56,7 @@ jobs:
         uses: actions/cache@v2.1.7
         with:
           path: golang-wrapper/build/tools
-          key: tools-${{ runner.os }}-${{ hashFiles('**/*.gradle.kts', 'buildSrc/src/**/*.kt) }}
+          key: tools-${{ runner.os }}-${{ hashFiles('**/*.gradle.kts', 'buildSrc/src/**/*.kt') }}
 
       - name: Build and test
         run: ./gradlew --parallel golang-wrapper:buildSharedLibs
@@ -158,7 +158,7 @@ jobs:
         uses: actions/cache@v2.1.7
         with:
           path: golang-wrapper/build/tools
-          key: tools-${{ runner.os }}-${{ hashFiles('**/*.gradle.kts', 'buildSrc/src/**/*.kt) }}
+          key: tools-${{ runner.os }}-${{ hashFiles('**/*.gradle.kts', 'buildSrc/src/**/*.kt') }}
 
       - name: Install Docker
         run: ./.github/workflows/ci/install_docker.sh ${{ matrix.dockerVersion }}
@@ -253,7 +253,7 @@ jobs:
         uses: actions/cache@v2.1.7
         with:
           path: golang-wrapper/build/tools
-          key: tools-${{ runner.os }}-${{ hashFiles('**/*.gradle.kts', 'buildSrc/src/**/*.kt) }}
+          key: tools-${{ runner.os }}-${{ hashFiles('**/*.gradle.kts', 'buildSrc/src/**/*.kt') }}
 
       - name: Build and test
         run: ./gradlew --parallel golang-wrapper:check
@@ -325,7 +325,7 @@ jobs:
         uses: actions/cache@v2.1.7
         with:
           path: golang-wrapper/build/tools
-          key: tools-${{ runner.os }}-${{ hashFiles('**/*.gradle.kts', 'buildSrc/src/**/*.kt) }}
+          key: tools-${{ runner.os }}-${{ hashFiles('**/*.gradle.kts', 'buildSrc/src/**/*.kt') }}
 
       # Why do we get all libraries for all operating systems? This is to ensure that we embed the libraries
       # for all operating systems in the .jar produced for the JVM, regardless of the system that the .jar is
