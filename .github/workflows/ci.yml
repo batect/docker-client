@@ -255,7 +255,7 @@ jobs:
           path: golang-wrapper/build/tools
           key: tools-${{ runner.os }}-${{ hashFiles('**/*.gradle.kts', 'buildSrc/src/**/*.kt') }}
 
-      - name: Build and test
+      - name: Run linting
         run: ./gradlew golang-wrapper:check
 
       - name: Stop Gradle daemon
