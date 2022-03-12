@@ -77,6 +77,9 @@ abstract class GolangBuild @Inject constructor(private val workerExecutor: Worke
     @get:Internal
     abstract val baseOutputName: Property<String>
 
+    @get:Internal
+    abstract val zigCacheDirectory: DirectoryProperty
+
     init {
         group = "build"
 
@@ -128,7 +131,8 @@ abstract class GolangBuild @Inject constructor(private val workerExecutor: Worke
             "GOOS" to targetOperatingSystem.get().name.lowercase(),
             "GOARCH" to targetArchitecture.get().golangName,
             "CC" to """"${zigCompilerExecutablePath.get().asFile.absolutePath}" cc -target $zigTarget $targetSpecificZigArgs""",
-            "CXX" to """"${zigCompilerExecutablePath.get().asFile.absolutePath}" c++ -target $zigTarget $targetSpecificZigArgs"""
+            "CXX" to """"${zigCompilerExecutablePath.get().asFile.absolutePath}" c++ -target $zigTarget $targetSpecificZigArgs""",
+            "ZIG_LOCAL_CACHE_DIR" to zigCacheDirectory.get().asFile.absolutePath
         )
 
     private val zigTarget: String

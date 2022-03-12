@@ -58,6 +58,15 @@ class GolangCrossCompilationPlugin @Inject constructor(private val execActionFac
                 }
             )
 
+            zigCacheDirectory.convention(
+                target.layout.buildDirectory.map { buildDirectory ->
+                    buildDirectory
+                        .dir("zig")
+                        .dir("cache")
+                        .dir(this.name)
+                }
+            )
+
             baseOutputName.convention(
                 targetOperatingSystem.zip(libraryName) { targetOperatingSystem, libraryName ->
                     when (targetOperatingSystem) {
