@@ -52,7 +52,7 @@ jobs:
           restore-keys: kotlin-native-wrapper-${{ runner.os }}
 
       - name: Cache tools
-        id: cache-kotlin-native
+        id: cache-tools
         uses: actions/cache@v2.1.7
         with:
           path: golang-wrapper/build/tools
@@ -154,7 +154,7 @@ jobs:
           restore-keys: kotlin-native-${{ runner.os }}
 
       - name: Cache tools
-        id: cache-kotlin-native
+        id: cache-tools
         uses: actions/cache@v2.1.7
         with:
           path: golang-wrapper/build/tools
@@ -249,7 +249,7 @@ jobs:
           restore-keys: kotlin-native-${{ runner.os }}
 
       - name: Cache tools
-        id: cache-kotlin-native
+        id: cache-tools
         uses: actions/cache@v2.1.7
         with:
           path: golang-wrapper/build/tools
@@ -321,7 +321,7 @@ jobs:
           restore-keys: kotlin-native-${{ runner.os }}
 
       - name: Cache tools
-        id: cache-kotlin-native
+        id: cache-tools
         uses: actions/cache@v2.1.7
         with:
           path: golang-wrapper/build/tools
