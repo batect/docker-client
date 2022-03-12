@@ -36,6 +36,8 @@ class GolangPlugin : Plugin<Project> {
 
         val linterExecutable = registerLintDownloadTasks(target, extension)
         registerLintTask(target, extension, linterExecutable)
+
+        registerCleanTask(target, extension)
     }
 
     private fun createExtension(target: Project): GolangPluginExtension {
@@ -170,6 +172,12 @@ class GolangPlugin : Plugin<Project> {
             sourceDirectory.set(extension.sourceDirectory)
             goRootDirectory.set(extension.golangRoot)
             upToDateCheckFilePath.set(target.layout.buildDirectory.file("lint/upToDate"))
+        }
+    }
+
+    private fun registerCleanTask(target: Project, extension: GolangPluginExtension) {
+        target.tasks.register<GolangCacheClean>("cleanGolangCache") {
+            golangCompilerExecutablePath.set(extension.golangCompilerExecutablePath)
         }
     }
 
