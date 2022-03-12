@@ -33,11 +33,10 @@ import org.gradle.api.tasks.OutputFile
 import org.gradle.api.tasks.PathSensitive
 import org.gradle.api.tasks.PathSensitivity
 import org.gradle.api.tasks.TaskAction
-import org.gradle.process.internal.ExecActionFactory
-import java.nio.file.Files
+import org.gradle.workers.WorkerExecutor
 import javax.inject.Inject
 
-abstract class GolangBuild @Inject constructor(private val execActionFactory: ExecActionFactory) : DefaultTask() {
+abstract class GolangBuild @Inject constructor(private val workerExecutor: WorkerExecutor) : DefaultTask() {
     @get:InputDirectory
     @get:PathSensitive(PathSensitivity.RELATIVE)
     abstract val sourceDirectory: DirectoryProperty
@@ -51,7 +50,7 @@ abstract class GolangBuild @Inject constructor(private val execActionFactory: Ex
     @get:Input
     abstract val targetBinaryType: Property<BinaryType>
 
-    @get:Input
+    @get:Internal
     abstract val libraryName: Property<String>
 
     @get:InputFile
@@ -92,27 +91,17 @@ abstract class GolangBuild @Inject constructor(private val execActionFactory: Ex
 
     @TaskAction
     fun run() {
-        cleanOutputDirectory()
-        runBuild()
-        moveHeaderFileToExpectedLocation()
-    }
-
-    private fun cleanOutputDirectory() {
-        if (!outputDirectory.get().asFile.deleteRecursively()) {
-            throw RuntimeException("Could not remove directory ${outputDirectory.get()}")
+        workerExecutor.noIsolation().submit(GolangBuildAction::class.java) {
+            it.outputDirectory.set(outputDirectory)
+            it.sourceDirectory.set(sourceDirectory)
+            it.compilationCommand.set(compilationCommand)
+            it.compilationCommandEnvironment.set(compilationCommandEnvironment)
+            it.outputLibraryFile.set(outputLibraryFile)
+            it.outputHeaderFile.set(outputHeaderFile)
         }
     }
 
-    private fun runBuild() {
-        val action = execActionFactory.newExecAction()
-        action.workingDir = sourceDirectory.asFile.get()
-        action.environment(environment)
-        action.commandLine = goBuildCommand
-
-        action.execute().assertNormalExitValue()
-    }
-
-    private val goBuildCommand: List<String>
+    private val compilationCommand: List<String>
         get() = listOf(
             golangCompilerExecutablePath.get().asFile.absolutePath,
             "build",
@@ -133,7 +122,7 @@ abstract class GolangBuild @Inject constructor(private val execActionFactory: Ex
             emptyArray()
         }
 
-    private val environment: Map<String, String>
+    private val compilationCommandEnvironment: Map<String, String>
         get() = mapOf(
             "CGO_ENABLED" to "1",
             "GOOS" to targetOperatingSystem.get().name.lowercase(),
@@ -154,17 +143,4 @@ abstract class GolangBuild @Inject constructor(private val execActionFactory: Ex
             }
             else -> ""
         }
-
-    private fun moveHeaderFileToExpectedLocation() {
-        val outputLibraryPath = outputLibraryFile.get().asFile
-        val outputHeaderPath = outputHeaderFile.get().asFile.toPath()
-        val headerFileGeneratedByGolangCompiler = outputLibraryPath.parentFile.resolve(outputLibraryPath.nameWithoutExtension + ".h").toPath()
-
-        if (headerFileGeneratedByGolangCompiler == outputHeaderPath) {
-            // Header file already has expected name, nothing to do.
-            return
-        }
-
-        Files.move(headerFileGeneratedByGolangCompiler, outputHeaderPath)
-    }
 }

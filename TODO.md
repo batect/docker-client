@@ -27,8 +27,6 @@
 * Sample app
   * Add snippets to readme
 * Remove use of Kotest snapshot version once new release is published with support for Kotlin/Native's new memory model
-* Run Golang builds in parallel - use the worker API to enable this: https://docs.gradle.org/current/userguide/custom_tasks.html#worker_api
-  * May also want to apply this to the Golang linting task and checksum verification tasks as well
 * Configure golangci-lint version in GolangPluginExtension without 'v' prefix
 * Use more recent JDK version on CI?
 
