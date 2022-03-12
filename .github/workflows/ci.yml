@@ -59,7 +59,7 @@ jobs:
           key: tools-${{ runner.os }}-${{ hashFiles('**/*.gradle.kts', 'buildSrc/src/**/*.kt') }}
 
       - name: Build and test
-        run: ./gradlew --parallel golang-wrapper:buildSharedLibs
+        run: ./gradlew golang-wrapper:buildSharedLibs
 
       - name: Stop Gradle daemon
         run: ./gradlew --stop && sleep 5 # HACK: wait for Gradle to shut down to prevent failures like https://github.com/batect/docker-client/runs/4576861141?check_suite_focus=true
@@ -185,13 +185,13 @@ jobs:
         if: matrix.disableDockerDaemonTests != 1
 
       - name: Build, test and package
-        run: ./gradlew --parallel client:check client:jvmJar --exclude-task jvmTest # FIXME: Tests fail on JVM due to https://github.com/jnr/jnr-ffi/pull/299
+        run: ./gradlew client:check client:jvmJar --exclude-task jvmTest # FIXME: Tests fail on JVM due to https://github.com/jnr/jnr-ffi/pull/299
         env:
           DISABLE_DOCKER_DAEMON_TESTS: ${{ matrix.disableDockerDaemonTests }}
           DOCKER_CONTAINER_OPERATING_SYSTEM: ${{ matrix.containerOperatingSystem }}
 
       - name: Check JAR contains native libraries for all operating systems
-        run: ./gradlew --parallel client:checkJarContents
+        run: ./gradlew client:checkJarContents
 
       - name: Check for outdated generated code
         run: if [ ! -z "$(git status --porcelain)" ]; then echo "Generated code changed. Do you need to run './gradlew generate'?">/dev/stderr; echo; git status --porcelain; echo; git diff; exit 1; fi
@@ -256,7 +256,7 @@ jobs:
           key: tools-${{ runner.os }}-${{ hashFiles('**/*.gradle.kts', 'buildSrc/src/**/*.kt') }}
 
       - name: Build and test
-        run: ./gradlew --parallel golang-wrapper:check
+        run: ./gradlew golang-wrapper:check
 
       - name: Stop Gradle daemon
         run: ./gradlew --stop && sleep 5 # HACK: wait for Gradle to shut down to prevent failures like https://github.com/batect/docker-client/runs/4576861141?check_suite_focus=true
@@ -337,7 +337,7 @@ jobs:
           path: golang-wrapper/build/libs
 
       - name: Check JAR contains native libraries for all operating systems
-        run: ./gradlew --parallel client:checkJarContents
+        run: ./gradlew client:checkJarContents
         if: ${{ runner.os == 'Linux' }} # We only publish the JAR from Linux, so there's no point checking on other operating systems.
 
       - name: Publish snapshot
