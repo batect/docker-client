@@ -338,7 +338,6 @@ jobs:
 
       - name: Check JAR contains native libraries for all operating systems
         run: ./gradlew client:checkJarContents
-        if: ${{ runner.os == 'Linux' }} # We only publish the JAR from Linux, so there's no point checking on other operating systems.
 
       - name: Publish snapshot
         run: ./gradlew publishSnapshot
