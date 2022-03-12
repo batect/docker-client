@@ -6,7 +6,6 @@
   * Golang dependencies
 * Readme
   * Add examples
-* Go build: ensure Golang version is as expected (or download and cache binary)
 * Test more environments:
   * Podman?
   * Colima?
@@ -33,6 +32,7 @@
 * Configure golangci-lint version in GolangPluginExtension without 'v' prefix
 * Use more recent JDK version on CI?
 * Use https://github.com/square/kotlinpoet/ to generate Kotlin code rather than current string concatenation approach?
+* Re-enable Golang linter on CI once it supports Go 1.18: https://github.com/golangci/golangci-lint/pull/2438
 
 # APIs
 
