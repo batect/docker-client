@@ -32,8 +32,7 @@ class GolangPlugin : Plugin<Project> {
     override fun apply(target: Project) {
         val extension = createExtension(target)
 
-        val compilerExecutable = registerGolangDownloadTasks(target, extension)
-        extension.golangCompilerExecutablePath.set(compilerExecutable)
+        registerGolangDownloadTasks(target, extension)
 
         val linterExecutable = registerLintDownloadTasks(target, extension)
         registerLintTask(target, extension, linterExecutable)
@@ -47,7 +46,7 @@ class GolangPlugin : Plugin<Project> {
         return extension
     }
 
-    private fun registerGolangDownloadTasks(target: Project, extension: GolangPluginExtension): Provider<RegularFile> {
+    private fun registerGolangDownloadTasks(target: Project, extension: GolangPluginExtension) {
         val rootUrl = "https://dl.google.com/go"
         val archiveFileName = extension.golangVersion
             .map { "go$it.${OperatingSystem.current.name.lowercase()}-${Architecture.current.golangName}.$archiveFileExtension" }
@@ -104,7 +103,8 @@ class GolangPlugin : Plugin<Project> {
             else -> "go"
         }
 
-        return target.layout.file(extractGolang.map { it.destinationDir.resolve("bin").resolve(executableName) })
+        extension.golangRoot.set(target.layout.dir(extractGolang.map { it.destinationDir }))
+        extension.golangCompilerExecutablePath.set(extension.golangRoot.map { it.dir("bin").file(executableName) })
     }
 
     private fun registerLintDownloadTasks(target: Project, extension: GolangPluginExtension): Provider<RegularFile> {
@@ -168,6 +168,7 @@ class GolangPlugin : Plugin<Project> {
         target.tasks.register<GolangLint>("lint") {
             executablePath.set(executable)
             sourceDirectory.set(extension.sourceDirectory)
+            goRootDirectory.set(extension.golangRoot)
             upToDateCheckFilePath.set(target.layout.buildDirectory.file("lint/upToDate"))
         }
     }

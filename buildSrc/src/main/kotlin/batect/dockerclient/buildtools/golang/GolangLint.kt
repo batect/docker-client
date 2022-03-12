@@ -37,6 +37,9 @@ abstract class GolangLint @Inject constructor(private val execActionFactory: Exe
     @get:PathSensitive(PathSensitivity.NONE)
     abstract val executablePath: RegularFileProperty
 
+    @get:InputDirectory
+    abstract val goRootDirectory: DirectoryProperty
+
     @get:OutputFile
     abstract val upToDateCheckFilePath: RegularFileProperty
 

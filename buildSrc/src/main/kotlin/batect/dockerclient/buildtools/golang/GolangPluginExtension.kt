@@ -24,5 +24,6 @@ abstract class GolangPluginExtension {
     abstract val sourceDirectory: DirectoryProperty
     abstract val golangVersion: Property<String>
     abstract val golangCILintVersion: Property<String>
+    abstract val golangRoot: DirectoryProperty
     abstract val golangCompilerExecutablePath: RegularFileProperty
 }
