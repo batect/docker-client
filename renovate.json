@@ -28,7 +28,7 @@
             ],
             "datasourceTemplate": "github-releases",
             "depNameTemplate": "golangci/golangci-lint",
-            "extractVersion": "^v(?<version>.*)$"
+            "extractVersionTemplate": "^v(?<version>.*)$"
         },
         {
             "fileMatch": [
@@ -49,7 +49,7 @@
             ],
             "datasourceTemplate": "github-tags",
             "depNameTemplate": "golang/go",
-            "extractVersion": "^go(?<version>.*)$"
+            "extractVersionTemplate": "^go(?<version>.*)$"
         }
     ],
     "packageRules": [
