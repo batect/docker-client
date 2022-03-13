@@ -32,8 +32,8 @@ jobs:
       - name: Set up JDK
         uses: actions/setup-java@v3.0.0
         with:
-          java-version: 11
-          distribution: adopt
+          java-version: 17.0.2+8
+          distribution: temurin
 
       - name: Cache Gradle-managed packages
         id: cache-gradle-packages
@@ -141,8 +141,8 @@ jobs:
       - name: Set up JDK
         uses: actions/setup-java@v3.0.0
         with:
-          java-version: 11
-          distribution: adopt
+          java-version: 17.0.2+8
+          distribution: temurin
 
       - name: Cache Gradle-managed packages
         id: cache-gradle-packages
@@ -244,8 +244,8 @@ jobs:
       - name: Set up JDK
         uses: actions/setup-java@v3.0.0
         with:
-          java-version: 11
-          distribution: adopt
+          java-version: 17.0.2+8
+          distribution: temurin
 
       - name: Cache Gradle-managed packages
         id: cache-gradle-packages
@@ -325,8 +325,8 @@ jobs:
       - name: Set up JDK
         uses: actions/setup-java@v3.0.0
         with:
-          java-version: 11
-          distribution: adopt
+          java-version: 17.0.2+8
+          distribution: temurin
 
       - name: Cache Gradle-managed packages
         id: cache-gradle-packages
