@@ -40,7 +40,7 @@ jobs:
         uses: actions/cache@v2.1.7
         with:
           path: ~/.gradle/caches
-          key: gradle-wrapper-packages-${{ runner.os }}-${{ hashFiles('**/*.gradle.kts', 'gradle/libs.versions.toml') }}
+          key: gradle-wrapper-packages-${{ runner.os }}-${{ hashFiles('gradle/libs.versions.toml') }}
           restore-keys: gradle-wrapper-packages-${{ runner.os }}
 
       - name: Cache Golang packages
@@ -55,7 +55,7 @@ jobs:
         uses: actions/cache@v2.1.7
         with:
           path: ~/.konan
-          key: kotlin-native-wrapper-${{ runner.os }}-${{ hashFiles('**/*.gradle.kts', 'gradle/libs.versions.toml') }}
+          key: kotlin-native-wrapper-${{ runner.os }}-${{ hashFiles('gradle/libs.versions.toml') }}
           restore-keys: kotlin-native-wrapper-${{ runner.os }}
 
       - name: Cache tools
@@ -149,7 +149,7 @@ jobs:
         uses: actions/cache@v2.1.7
         with:
           path: ~/.gradle/caches
-          key: gradle-packages-${{ runner.os }}-${{ hashFiles('**/*.gradle.kts', 'gradle/libs.versions.toml') }}
+          key: gradle-packages-${{ runner.os }}-${{ hashFiles('gradle/libs.versions.toml') }}
           restore-keys: gradle-packages-${{ runner.os }}
 
       - name: Cache Golang packages
@@ -164,7 +164,7 @@ jobs:
         uses: actions/cache@v2.1.7
         with:
           path: ~/.konan
-          key: kotlin-native-${{ runner.os }}-${{ hashFiles('**/*.gradle.kts', 'gradle/libs.versions.toml') }}
+          key: kotlin-native-${{ runner.os }}-${{ hashFiles('gradle/libs.versions.toml') }}
           restore-keys: kotlin-native-${{ runner.os }}
 
       - name: Cache tools
@@ -252,7 +252,7 @@ jobs:
         uses: actions/cache@v2.1.7
         with:
           path: ~/.gradle/caches
-          key: gradle-lint-packages-${{ runner.os }}-${{ hashFiles('**/*.gradle.kts', 'gradle/libs.versions.toml') }}
+          key: gradle-lint-packages-${{ runner.os }}-${{ hashFiles('gradle/libs.versions.toml') }}
           restore-keys: gradle-lint-packages-${{ runner.os }}
 
       - name: Cache Golang packages
@@ -267,7 +267,7 @@ jobs:
         uses: actions/cache@v2.1.7
         with:
           path: ~/.konan
-          key: kotlin-native-lint-${{ runner.os }}-${{ hashFiles('**/*.gradle.kts', 'gradle/libs.versions.toml') }}
+          key: kotlin-native-lint-${{ runner.os }}-${{ hashFiles('gradle/libs.versions.toml') }}
           restore-keys: kotlin-native-lint-${{ runner.os }}
 
       - name: Cache tools
@@ -333,7 +333,7 @@ jobs:
         uses: actions/cache@v2.1.7
         with:
           path: ~/.gradle/caches
-          key: gradle-kotlin-packages-${{ runner.os }}-${{ hashFiles('**/*.gradle.kts', 'gradle/libs.versions.toml') }}
+          key: gradle-kotlin-packages-${{ runner.os }}-${{ hashFiles('gradle/libs.versions.toml') }}
           restore-keys: gradle-kotlin-packages-${{ runner.os }}
 
       - name: Cache Golang packages
@@ -348,7 +348,7 @@ jobs:
         uses: actions/cache@v2.1.7
         with:
           path: ~/.konan
-          key: kotlin-native-${{ runner.os }}-${{ hashFiles('**/*.gradle.kts', 'gradle/libs.versions.toml') }}
+          key: kotlin-native-${{ runner.os }}-${{ hashFiles('gradle/libs.versions.toml') }}
           restore-keys: kotlin-native-${{ runner.os }}
 
       - name: Cache tools
