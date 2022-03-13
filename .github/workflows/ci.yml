@@ -203,6 +203,7 @@ jobs:
         env:
           DISABLE_DOCKER_DAEMON_TESTS: ${{ matrix.disableDockerDaemonTests }}
           DOCKER_CONTAINER_OPERATING_SYSTEM: ${{ matrix.containerOperatingSystem }}
+          RUN_TARGETS_FOR_OTHER_HOSTS: false
 
       - name: Check JAR contains native libraries for all operating systems
         run: ./gradlew client:checkJarContents

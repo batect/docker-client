@@ -50,6 +50,7 @@ evaluationDependsOn(":golang-wrapper")
 
 val golangWrapperProject = project(":golang-wrapper")
 val jvmLibsDir = buildDir.resolve("resources").resolve("jvm")
+val runTargetsForOtherHosts = System.getenv().getOrDefault("RUN_TARGETS_FOR_OTHER_HOSTS", "true") == "true"
 
 kotlin {
     jvm {
@@ -188,7 +189,7 @@ kotlin {
             "${target.name}TestKlibrary",
         ).forEach { taskName ->
             tasks.named(taskName) {
-                onlyIf { target.konanTarget.isSupportedOnThisMachine }
+                onlyIf { target.konanTarget.isSupportedOnThisMachine && (target.konanTarget.isSameOperatingSystemAsHost || runTargetsForOtherHosts) }
             }
         }
 
