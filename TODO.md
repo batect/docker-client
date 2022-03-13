@@ -32,6 +32,7 @@
 * Use https://github.com/square/kotlinpoet/ to generate Kotlin code rather than current string concatenation approach?
 * Re-enable Golang linter on CI once it supports Go 1.18: https://github.com/golangci/golangci-lint/pull/2438
 * Reduce impact of buildSrc build time on CI builds - currently takes 5 minutes before task even starts
+  * Use some kind of build cache? eg. Gradle Enterprise or https://github.com/burrunan/gradle-cache-action
 
 # APIs
 
