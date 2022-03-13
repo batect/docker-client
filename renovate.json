@@ -27,7 +27,8 @@
                 "golangCILintVersion\\.set\\(\"(?<currentValue>[\\d.]+)\"\\)"
             ],
             "datasourceTemplate": "github-releases",
-            "depNameTemplate": "golangci/golangci-lint"
+            "depNameTemplate": "golangci/golangci-lint",
+            "extractVersion": "^v(?<version>.*)$"
         },
         {
             "fileMatch": [
@@ -47,7 +48,8 @@
                 "golangVersion\\.set\\(\"(?<currentValue>[\\d.]+)\"\\)"
             ],
             "datasourceTemplate": "github-tags",
-            "depNameTemplate": "golang/go"
+            "depNameTemplate": "golang/go",
+            "extractVersion": "^go(?<version>.*)$"
         }
     ],
     "packageRules": [
