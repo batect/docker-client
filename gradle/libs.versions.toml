@@ -1,5 +1,5 @@
 [versions]
-kotest = "5.2.0"
+kotest = "5.2.1"
 kotlin = "1.6.10"
 kotlinx-serialization = "1.3.2"
 ktlint = "0.44.0"
@@ -24,7 +24,7 @@ spotless = { group = "com.diffplug.spotless", name = "spotless-plugin-gradle", v
 xz = { group = "org.tukaani", name = "xz", version = "1.9" }
 
 [plugins]
-kotest-multiplatform = { id = "io.kotest.multiplatform", version = "5.1.0" } # TODO: use version.ref = "kotest" once we're using a stable version everywhere again
+kotest-multiplatform = { id = "io.kotest.multiplatform", version = "5.2.1" } # TODO: use version.ref = "kotest" once we're using a stable version everywhere again
 kotlin-jvm = { id = "org.jetbrains.kotlin.jvm", version.ref = "kotlin" }
 kotlin-multiplatform = { id = "org.jetbrains.kotlin.multiplatform", version.ref = "kotlin" }
 kotlin-plugin-serialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlin" }
