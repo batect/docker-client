@@ -28,9 +28,6 @@ plugins {
 
 repositories {
     mavenCentral()
-
-    // Only required for snapshot Kotest versions - remove this once we're using a stable version again.
-    maven("https://oss.sonatype.org/content/repositories/snapshots")
 }
 
 dependencies {

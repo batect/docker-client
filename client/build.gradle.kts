@@ -41,9 +41,6 @@ plugins {
 
 repositories {
     mavenCentral()
-
-    // Only required for snapshot Kotest versions - remove this once we're using a stable version again.
-    maven("https://oss.sonatype.org/content/repositories/snapshots")
 }
 
 evaluationDependsOn(":golang-wrapper")
@@ -266,11 +263,6 @@ kotlin.targets.withType(KotlinNativeTarget::class.java) {
     binaries.all {
         binaryOptions["memoryModel"] = "experimental"
     }
-}
-
-// Only required while we're using a snapshot Kotest version - remove this once we're using a stable version again.
-kotest {
-    compilerPluginVersion.set(libs.versions.kotest)
 }
 
 val testEnvironmentVariables = setOf(
