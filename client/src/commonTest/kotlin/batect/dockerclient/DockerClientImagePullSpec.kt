@@ -103,6 +103,7 @@ class DockerClientImagePullSpec : ShouldSpec({
             // consider the test passing if at least one of these updates is posted.
             progressUpdatesReceived shouldContainAnyOf setOf(
                 ImagePullProgressUpdate("Downloading", ImagePullProgressDetail(0, layerSize), layerId),
+                ImagePullProgressUpdate("Downloading", ImagePullProgressDetail(layerSize, layerSize), layerId),
                 ImagePullProgressUpdate("Download complete", ImagePullProgressDetail(0, 0), layerId)
             )
 
