@@ -107,7 +107,7 @@ spotless {
 }
 
 golang {
-    golangVersion.set("1.18rc1")
+    golangVersion.set("1.18")
     golangCILintVersion.set("1.44.2")
 }
 
