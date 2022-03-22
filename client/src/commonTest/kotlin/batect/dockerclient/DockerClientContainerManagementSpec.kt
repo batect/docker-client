@@ -17,6 +17,8 @@
 package batect.dockerclient
 
 import batect.dockerclient.io.SinkTextOutput
+import io.kotest.assertions.throwables.shouldNotThrowAny
+import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.common.ExperimentalKotest
 import io.kotest.core.spec.style.ShouldSpec
 import io.kotest.matchers.comparables.shouldBeLessThan
@@ -58,7 +60,7 @@ class DockerClientContainerManagementSpec : ShouldSpec({
 
                 exitCode shouldBe 123
             } finally {
-                client.removeContainer(container)
+                client.removeContainer(container, force = true)
             }
         }
 
@@ -75,7 +77,7 @@ class DockerClientContainerManagementSpec : ShouldSpec({
                 val stopDuration = measureTime { client.stopContainer(container, 2.seconds) }
                 stopDuration shouldBeLessThan 5.seconds
             } finally {
-                client.removeContainer(container)
+                client.removeContainer(container, force = true)
             }
         }
 
@@ -109,8 +111,73 @@ class DockerClientContainerManagementSpec : ShouldSpec({
                 stdoutText shouldBe "Hello stdout\n"
                 stderrText shouldBe "Hello stderr\n"
             } finally {
-                client.removeContainer(container)
+                client.removeContainer(container, force = true)
             }
+        }
+
+        should("throw an appropriate exception when starting a container that doesn't exist") {
+            val exception = shouldThrow<ContainerStartFailedException> { client.startContainer(ContainerReference("does-not-exist")) }
+
+            exception.message shouldBe "Error response from daemon: No such container: does-not-exist"
+        }
+
+        should("not throw an exception when starting a container that has already been started") {
+            val spec = ContainerCreationSpec.Builder(image)
+                .withCommand(listOf("sh", "-c", "sleep 9999"))
+                .build()
+
+            val container = client.createContainer(spec)
+
+            try {
+                client.startContainer(container)
+
+                shouldNotThrowAny { client.startContainer(container) }
+            } finally {
+                client.removeContainer(container, force = true)
+            }
+        }
+
+        should("throw an appropriate exception when stopping a container that doesn't exist") {
+            val exception = shouldThrow<ContainerStopFailedException> { client.stopContainer(ContainerReference("does-not-exist"), 10.seconds) }
+
+            exception.message shouldBe "Error response from daemon: No such container: does-not-exist"
+        }
+
+        should("not throw an exception when stopping a container that's already been stopped") {
+            val spec = ContainerCreationSpec.Builder(image)
+                .withCommand(listOf("sh", "-c", "sleep 9999"))
+                .build()
+
+            val container = client.createContainer(spec)
+
+            try {
+                client.startContainer(container)
+                client.stopContainer(container, 1.seconds)
+
+                shouldNotThrowAny { client.stopContainer(container, 1.seconds) }
+            } finally {
+                client.removeContainer(container, force = true)
+            }
+        }
+
+        should("not throw an exception when stopping a container that's never been started") {
+            val spec = ContainerCreationSpec.Builder(image)
+                .withCommand(listOf("sh", "-c", "sleep 9999"))
+                .build()
+
+            val container = client.createContainer(spec)
+
+            try {
+                shouldNotThrowAny { client.stopContainer(container, 1.seconds) }
+            } finally {
+                client.removeContainer(container, force = true)
+            }
+        }
+
+        should("throw an appropriate exception when removing a container that doesn't exist") {
+            val exception = shouldThrow<ContainerRemovalFailedException> { client.removeContainer(ContainerReference("does-not-exist")) }
+
+            exception.message shouldBe "No such container: does-not-exist"
         }
     }
 })

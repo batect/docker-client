@@ -99,15 +99,8 @@
       * Image does not exist
       * Default command
       * Default entrypoint
-  * Start
-    * Test attempting to start a container that doesn't exist
-  * Stop
-    * Test attempting to stop a container that doesn't exist
-  * Remove
-    * Test attempting to remove a container that doesn't exist
   * Upload files
   * Attach
-    * Stream output to stdout / stderr - to console or to buffer
     * Stream input to stdin - from console or from buffer
     * Reuse output stream
     * Reuse input stream
