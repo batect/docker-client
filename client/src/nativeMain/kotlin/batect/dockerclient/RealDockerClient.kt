@@ -17,6 +17,7 @@
 package batect.dockerclient
 
 import batect.dockerclient.io.TextOutput
+import batect.dockerclient.native.AttachToContainerOutput
 import batect.dockerclient.native.BuildImage
 import batect.dockerclient.native.BuildImageProgressUpdate
 import batect.dockerclient.native.BuildImageProgressUpdate_BuildFailed
@@ -70,6 +71,8 @@ import kotlinx.cinterop.pointed
 import kotlinx.cinterop.ptr
 import kotlinx.cinterop.staticCFunction
 import kotlinx.cinterop.toKString
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
 import kotlin.time.Duration
 
 internal actual class RealDockerClient actual constructor(configuration: DockerClientConfiguration) : DockerClient, AutoCloseable {
@@ -340,6 +343,27 @@ internal actual class RealDockerClient actual constructor(configuration: DockerC
     override fun stopContainer(container: ContainerReference, timeout: Duration) {
         StopContainer(clientHandle, container.id.cstr, timeout.inWholeSeconds).ifFailed { error ->
             throw ContainerStopFailedException(error.pointed)
+        }
+    }
+
+    override fun attachToContainerOutput(container: ContainerReference, stdout: TextOutput, stderr: TextOutput) {
+        stdout.prepareStream().use { stdoutStream ->
+            stderr.prepareStream().use { stderrStream ->
+                runBlocking(IODispatcher) {
+                    launch { stdoutStream.run() }
+                    launch { stderrStream.run() }
+                    launch {
+                        AttachToContainerOutput(
+                            clientHandle,
+                            container.id.cstr,
+                            stdoutStream.outputStreamHandle,
+                            stderrStream.outputStreamHandle
+                        ).ifFailed { error ->
+                            throw AttachToContainerFailedException(error.pointed)
+                        }
+                    }
+                }
+            }
         }
     }
 

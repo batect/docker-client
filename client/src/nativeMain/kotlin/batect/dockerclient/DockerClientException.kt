@@ -159,7 +159,16 @@ public actual class ContainerRemovalFailedException actual constructor(
 ) : DockerClientException(message, cause, golangErrorType) {
     internal constructor(error: Error) : this(error.cleanErrorMessage, null, golangErrorType = error.Type!!.toKString())
 }
+
 public actual class ContainerWaitFailedException actual constructor(
+    message: String,
+    cause: Throwable?,
+    golangErrorType: String?
+) : DockerClientException(message, cause, golangErrorType) {
+    internal constructor(error: Error) : this(error.cleanErrorMessage, null, golangErrorType = error.Type!!.toKString())
+}
+
+public actual class AttachToContainerFailedException actual constructor(
     message: String,
     cause: Throwable?,
     golangErrorType: String?

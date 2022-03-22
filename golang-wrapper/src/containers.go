@@ -22,6 +22,7 @@ import (
 	"context"
 	"time"
 
+	"github.com/batect/docker-client/golang-wrapper/src/replacements"
 	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/api/types/container"
 	"github.com/docker/docker/api/types/network"
@@ -82,6 +83,46 @@ func RemoveContainer(clientHandle DockerClientHandle, id *C.char, force C.bool, 
 	}
 
 	if err := docker.ContainerRemove(context.Background(), C.GoString(id), opts); err != nil {
+		return toError(err)
+	}
+
+	return nil
+}
+
+//export AttachToContainerOutput
+func AttachToContainerOutput(clientHandle DockerClientHandle, id *C.char, stdoutStreamHandle OutputStreamHandle, stderrStreamHandle OutputStreamHandle) Error {
+	defer closeOutputStream(stdoutStreamHandle)
+	defer closeOutputStream(stderrStreamHandle)
+
+	docker := clientHandle.DockerAPIClient()
+	containerID := C.GoString(id)
+
+	config, err := docker.ContainerInspect(context.Background(), containerID)
+
+	opts := types.ContainerAttachOptions{
+		Logs:   true,
+		Stream: true,
+		Stdout: true,
+		Stderr: true,
+	}
+
+	resp, err := docker.ContainerAttach(context.Background(), containerID, opts)
+
+	if err != nil {
+		return toError(err)
+	}
+
+	defer resp.Close()
+
+	streamer := replacements.HijackedIOStreamer{
+		InputStream:  nil,
+		OutputStream: getOutputStream(stdoutStreamHandle),
+		ErrorStream:  getOutputStream(stderrStreamHandle),
+		Resp:         resp,
+		Tty:          config.Config.Tty,
+	}
+
+	if err := streamer.Stream(context.Background()); err != nil {
 		return toError(err)
 	}
 

@@ -297,6 +297,29 @@ internal actual class RealDockerClient actual constructor(configuration: DockerC
         }
     }
 
+    override fun attachToContainerOutput(container: ContainerReference, stdout: TextOutput, stderr: TextOutput) {
+        stdout.prepareStream().use { stdoutStream ->
+            stderr.prepareStream().use { stderrStream ->
+                runBlocking(IODispatcher) {
+                    launch { stdoutStream.run() }
+                    launch { stderrStream.run() }
+                    launch {
+                        nativeAPI.AttachToContainerOutput(
+                            clientHandle,
+                            container.id,
+                            stdoutStream.outputStreamHandle.toLong(),
+                            stderrStream.outputStreamHandle.toLong()
+                        ).use { error ->
+                            if (error != null) {
+                                throw AttachToContainerFailedException(error)
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
     override fun waitForContainerToExit(container: ContainerReference): Long {
         nativeAPI.WaitForContainerToExit(clientHandle, container.id)!!.use { ret ->
             if (ret.error != null) {

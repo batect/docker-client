@@ -32,6 +32,7 @@ internal interface API {
     fun StartContainer(@In clientHandle: Long, @In id: kotlin.String): Error?
     fun StopContainer(@In clientHandle: Long, @In id: kotlin.String, @In timeoutSeconds: Long): Error?
     fun RemoveContainer(@In clientHandle: Long, @In id: kotlin.String, @In force: Boolean, @In removeVolumes: Boolean): Error?
+    fun AttachToContainerOutput(@In clientHandle: Long, @In id: kotlin.String, @In stdoutStreamHandle: Long, @In stderrStreamHandle: Long): Error?
     fun WaitForContainerToExit(@In clientHandle: Long, @In id: kotlin.String): WaitForContainerToExitReturn?
     fun Ping(@In clientHandle: Long): PingReturn?
     fun GetDaemonVersionInformation(@In clientHandle: Long): GetDaemonVersionInformationReturn?

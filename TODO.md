@@ -50,6 +50,7 @@
 * Autogenerate struct accessors for arrays in structs (eg. BuildImageRequest.BuildArgs)
 
 * Remove `with...` prefixes from ImageBuildSpec / ContainerCreationSpec?
+* Add `ifFailed` helper method to JVM `RealDockerClient`
 
 * Images
   * Build
@@ -127,7 +128,15 @@
     * Stream input to stdin - from console or from buffer
     * Reuse output stream
     * Reuse input stream
-  * Run - helper method that does create / start / attach / stop / remove
+    * Forward signals to container (test by sending Ctrl-C to self)
+    * Set and update TTY size
+    * Make it easy to handle race condition (similar to what is needed for "wait for exit" above - wait until we've had a HTTP response from daemon before proceeding)
+    * Handle case where only one stream is provided (eg. only stdout, no stderr)
+    * Test with and without TTY enabled
+      * With TTY enabled: all output goes to stdout stream
+      * Without TTY enabled: output split across streams according to source
+    * Handle case where container hasn't been started or has already finished
+  * Run - helper method that does start / attach / wait / stop / remove
   * Stream events (for waiting for health check)
   * Inspect (for getting last health check result)
 * Exec

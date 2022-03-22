@@ -43,6 +43,7 @@ public interface DockerClient : AutoCloseable {
     public fun startContainer(container: ContainerReference)
     public fun stopContainer(container: ContainerReference, timeout: Duration)
     public fun removeContainer(container: ContainerReference, force: Boolean = false, removeVolumes: Boolean = false)
+    public fun attachToContainerOutput(container: ContainerReference, stdout: TextOutput, stderr: TextOutput)
 
     /**
      * Wait for a container to exit, and then return its exit code.

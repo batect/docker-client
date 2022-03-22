@@ -145,6 +145,7 @@ public actual class ContainerStartFailedException actual constructor(
 ) : DockerClientException(message, cause, golangErrorType) {
     internal constructor(error: Error) : this(error.cleanErrorMessage, null, golangErrorType = error.type.get())
 }
+
 public actual class ContainerStopFailedException actual constructor(
     message: String,
     cause: Throwable?,
@@ -152,6 +153,7 @@ public actual class ContainerStopFailedException actual constructor(
 ) : DockerClientException(message, cause, golangErrorType) {
     internal constructor(error: Error) : this(error.cleanErrorMessage, null, golangErrorType = error.type.get())
 }
+
 public actual class ContainerRemovalFailedException actual constructor(
     message: String,
     cause: Throwable?,
@@ -159,7 +161,16 @@ public actual class ContainerRemovalFailedException actual constructor(
 ) : DockerClientException(message, cause, golangErrorType) {
     internal constructor(error: Error) : this(error.cleanErrorMessage, null, golangErrorType = error.type.get())
 }
+
 public actual class ContainerWaitFailedException actual constructor(
+    message: String,
+    cause: Throwable?,
+    golangErrorType: String?
+) : DockerClientException(message, cause, golangErrorType) {
+    internal constructor(error: Error) : this(error.cleanErrorMessage, null, golangErrorType = error.type.get())
+}
+
+public actual class AttachToContainerFailedException actual constructor(
     message: String,
     cause: Throwable?,
     golangErrorType: String?
