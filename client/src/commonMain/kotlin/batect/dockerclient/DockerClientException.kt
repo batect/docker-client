@@ -106,3 +106,33 @@ public class InvalidImageBuildSpecException(
     message: String,
     cause: Throwable? = null
 ) : DockerClientException(message, cause)
+
+public expect class ContainerCreationFailedException(
+    message: String,
+    cause: Throwable? = null,
+    golangErrorType: String? = null
+) : DockerClientException
+
+public expect class ContainerStartFailedException(
+    message: String,
+    cause: Throwable? = null,
+    golangErrorType: String? = null
+) : DockerClientException
+
+public expect class ContainerStopFailedException(
+    message: String,
+    cause: Throwable? = null,
+    golangErrorType: String? = null
+) : DockerClientException
+
+public expect class ContainerRemovalFailedException(
+    message: String,
+    cause: Throwable? = null,
+    golangErrorType: String? = null
+) : DockerClientException
+
+public expect class ContainerWaitFailedException(
+    message: String,
+    cause: Throwable? = null,
+    golangErrorType: String? = null
+) : DockerClientException

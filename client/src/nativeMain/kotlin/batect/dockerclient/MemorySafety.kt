@@ -18,11 +18,13 @@ package batect.dockerclient
 
 import batect.dockerclient.native.BuildImageReturn
 import batect.dockerclient.native.CreateClientReturn
+import batect.dockerclient.native.CreateContainerReturn
 import batect.dockerclient.native.CreateNetworkReturn
 import batect.dockerclient.native.CreateVolumeReturn
 import batect.dockerclient.native.Error
 import batect.dockerclient.native.FreeBuildImageReturn
 import batect.dockerclient.native.FreeCreateClientReturn
+import batect.dockerclient.native.FreeCreateContainerReturn
 import batect.dockerclient.native.FreeCreateNetworkReturn
 import batect.dockerclient.native.FreeCreateVolumeReturn
 import batect.dockerclient.native.FreeError
@@ -32,12 +34,14 @@ import batect.dockerclient.native.FreeGetNetworkByNameOrIDReturn
 import batect.dockerclient.native.FreeListAllVolumesReturn
 import batect.dockerclient.native.FreePingReturn
 import batect.dockerclient.native.FreePullImageReturn
+import batect.dockerclient.native.FreeWaitForContainerToExitReturn
 import batect.dockerclient.native.GetDaemonVersionInformationReturn
 import batect.dockerclient.native.GetImageReturn
 import batect.dockerclient.native.GetNetworkByNameOrIDReturn
 import batect.dockerclient.native.ListAllVolumesReturn
 import batect.dockerclient.native.PingReturn
 import batect.dockerclient.native.PullImageReturn
+import batect.dockerclient.native.WaitForContainerToExitReturn
 import kotlinx.cinterop.CPointer
 import kotlinx.cinterop.StableRef
 
@@ -60,6 +64,8 @@ internal inline fun <R> CPointer<GetNetworkByNameOrIDReturn>.use(user: (CPointer
 internal inline fun <R> CPointer<PullImageReturn>.use(user: (CPointer<PullImageReturn>) -> R): R = use(::FreePullImageReturn, user)
 internal inline fun <R> CPointer<GetImageReturn>.use(user: (CPointer<GetImageReturn>) -> R): R = use(::FreeGetImageReturn, user)
 internal inline fun <R> CPointer<BuildImageReturn>.use(user: (CPointer<BuildImageReturn>) -> R): R = use(::FreeBuildImageReturn, user)
+internal inline fun <R> CPointer<CreateContainerReturn>.use(user: (CPointer<CreateContainerReturn>) -> R): R = use(::FreeCreateContainerReturn, user)
+internal inline fun <R> CPointer<WaitForContainerToExitReturn>.use(user: (CPointer<WaitForContainerToExitReturn>) -> R): R = use(::FreeWaitForContainerToExitReturn, user)
 internal inline fun <R> CPointer<Error>?.use(user: (CPointer<Error>?) -> R): R = use(::FreeError, user)
 
 internal inline fun CPointer<Error>?.ifFailed(onError: (CPointer<Error>) -> Unit) = use { error ->

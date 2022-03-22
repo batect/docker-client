@@ -130,5 +130,42 @@ public actual class ImageBuildCachePruneFailedException actual constructor(
     internal constructor(error: Error) : this(error.cleanErrorMessage, null, golangErrorType = error.type.get())
 }
 
+public actual class ContainerCreationFailedException actual constructor(
+    message: String,
+    cause: Throwable?,
+    golangErrorType: String?
+) : DockerClientException(message, cause, golangErrorType) {
+    internal constructor(error: Error) : this(error.cleanErrorMessage, null, golangErrorType = error.type.get())
+}
+
+public actual class ContainerStartFailedException actual constructor(
+    message: String,
+    cause: Throwable?,
+    golangErrorType: String?
+) : DockerClientException(message, cause, golangErrorType) {
+    internal constructor(error: Error) : this(error.cleanErrorMessage, null, golangErrorType = error.type.get())
+}
+public actual class ContainerStopFailedException actual constructor(
+    message: String,
+    cause: Throwable?,
+    golangErrorType: String?
+) : DockerClientException(message, cause, golangErrorType) {
+    internal constructor(error: Error) : this(error.cleanErrorMessage, null, golangErrorType = error.type.get())
+}
+public actual class ContainerRemovalFailedException actual constructor(
+    message: String,
+    cause: Throwable?,
+    golangErrorType: String?
+) : DockerClientException(message, cause, golangErrorType) {
+    internal constructor(error: Error) : this(error.cleanErrorMessage, null, golangErrorType = error.type.get())
+}
+public actual class ContainerWaitFailedException actual constructor(
+    message: String,
+    cause: Throwable?,
+    golangErrorType: String?
+) : DockerClientException(message, cause, golangErrorType) {
+    internal constructor(error: Error) : this(error.cleanErrorMessage, null, golangErrorType = error.type.get())
+}
+
 private val Error.cleanErrorMessage: String
     get() = this.message.get().removePrefix("Error: ")

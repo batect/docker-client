@@ -28,12 +28,14 @@ import batect.dockerclient.native.BuildImageProgressUpdate_StepPullProgressUpdat
 import batect.dockerclient.native.BuildImageProgressUpdate_StepStarting
 import batect.dockerclient.native.BuildImageRequest
 import batect.dockerclient.native.ClientConfiguration
+import batect.dockerclient.native.CreateContainerRequest
 import batect.dockerclient.native.DockerClientHandle
 import batect.dockerclient.native.PullImageProgressCallback
 import batect.dockerclient.native.PullImageProgressUpdate
 import batect.dockerclient.native.StringPair
 import batect.dockerclient.native.TLSConfiguration
 import batect.dockerclient.native.buildArgs
+import batect.dockerclient.native.command
 import batect.dockerclient.native.imageTags
 import batect.dockerclient.native.nativeAPI
 import batect.dockerclient.native.volumes
@@ -43,6 +45,7 @@ import jnr.ffi.Struct
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
+import kotlin.time.Duration
 
 internal actual class RealDockerClient actual constructor(configuration: DockerClientConfiguration) : DockerClient, AutoCloseable {
     // This property is internally visible so that tests can get this value to establish scenarios
@@ -260,6 +263,50 @@ internal actual class RealDockerClient actual constructor(configuration: DockerC
         }
     }
 
+    override fun createContainer(spec: ContainerCreationSpec): ContainerReference {
+        nativeAPI.CreateContainer(clientHandle, CreateContainerRequest(spec))!!.use { ret ->
+            if (ret.error != null) {
+                throw ContainerCreationFailedException(ret.error!!)
+            }
+
+            return ContainerReference(ret.response!!.id.get())
+        }
+    }
+
+    override fun startContainer(container: ContainerReference) {
+        nativeAPI.StartContainer(clientHandle, container.id).use { error ->
+            if (error != null) {
+                throw ContainerStartFailedException(error)
+            }
+        }
+    }
+
+    override fun stopContainer(container: ContainerReference, timeout: Duration) {
+        nativeAPI.StopContainer(clientHandle, container.id, timeout.inWholeSeconds).use { error ->
+            if (error != null) {
+                throw ContainerStopFailedException(error)
+            }
+        }
+    }
+
+    override fun removeContainer(container: ContainerReference, force: Boolean, removeVolumes: Boolean) {
+        nativeAPI.RemoveContainer(clientHandle, container.id, force, removeVolumes).use { error ->
+            if (error != null) {
+                throw ContainerRemovalFailedException(error)
+            }
+        }
+    }
+
+    override fun waitForContainerToExit(container: ContainerReference): Long {
+        nativeAPI.WaitForContainerToExit(clientHandle, container.id)!!.use { ret ->
+            if (ret.error != null) {
+                throw ContainerWaitFailedException(ret.error!!)
+            }
+
+            return ret.exitCode.longValue()
+        }
+    }
+
     override fun close() {
         nativeAPI.DisposeClient(clientHandle).use { error ->
             if (error != null) {
@@ -351,6 +398,14 @@ internal actual class RealDockerClient actual constructor(configuration: DockerC
         request.noCache.set(jvm.noCache)
         request.targetBuildStage.set(jvm.targetBuildStage)
         request.builderVersion.set(jvm.builderApiVersion)
+
+        return request
+    }
+
+    private fun CreateContainerRequest(jvm: ContainerCreationSpec): CreateContainerRequest {
+        val request = CreateContainerRequest(Runtime.getRuntime(nativeAPI))
+        request.imageReference.set(jvm.image.id)
+        request.command = jvm.command
 
         return request
     }

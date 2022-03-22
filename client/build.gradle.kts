@@ -71,6 +71,7 @@ kotlin {
         val commonMain by getting {
             dependencies {
                 implementation(libs.okio)
+                implementation(libs.kotlinx.coroutines.core)
             }
         }
 
@@ -82,7 +83,6 @@ kotlin {
             dependencies {
                 implementation(libs.jnr.ffi)
                 implementation(libs.jnr.posix)
-                implementation(libs.kotlinx.coroutines.core)
             }
 
             resources.srcDir(jvmLibsDir)

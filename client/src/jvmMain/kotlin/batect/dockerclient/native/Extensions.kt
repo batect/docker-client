@@ -43,6 +43,12 @@ internal var BuildImageRequest.imageTags by WriteOnlyList<BuildImageRequest, Str
     ::stringToPointer
 )
 
+internal var CreateContainerRequest.command by WriteOnlyList<CreateContainerRequest, String>(
+    CreateContainerRequest::commandCount,
+    CreateContainerRequest::commandPointer,
+    ::stringToPointer
+)
+
 internal fun StringPair(key: String, value: String): StringPair {
     val pair = StringPair(Runtime.getRuntime(nativeAPI))
     pair.key.set(key)

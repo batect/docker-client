@@ -28,6 +28,11 @@ internal interface API {
     fun CreateClient(@In cfg: ClientConfiguration): CreateClientReturn?
     fun DisposeClient(@In clientHandle: Long): Error?
     fun SetClientProxySettingsForTest(@In clientHandle: Long)
+    fun CreateContainer(@In clientHandle: Long, @In spec: CreateContainerRequest): CreateContainerReturn?
+    fun StartContainer(@In clientHandle: Long, @In id: kotlin.String): Error?
+    fun StopContainer(@In clientHandle: Long, @In id: kotlin.String, @In timeoutSeconds: Long): Error?
+    fun RemoveContainer(@In clientHandle: Long, @In id: kotlin.String, @In force: Boolean, @In removeVolumes: Boolean): Error?
+    fun WaitForContainerToExit(@In clientHandle: Long, @In id: kotlin.String): WaitForContainerToExitReturn?
     fun Ping(@In clientHandle: Long): PingReturn?
     fun GetDaemonVersionInformation(@In clientHandle: Long): GetDaemonVersionInformationReturn?
     fun DeleteImage(@In clientHandle: Long, @In ref: kotlin.String, @In force: Boolean): Error?
@@ -106,4 +111,12 @@ internal interface API {
     fun AllocBuildImageProgressUpdate_BuildFailed(): BuildImageProgressUpdate_BuildFailed?
     fun FreeBuildImageProgressUpdate(@In value: BuildImageProgressUpdate)
     fun AllocBuildImageProgressUpdate(): BuildImageProgressUpdate?
+    fun FreeContainerReference(@In value: ContainerReference)
+    fun AllocContainerReference(): ContainerReference?
+    fun FreeCreateContainerRequest(@In value: CreateContainerRequest)
+    fun AllocCreateContainerRequest(): CreateContainerRequest?
+    fun FreeCreateContainerReturn(@In value: CreateContainerReturn)
+    fun AllocCreateContainerReturn(): CreateContainerReturn?
+    fun FreeWaitForContainerToExitReturn(@In value: WaitForContainerToExitReturn)
+    fun AllocWaitForContainerToExitReturn(): WaitForContainerToExitReturn?
 }

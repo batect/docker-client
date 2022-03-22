@@ -600,6 +600,79 @@ bool InvokeBuildImageProgressCallback(BuildImageProgressCallback method, void* u
     return method(userData, progress);
 }
 
+ContainerReference* AllocContainerReference() {
+    ContainerReference* value = malloc(sizeof(ContainerReference));
+    value->ID = NULL;
+
+    return value;
+}
+
+void FreeContainerReference(ContainerReference* value) {
+    if (value == NULL) {
+        return;
+    }
+
+    free(value->ID);
+    free(value);
+}
+
+CreateContainerRequest* AllocCreateContainerRequest() {
+    CreateContainerRequest* value = malloc(sizeof(CreateContainerRequest));
+    value->ImageReference = NULL;
+    value->Command = NULL;
+    value->CommandCount = 0;
+
+    return value;
+}
+
+void FreeCreateContainerRequest(CreateContainerRequest* value) {
+    if (value == NULL) {
+        return;
+    }
+
+    free(value->ImageReference);
+    for (uint64_t i = 0; i < value->CommandCount; i++) {
+        free(value->Command[i]);
+    }
+
+    free(value->Command);
+    free(value);
+}
+
+CreateContainerReturn* AllocCreateContainerReturn() {
+    CreateContainerReturn* value = malloc(sizeof(CreateContainerReturn));
+    value->Response = NULL;
+    value->Error = NULL;
+
+    return value;
+}
+
+void FreeCreateContainerReturn(CreateContainerReturn* value) {
+    if (value == NULL) {
+        return;
+    }
+
+    FreeContainerReference(value->Response);
+    FreeError(value->Error);
+    free(value);
+}
+
+WaitForContainerToExitReturn* AllocWaitForContainerToExitReturn() {
+    WaitForContainerToExitReturn* value = malloc(sizeof(WaitForContainerToExitReturn));
+    value->Error = NULL;
+
+    return value;
+}
+
+void FreeWaitForContainerToExitReturn(WaitForContainerToExitReturn* value) {
+    if (value == NULL) {
+        return;
+    }
+
+    FreeError(value->Error);
+    free(value);
+}
+
 VolumeReference** CreateVolumeReferenceArray(uint64_t size) {
     return malloc(size * sizeof(VolumeReference*));
 }

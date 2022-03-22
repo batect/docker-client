@@ -495,3 +495,58 @@ internal interface BuildImageProgressCallback {
     @Delegate
     fun invoke(userData: Pointer?, progressPointer: Pointer?): Boolean
 }
+
+internal class ContainerReference(runtime: Runtime) : Struct(runtime), AutoCloseable {
+    constructor(pointer: jnr.ffi.Pointer) : this(pointer.runtime) {
+        this.useMemory(pointer)
+    }
+
+    val id = UTF8StringRef()
+
+    override fun close() {
+        nativeAPI.FreeContainerReference(this)
+    }
+}
+
+internal class CreateContainerRequest(runtime: Runtime) : Struct(runtime), AutoCloseable {
+    constructor(pointer: jnr.ffi.Pointer) : this(pointer.runtime) {
+        this.useMemory(pointer)
+    }
+
+    val imageReference = UTF8StringRef()
+    val commandCount = u_int64_t()
+    val commandPointer = Pointer()
+
+    override fun close() {
+        nativeAPI.FreeCreateContainerRequest(this)
+    }
+}
+
+internal class CreateContainerReturn(runtime: Runtime) : Struct(runtime), AutoCloseable {
+    constructor(pointer: jnr.ffi.Pointer) : this(pointer.runtime) {
+        this.useMemory(pointer)
+    }
+
+    val responsePointer = Pointer()
+    val response: ContainerReference? by lazy { if (responsePointer.intValue() == 0) null else ContainerReference(responsePointer.get()) }
+    val errorPointer = Pointer()
+    val error: Error? by lazy { if (errorPointer.intValue() == 0) null else Error(errorPointer.get()) }
+
+    override fun close() {
+        nativeAPI.FreeCreateContainerReturn(this)
+    }
+}
+
+internal class WaitForContainerToExitReturn(runtime: Runtime) : Struct(runtime), AutoCloseable {
+    constructor(pointer: jnr.ffi.Pointer) : this(pointer.runtime) {
+        this.useMemory(pointer)
+    }
+
+    val exitCode = int64_t()
+    val errorPointer = Pointer()
+    val error: Error? by lazy { if (errorPointer.intValue() == 0) null else Error(errorPointer.get()) }
+
+    override fun close() {
+        nativeAPI.FreeWaitForContainerToExitReturn(this)
+    }
+}

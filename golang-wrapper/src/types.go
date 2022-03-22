@@ -61,6 +61,10 @@ type BuildImageProgressUpdate_StepFinished *C.BuildImageProgressUpdate_StepFinis
 type BuildImageProgressUpdate_BuildFailed *C.BuildImageProgressUpdate_BuildFailed
 type BuildImageProgressUpdate *C.BuildImageProgressUpdate
 type BuildImageProgressCallback C.BuildImageProgressCallback
+type ContainerReference *C.ContainerReference
+type CreateContainerRequest *C.CreateContainerRequest
+type CreateContainerReturn *C.CreateContainerReturn
+type WaitForContainerToExitReturn *C.WaitForContainerToExitReturn
 
 func newError(
     Type string,
@@ -460,6 +464,55 @@ func newBuildImageProgressUpdate(
     value.StepDownloadProgressUpdate = StepDownloadProgressUpdate
     value.StepFinished = StepFinished
     value.BuildFailed = BuildFailed
+
+    return value
+}
+
+func newContainerReference(
+    ID string,
+) ContainerReference {
+    value := C.AllocContainerReference()
+    value.ID = C.CString(ID)
+
+    return value
+}
+
+func newCreateContainerRequest(
+    ImageReference string,
+    Command []string,
+) CreateContainerRequest {
+    value := C.AllocCreateContainerRequest()
+    value.ImageReference = C.CString(ImageReference)
+
+    value.CommandCount = C.uint64_t(len(Command))
+    value.Command = C.CreatestringArray(value.CommandCount)
+
+    for i, v := range Command {
+        C.SetstringArrayElement(value.Command, C.uint64_t(i), C.CString(v))
+    }
+
+
+    return value
+}
+
+func newCreateContainerReturn(
+    Response ContainerReference,
+    Error Error,
+) CreateContainerReturn {
+    value := C.AllocCreateContainerReturn()
+    value.Response = Response
+    value.Error = Error
+
+    return value
+}
+
+func newWaitForContainerToExitReturn(
+    ExitCode int64,
+    Error Error,
+) WaitForContainerToExitReturn {
+    value := C.AllocWaitForContainerToExitReturn()
+    value.ExitCode = C.int64_t(ExitCode)
+    value.Error = Error
 
     return value
 }

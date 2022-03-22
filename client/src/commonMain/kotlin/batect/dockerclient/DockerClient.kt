@@ -18,6 +18,7 @@ package batect.dockerclient
 
 import batect.dockerclient.io.TextOutput
 import okio.Path
+import kotlin.time.Duration
 
 public interface DockerClient : AutoCloseable {
     public fun ping(): PingResponse
@@ -37,6 +38,18 @@ public interface DockerClient : AutoCloseable {
 
     public fun buildImage(spec: ImageBuildSpec, output: TextOutput, onProgressUpdate: ImageBuildProgressReceiver = {}): ImageReference
     public fun pruneImageBuildCache()
+
+    public fun createContainer(spec: ContainerCreationSpec): ContainerReference
+    public fun startContainer(container: ContainerReference)
+    public fun stopContainer(container: ContainerReference, timeout: Duration)
+    public fun removeContainer(container: ContainerReference, force: Boolean = false, removeVolumes: Boolean = false)
+
+    /**
+     * Wait for a container to exit, and then return its exit code.
+     *
+     * @return the container's exit code
+     */
+    public fun waitForContainerToExit(container: ContainerReference): Long
 
     public class Builder internal constructor(internal val factory: DockerClientFactory) {
         public constructor() : this({ config -> RealDockerClient(config) })

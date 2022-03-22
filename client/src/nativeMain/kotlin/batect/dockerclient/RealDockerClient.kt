@@ -29,6 +29,8 @@ import batect.dockerclient.native.BuildImageProgressUpdate_StepStarting
 import batect.dockerclient.native.BuildImageRequest
 import batect.dockerclient.native.ClientConfiguration
 import batect.dockerclient.native.CreateClient
+import batect.dockerclient.native.CreateContainer
+import batect.dockerclient.native.CreateContainerRequest
 import batect.dockerclient.native.CreateNetwork
 import batect.dockerclient.native.CreateVolume
 import batect.dockerclient.native.DeleteImage
@@ -36,7 +38,6 @@ import batect.dockerclient.native.DeleteNetwork
 import batect.dockerclient.native.DeleteVolume
 import batect.dockerclient.native.DisposeClient
 import batect.dockerclient.native.DockerClientHandle
-import batect.dockerclient.native.Error
 import batect.dockerclient.native.GetDaemonVersionInformation
 import batect.dockerclient.native.GetImage
 import batect.dockerclient.native.GetNetworkByNameOrID
@@ -46,8 +47,12 @@ import batect.dockerclient.native.PruneImageBuildCache
 import batect.dockerclient.native.PullImage
 import batect.dockerclient.native.PullImageProgressDetail
 import batect.dockerclient.native.PullImageProgressUpdate
+import batect.dockerclient.native.RemoveContainer
+import batect.dockerclient.native.StartContainer
+import batect.dockerclient.native.StopContainer
 import batect.dockerclient.native.StringPair
 import batect.dockerclient.native.TLSConfiguration
+import batect.dockerclient.native.WaitForContainerToExit
 import kotlinx.cinterop.CFunction
 import kotlinx.cinterop.COpaquePointer
 import kotlinx.cinterop.CPointed
@@ -65,6 +70,7 @@ import kotlinx.cinterop.pointed
 import kotlinx.cinterop.ptr
 import kotlinx.cinterop.staticCFunction
 import kotlinx.cinterop.toKString
+import kotlin.time.Duration
 
 internal actual class RealDockerClient actual constructor(configuration: DockerClientConfiguration) : DockerClient, AutoCloseable {
     // This property is internally visible so that tests can get this value to establish scenarios
@@ -84,24 +90,22 @@ internal actual class RealDockerClient actual constructor(configuration: DockerC
     }
 
     private fun MemScope.allocClientConfiguration(configuration: DockerClientConfiguration): ClientConfiguration {
-        val nativeConfig = alloc<ClientConfiguration>()
-        nativeConfig.UseConfigurationFromEnvironment = configuration.useConfigurationFromEnvironment
-        nativeConfig.Host = configuration.host?.cstr?.ptr
-        nativeConfig.ConfigDirectoryPath = configuration.configDirectoryPath?.cstr?.ptr
+        return alloc {
+            UseConfigurationFromEnvironment = configuration.useConfigurationFromEnvironment
+            Host = configuration.host?.cstr?.ptr
+            ConfigDirectoryPath = configuration.configDirectoryPath?.cstr?.ptr
 
-        if (configuration.tls != null) {
-            val tls = alloc<TLSConfiguration>()
-            tls.CAFilePath = configuration.tls.caFilePath.cstr.ptr
-            tls.CertFilePath = configuration.tls.certFilePath.cstr.ptr
-            tls.KeyFilePath = configuration.tls.keyFilePath.cstr.ptr
-            tls.InsecureSkipVerify = configuration.tls.insecureSkipVerify
-
-            nativeConfig.TLS = tls.ptr
-        } else {
-            nativeConfig.TLS = null
+            if (configuration.tls != null) {
+                TLS = alloc<TLSConfiguration> {
+                    CAFilePath = configuration.tls.caFilePath.cstr.ptr
+                    CertFilePath = configuration.tls.certFilePath.cstr.ptr
+                    KeyFilePath = configuration.tls.keyFilePath.cstr.ptr
+                    InsecureSkipVerify = configuration.tls.insecureSkipVerify
+                }.ptr
+            } else {
+                TLS = null
+            }
         }
-
-        return nativeConfig
     }
 
     public override fun ping(): PingResponse {
@@ -276,35 +280,83 @@ internal actual class RealDockerClient actual constructor(configuration: DockerC
         }
     }
 
+    private fun MemScope.allocBuildImageRequest(spec: ImageBuildSpec): BuildImageRequest {
+        return alloc {
+            ContextDirectory = spec.contextDirectory.toString().cstr.ptr
+            PathToDockerfile = spec.pathToDockerfile.toString().cstr.ptr
+
+            BuildArgs = allocArrayOf(
+                spec.buildArgs.map {
+                    alloc<StringPair> {
+                        Key = it.key.cstr.ptr
+                        Value = it.value.cstr.ptr
+                    }.ptr
+                }
+            )
+
+            BuildArgsCount = spec.buildArgs.size.toULong()
+
+            ImageTags = allocArrayOf(spec.imageTags.map { it.cstr.ptr })
+            ImageTagsCount = spec.imageTags.size.toULong()
+            AlwaysPullBaseImages = spec.alwaysPullBaseImages
+            NoCache = spec.noCache
+            TargetBuildStage = spec.targetBuildStage.cstr.ptr
+            BuilderVersion = spec.builderApiVersion?.cstr?.ptr
+        }
+    }
+
     public override fun pruneImageBuildCache() {
         PruneImageBuildCache(clientHandle).ifFailed { error ->
             throw ImageBuildCachePruneFailedException(error.pointed)
         }
     }
 
-    private fun MemScope.allocBuildImageRequest(spec: ImageBuildSpec): BuildImageRequest {
-        val request = alloc<BuildImageRequest>()
-        request.ContextDirectory = spec.contextDirectory.toString().cstr.ptr
-        request.PathToDockerfile = spec.pathToDockerfile.toString().cstr.ptr
+    override fun createContainer(spec: ContainerCreationSpec): ContainerReference {
+        memScoped {
+            CreateContainer(clientHandle, allocCreateContainerRequest(spec).ptr)!!.use { ret ->
+                if (ret.pointed.Error != null) {
+                    throw ContainerCreationFailedException(ret.pointed.Error!!.pointed)
+                }
 
-        request.BuildArgs = allocArrayOf(
-            spec.buildArgs.map {
-                val pair = alloc<StringPair>()
-                pair.Key = it.key.cstr.ptr
-                pair.Value = it.value.cstr.ptr
-                pair.ptr
+                return ContainerReference(ret.pointed.Response!!.pointed.ID!!.toKString())
             }
-        )
-        request.BuildArgsCount = spec.buildArgs.size.toULong()
+        }
+    }
 
-        request.ImageTags = allocArrayOf(spec.imageTags.map { it.cstr.ptr })
-        request.ImageTagsCount = spec.imageTags.size.toULong()
-        request.AlwaysPullBaseImages = spec.alwaysPullBaseImages
-        request.NoCache = spec.noCache
-        request.TargetBuildStage = spec.targetBuildStage.cstr.ptr
-        request.BuilderVersion = spec.builderApiVersion?.cstr?.ptr
+    private fun MemScope.allocCreateContainerRequest(spec: ContainerCreationSpec): CreateContainerRequest {
+        return alloc {
+            ImageReference = spec.image.id.cstr.ptr
+            Command = allocArrayOf(spec.command.map { it.cstr.ptr })
+            CommandCount = spec.command.size.toULong()
+        }
+    }
 
-        return request
+    override fun startContainer(container: ContainerReference) {
+        StartContainer(clientHandle, container.id.cstr).ifFailed { error ->
+            throw ContainerStartFailedException(error.pointed)
+        }
+    }
+
+    override fun stopContainer(container: ContainerReference, timeout: Duration) {
+        StopContainer(clientHandle, container.id.cstr, timeout.inWholeSeconds).ifFailed { error ->
+            throw ContainerStopFailedException(error.pointed)
+        }
+    }
+
+    override fun removeContainer(container: ContainerReference, force: Boolean, removeVolumes: Boolean) {
+        RemoveContainer(clientHandle, container.id.cstr, force, removeVolumes).ifFailed { error ->
+            throw ContainerRemovalFailedException(error.pointed)
+        }
+    }
+
+    override fun waitForContainerToExit(container: ContainerReference): Long {
+        WaitForContainerToExit(clientHandle, container.id.cstr)!!.use { ret ->
+            if (ret.pointed.Error != null) {
+                throw ContainerWaitFailedException(ret.pointed.Error!!.pointed)
+            }
+
+            return ret.pointed.ExitCode
+        }
     }
 
     override fun close() {

@@ -32,6 +32,8 @@
 * Re-enable Golang linter on CI once it supports Go 1.18: https://github.com/golangci/golangci-lint/pull/2438
 * Reduce impact of buildSrc build time on CI builds - currently takes 5 minutes before task even starts
   * Use some kind of build cache? eg. Gradle Enterprise or https://github.com/gradle/gradle-build-action
+* Remove "be able to" prefixes from test descriptions
+* Use HTTPS URL in license header
 
 # APIs
 
@@ -47,6 +49,8 @@
 * Check that Golang code can return an empty list (eg. listing all volumes returns no volumes)
 * Autogenerate struct accessors for arrays in structs (eg. BuildImageRequest.BuildArgs)
 
+* Remove `with...` prefixes from ImageBuildSpec / ContainerCreationSpec?
+
 * Images
   * Build
     * Kotlin/Native: Stream output while build is running, not just when build returns (see TODO in native buildImage())
@@ -54,17 +58,76 @@
     * BuildKit
       * Fix issue running tests on JVM: blocked by https://github.com/jnr/jnr-ffi/pull/299, re-enable JVM tests on CI once this is resolved
       * Deal with steps formatted like `[ 1/12] FROM docker.io/...` (notice leading space before '1') when sorting steps
+        * Is this sorting still required?
       * Support for SSH passthrough
       * Support for secrets
       * Add support for warnings (added in BuildKit 0.10.0)
     * Test that we can run a built image
 * Containers
   * Create
+    * Name
+    * Network
+    * Host name
+      * If greater than 63 characters, throw exception
+    * Network aliases
+    * Extra hosts
+    * Environment variables
+    * Mounts
+      * Local directory
+      * Volume
+      * Docker socket
+    * Entrypoint
+    * Working directory
+    * Device mounts
+    * Port mappings
+      * Listed in `EXPOSE` instruction
+      * Not listed in `EXPOSE`
+    * Health check configuration
+    * User and group
+    * Privileged
+    * Capabilities to add
+    * Capabilities to drop
+    * Init process enabled
+    * TTY enabled
+    * STDIN attached
+    * Log driver
+    * Log configuration
+    * SHM size
+    * Scenarios to test:
+      * Windows containers
+      * Image does not exist
+      * Default command
+      * Default entrypoint
   * Start
+    * Test attempting to start a container that doesn't exist
   * Stop
+    * Test attempting to stop a container that doesn't exist
   * Remove
+    * Test attempting to remove a container that doesn't exist
+  * Wait for exit
+    * Make it easy to handle race condition alluded to by this documentation from Docker's `ContainerWait` API function:
+
+      ```
+      // If this client's API version is before 1.30, condition is ignored and
+      // ContainerWait will return immediately with the two channels, as the server
+      // will wait as if the condition were "not-running".
+      //
+      // If this client's API version is at least 1.30, ContainerWait blocks until
+      // the request has been acknowledged by the server (with a response header),
+      // then returns two channels on which the caller can wait for the exit status
+      // of the container or an error if there was a problem either beginning the
+      // wait request or in getting the response. This allows the caller to
+      // synchronize ContainerWait with other calls, such as specifying a
+      // "next-exit" condition before issuing a ContainerStart request.
+      ```
+
   * Upload files
-  * Run
+  * Attach
+    * Stream output to stdout / stderr - to console or to buffer
+    * Stream input to stdin - from console or from buffer
+    * Reuse output stream
+    * Reuse input stream
+  * Run - helper method that does create / start / attach / stop / remove
   * Stream events (for waiting for health check)
   * Inspect (for getting last health check result)
 * Exec

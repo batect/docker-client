@@ -216,6 +216,26 @@ typedef struct {
 
 typedef bool (*BuildImageProgressCallback) (void*, BuildImageProgressUpdate*);
 
+typedef struct {
+    char* ID;
+} ContainerReference;
+
+typedef struct {
+    char* ImageReference;
+    uint64_t CommandCount;
+    char** Command;
+} CreateContainerRequest;
+
+typedef struct {
+    ContainerReference* Response;
+    Error* Error;
+} CreateContainerReturn;
+
+typedef struct {
+    int64_t ExitCode;
+    Error* Error;
+} WaitForContainerToExitReturn;
+
 EXPORTED_FUNCTION Error* AllocError();
 EXPORTED_FUNCTION void FreeError(Error* value);
 EXPORTED_FUNCTION TLSConfiguration* AllocTLSConfiguration();
@@ -280,6 +300,14 @@ EXPORTED_FUNCTION void FreeBuildImageProgressUpdate_BuildFailed(BuildImageProgre
 EXPORTED_FUNCTION BuildImageProgressUpdate* AllocBuildImageProgressUpdate();
 EXPORTED_FUNCTION void FreeBuildImageProgressUpdate(BuildImageProgressUpdate* value);
 EXPORTED_FUNCTION bool InvokeBuildImageProgressCallback(BuildImageProgressCallback method, void* userData, BuildImageProgressUpdate* progress);
+EXPORTED_FUNCTION ContainerReference* AllocContainerReference();
+EXPORTED_FUNCTION void FreeContainerReference(ContainerReference* value);
+EXPORTED_FUNCTION CreateContainerRequest* AllocCreateContainerRequest();
+EXPORTED_FUNCTION void FreeCreateContainerRequest(CreateContainerRequest* value);
+EXPORTED_FUNCTION CreateContainerReturn* AllocCreateContainerReturn();
+EXPORTED_FUNCTION void FreeCreateContainerReturn(CreateContainerReturn* value);
+EXPORTED_FUNCTION WaitForContainerToExitReturn* AllocWaitForContainerToExitReturn();
+EXPORTED_FUNCTION void FreeWaitForContainerToExitReturn(WaitForContainerToExitReturn* value);
 EXPORTED_FUNCTION VolumeReference** CreateVolumeReferenceArray(uint64_t size);
 EXPORTED_FUNCTION void SetVolumeReferenceArrayElement(VolumeReference** array, uint64_t index, VolumeReference* value);
 EXPORTED_FUNCTION VolumeReference* GetVolumeReferenceArrayElement(VolumeReference** array, uint64_t index);

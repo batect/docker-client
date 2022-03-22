@@ -111,7 +111,7 @@ enum class PrimitiveType(
 ) : TypeInformation {
     StringType("string", "string", "char*", "kotlin.String", jvmNameInStruct = "UTF8StringRef", isPointer = true, cgoConversionFunctionName = "C.CString", jnrPointerAccessorFunctionName = "getString"),
     BooleanType("boolean", "bool", "bool", "Boolean", alternativeCNames = setOf("_Bool")),
-    Int64Type("int64", "int64", "int64_t", "long", jvmNameInStruct = "int64_t", cgoConversionFunctionName = "C.int64_t"),
+    Int64Type("int64", "int64", "int64_t", "Long", jvmNameInStruct = "int64_t", cgoConversionFunctionName = "C.int64_t"),
     GenericPointerType("void*", "unsafe.Pointer", "void*", "Pointer?");
 
     companion object {
