@@ -673,6 +673,10 @@ void FreeWaitForContainerToExitReturn(WaitForContainerToExitReturn* value) {
     free(value);
 }
 
+bool InvokeReadyCallback(ReadyCallback method, void* userData) {
+    return method(userData);
+}
+
 VolumeReference** CreateVolumeReferenceArray(uint64_t size) {
     return malloc(size * sizeof(VolumeReference*));
 }

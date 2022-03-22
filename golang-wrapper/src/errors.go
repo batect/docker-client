@@ -19,9 +19,16 @@ import "fmt"
 var (
 	ErrInvalidDockerClientHandle = InvalidDockerClientHandleError{}
 	ErrProgressCallbackFailed    = ProgressCallbackFailedError{}
+	ErrReadyCallbackFailed       = ReadyCallbackFailedError{}
 	ErrInvalidOutputStreamHandle = InvalidOutputStreamHandleError{}
 	ErrBuildKitNotSupported      = BuildKitNotSupportedError{}
 )
+
+type InvalidDockerClientHandleError struct{}
+
+func (e InvalidDockerClientHandleError) Error() string {
+	return "invalid Docker client handle"
+}
 
 type ProgressCallbackFailedError struct{}
 
@@ -29,10 +36,10 @@ func (e ProgressCallbackFailedError) Error() string {
 	return "progress callback failed"
 }
 
-type InvalidDockerClientHandleError struct{}
+type ReadyCallbackFailedError struct{}
 
-func (e InvalidDockerClientHandleError) Error() string {
-	return "invalid Docker client handle"
+func (e ReadyCallbackFailedError) Error() string {
+	return "ready callback failed"
 }
 
 type InvalidOutputStreamHandleError struct{}
@@ -41,16 +48,16 @@ func (e InvalidOutputStreamHandleError) Error() string {
 	return "invalid output stream handle"
 }
 
+type BuildKitNotSupportedError struct{}
+
+func (e BuildKitNotSupportedError) Error() string {
+	return "the Docker deamon in use does not support BuildKit"
+}
+
 type InvalidBuilderVersionError struct {
 	InvalidVersion string
 }
 
 func (e InvalidBuilderVersionError) Error() string {
 	return fmt.Sprintf("unknown builder version '%s'", e.InvalidVersion)
-}
-
-type BuildKitNotSupportedError struct{}
-
-func (e BuildKitNotSupportedError) Error() string {
-	return "the Docker deamon in use does not support BuildKit"
 }

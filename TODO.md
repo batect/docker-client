@@ -105,23 +105,6 @@
     * Test attempting to stop a container that doesn't exist
   * Remove
     * Test attempting to remove a container that doesn't exist
-  * Wait for exit
-    * Make it easy to handle race condition alluded to by this documentation from Docker's `ContainerWait` API function:
-
-      ```
-      // If this client's API version is before 1.30, condition is ignored and
-      // ContainerWait will return immediately with the two channels, as the server
-      // will wait as if the condition were "not-running".
-      //
-      // If this client's API version is at least 1.30, ContainerWait blocks until
-      // the request has been acknowledged by the server (with a response header),
-      // then returns two channels on which the caller can wait for the exit status
-      // of the container or an error if there was a problem either beginning the
-      // wait request or in getting the response. This allows the caller to
-      // synchronize ContainerWait with other calls, such as specifying a
-      // "next-exit" condition before issuing a ContainerStart request.
-      ```
-
   * Upload files
   * Attach
     * Stream output to stdout / stderr - to console or to buffer
@@ -130,7 +113,6 @@
     * Reuse input stream
     * Forward signals to container (test by sending Ctrl-C to self)
     * Set and update TTY size
-    * Make it easy to handle race condition (similar to what is needed for "wait for exit" above - wait until we've had a HTTP response from daemon before proceeding)
     * Handle case where only one stream is provided (eg. only stdout, no stderr)
     * Test with and without TTY enabled
       * With TTY enabled: all output goes to stdout stream

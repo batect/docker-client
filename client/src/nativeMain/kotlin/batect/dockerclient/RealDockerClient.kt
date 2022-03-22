@@ -346,20 +346,30 @@ internal actual class RealDockerClient actual constructor(configuration: DockerC
         }
     }
 
-    override fun attachToContainerOutput(container: ContainerReference, stdout: TextOutput, stderr: TextOutput) {
+    override fun attachToContainerOutput(container: ContainerReference, stdout: TextOutput, stderr: TextOutput, attachedNotification: ReadyNotification?) {
         stdout.prepareStream().use { stdoutStream ->
             stderr.prepareStream().use { stderrStream ->
                 runBlocking(IODispatcher) {
                     launch { stdoutStream.run() }
                     launch { stderrStream.run() }
                     launch {
-                        AttachToContainerOutput(
-                            clientHandle,
-                            container.id.cstr,
-                            stdoutStream.outputStreamHandle,
-                            stderrStream.outputStreamHandle
-                        ).ifFailed { error ->
-                            throw AttachToContainerFailedException(error.pointed)
+                        val callbackState = ReadyNotificationCallbackState(attachedNotification)
+
+                        callbackState.use { callback, callbackUserData ->
+                            AttachToContainerOutput(
+                                clientHandle,
+                                container.id.cstr,
+                                stdoutStream.outputStreamHandle,
+                                stderrStream.outputStreamHandle,
+                                callback,
+                                callbackUserData
+                            ).ifFailed { error ->
+                                if (error.pointed.Type!!.toKString() == "main.ReadyCallbackFailedError") {
+                                    throw callbackState.exceptionThrown!!
+                                }
+
+                                throw AttachToContainerFailedException(error.pointed)
+                            }
                         }
                     }
                 }
@@ -373,13 +383,21 @@ internal actual class RealDockerClient actual constructor(configuration: DockerC
         }
     }
 
-    override fun waitForContainerToExit(container: ContainerReference): Long {
-        WaitForContainerToExit(clientHandle, container.id.cstr)!!.use { ret ->
-            if (ret.pointed.Error != null) {
-                throw ContainerWaitFailedException(ret.pointed.Error!!.pointed)
-            }
+    override fun waitForContainerToExit(container: ContainerReference, waitingNotification: ReadyNotification?): Long {
+        val callbackState = ReadyNotificationCallbackState(waitingNotification)
 
-            return ret.pointed.ExitCode
+        return callbackState.use { callback, callbackUserData ->
+            WaitForContainerToExit(clientHandle, container.id.cstr, callback, callbackUserData)!!.use { ret ->
+                if (ret.pointed.Error != null) {
+                    if (ret.pointed.Error!!.pointed.Type!!.toKString() == "main.ReadyCallbackFailedError") {
+                        throw callbackState.exceptionThrown!!
+                    }
+
+                    throw ContainerWaitFailedException(ret.pointed.Error!!.pointed)
+                }
+
+                ret.pointed.ExitCode
+            }
         }
     }
 
@@ -483,6 +501,26 @@ private class CallbackState<ParameterType : CPointed>(private val callbackFuncti
 
             try {
                 callbackState.callbackFunction(param)
+                true
+            } catch (t: Throwable) {
+                callbackState.exceptionThrown = t
+                false
+            }
+        }
+
+        user(callback, userDataRef.asCPointer())
+    }
+}
+
+private class ReadyNotificationCallbackState(private val readyNotification: ReadyNotification?) {
+    var exceptionThrown: Throwable? = null
+
+    fun <R> use(user: (CPointer<CFunction<(COpaquePointer?) -> Boolean>>, COpaquePointer) -> R): R = StableRef.create(this).use { userDataRef ->
+        val callback = staticCFunction { userData: COpaquePointer? ->
+            val callbackState = userData!!.asStableRef<ReadyNotificationCallbackState>().get()
+
+            try {
+                callbackState.readyNotification?.markAsReady()
                 true
             } catch (t: Throwable) {
                 callbackState.exceptionThrown = t

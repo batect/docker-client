@@ -65,6 +65,7 @@ type ContainerReference *C.ContainerReference
 type CreateContainerRequest *C.CreateContainerRequest
 type CreateContainerReturn *C.CreateContainerReturn
 type WaitForContainerToExitReturn *C.WaitForContainerToExitReturn
+type ReadyCallback C.ReadyCallback
 
 func newError(
     Type string,
@@ -523,5 +524,9 @@ func invokePullImageProgressCallback(method PullImageProgressCallback, userData 
 
 func invokeBuildImageProgressCallback(method BuildImageProgressCallback, userData unsafe.Pointer, progress BuildImageProgressUpdate) bool {
     return bool(C.InvokeBuildImageProgressCallback(method, userData, progress))
+}
+
+func invokeReadyCallback(method ReadyCallback, userData unsafe.Pointer, ) bool {
+    return bool(C.InvokeReadyCallback(method, userData, ))
 }
 

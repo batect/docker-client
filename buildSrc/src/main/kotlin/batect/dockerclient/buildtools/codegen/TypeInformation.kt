@@ -139,7 +139,7 @@ data class ArrayType(
 @SerialName("callback")
 data class CallbackTypeFromConfigFile(
     override val name: String,
-    val parameters: List<ParameterInfo>
+    val parameters: List<ParameterInfo> = emptyList()
 ) : TypeFromConfigFile() {
     override fun resolve(userDefinedTypes: Map<String, TypeFromConfigFile>): TypeInformation {
         return CallbackType(

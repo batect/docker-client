@@ -21,6 +21,7 @@ import (
 	"C"
 	"context"
 	"time"
+	"unsafe"
 
 	"github.com/batect/docker-client/golang-wrapper/src/replacements"
 	"github.com/docker/docker/api/types"
@@ -90,7 +91,7 @@ func RemoveContainer(clientHandle DockerClientHandle, id *C.char, force C.bool, 
 }
 
 //export AttachToContainerOutput
-func AttachToContainerOutput(clientHandle DockerClientHandle, id *C.char, stdoutStreamHandle OutputStreamHandle, stderrStreamHandle OutputStreamHandle) Error {
+func AttachToContainerOutput(clientHandle DockerClientHandle, id *C.char, stdoutStreamHandle OutputStreamHandle, stderrStreamHandle OutputStreamHandle, onReady ReadyCallback, callbackUserData unsafe.Pointer) Error {
 	defer stdoutStreamHandle.Close()
 	defer stderrStreamHandle.Close()
 
@@ -114,6 +115,10 @@ func AttachToContainerOutput(clientHandle DockerClientHandle, id *C.char, stdout
 
 	defer resp.Close()
 
+	if !invokeReadyCallback(onReady, callbackUserData) {
+		return toError(ErrReadyCallbackFailed)
+	}
+
 	streamer := replacements.HijackedIOStreamer{
 		InputStream:  nil,
 		OutputStream: stdoutStreamHandle.OutputStream(),
@@ -130,10 +135,14 @@ func AttachToContainerOutput(clientHandle DockerClientHandle, id *C.char, stdout
 }
 
 //export WaitForContainerToExit
-func WaitForContainerToExit(clientHandle DockerClientHandle, id *C.char) WaitForContainerToExitReturn {
+func WaitForContainerToExit(clientHandle DockerClientHandle, id *C.char, onReady ReadyCallback, callbackUserData unsafe.Pointer) WaitForContainerToExitReturn {
 	docker := clientHandle.DockerAPIClient()
 
 	responseC, errC := docker.ContainerWait(context.Background(), C.GoString(id), container.WaitConditionNextExit)
+
+	if !invokeReadyCallback(onReady, callbackUserData) {
+		return newWaitForContainerToExitReturn(-1, toError(ErrReadyCallbackFailed))
+	}
 
 	select {
 	case result := <-responseC:

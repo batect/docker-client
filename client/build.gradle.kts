@@ -51,10 +51,10 @@ val runTargetsForOtherHosts = System.getenv().getOrDefault("RUN_TARGETS_FOR_OTHE
 
 kotlin {
     jvm {
-        compilations.all {
+        compilations.configureEach {
             kotlinOptions {
                 jvmTarget = "1.8"
-                freeCompilerArgs = listOf("-Xjvm-default=all")
+                freeCompilerArgs += listOf("-Xjvm-default=all")
             }
         }
     }
@@ -257,6 +257,14 @@ val KonanTarget.isSameOperatingSystemAsHost: Boolean
         Family.MINGW -> OperatingSystem.current().isWindows
         else -> throw UnsupportedOperationException("Unknown target family: $family")
     }
+
+kotlin.targets.configureEach {
+    compilations.configureEach {
+        kotlinOptions {
+            freeCompilerArgs += listOf("-opt-in=kotlin.RequiresOptIn")
+        }
+    }
+}
 
 // Remove this once the new memory model is the default.
 kotlin.targets.withType(KotlinNativeTarget::class.java) {

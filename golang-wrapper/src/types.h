@@ -236,6 +236,8 @@ typedef struct {
     Error* Error;
 } WaitForContainerToExitReturn;
 
+typedef bool (*ReadyCallback) (void*);
+
 EXPORTED_FUNCTION Error* AllocError();
 EXPORTED_FUNCTION void FreeError(Error* value);
 EXPORTED_FUNCTION TLSConfiguration* AllocTLSConfiguration();
@@ -308,6 +310,7 @@ EXPORTED_FUNCTION CreateContainerReturn* AllocCreateContainerReturn();
 EXPORTED_FUNCTION void FreeCreateContainerReturn(CreateContainerReturn* value);
 EXPORTED_FUNCTION WaitForContainerToExitReturn* AllocWaitForContainerToExitReturn();
 EXPORTED_FUNCTION void FreeWaitForContainerToExitReturn(WaitForContainerToExitReturn* value);
+EXPORTED_FUNCTION bool InvokeReadyCallback(ReadyCallback method, void* userData);
 EXPORTED_FUNCTION VolumeReference** CreateVolumeReferenceArray(uint64_t size);
 EXPORTED_FUNCTION void SetVolumeReferenceArrayElement(VolumeReference** array, uint64_t index, VolumeReference* value);
 EXPORTED_FUNCTION VolumeReference* GetVolumeReferenceArrayElement(VolumeReference** array, uint64_t index);

@@ -16,6 +16,7 @@
 
 package batect.dockerclient
 
+import io.kotest.common.ExperimentalKotest
 import io.kotest.core.spec.style.scopes.RootContainerWithConfigBuilder
 import io.kotest.core.spec.style.scopes.RootTestWithConfigBuilder
 import io.kotest.core.spec.style.scopes.TestWithConfigBuilder
@@ -36,6 +37,7 @@ private val dockerDaemonPresent: Boolean
 internal fun RootTestWithConfigBuilder.onlyIfDockerDaemonSupportsLinuxContainers(test: suspend TestContext.() -> Unit) =
     this.config(enabledIf = { dockerDaemonPresent && testEnvironmentContainerOperatingSystem == ContainerOperatingSystem.Linux }, test = test)
 
+@OptIn(ExperimentalKotest::class)
 internal fun <T> RootContainerWithConfigBuilder<T>.onlyIfDockerDaemonSupportsLinuxContainers(test: suspend T.() -> Unit) =
     this.config(enabledIf = { dockerDaemonPresent && testEnvironmentContainerOperatingSystem == ContainerOperatingSystem.Linux }, test = test)
 

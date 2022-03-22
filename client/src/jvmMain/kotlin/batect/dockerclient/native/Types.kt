@@ -550,3 +550,8 @@ internal class WaitForContainerToExitReturn(runtime: Runtime) : Struct(runtime),
         nativeAPI.FreeWaitForContainerToExitReturn(this)
     }
 }
+
+internal interface ReadyCallback {
+    @Delegate
+    fun invoke(userData: Pointer?): Boolean
+}

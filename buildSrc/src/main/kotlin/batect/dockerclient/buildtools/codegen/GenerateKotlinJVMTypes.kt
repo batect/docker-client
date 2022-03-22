@@ -127,7 +127,9 @@ abstract class GenerateKotlinJVMTypes : DefaultTask() {
     private fun generateCallback(builder: StringBuilder, type: CallbackType) {
         builder.appendLine()
 
-        val parameters = type.parameters
+        val parameters = listOf(CallbackParameter("userData", PrimitiveType.GenericPointerType)) + type.parameters
+
+        val formattedParameters = parameters
             .associate { it.name to it.type }
             .map { (name, type) ->
                 when (type) {
@@ -142,7 +144,7 @@ abstract class GenerateKotlinJVMTypes : DefaultTask() {
             """
                 internal interface ${type.jvmName} {
                     @Delegate
-                    fun invoke(userData: Pointer?, $parameters): Boolean
+                    fun invoke($formattedParameters): Boolean
                 }
             """.trimIndent()
         )

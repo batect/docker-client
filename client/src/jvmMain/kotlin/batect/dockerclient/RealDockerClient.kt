@@ -32,6 +32,7 @@ import batect.dockerclient.native.CreateContainerRequest
 import batect.dockerclient.native.DockerClientHandle
 import batect.dockerclient.native.PullImageProgressCallback
 import batect.dockerclient.native.PullImageProgressUpdate
+import batect.dockerclient.native.ReadyCallback
 import batect.dockerclient.native.StringPair
 import batect.dockerclient.native.TLSConfiguration
 import batect.dockerclient.native.buildArgs
@@ -297,7 +298,9 @@ internal actual class RealDockerClient actual constructor(configuration: DockerC
         }
     }
 
-    override fun attachToContainerOutput(container: ContainerReference, stdout: TextOutput, stderr: TextOutput) {
+    override fun attachToContainerOutput(container: ContainerReference, stdout: TextOutput, stderr: TextOutput, attachedNotification: ReadyNotification?) {
+        val callback = ReadyCallback(attachedNotification)
+
         stdout.prepareStream().use { stdoutStream ->
             stderr.prepareStream().use { stderrStream ->
                 runBlocking(IODispatcher) {
@@ -308,9 +311,15 @@ internal actual class RealDockerClient actual constructor(configuration: DockerC
                             clientHandle,
                             container.id,
                             stdoutStream.outputStreamHandle.toLong(),
-                            stderrStream.outputStreamHandle.toLong()
+                            stderrStream.outputStreamHandle.toLong(),
+                            callback,
+                            null
                         ).use { error ->
                             if (error != null) {
+                                if (error.type.get() == "main.ReadyCallbackFailedError") {
+                                    throw callback.exceptionThrownInCallback!!
+                                }
+
                                 throw AttachToContainerFailedException(error)
                             }
                         }
@@ -320,9 +329,15 @@ internal actual class RealDockerClient actual constructor(configuration: DockerC
         }
     }
 
-    override fun waitForContainerToExit(container: ContainerReference): Long {
-        nativeAPI.WaitForContainerToExit(clientHandle, container.id)!!.use { ret ->
+    override fun waitForContainerToExit(container: ContainerReference, waitingNotification: ReadyNotification?): Long {
+        val callback = ReadyCallback(waitingNotification)
+
+        nativeAPI.WaitForContainerToExit(clientHandle, container.id, callback, null)!!.use { ret ->
             if (ret.error != null) {
+                if (ret.error!!.type.get() == "main.ReadyCallbackFailedError") {
+                    throw callback.exceptionThrownInCallback!!
+                }
+
                 throw ContainerWaitFailedException(ret.error!!)
             }
 
@@ -431,5 +446,19 @@ internal actual class RealDockerClient actual constructor(configuration: DockerC
         request.command = jvm.command
 
         return request
+    }
+
+    private class ReadyCallback(private val notification: ReadyNotification?) : batect.dockerclient.native.ReadyCallback {
+        var exceptionThrownInCallback: Throwable? = null
+
+        override fun invoke(userData: Pointer?): Boolean {
+            try {
+                notification?.markAsReady()
+                return true
+            } catch (t: Throwable) {
+                exceptionThrownInCallback = t
+                return false
+            }
+        }
     }
 }

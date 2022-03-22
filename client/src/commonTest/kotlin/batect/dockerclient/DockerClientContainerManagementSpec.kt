@@ -17,11 +17,11 @@
 package batect.dockerclient
 
 import batect.dockerclient.io.SinkTextOutput
+import io.kotest.common.ExperimentalKotest
 import io.kotest.core.spec.style.ShouldSpec
 import io.kotest.matchers.comparables.shouldBeLessThan
 import io.kotest.matchers.shouldBe
 import kotlinx.coroutines.async
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import okio.Buffer
@@ -30,6 +30,7 @@ import kotlin.time.ExperimentalTime
 import kotlin.time.measureTime
 
 @ExperimentalTime
+@OptIn(ExperimentalKotest::class)
 class DockerClientContainerManagementSpec : ShouldSpec({
     context("when working with Linux containers").onlyIfDockerDaemonSupportsLinuxContainers {
         val client = closeAfterTest(DockerClient.Builder().build())
@@ -44,9 +45,13 @@ class DockerClientContainerManagementSpec : ShouldSpec({
 
             try {
                 val exitCode = withContext(IODispatcher) {
-                    val exitCodeSource = async { client.waitForContainerToExit(container) }
+                    val waitingForContainerToExit = ReadyNotification()
+                    val exitCodeSource = async { client.waitForContainerToExit(container, waitingForContainerToExit) }
 
-                    launch { client.startContainer(container) }
+                    launch {
+                        waitingForContainerToExit.waitForReady()
+                        client.startContainer(container)
+                    }
 
                     exitCodeSource.await()
                 }
@@ -86,11 +91,16 @@ class DockerClientContainerManagementSpec : ShouldSpec({
                 val stderr = Buffer()
 
                 withContext(IODispatcher) {
-                    launch { client.attachToContainerOutput(container, SinkTextOutput(stdout), SinkTextOutput(stderr)) }
+                    val listeningToOutput = ReadyNotification()
 
-                    delay(1000) // HACK: until we have a way to know the attach has succeeded, just wait a bit to give it time to set itself up
+                    launch {
+                        client.attachToContainerOutput(container, SinkTextOutput(stdout), SinkTextOutput(stderr), listeningToOutput)
+                    }
 
-                    launch { client.startContainer(container) }
+                    launch {
+                        listeningToOutput.waitForReady()
+                        client.startContainer(container)
+                    }
                 }
 
                 val stdoutText = stdout.readUtf8()

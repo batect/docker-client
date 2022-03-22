@@ -160,7 +160,14 @@ abstract class GenerateGolangTypes : DefaultTask() {
                 builder.appendLine()
             }
             is CallbackType -> {
-                builder.appendLine("typedef bool (*${type.name}) (void*, ${type.parameters.joinToString(", ") { it.type.cName }});")
+                builder.append("typedef bool (*${type.name}) (void*")
+
+                if (type.parameters.isNotEmpty()) {
+                    builder.append(", ")
+                    builder.append(type.parameters.joinToString(", ") { it.type.cName })
+                }
+
+                builder.appendLine(");")
                 builder.appendLine()
             }
             is PrimitiveType, is ArrayType -> {
@@ -399,12 +406,25 @@ abstract class GenerateGolangTypes : DefaultTask() {
                 "return array[index];"
             )
 
-            fun invoke(callback: CallbackType): CMethod = CMethod(
-                "Invoke${callback.name}",
-                "bool",
-                listOf(CMethodParameter("method", callback.cName), CMethodParameter("userData", "void*")) + callback.parameters.map { CMethodParameter(it.name, it.type.cName) },
-                "return method(userData, ${callback.parameters.joinToString(", ") { it.name }});"
-            )
+            fun invoke(callback: CallbackType): CMethod {
+                val body = StringBuilder()
+
+                body.append("return method(userData")
+
+                if (callback.parameters.isNotEmpty()) {
+                    body.append(", ")
+                    body.append(callback.parameters.joinToString(", ") { it.name })
+                }
+
+                body.append(");")
+
+                return CMethod(
+                    "Invoke${callback.name}",
+                    "bool",
+                    listOf(CMethodParameter("method", callback.cName), CMethodParameter("userData", "void*")) + callback.parameters.map { CMethodParameter(it.name, it.type.cName) },
+                    body.toString()
+                )
+            }
         }
     }
 

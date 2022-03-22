@@ -345,3 +345,6 @@
       type: int64
     - name: Error
       type: Error
+
+- name: ReadyCallback
+  type: callback
