@@ -91,8 +91,8 @@ func RemoveContainer(clientHandle DockerClientHandle, id *C.char, force C.bool, 
 
 //export AttachToContainerOutput
 func AttachToContainerOutput(clientHandle DockerClientHandle, id *C.char, stdoutStreamHandle OutputStreamHandle, stderrStreamHandle OutputStreamHandle) Error {
-	defer closeOutputStream(stdoutStreamHandle)
-	defer closeOutputStream(stderrStreamHandle)
+	defer stdoutStreamHandle.Close()
+	defer stderrStreamHandle.Close()
 
 	docker := clientHandle.DockerAPIClient()
 	containerID := C.GoString(id)
@@ -116,8 +116,8 @@ func AttachToContainerOutput(clientHandle DockerClientHandle, id *C.char, stdout
 
 	streamer := replacements.HijackedIOStreamer{
 		InputStream:  nil,
-		OutputStream: getOutputStream(stdoutStreamHandle),
-		ErrorStream:  getOutputStream(stderrStreamHandle),
+		OutputStream: stdoutStreamHandle.OutputStream(),
+		ErrorStream:  stderrStreamHandle.OutputStream(),
 		Resp:         resp,
 		Tty:          config.Config.Tty,
 	}

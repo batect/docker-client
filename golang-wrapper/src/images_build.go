@@ -34,7 +34,7 @@ import (
 
 //export BuildImage
 func BuildImage(clientHandle DockerClientHandle, request *C.BuildImageRequest, outputStreamHandle OutputStreamHandle, onProgressUpdate BuildImageProgressCallback, callbackUserData unsafe.Pointer) BuildImageReturn {
-	defer closeOutputStream(outputStreamHandle)
+	defer outputStreamHandle.Close()
 
 	builderVersion := C.GoString(request.BuilderVersion)
 

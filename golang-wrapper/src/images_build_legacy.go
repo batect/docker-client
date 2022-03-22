@@ -143,7 +143,7 @@ func (p *legacyImageBuildResponseBodyParser) Parse(response types.ImageBuildResp
 	p.haveSeenStepFinishedLineForCurrentStep = false
 	p.currentStepIsPullStep = false
 
-	output := getOutputStream(p.outputStreamHandle)
+	output := p.outputStreamHandle.OutputStream()
 
 	if err := parseAndDisplayJSONMessagesStream(response.Body, output, p.onMessageReceived); err != nil {
 		return "", err

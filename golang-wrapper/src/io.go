@@ -44,14 +44,14 @@ type pipe struct {
 	writeEnd *os.File
 }
 
-func getOutputStream(handle OutputStreamHandle) *streams.Out {
+func (handle OutputStreamHandle) OutputStream() *streams.Out {
 	outputStreamsLock.RLock()
 	defer outputStreamsLock.RUnlock()
 
 	return outputStreams[uint64(handle)]
 }
 
-func closeOutputStream(handle OutputStreamHandle) {
+func (handle OutputStreamHandle) Close() {
 	outputStreamsLock.RLock()
 	defer outputStreamsLock.RUnlock()
 
