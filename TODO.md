@@ -96,7 +96,6 @@
     * SHM size
     * Scenarios to test:
       * Windows containers
-      * Image does not exist
       * Default command
       * Default entrypoint
   * Upload files

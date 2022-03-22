@@ -115,6 +115,16 @@ class DockerClientContainerManagementSpec : ShouldSpec({
             }
         }
 
+        should("throw an appropriate exception when creating a container with an image that doesn't exist") {
+            val spec = ContainerCreationSpec.Builder(ImageReference("batect/this-image-does-not-exist:abc123"))
+                .withCommand(listOf("sh", "-c", "exit 123"))
+                .build()
+
+            val exception = shouldThrow<ContainerCreationFailedException> { client.createContainer(spec) }
+
+            exception.message shouldBe "Error response from daemon: No such image: batect/this-image-does-not-exist:abc123"
+        }
+
         should("throw an appropriate exception when starting a container that doesn't exist") {
             val exception = shouldThrow<ContainerStartFailedException> { client.startContainer(ContainerReference("does-not-exist")) }
 
