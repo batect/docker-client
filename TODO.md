@@ -33,7 +33,6 @@
 * Reduce impact of buildSrc build time on CI builds - currently takes 5 minutes before task even starts
   * Use some kind of build cache? eg. Gradle Enterprise or https://github.com/gradle/gradle-build-action
 * Remove "be able to" prefixes from test descriptions
-* Use HTTPS URL in license header
 
 # APIs
 
