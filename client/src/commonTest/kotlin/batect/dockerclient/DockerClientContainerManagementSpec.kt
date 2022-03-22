@@ -31,7 +31,7 @@ class DockerClientContainerManagementSpec : ShouldSpec({
     val client = closeAfterTest(DockerClient.Builder().build())
     val image = client.pullImage("alpine:3.15.0")
 
-    should("be able to create, start, wait for and remove a container") {
+    should("be able to create, start, wait for and remove a container").onlyIfDockerDaemonSupportsLinuxContainers {
         val spec = ContainerCreationSpec.Builder(image)
             .withCommand(listOf("sh", "-c", "exit 123"))
             .build()
@@ -53,7 +53,7 @@ class DockerClientContainerManagementSpec : ShouldSpec({
         }
     }
 
-    should("be able to stop a container, respecting any timeout provided") {
+    should("be able to stop a container, respecting any timeout provided").onlyIfDockerDaemonSupportsLinuxContainers {
         val spec = ContainerCreationSpec.Builder(image)
             .withCommand(listOf("sh", "-c", "sleep 9999")) // This command does not respond to signals and so must be forcibly terminated
             .build()
