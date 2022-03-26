@@ -42,7 +42,7 @@ type HijackedIOStreamer struct {
 func (h *HijackedIOStreamer) Stream(ctx context.Context) error {
 	restoreInput, err := h.setupInput()
 	if err != nil {
-		return fmt.Errorf("unable to setup input stream: %s", err)
+		return fmt.Errorf("unable to setup input stream: %w", err)
 	}
 
 	defer restoreInput()
@@ -77,12 +77,13 @@ func (h *HijackedIOStreamer) setupInput() (restore func(), err error) {
 	}
 
 	if err := h.setRawTerminal(); err != nil {
-		return nil, fmt.Errorf("unable to set IO streams as raw terminal: %s", err)
+		return nil, fmt.Errorf("unable to set IO streams as raw terminal: %w", err)
 	}
 
 	var restoreOnce sync.Once
 	restore = func() {
 		restoreOnce.Do(func() {
+			//nolint:errcheck
 			h.restoreTerminal()
 		})
 	}
@@ -96,11 +97,13 @@ func (h *HijackedIOStreamer) beginOutputStream(restoreInput func()) <-chan error
 	}
 
 	outputDone := make(chan error)
+
 	go func() {
 		var err error
 
 		if h.OutputStream != nil && h.Tty {
 			_, err = io.Copy(h.OutputStream, h.Resp.Reader)
+
 			restoreInput()
 		} else {
 			_, err = stdcopy.StdCopy(h.OutputStream, h.ErrorStream, h.Resp.Reader)
@@ -118,6 +121,7 @@ func (h *HijackedIOStreamer) beginInputStream(restoreInput func()) <-chan error 
 	go func() {
 		if h.InputStream != nil {
 			_, err := io.Copy(h.Resp.Conn, h.InputStream)
+
 			restoreInput()
 
 			if err != nil {

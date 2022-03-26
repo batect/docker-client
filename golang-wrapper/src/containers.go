@@ -100,6 +100,10 @@ func AttachToContainerOutput(clientHandle DockerClientHandle, id *C.char, stdout
 
 	config, err := docker.ContainerInspect(context.Background(), containerID)
 
+	if err != nil {
+		return toError(err)
+	}
+
 	opts := types.ContainerAttachOptions{
 		Logs:   true,
 		Stream: true,
