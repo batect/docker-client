@@ -336,6 +336,7 @@ internal actual class RealDockerClient actual constructor(configuration: DockerC
 
     override fun startContainer(container: ContainerReference) {
         StartContainer(clientHandle, container.id.cstr).ifFailed { error ->
+            println("Starting container failed: ${error.pointed.Message!!.toKString()}")
             throw ContainerStartFailedException(error.pointed)
         }
     }
