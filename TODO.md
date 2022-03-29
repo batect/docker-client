@@ -33,13 +33,14 @@
 * Reduce impact of buildSrc build time on CI builds - currently takes 5 minutes before task even starts
   * Use some kind of build cache? eg. Gradle Enterprise or https://github.com/gradle/gradle-build-action
 * Remove "be able to" prefixes from test descriptions
+* Run Mac CI tests with Colima?
 
 # APIs
 
 * Client configuration
   * Add tests to verify that client configuration is actually applied - see TODO in DockerClientBuilderSpec
   * Throw exceptions early (eg. if files provided don't exist)
-  * Support for Docker config contexts
+  * Support for Docker CLI config contexts
 * Timeouts for calls?
 * Cancellation for calls
   * Make all methods coroutines? https://kotlin.github.io/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines/suspend-cancellable-coroutine.html
@@ -57,8 +58,8 @@
       * Fix issue running tests on JVM: blocked by https://github.com/jnr/jnr-ffi/pull/299, re-enable JVM tests on CI once this is resolved
       * Deal with steps formatted like `[ 1/12] FROM docker.io/...` (notice leading space before '1') when sorting steps
         * Is this sorting still required?
-      * Support for SSH passthrough
-      * Support for secrets
+      * Support for SSH passthrough - fail if attempted with legacy builder
+      * Support for secrets - fail if attempted with legacy builder
       * Add support for warnings (added in BuildKit 0.10.0)
     * Test that we can run a built image
 * Containers
