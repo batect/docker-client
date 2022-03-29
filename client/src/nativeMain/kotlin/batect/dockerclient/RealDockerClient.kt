@@ -71,6 +71,7 @@ import kotlinx.cinterop.pointed
 import kotlinx.cinterop.ptr
 import kotlinx.cinterop.staticCFunction
 import kotlinx.cinterop.toKString
+import kotlinx.coroutines.async
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import kotlin.time.Duration
@@ -253,30 +254,32 @@ internal actual class RealDockerClient actual constructor(configuration: DockerC
                     onProgressUpdate.invoke(ImageBuildProgressUpdate(progress!!.pointed))
                 }
 
-                return callbackState.use { callback, callbackUserData ->
-                    BuildImage(
-                        clientHandle,
-                        allocBuildImageRequest(spec).ptr,
-                        stream.outputStreamHandle,
-                        callback,
-                        callbackUserData
-                    )!!.use { ret ->
-                        stream.run() // FIXME: This really should be done in parallel with the BuildImage call above, but Kotlin/Native does not yet support multithreaded coroutines
+                return runBlocking(IODispatcher) {
+                    launch { stream.run() }
 
-                        if (ret.pointed.Error != null) {
-                            val errorType = ret.pointed.Error!!.pointed.Type!!.toKString()
+                    callbackState.use { callback, callbackUserData ->
+                        BuildImage(
+                            clientHandle,
+                            allocBuildImageRequest(spec).ptr,
+                            stream.outputStreamHandle,
+                            callback,
+                            callbackUserData
+                        )!!.use { ret ->
+                            if (ret.pointed.Error != null) {
+                                val errorType = ret.pointed.Error!!.pointed.Type!!.toKString()
 
-                            if (errorType == "main.ProgressCallbackFailedError") {
-                                throw ImageBuildFailedException("Image build progress receiver threw an exception: ${callbackState.exceptionThrown}", callbackState.exceptionThrown, errorType)
+                                if (errorType == "main.ProgressCallbackFailedError") {
+                                    throw ImageBuildFailedException("Image build progress receiver threw an exception: ${callbackState.exceptionThrown}", callbackState.exceptionThrown, errorType)
+                                }
+
+                                throw ImageBuildFailedException(ret.pointed.Error!!.pointed)
                             }
 
-                            throw ImageBuildFailedException(ret.pointed.Error!!.pointed)
+                            val imageReference = ImageReference(ret.pointed.Response!!.pointed)
+                            onProgressUpdate(BuildComplete(imageReference))
+
+                            imageReference
                         }
-
-                        val imageReference = ImageReference(ret.pointed.Response!!.pointed)
-                        onProgressUpdate(BuildComplete(imageReference))
-
-                        imageReference
                     }
                 }
             }
