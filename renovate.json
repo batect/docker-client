@@ -104,6 +104,14 @@
                 "client/src/commonTest/resources/images/file-download/Dockerfile"
             ],
             "enabled": false
+        },
+        {
+            "groupName": "Spotless",
+            "matchManagers": ["gradle-lite"],
+            "matchPackagePatterns": [
+                "^com\\.diffplug\\.spotless$",
+                "^com\\.diffplug\\.spotless:"
+            ]
         }
     ]
 }
