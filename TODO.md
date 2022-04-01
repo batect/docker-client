@@ -42,6 +42,7 @@
   * Throw exceptions early (eg. if files provided don't exist)
   * Support for Docker CLI config contexts
 * Timeouts for calls?
+  * Add tests to verify this is working as expected
 * Cancellation for calls
   * Make all methods coroutines? https://kotlin.github.io/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines/suspend-cancellable-coroutine.html
 * Pass structs to methods by value rather than by reference once jnr-ffi supports it
