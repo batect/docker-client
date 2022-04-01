@@ -18,7 +18,6 @@
 * Go build: use Zig for compilation?
   * Share Golang and Zig build cache between tasks in same CI build run?
   * Set ZIG_LOCAL_CACHE_DIR to the same thing for all builds?
-  * Cache value of macOS SDK root (currently run xcrun every time the value is used)
 * Run tests with memory leak detector - eg. valgrind
 * Linter to catch when memory is not freed (eg. Golang code allocates struct that is used as callback parameter)
 * Fix broken publication of library

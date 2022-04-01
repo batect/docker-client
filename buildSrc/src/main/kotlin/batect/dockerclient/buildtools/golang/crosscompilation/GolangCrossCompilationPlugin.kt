@@ -106,10 +106,12 @@ class GolangCrossCompilationPlugin @Inject constructor(private val execActionFac
     private fun createExtension(target: Project): GolangCrossCompilationPluginExtension {
         val extension = target.extensions.create<GolangCrossCompilationPluginExtension>("golangCrossCompilation")
         extension.outputDirectory.convention(target.layout.buildDirectory.dir("libs"))
-        extension.macOSSystemRootDirectory.convention(target.layout.dir(target.provider { findMacOSSystemRoot() }))
+        extension.macOSSystemRootDirectory.convention(target.layout.dir(target.provider { macOSSystemRoot }))
 
         return extension
     }
+
+    private val macOSSystemRoot: File? by lazy { findMacOSSystemRoot() }
 
     private fun findMacOSSystemRoot(): File? {
         if (OperatingSystem.current != OperatingSystem.Darwin) {
