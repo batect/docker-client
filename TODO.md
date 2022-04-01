@@ -55,7 +55,6 @@
 * Images
   * Build
     * BuildKit
-      * Fix issue running tests on JVM: blocked by https://github.com/jnr/jnr-ffi/pull/299, re-enable JVM tests on CI once this is resolved
       * Deal with steps formatted like `[ 1/12] FROM docker.io/...` (notice leading space before '1') when sorting steps
         * Is this sorting still required?
       * Support for SSH passthrough - fail if attempted with legacy builder

@@ -199,7 +199,7 @@ jobs:
         if: matrix.disableDockerDaemonTests != 1
 
       - name: Build, test and package
-        run: ./gradlew client:check client:jvmJar --exclude-task jvmTest # FIXME: Tests fail on JVM due to https://github.com/jnr/jnr-ffi/pull/299
+        run: ./gradlew client:check client:jvmJar
         env:
           DISABLE_DOCKER_DAEMON_TESTS: ${{ matrix.disableDockerDaemonTests }}
           DOCKER_CONTAINER_OPERATING_SYSTEM: ${{ matrix.containerOperatingSystem }}
