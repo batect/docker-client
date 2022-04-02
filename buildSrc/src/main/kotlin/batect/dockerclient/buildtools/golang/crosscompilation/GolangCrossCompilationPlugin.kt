@@ -16,6 +16,7 @@
 
 package batect.dockerclient.buildtools.golang.crosscompilation
 
+import batect.dockerclient.buildtools.Architecture
 import batect.dockerclient.buildtools.BinaryType
 import batect.dockerclient.buildtools.OperatingSystem
 import batect.dockerclient.buildtools.golang.GolangPlugin
@@ -28,6 +29,7 @@ import org.gradle.api.provider.Provider
 import org.gradle.kotlin.dsl.apply
 import org.gradle.kotlin.dsl.create
 import org.gradle.kotlin.dsl.getByType
+import org.gradle.kotlin.dsl.register
 import org.gradle.kotlin.dsl.withType
 import org.gradle.process.internal.ExecActionFactory
 import java.io.ByteArrayOutputStream
@@ -42,12 +44,39 @@ class GolangCrossCompilationPlugin @Inject constructor(private val execActionFac
         val golangExtension = target.extensions.getByType<GolangPluginExtension>()
         val zigExtension = target.extensions.getByType<ZigPluginExtension>()
         val crossCompilationExtension = createExtension(target)
+        val environmentVariablesProvider = GolangCrossCompilationEnvironmentVariablesProvider(crossCompilationExtension, zigExtension, target)
 
+        configureGolangBuildTaskDefaults(target, golangExtension, crossCompilationExtension, environmentVariablesProvider)
+        configureLintingTaskDefaults(target, crossCompilationExtension, environmentVariablesProvider)
+        registerLintTask(target, golangExtension)
+    }
+
+    private fun createExtension(target: Project): GolangCrossCompilationPluginExtension {
+        val extension = target.extensions.create<GolangCrossCompilationPluginExtension>("golangCrossCompilation")
+        extension.outputDirectory.convention(target.layout.buildDirectory.dir("libs"))
+        extension.macOSSystemRootDirectory.convention(target.layout.dir(target.provider { macOSSystemRoot }))
+
+        extension.rootZigCacheDirectory.convention(
+            target.layout.buildDirectory.map { buildDirectory ->
+                buildDirectory
+                    .dir("zig")
+                    .dir("cache")
+            }
+        )
+
+        return extension
+    }
+
+    private fun configureGolangBuildTaskDefaults(
+        target: Project,
+        golangExtension: GolangPluginExtension,
+        crossCompilationExtension: GolangCrossCompilationPluginExtension,
+        environmentVariablesProvider: GolangCrossCompilationEnvironmentVariablesProvider
+    ) {
         target.tasks.withType<GolangBuild>() {
             sourceDirectory.convention(golangExtension.sourceDirectory)
             golangCompilerExecutablePath.convention(golangExtension.golangCompilerExecutablePath)
-            zigCompilerExecutablePath.convention(zigExtension.zigCompilerExecutablePath)
-            macOSSystemRoot.convention(crossCompilationExtension.macOSSystemRootDirectory)
+            zigCacheDirectory.convention(crossCompilationExtension.rootZigCacheDirectory.map { it.dir(this.name) })
 
             outputDirectory.convention(
                 crossCompilationExtension.outputDirectory.map { outputDirectory ->
@@ -55,15 +84,6 @@ class GolangCrossCompilationPlugin @Inject constructor(private val execActionFac
                         .dir(targetOperatingSystem.map { it.name.lowercase() }).get()
                         .dir(targetArchitecture.map { it.name.lowercase() }).get()
                         .dir(targetBinaryType.map { it.name.lowercase() }).get()
-                }
-            )
-
-            zigCacheDirectory.convention(
-                target.layout.buildDirectory.map { buildDirectory ->
-                    buildDirectory
-                        .dir("zig")
-                        .dir("cache")
-                        .dir(this.name)
                 }
             )
 
@@ -100,15 +120,40 @@ class GolangCrossCompilationPlugin @Inject constructor(private val execActionFac
             )
 
             outputHeaderFile.convention(outputDirectory.file(libraryName.map { "$it.h" }))
+
+            environmentVariablesProvider.configureEnvironmentVariablesForTarget(
+                compilationEnvironmentVariables,
+                targetOperatingSystem,
+                targetArchitecture,
+                zigCacheDirectory
+            )
         }
     }
 
-    private fun createExtension(target: Project): GolangCrossCompilationPluginExtension {
-        val extension = target.extensions.create<GolangCrossCompilationPluginExtension>("golangCrossCompilation")
-        extension.outputDirectory.convention(target.layout.buildDirectory.dir("libs"))
-        extension.macOSSystemRootDirectory.convention(target.layout.dir(target.provider { macOSSystemRoot }))
+    private fun configureLintingTaskDefaults(
+        target: Project,
+        crossCompilationExtension: GolangCrossCompilationPluginExtension,
+        environmentVariablesProvider: GolangCrossCompilationEnvironmentVariablesProvider
+    ) {
+        target.tasks.withType<GolangLint> {
+            val zigCacheDirectory = crossCompilationExtension.rootZigCacheDirectory.map { it.dir(this.name) }
 
-        return extension
+            environmentVariablesProvider.configureEnvironmentVariablesForTarget(
+                additionalEnvironmentVariables,
+                project.provider { OperatingSystem.current },
+                project.provider { Architecture.current },
+                zigCacheDirectory
+            )
+        }
+    }
+
+    private fun registerLintTask(target: Project, extension: GolangPluginExtension) {
+        target.tasks.register<GolangLint>("lint") {
+            executablePath.set(extension.linterExecutablePath)
+            sourceDirectory.set(extension.sourceDirectory)
+            goRootDirectory.set(extension.golangRoot)
+            upToDateCheckFilePath.set(target.layout.buildDirectory.file("lint/upToDate"))
+        }
     }
 
     private val macOSSystemRoot: File? by lazy { findMacOSSystemRoot() }

@@ -21,9 +21,7 @@ import batect.dockerclient.buildtools.OperatingSystem
 import de.undercouch.gradle.tasks.download.Download
 import org.gradle.api.Plugin
 import org.gradle.api.Project
-import org.gradle.api.file.RegularFile
 import org.gradle.api.file.RelativePath
-import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.Sync
 import org.gradle.kotlin.dsl.create
 import org.gradle.kotlin.dsl.register
@@ -33,10 +31,7 @@ class GolangPlugin : Plugin<Project> {
         val extension = createExtension(target)
 
         registerGolangDownloadTasks(target, extension)
-
-        val linterExecutable = registerLintDownloadTasks(target, extension)
-        registerLintTask(target, extension, linterExecutable)
-
+        registerLintDownloadTasks(target, extension)
         registerCleanTask(target, extension)
     }
 
@@ -109,7 +104,7 @@ class GolangPlugin : Plugin<Project> {
         extension.golangCompilerExecutablePath.set(extension.golangRoot.map { it.dir("bin").file(executableName) })
     }
 
-    private fun registerLintDownloadTasks(target: Project, extension: GolangPluginExtension): Provider<RegularFile> {
+    private fun registerLintDownloadTasks(target: Project, extension: GolangPluginExtension) {
         val extensionProvider = target.provider { extension }
         val rootUrl = extension.golangCILintVersion.map { "https://github.com/golangci/golangci-lint/releases/download/v$it" }
         val filePrefix = extension.golangCILintVersion.map { "golangci-lint-$it" }
@@ -163,16 +158,7 @@ class GolangPlugin : Plugin<Project> {
             into(targetDirectory)
         }
 
-        return target.layout.file(extractExecutable.map { it.outputs.files.singleFile.resolve(executableName) })
-    }
-
-    private fun registerLintTask(target: Project, extension: GolangPluginExtension, executable: Provider<RegularFile>) {
-        target.tasks.register<GolangLint>("lint") {
-            executablePath.set(executable)
-            sourceDirectory.set(extension.sourceDirectory)
-            goRootDirectory.set(extension.golangRoot)
-            upToDateCheckFilePath.set(target.layout.buildDirectory.file("lint/upToDate"))
-        }
+        extension.linterExecutablePath.set(target.layout.file(extractExecutable.map { it.outputs.files.singleFile.resolve(executableName) }))
     }
 
     private fun registerCleanTask(target: Project, extension: GolangPluginExtension) {

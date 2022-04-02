@@ -14,11 +14,13 @@
     limitations under the License.
 */
 
-package batect.dockerclient.buildtools.golang
+package batect.dockerclient.buildtools.golang.crosscompilation
 
 import org.gradle.api.DefaultTask
 import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.file.RegularFileProperty
+import org.gradle.api.provider.MapProperty
+import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.InputDirectory
 import org.gradle.api.tasks.InputFile
 import org.gradle.api.tasks.OutputFile
@@ -40,6 +42,9 @@ abstract class GolangLint @Inject constructor(private val execActionFactory: Exe
     @get:InputDirectory
     abstract val goRootDirectory: DirectoryProperty
 
+    @get:Input
+    abstract val additionalEnvironmentVariables: MapProperty<String, String>
+
     @get:OutputFile
     abstract val upToDateCheckFilePath: RegularFileProperty
 
@@ -52,6 +57,7 @@ abstract class GolangLint @Inject constructor(private val execActionFactory: Exe
         val action = execActionFactory.newExecAction()
         action.workingDir = sourceDirectory.asFile.get()
         action.environment("GOROOT", goRootDirectory.get().asFile.absolutePath)
+        action.environment(additionalEnvironmentVariables.get())
 
         action.commandLine = listOf(
             executablePath.get().toString(),

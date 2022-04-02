@@ -22,12 +22,12 @@ import batect.dockerclient.buildtools.OperatingSystem
 import org.gradle.api.DefaultTask
 import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.file.RegularFileProperty
+import org.gradle.api.provider.MapProperty
 import org.gradle.api.provider.Property
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.InputDirectory
 import org.gradle.api.tasks.InputFile
 import org.gradle.api.tasks.Internal
-import org.gradle.api.tasks.Optional
 import org.gradle.api.tasks.OutputDirectory
 import org.gradle.api.tasks.OutputFile
 import org.gradle.api.tasks.PathSensitive
@@ -57,13 +57,8 @@ abstract class GolangBuild @Inject constructor(private val workerExecutor: Worke
     @get:PathSensitive(PathSensitivity.NONE)
     abstract val golangCompilerExecutablePath: RegularFileProperty
 
-    @get:InputFile
-    @get:PathSensitive(PathSensitivity.NONE)
-    abstract val zigCompilerExecutablePath: RegularFileProperty
-
-    @get:Optional
-    @get:InputDirectory
-    abstract val macOSSystemRoot: DirectoryProperty
+    @get:Input
+    abstract val compilationEnvironmentVariables: MapProperty<String, String>
 
     @get:OutputDirectory
     abstract val outputDirectory: DirectoryProperty
@@ -98,7 +93,7 @@ abstract class GolangBuild @Inject constructor(private val workerExecutor: Worke
             it.outputDirectory.set(outputDirectory)
             it.sourceDirectory.set(sourceDirectory)
             it.compilationCommand.set(compilationCommand)
-            it.compilationCommandEnvironment.set(compilationCommandEnvironment)
+            it.compilationCommandEnvironment.set(compilationEnvironmentVariables.get())
             it.outputLibraryFile.set(outputLibraryFile)
             it.outputHeaderFile.set(outputHeaderFile)
         }
@@ -123,28 +118,5 @@ abstract class GolangBuild @Inject constructor(private val workerExecutor: Worke
             arrayOf("-ldflags", "-s")
         } else {
             emptyArray()
-        }
-
-    private val compilationCommandEnvironment: Map<String, String>
-        get() = mapOf(
-            "CGO_ENABLED" to "1",
-            "GOOS" to targetOperatingSystem.get().name.lowercase(),
-            "GOARCH" to targetArchitecture.get().golangName,
-            "CC" to """"${zigCompilerExecutablePath.get().asFile.absolutePath}" cc -target $zigTarget $targetSpecificZigArgs""",
-            "CXX" to """"${zigCompilerExecutablePath.get().asFile.absolutePath}" c++ -target $zigTarget $targetSpecificZigArgs""",
-            "ZIG_LOCAL_CACHE_DIR" to zigCacheDirectory.get().asFile.absolutePath
-        )
-
-    private val zigTarget: String
-        get() = "${targetArchitecture.get().zigName}-${targetOperatingSystem.get().zigName}-gnu"
-
-    private val targetSpecificZigArgs: String
-        get() = when (targetOperatingSystem.get()) {
-            OperatingSystem.Darwin -> {
-                val sysRoot = macOSSystemRoot.get().asFile.absolutePath
-
-                """--sysroot "$sysRoot" "-I/usr/include" "-F/System/Library/Frameworks" "-L/usr/lib""""
-            }
-            else -> ""
         }
 }

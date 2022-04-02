@@ -21,4 +21,5 @@ import org.gradle.api.file.DirectoryProperty
 abstract class GolangCrossCompilationPluginExtension {
     abstract val outputDirectory: DirectoryProperty
     abstract val macOSSystemRootDirectory: DirectoryProperty
+    abstract val rootZigCacheDirectory: DirectoryProperty
 }
