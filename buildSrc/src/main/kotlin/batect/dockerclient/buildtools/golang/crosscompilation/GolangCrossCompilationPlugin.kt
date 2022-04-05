@@ -47,7 +47,7 @@ class GolangCrossCompilationPlugin @Inject constructor(private val execActionFac
         val environmentVariablesProvider = GolangCrossCompilationEnvironmentVariablesProvider(crossCompilationExtension, zigExtension, target)
 
         configureGolangBuildTaskDefaults(target, golangExtension, crossCompilationExtension, environmentVariablesProvider)
-        configureLintingTaskDefaults(target, crossCompilationExtension, environmentVariablesProvider)
+        configureLintingTaskDefaults(target, environmentVariablesProvider)
         registerLintTask(target, golangExtension)
     }
 
@@ -76,7 +76,6 @@ class GolangCrossCompilationPlugin @Inject constructor(private val execActionFac
         target.tasks.withType<GolangBuild>() {
             sourceDirectory.convention(golangExtension.sourceDirectory)
             golangCompilerExecutablePath.convention(golangExtension.golangCompilerExecutablePath)
-            zigCacheDirectory.convention(crossCompilationExtension.rootZigCacheDirectory.map { it.dir(this.name) })
 
             outputDirectory.convention(
                 crossCompilationExtension.outputDirectory.map { outputDirectory ->
@@ -125,24 +124,21 @@ class GolangCrossCompilationPlugin @Inject constructor(private val execActionFac
                 compilationEnvironmentVariables,
                 targetOperatingSystem,
                 targetArchitecture,
-                zigCacheDirectory
+                this.name
             )
         }
     }
 
     private fun configureLintingTaskDefaults(
         target: Project,
-        crossCompilationExtension: GolangCrossCompilationPluginExtension,
         environmentVariablesProvider: GolangCrossCompilationEnvironmentVariablesProvider
     ) {
         target.tasks.withType<GolangLint> {
-            val zigCacheDirectory = crossCompilationExtension.rootZigCacheDirectory.map { it.dir(this.name) }
-
             environmentVariablesProvider.configureEnvironmentVariablesForTarget(
                 additionalEnvironmentVariables,
                 project.provider { OperatingSystem.current },
                 project.provider { Architecture.current },
-                zigCacheDirectory
+                this.name
             )
         }
     }

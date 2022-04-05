@@ -20,7 +20,6 @@ import batect.dockerclient.buildtools.Architecture
 import batect.dockerclient.buildtools.OperatingSystem
 import batect.dockerclient.buildtools.zig.ZigPluginExtension
 import org.gradle.api.Project
-import org.gradle.api.file.Directory
 import org.gradle.api.provider.MapProperty
 import org.gradle.api.provider.Provider
 import javax.inject.Inject
@@ -34,14 +33,17 @@ class GolangCrossCompilationEnvironmentVariablesProvider @Inject constructor(
         environmentVariables: MapProperty<String, String>,
         operatingSystem: Provider<OperatingSystem>,
         architecture: Provider<Architecture>,
-        zigCacheDirectory: Provider<Directory>
+        taskName: String
     ) {
         environmentVariables.put("CGO_ENABLED", "1")
         environmentVariables.put("GOOS", operatingSystem.map { it.name.lowercase() })
         environmentVariables.put("GOARCH", architecture.map { it.golangName })
         environmentVariables.put("CC", createCompilerVariableProvider("cc", operatingSystem, architecture))
         environmentVariables.put("CXX", createCompilerVariableProvider("c++", operatingSystem, architecture))
-        environmentVariables.put("ZIG_LOCAL_CACHE_DIR", zigCacheDirectory.map { it.asFile.absolutePath })
+
+        val zigCacheDirectory = crossCompilationExtension.rootZigCacheDirectory.map { it.dir(taskName) }
+        environmentVariables.put("ZIG_LOCAL_CACHE_DIR", zigCacheDirectory.map { it.dir("local").asFile.absolutePath })
+        environmentVariables.put("ZIG_GLOBAL_CACHE_DIR", zigCacheDirectory.map { it.dir("global").asFile.absolutePath })
     }
 
     private fun createCompilerVariableProvider(

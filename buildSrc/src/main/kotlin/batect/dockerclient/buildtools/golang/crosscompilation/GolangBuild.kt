@@ -72,9 +72,6 @@ abstract class GolangBuild @Inject constructor(private val workerExecutor: Worke
     @get:Internal
     abstract val baseOutputName: Property<String>
 
-    @get:Internal
-    abstract val zigCacheDirectory: DirectoryProperty
-
     init {
         group = "build"
 
