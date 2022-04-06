@@ -57,6 +57,7 @@ abstract class GolangLint @Inject constructor(private val execActionFactory: Exe
         val action = execActionFactory.newExecAction()
         action.workingDir = sourceDirectory.asFile.get()
         action.environment("GOROOT", goRootDirectory.get().asFile.absolutePath)
+        action.environment("PATH", goRootDirectory.get().dir("bin").asFile.absolutePath)
         action.environment(additionalEnvironmentVariables.get())
 
         action.commandLine = listOf(
