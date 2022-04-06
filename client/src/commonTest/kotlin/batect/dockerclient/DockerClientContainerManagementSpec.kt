@@ -34,7 +34,7 @@ import kotlin.time.measureTime
 @ExperimentalTime
 @OptIn(ExperimentalKotest::class)
 class DockerClientContainerManagementSpec : ShouldSpec({
-    xcontext("when working with Linux containers").onlyIfDockerDaemonSupportsLinuxContainers {
+    context("when working with Linux containers").onlyIfDockerDaemonSupportsLinuxContainers {
         val client = closeAfterTest(DockerClient.Builder().build())
         val image = client.pullImage("alpine:3.15.0")
 

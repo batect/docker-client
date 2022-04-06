@@ -33,6 +33,7 @@
   * Use some kind of build cache? eg. Gradle Enterprise or https://github.com/gradle/gradle-build-action
 * Remove "be able to" prefixes from test descriptions
 * Run Mac CI tests with Colima?
+* Remove `IODispatcher` / `Dispatchers.kt` once https://github.com/Kotlin/kotlinx.coroutines/issues/3205 is resolved
 
 # APIs
 
