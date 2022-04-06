@@ -1,6 +1,6 @@
 module github.com/batect/docker-client/golang-wrapper/src
 
-go 1.17
+go 1.18
 
 require (
 	github.com/docker/cli v20.10.14+incompatible

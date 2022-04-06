@@ -278,7 +278,7 @@ jobs:
           key: tools-${{ runner.os }}-${{ hashFiles('**/*.gradle.kts', 'buildSrc/src/**/*.kt') }}
 
       - name: Run linting
-        # :golang-wrapper:lint: disabled until https://github.com/golangci/golangci-lint/pull/2438 is fixed
+        # :golang-wrapper:lint: disabled until https://github.com/golangci/golangci-lint/issues/2649 is resolved
         run: ./gradlew golang-wrapper:check --exclude-task :golang-wrapper:lint
 
       - name: Stop Gradle daemon
