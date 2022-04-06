@@ -433,7 +433,7 @@ class DockerClientBuildKitImageBuildSpec : ShouldSpec({
 
         outputText shouldContain """^#\d \[internal] load build definition from Dockerfile$""".toRegex(RegexOption.MULTILINE)
         outputText shouldContain """^#\d \[internal] load .dockerignore$""".toRegex(RegexOption.MULTILINE)
-        outputText shouldContain """^#3 \[internal] load metadata for docker.io/library/alpine:3.14.2$""".toRegex(RegexOption.MULTILINE)
+        outputText shouldContain """^#\d \[internal] load metadata for docker.io/library/alpine:3.14.2$""".toRegex(RegexOption.MULTILINE)
         outputText shouldContain """^#\d \[(other|stage-1) 1/2] FROM docker.io/library/alpine:3.14.2(@sha256:e1c082e3d3c45cccac829840a25941e679c25d438cc8412c2fa221cf1a824e6a)?$""".toRegex(RegexOption.MULTILINE)
         outputText shouldContain """^#\d \[other 2/2] RUN touch /file-from-other$""".toRegex(RegexOption.MULTILINE)
         outputText shouldContain """^#\d \[stage-1 2/2] COPY --from=other /file-from-other /received/file-from-other$""".toRegex(RegexOption.MULTILINE)
@@ -450,7 +450,10 @@ class DockerClientBuildKitImageBuildSpec : ShouldSpec({
             it.stepName shouldBe "[internal] load .dockerignore"
         }
 
-        progressUpdatesReceived shouldContain StepStarting(3, "[internal] load metadata for docker.io/library/alpine:3.14.2")
+        progressUpdatesReceived.forAtLeastOne {
+            it.shouldBeTypeOf<StepStarting>()
+            it.stepName shouldBe "[internal] load metadata for docker.io/library/alpine:3.14.2"
+        }
 
         progressUpdatesReceived.forAtLeastOne {
             it.shouldBeTypeOf<StepStarting>()
