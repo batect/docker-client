@@ -15,9 +15,9 @@
 * Contributor guide
 * KDoc comments for public API
   * Enforce this somehow?
-* Go build: use Zig for compilation?
+* Go build: use Zig for compilation
   * Share Golang and Zig build cache between tasks in same CI build run?
-  * Set ZIG_LOCAL_CACHE_DIR to the same thing for all builds?
+  * Set ZIG_LOCAL_CACHE_DIR and ZIG_GLOBAL_CACHE_DIR to the same thing for all builds once https://github.com/ziglang/zig/issues/9711 is resolved
 * Run tests with memory leak detector - eg. valgrind
 * Linter to catch when memory is not freed (eg. Golang code allocates struct that is used as callback parameter)
 * Fix broken publication of library
