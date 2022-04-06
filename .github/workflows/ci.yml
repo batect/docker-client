@@ -278,9 +278,8 @@ jobs:
           key: tools-${{ runner.os }}-${{ hashFiles('**/*.gradle.kts', 'buildSrc/src/**/*.kt') }}
 
       - name: Run linting
-        # :golang-wrapper:buildSharedLibWindowsX64: disabled until https://github.com/ziglang/zig/issues/9711 is fixed (or Zig 0.9.2 or later is released, which apparently fixes this issue)
         # :golang-wrapper:lint: disabled until https://github.com/golangci/golangci-lint/pull/2438 is fixed
-        run: ./gradlew golang-wrapper:check --exclude-task :golang-wrapper:buildSharedLibWindowsX64 --exclude-task :golang-wrapper:lint
+        run: ./gradlew golang-wrapper:check --exclude-task :golang-wrapper:lint
 
       - name: Stop Gradle daemon
         run: ./gradlew --stop && sleep 5 # HACK: wait for Gradle to shut down to prevent failures like https://github.com/batect/docker-client/runs/4576861141?check_suite_focus=true

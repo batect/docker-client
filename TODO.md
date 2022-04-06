@@ -23,8 +23,6 @@
 * Fix broken publication of library
   * Disabled due to Okio not supporting hierarchical project structure - https://github.com/square/okio/pull/980 needs bug fixes in Kotlin 1.6.20
   * See compatibility table at https://kotlinlang.org/docs/migrating-multiplatform-project-to-14.html#migrate-to-the-hierarchical-project-structure
-  * Will likely fail until https://github.com/ziglang/zig/issues/9711 is fixed
-    * Also re-enable `:golang-wrapper:buildSharedLibWindowsX64` on linting job once this is fixed
 * Sample app
   * Add snippets to readme
 * Use https://github.com/square/kotlinpoet/ to generate Kotlin code rather than current string concatenation approach?
