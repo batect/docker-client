@@ -58,7 +58,7 @@ class DockerClientBuildKitImageBuildSpec : ShouldSpec({
 
         outputText shouldContain """
             |#(\d+) \[internal] load build definition from Dockerfile
-            |(#\1 transferring dockerfile:
+            |(#\1 transferring dockerfile: \d+B
             |)?#\1 transferring dockerfile: \d+B (\d+\.\d+s )?done
             |#\1 DONE \d+\.\d+s
             |
@@ -72,8 +72,8 @@ class DockerClientBuildKitImageBuildSpec : ShouldSpec({
         """.trimMargin().toRegex()
 
         outputText shouldContain """
-            |#3 \[internal] load metadata for docker.io/library/alpine:3.14.2
-            |#3 DONE \d+\.\d+s
+            |#(\d+) \[internal] load metadata for docker.io/library/alpine:3.14.2
+            |#\1 DONE \d+\.\d+s
             |
         """.trimMargin().toRegex()
 
@@ -369,7 +369,7 @@ class DockerClientBuildKitImageBuildSpec : ShouldSpec({
 
         val singleBuildOutputPattern = """
             [\S\s]*#\d \[internal] load build definition from Dockerfile
-            (#\d transferring dockerfile:
+            (#\d transferring dockerfile: \d+B
             )?#\d transferring dockerfile: \d+B (\d+\.\d+s )?done
             #\d DONE \d+\.\d+s
             [\S\s]*
@@ -581,9 +581,13 @@ class DockerClientBuildKitImageBuildSpec : ShouldSpec({
         )
 
         val outputText = output.readUtf8().trim()
-        outputText.lines() shouldContain "#3 [internal] load metadata for docker.io/batect/this-image-does-not-exist:1.0"
+        outputText shouldContain """^#\d+ \[internal] load metadata for docker.io/batect/this-image-does-not-exist:1.0$""".toRegex(RegexOption.MULTILINE)
 
-        progressUpdatesReceived shouldContain StepStarting(3, "[internal] load metadata for docker.io/batect/this-image-does-not-exist:1.0")
+        progressUpdatesReceived.forAtLeastOne {
+            it.shouldBeTypeOf<StepStarting>()
+            it.stepName shouldBe "[internal] load metadata for docker.io/batect/this-image-does-not-exist:1.0"
+        }
+
         progressUpdatesReceived shouldContainAnyOf setOf(
             BuildFailed("failed to solve with frontend dockerfile.v0: failed to create LLB definition: docker.io/batect/this-image-does-not-exist:1.0: not found"),
             BuildFailed("failed to solve with frontend dockerfile.v0: failed to create LLB definition: pull access denied, repository does not exist or may require authorization: server message: insufficient_scope: authorization failed"),
