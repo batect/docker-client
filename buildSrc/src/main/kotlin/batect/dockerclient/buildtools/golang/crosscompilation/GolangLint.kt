@@ -20,6 +20,7 @@ import org.gradle.api.DefaultTask
 import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.provider.MapProperty
+import org.gradle.api.provider.Property
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.InputDirectory
 import org.gradle.api.tasks.InputFile
@@ -27,6 +28,7 @@ import org.gradle.api.tasks.OutputFile
 import org.gradle.api.tasks.PathSensitive
 import org.gradle.api.tasks.PathSensitivity
 import org.gradle.api.tasks.TaskAction
+import org.gradle.internal.os.OperatingSystem
 import org.gradle.process.internal.ExecActionFactory
 import javax.inject.Inject
 
@@ -45,6 +47,9 @@ abstract class GolangLint @Inject constructor(private val execActionFactory: Exe
     @get:Input
     abstract val additionalEnvironmentVariables: MapProperty<String, String>
 
+    @get:Input
+    abstract val systemPath: Property<String>
+
     @get:OutputFile
     abstract val upToDateCheckFilePath: RegularFileProperty
 
@@ -57,7 +62,7 @@ abstract class GolangLint @Inject constructor(private val execActionFactory: Exe
         val action = execActionFactory.newExecAction()
         action.workingDir = sourceDirectory.asFile.get()
         action.environment("GOROOT", goRootDirectory.get().asFile.absolutePath)
-        action.environment("PATH", goRootDirectory.get().dir("bin").asFile.absolutePath)
+        action.environment("PATH", combinedSystemPath)
         action.environment(additionalEnvironmentVariables.get())
 
         action.commandLine = listOf(
@@ -75,4 +80,12 @@ abstract class GolangLint @Inject constructor(private val execActionFactory: Exe
 
         upToDateCheckFile.createNewFile()
     }
+
+    private val combinedSystemPath: String
+        get() {
+            val goBinDirectory = goRootDirectory.get().dir("bin").asFile.absolutePath
+            val separator = if (OperatingSystem.current().isWindows) ";" else ":"
+
+            return "$goBinDirectory$separator${systemPath.get()}"
+        }
 }

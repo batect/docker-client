@@ -140,6 +140,8 @@ class GolangCrossCompilationPlugin @Inject constructor(private val execActionFac
                 project.provider { Architecture.current },
                 this.name
             )
+
+            systemPath.convention(target.providers.environmentVariable("PATH"))
         }
     }
 
