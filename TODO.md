@@ -32,6 +32,7 @@
 * Remove "be able to" prefixes from test descriptions
 * Run Mac CI tests with Colima?
 * Remove `IODispatcher` / `Dispatchers.kt` once https://github.com/Kotlin/kotlinx.coroutines/issues/3205 is resolved
+* Merge Golang Gradle plugins, distinction doesn't make sense any more
 
 # APIs
 
