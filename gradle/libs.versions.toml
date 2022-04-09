@@ -1,5 +1,5 @@
 [versions]
-kotest = "5.2.2"
+kotest = "5.2.3"
 kotest-plugin = "5.2.3" # The Kotest plugin is updated on a different cadence to the main framework.
 kotlin = "1.6.20"
 kotlinx-serialization = "1.3.2"
