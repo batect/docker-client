@@ -29,14 +29,14 @@ import (
 
 //nolint:gochecknoglobals
 var (
-	outputStreams = map[uint64]*streams.Out{
+	outputStreams = map[OutputStreamHandle]*streams.Out{
 		1: streams.NewOut(os.Stdout),
 		2: streams.NewOut(os.Stderr),
 	}
 
-	outputPipes                  = map[uint64]*pipe{}
-	outputStreamsLock            = sync.RWMutex{}
-	nextOutputStreamIndex uint64 = 3
+	outputPipes                               = map[OutputStreamHandle]*pipe{}
+	outputStreamsLock                         = sync.RWMutex{}
+	nextOutputStreamHandle OutputStreamHandle = 3
 )
 
 type pipe struct {
@@ -48,15 +48,14 @@ func (handle OutputStreamHandle) OutputStream() *streams.Out {
 	outputStreamsLock.RLock()
 	defer outputStreamsLock.RUnlock()
 
-	return outputStreams[uint64(handle)]
+	return outputStreams[handle]
 }
 
 func (handle OutputStreamHandle) Close() {
 	outputStreamsLock.RLock()
 	defer outputStreamsLock.RUnlock()
 
-	idx := uint64(handle)
-	pipe, ok := outputPipes[idx]
+	pipe, ok := outputPipes[handle]
 
 	if !ok {
 		return
@@ -76,23 +75,23 @@ func CreateOutputPipe() CreateOutputPipeReturn {
 	outputStreamsLock.Lock()
 	defer outputStreamsLock.Unlock()
 
-	streamIndex := nextOutputStreamIndex
+	streamHandle := nextOutputStreamHandle
 
-	// This should never happen, unless nextOutputStreamIndex wraps after reaching the maximum value of a uint64
+	// This should never happen, unless nextOutputStreamHandle wraps after reaching the maximum value of a uint64
 	// (roughly enough to create a new client every nanosecond for 213,500 days, or just over 580 years)
-	if _, exists := outputStreams[streamIndex]; exists {
-		panic(fmt.Sprintf("would have replaced existing output stream at index %v", streamIndex))
+	if _, exists := outputStreams[streamHandle]; exists {
+		panic(fmt.Sprintf("would have replaced existing output stream at index %v", streamHandle))
 	}
 
-	if _, exists := outputPipes[streamIndex]; exists {
-		panic(fmt.Sprintf("would have replaced existing output pipe at index %v", streamIndex))
+	if _, exists := outputPipes[streamHandle]; exists {
+		panic(fmt.Sprintf("would have replaced existing output pipe at index %v", streamHandle))
 	}
 
-	outputStreams[streamIndex] = streams.NewOut(writeEnd)
-	outputPipes[streamIndex] = &pipe{readEnd: readEnd, writeEnd: writeEnd}
-	nextOutputStreamIndex++
+	outputStreams[streamHandle] = streams.NewOut(writeEnd)
+	outputPipes[streamHandle] = &pipe{readEnd: readEnd, writeEnd: writeEnd}
+	nextOutputStreamHandle++
 
-	return newCreateOutputPipeReturn(OutputStreamHandle(streamIndex), FileDescriptor(readEnd.Fd()), nil)
+	return newCreateOutputPipeReturn(streamHandle, FileDescriptor(readEnd.Fd()), nil)
 }
 
 //export DisposeOutputPipe
@@ -100,8 +99,7 @@ func DisposeOutputPipe(handle OutputStreamHandle) Error {
 	outputStreamsLock.Lock()
 	defer outputStreamsLock.Unlock()
 
-	idx := uint64(handle)
-	pipe, ok := outputPipes[idx]
+	pipe, ok := outputPipes[handle]
 
 	if !ok {
 		return toError(ErrInvalidOutputStreamHandle)
@@ -115,8 +113,8 @@ func DisposeOutputPipe(handle OutputStreamHandle) Error {
 		return toError(fmt.Errorf("could not close read end of pipe: %w", err))
 	}
 
-	delete(outputPipes, idx)
-	delete(outputStreams, idx)
+	delete(outputPipes, handle)
+	delete(outputStreams, handle)
 
 	return nil
 }

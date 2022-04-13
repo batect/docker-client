@@ -43,7 +43,7 @@ import (
 var (
 	activeClients                        = map[DockerClientHandle]*activeClient{}
 	activeClientsLock                    = sync.RWMutex{}
-	nextClientIndex   DockerClientHandle = 0
+	nextClientHandle  DockerClientHandle = 0
 )
 
 type activeClient struct {
@@ -102,9 +102,9 @@ func CreateClient(cfg *C.ClientConfiguration) CreateClientReturn {
 	activeClientsLock.Lock()
 	defer activeClientsLock.Unlock()
 
-	clientIndex := nextClientIndex
+	clientIndex := nextClientHandle
 
-	// This should never happen, unless nextClientIndex wraps after reaching the maximum value of a uint64
+	// This should never happen, unless nextClientHandle wraps after reaching the maximum value of a uint64
 	// (roughly enough to create a new client every nanosecond for 213,500 days, or just over 580 years)
 	if _, exists := activeClients[clientIndex]; exists {
 		panic(fmt.Sprintf("would have replaced existing client at index %v", clientIndex))
@@ -117,7 +117,7 @@ func CreateClient(cfg *C.ClientConfiguration) CreateClientReturn {
 		serverInfoLock:  &sync.RWMutex{},
 	}
 
-	nextClientIndex++
+	nextClientHandle++
 
 	return newCreateClientReturn(clientIndex, nil)
 }
