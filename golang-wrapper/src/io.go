@@ -77,6 +77,13 @@ func CreateOutputPipe() CreateOutputPipeReturn {
 	defer outputStreamsLock.Unlock()
 
 	streamIndex := nextOutputStreamIndex
+
+	// This should never happen, unless nextOutputStreamIndex wraps after reaching the maximum value of a uint64
+	// (roughly enough to create a new client every nanosecond for 213,500 days, or just over 580 years)
+	if _, exists := outputStreams[streamIndex]; exists {
+		panic(fmt.Sprintf("would have replaced existing output stream at index %v", streamIndex))
+	}
+
 	outputStreams[streamIndex] = streams.NewOut(writeEnd)
 	outputPipes[streamIndex] = &pipe{readEnd: readEnd, writeEnd: writeEnd}
 	nextOutputStreamIndex++

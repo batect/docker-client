@@ -104,6 +104,12 @@ func CreateClient(cfg *C.ClientConfiguration) CreateClientReturn {
 
 	clientIndex := nextClientIndex
 
+	// This should never happen, unless nextClientIndex wraps after reaching the maximum value of a uint64
+	// (roughly enough to create a new client every nanosecond for 213,500 days, or just over 580 years)
+	if _, exists := activeClients[clientIndex]; exists {
+		panic(fmt.Sprintf("would have replaced existing client at index %v", clientIndex))
+	}
+
 	activeClients[clientIndex] = &activeClient{
 		dockerAPIClient: c,
 		configFile:      configFile,
