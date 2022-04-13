@@ -84,6 +84,10 @@ func CreateOutputPipe() CreateOutputPipeReturn {
 		panic(fmt.Sprintf("would have replaced existing output stream at index %v", streamIndex))
 	}
 
+	if _, exists := outputPipes[streamIndex]; exists {
+		panic(fmt.Sprintf("would have replaced existing output pipe at index %v", streamIndex))
+	}
+
 	outputStreams[streamIndex] = streams.NewOut(writeEnd)
 	outputPipes[streamIndex] = &pipe{readEnd: readEnd, writeEnd: writeEnd}
 	nextOutputStreamIndex++
