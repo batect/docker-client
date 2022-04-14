@@ -58,7 +58,7 @@ class DockerClientBuildKitImageBuildSpec : ShouldSpec({
 
         outputText shouldContain """
             |#(\d+) \[internal] load build definition from Dockerfile
-            |(#\1 transferring dockerfile: \d+B
+            |(#\1 transferring dockerfile:( \d+B)?
             |)?#\1 transferring dockerfile: \d+B (\d+\.\d+s )?done
             |#\1 DONE \d+\.\d+s
             |
@@ -66,7 +66,8 @@ class DockerClientBuildKitImageBuildSpec : ShouldSpec({
 
         outputText shouldContain """
             |#(\d+) \[internal] load .dockerignore
-            |#\1 transferring context: 2B (\d+\.\d+s )?done
+            |(#\1 transferring context:( \d+B)?
+            |)?#\1 transferring context: 2B (\d+\.\d+s )?done
             |#\1 DONE \d+\.\d+s
             |
         """.trimMargin().toRegex()
