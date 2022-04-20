@@ -23,11 +23,6 @@ import io.kotest.core.spec.style.scopes.TestWithConfigBuilder
 import io.kotest.core.test.TestContext
 import okio.FileSystem
 
-// FIXME: this is a temporary workaround until Okio supports HMPP (https://github.com/square/okio/pull/980)
-// This isolates the IDE's complaints to this file, rather than having red squiggles in every file that uses the file system.
-internal val systemFileSystem: FileSystem
-    get() = FileSystem.SYSTEM
-
 internal fun RootTestWithConfigBuilder.onlyIfDockerDaemonPresent(test: suspend TestContext.() -> Unit) =
     this.config(enabledIf = { dockerDaemonPresent }, test = test)
 

@@ -303,8 +303,7 @@ jobs:
           rm -f  $HOME/.gradle/caches/journal-1/*.lock
 
   publish:
-    if: false # Disabled until https://github.com/square/okio/pull/980 is merged
-    # if: github.repository == 'batect/docker-client' && (github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/')) && github.event_name == 'push'
+    if: github.repository == 'batect/docker-client' && (github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/')) && github.event_name == 'push'
 
     needs:
       - build-and-test

@@ -22,10 +22,11 @@ import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
 import io.kotest.matchers.string.shouldEndWith
 import io.kotest.matchers.string.shouldStartWith
+import okio.FileSystem
 import okio.Path.Companion.toPath
 
 class DockerClientBuilderSpec : ShouldSpec({
-    val rootTestCertificatesDirectory = systemFileSystem.canonicalize("./src/commonTest/resources/dummy-client-certificates".toPath())
+    val rootTestCertificatesDirectory = FileSystem.SYSTEM.canonicalize("./src/commonTest/resources/dummy-client-certificates".toPath())
 
     val operatingSystemFileNotFoundMessage = when (testEnvironmentOperatingSystem) {
         OperatingSystem.Windows -> "The system cannot find the file specified."

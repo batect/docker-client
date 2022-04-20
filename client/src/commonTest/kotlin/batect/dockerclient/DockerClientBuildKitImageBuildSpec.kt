@@ -33,12 +33,13 @@ import io.kotest.matchers.string.shouldContain
 import io.kotest.matchers.string.shouldMatch
 import io.kotest.matchers.types.shouldBeTypeOf
 import okio.Buffer
+import okio.FileSystem
 import okio.Path
 import okio.Path.Companion.toPath
 import kotlin.random.Random
 
 class DockerClientBuildKitImageBuildSpec : ShouldSpec({
-    val rootTestImagesDirectory: Path = systemFileSystem.canonicalize("./src/commonTest/resources/images".toPath())
+    val rootTestImagesDirectory: Path = FileSystem.SYSTEM.canonicalize("./src/commonTest/resources/images".toPath())
     val client = closeAfterTest(DockerClient.Builder().build())
 
     should("be able to build a basic Linux container image").onlyIfDockerDaemonSupportsLinuxContainers {
@@ -696,6 +697,6 @@ private fun String.findStepNumberForStep(step: String): Long {
 }
 
 private fun readFileContents(path: Path): String =
-    systemFileSystem.read(path) {
+    FileSystem.SYSTEM.read(path) {
         return readUtf8()
     }
