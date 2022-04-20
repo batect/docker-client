@@ -33,7 +33,7 @@ public data class ImageBuildSpec(
         private var spec = ImageBuildSpec(contextDirectory, contextDirectory.resolve("Dockerfile"))
 
         init {
-            if (!FileSystem.SYSTEM.exists(spec.contextDirectory)) {
+            if (!systemFileSystem.exists(spec.contextDirectory)) {
                 throw InvalidImageBuildSpecException("Context directory '${spec.contextDirectory}' does not exist.")
             }
         }
@@ -107,7 +107,7 @@ public data class ImageBuildSpec(
         }
 
         public fun build(): ImageBuildSpec {
-            if (!FileSystem.SYSTEM.exists(spec.pathToDockerfile)) {
+            if (!systemFileSystem.exists(spec.pathToDockerfile)) {
                 throw InvalidImageBuildSpecException("Dockerfile '${spec.pathToDockerfile}' does not exist.")
             }
 
