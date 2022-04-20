@@ -21,7 +21,6 @@ import io.kotest.core.spec.style.scopes.RootContainerWithConfigBuilder
 import io.kotest.core.spec.style.scopes.RootTestWithConfigBuilder
 import io.kotest.core.spec.style.scopes.TestWithConfigBuilder
 import io.kotest.core.test.TestContext
-import okio.FileSystem
 
 internal fun RootTestWithConfigBuilder.onlyIfDockerDaemonPresent(test: suspend TestContext.() -> Unit) =
     this.config(enabledIf = { dockerDaemonPresent }, test = test)
