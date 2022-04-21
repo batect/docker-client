@@ -16,5 +16,8 @@
 
 rootProject.name = "docker-client"
 
+plugins {
+    id("com.gradle.enterprise") version("3.10")
+}
 include("golang-wrapper")
 include("client")
