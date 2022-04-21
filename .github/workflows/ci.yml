@@ -35,13 +35,8 @@ jobs:
           java-version: 17.0.2+8
           distribution: temurin
 
-      - name: Cache Gradle-managed packages
-        id: cache-gradle-packages
-        uses: actions/cache@v3.0.2
-        with:
-          path: ~/.gradle/caches
-          key: gradle-wrapper-packages-${{ runner.os }}-${{ hashFiles('gradle/libs.versions.toml') }}
-          restore-keys: gradle-wrapper-packages-${{ runner.os }}
+      - name: Setup Gradle
+        uses: gradle/gradle-build-action@v2.1.5
 
       - name: Cache Golang packages
         id: cache-golang-packages
@@ -56,7 +51,6 @@ jobs:
         with:
           path: ~/.konan
           key: kotlin-native-wrapper-${{ runner.os }}-${{ hashFiles('gradle/libs.versions.toml') }}
-          restore-keys: kotlin-native-wrapper-${{ runner.os }}
 
       - name: Cache tools
         id: cache-tools
@@ -66,28 +60,7 @@ jobs:
           key: tools-${{ runner.os }}-${{ hashFiles('**/*.gradle.kts', 'buildSrc/src/**/*.kt') }}
 
       - name: Build and test
-        run: ./gradlew golang-wrapper:buildSharedLibs
-
-      - name: Stop Gradle daemon
-        run: ./gradlew --stop && sleep 5 # HACK: wait for Gradle to shut down to prevent failures like https://github.com/batect/docker-client/runs/4576861141?check_suite_focus=true
-
-      - name: Clean up dependencies before caching
-        if: steps.cache-gradle-packages.outputs.cache-hit != 'true'
-        run: |
-          rm -f  $HOME/.gradle/caches/modules-2/modules-2.lock
-          rm -fr $HOME/.gradle/caches/*/plugin-resolution/
-          rm -fr $HOME/.gradle/caches/*/scripts/
-          rm -fr $HOME/.gradle/caches/*/scripts-remapped/
-          rm -fr $HOME/.gradle/caches/*/fileHashes/
-          rm -f  $HOME/.gradle/caches/*/fileContent/*.lock
-          rm -f  $HOME/.gradle/caches/*/javaCompile/*.lock
-          rm -f  $HOME/.gradle/caches/*/executionHistory/*.lock
-          rm -f  $HOME/.gradle/caches/*/generated-gradle-jars/*.lock
-          rm -f  $HOME/.gradle/caches/jars-3/*.lock
-          rm -f  $HOME/.gradle/caches/jars-8/*.lock
-          rm -f  $HOME/.gradle/caches/transforms-1/transforms-1.lock
-          rm -f  $HOME/.gradle/caches/journal-1/file-access.bin
-          rm -f  $HOME/.gradle/caches/journal-1/*.lock
+        run: ./gradlew golang-wrapper:buildSharedLibs --scan
 
       - name: Upload Golang wrapper libraries
         uses: actions/upload-artifact@v3.0.0
@@ -144,13 +117,8 @@ jobs:
           java-version: 17.0.2+8
           distribution: temurin
 
-      - name: Cache Gradle-managed packages
-        id: cache-gradle-packages
-        uses: actions/cache@v3.0.2
-        with:
-          path: ~/.gradle/caches
-          key: gradle-packages-${{ runner.os }}-${{ hashFiles('gradle/libs.versions.toml') }}
-          restore-keys: gradle-packages-${{ runner.os }}
+      - name: Setup Gradle
+        uses: gradle/gradle-build-action@v2.1.5
 
       - name: Cache Golang packages
         id: cache-golang-packages
@@ -165,7 +133,6 @@ jobs:
         with:
           path: ~/.konan
           key: kotlin-native-${{ runner.os }}-${{ hashFiles('gradle/libs.versions.toml') }}
-          restore-keys: kotlin-native-${{ runner.os }}
 
       - name: Cache tools
         id: cache-tools
@@ -199,38 +166,17 @@ jobs:
         if: matrix.disableDockerDaemonTests != 1
 
       - name: Build, test and package
-        run: ./gradlew client:check client:jvmJar
+        run: ./gradlew client:check client:jvmJar --scan
         env:
           DISABLE_DOCKER_DAEMON_TESTS: ${{ matrix.disableDockerDaemonTests }}
           DOCKER_CONTAINER_OPERATING_SYSTEM: ${{ matrix.containerOperatingSystem }}
           RUN_TARGETS_FOR_OTHER_HOSTS: false
 
       - name: Check JAR contains native libraries for all operating systems
-        run: ./gradlew client:checkJarContents
+        run: ./gradlew client:checkJarContents --scan
 
       - name: Check for outdated generated code
         run: if [ ! -z "$(git status --porcelain)" ]; then echo "Generated code changed. Do you need to run './gradlew generate'?">/dev/stderr; echo; git status --porcelain; echo; git diff; exit 1; fi
-
-      - name: Stop Gradle daemon
-        run: ./gradlew --stop && sleep 5 # HACK: wait for Gradle to shut down to prevent failures like https://github.com/batect/docker-client/runs/4576861141?check_suite_focus=true
-
-      - name: Clean up dependencies before caching
-        if: steps.cache-gradle-packages.outputs.cache-hit != 'true'
-        run: |
-          rm -f  $HOME/.gradle/caches/modules-2/modules-2.lock
-          rm -fr $HOME/.gradle/caches/*/plugin-resolution/
-          rm -fr $HOME/.gradle/caches/*/scripts/
-          rm -fr $HOME/.gradle/caches/*/scripts-remapped/
-          rm -fr $HOME/.gradle/caches/*/fileHashes/
-          rm -f  $HOME/.gradle/caches/*/fileContent/*.lock
-          rm -f  $HOME/.gradle/caches/*/javaCompile/*.lock
-          rm -f  $HOME/.gradle/caches/*/executionHistory/*.lock
-          rm -f  $HOME/.gradle/caches/*/generated-gradle-jars/*.lock
-          rm -f  $HOME/.gradle/caches/jars-3/*.lock
-          rm -f  $HOME/.gradle/caches/jars-8/*.lock
-          rm -f  $HOME/.gradle/caches/transforms-1/transforms-1.lock
-          rm -f  $HOME/.gradle/caches/journal-1/file-access.bin
-          rm -f  $HOME/.gradle/caches/journal-1/*.lock
 
   check-wrapper:
     name: "Lint wrapper library"
@@ -247,13 +193,8 @@ jobs:
           java-version: 17.0.2+8
           distribution: temurin
 
-      - name: Cache Gradle-managed packages
-        id: cache-gradle-packages
-        uses: actions/cache@v3.0.2
-        with:
-          path: ~/.gradle/caches
-          key: gradle-lint-packages-${{ runner.os }}-${{ hashFiles('gradle/libs.versions.toml') }}
-          restore-keys: gradle-lint-packages-${{ runner.os }}
+      - name: Setup Gradle
+        uses: gradle/gradle-build-action@v2.1.5
 
       - name: Cache Golang packages
         id: cache-golang-packages
@@ -268,7 +209,6 @@ jobs:
         with:
           path: ~/.konan
           key: kotlin-native-lint-${{ runner.os }}-${{ hashFiles('gradle/libs.versions.toml') }}
-          restore-keys: kotlin-native-lint-${{ runner.os }}
 
       - name: Cache tools
         id: cache-tools
@@ -279,28 +219,7 @@ jobs:
 
       - name: Run linting
         # :golang-wrapper:lint: disabled until https://github.com/golangci/golangci-lint/issues/2649 is resolved
-        run: ./gradlew golang-wrapper:check --exclude-task :golang-wrapper:lint
-
-      - name: Stop Gradle daemon
-        run: ./gradlew --stop && sleep 5 # HACK: wait for Gradle to shut down to prevent failures like https://github.com/batect/docker-client/runs/4576861141?check_suite_focus=true
-
-      - name: Clean up dependencies before caching
-        if: steps.cache-gradle-packages.outputs.cache-hit != 'true'
-        run: |
-          rm -f  $HOME/.gradle/caches/modules-2/modules-2.lock
-          rm -fr $HOME/.gradle/caches/*/plugin-resolution/
-          rm -fr $HOME/.gradle/caches/*/scripts/
-          rm -fr $HOME/.gradle/caches/*/scripts-remapped/
-          rm -fr $HOME/.gradle/caches/*/fileHashes/
-          rm -f  $HOME/.gradle/caches/*/fileContent/*.lock
-          rm -f  $HOME/.gradle/caches/*/javaCompile/*.lock
-          rm -f  $HOME/.gradle/caches/*/executionHistory/*.lock
-          rm -f  $HOME/.gradle/caches/*/generated-gradle-jars/*.lock
-          rm -f  $HOME/.gradle/caches/jars-3/*.lock
-          rm -f  $HOME/.gradle/caches/jars-8/*.lock
-          rm -f  $HOME/.gradle/caches/transforms-1/transforms-1.lock
-          rm -f  $HOME/.gradle/caches/journal-1/file-access.bin
-          rm -f  $HOME/.gradle/caches/journal-1/*.lock
+        run: ./gradlew golang-wrapper:check --exclude-task :golang-wrapper:lint --scan
 
   publish:
     if: github.repository == 'batect/docker-client' && (github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/')) && github.event_name == 'push'
@@ -326,13 +245,8 @@ jobs:
           java-version: 17.0.2+8
           distribution: temurin
 
-      - name: Cache Gradle-managed packages
-        id: cache-gradle-packages
-        uses: actions/cache@v3.0.2
-        with:
-          path: ~/.gradle/caches
-          key: gradle-kotlin-packages-${{ runner.os }}-${{ hashFiles('gradle/libs.versions.toml') }}
-          restore-keys: gradle-kotlin-packages-${{ runner.os }}
+      - name: Setup Gradle
+        uses: gradle/gradle-build-action@v2.1.5
 
       - name: Cache Golang packages
         id: cache-golang-packages
@@ -347,7 +261,6 @@ jobs:
         with:
           path: ~/.konan
           key: kotlin-native-${{ runner.os }}-${{ hashFiles('gradle/libs.versions.toml') }}
-          restore-keys: kotlin-native-${{ runner.os }}
 
       - name: Cache tools
         id: cache-tools
@@ -385,24 +298,3 @@ jobs:
           ORG_GRADLE_PROJECT_signingKey: ${{ secrets.GPG_KEY }}
           ORG_GRADLE_PROJECT_signingPassword: ${{ secrets.GPG_KEY_PASSPHRASE }}
         if: github.repository == 'batect/docker-client' && startsWith(github.ref, 'refs/tags/') && github.event_name == 'push'
-
-      - name: Stop Gradle daemon
-        run: ./gradlew --stop && sleep 5 # HACK: wait for Gradle to shut down to prevent failures like https://github.com/batect/docker-client/runs/4576861141?check_suite_focus=true
-
-      - name: Clean up dependencies before caching
-        if: steps.cache-gradle-packages.outputs.cache-hit != 'true'
-        run: |
-          rm -f  $HOME/.gradle/caches/modules-2/modules-2.lock
-          rm -fr $HOME/.gradle/caches/*/plugin-resolution/
-          rm -fr $HOME/.gradle/caches/*/scripts/
-          rm -fr $HOME/.gradle/caches/*/scripts-remapped/
-          rm -fr $HOME/.gradle/caches/*/fileHashes/
-          rm -f  $HOME/.gradle/caches/*/fileContent/*.lock
-          rm -f  $HOME/.gradle/caches/*/javaCompile/*.lock
-          rm -f  $HOME/.gradle/caches/*/executionHistory/*.lock
-          rm -f  $HOME/.gradle/caches/*/generated-gradle-jars/*.lock
-          rm -f  $HOME/.gradle/caches/jars-3/*.lock
-          rm -f  $HOME/.gradle/caches/jars-8/*.lock
-          rm -f  $HOME/.gradle/caches/transforms-1/transforms-1.lock
-          rm -f  $HOME/.gradle/caches/journal-1/file-access.bin
-          rm -f  $HOME/.gradle/caches/journal-1/*.lock
