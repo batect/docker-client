@@ -221,12 +221,34 @@ jobs:
         # :golang-wrapper:lint: disabled until https://github.com/golangci/golangci-lint/issues/2649 is resolved
         run: ./gradlew golang-wrapper:check --exclude-task :golang-wrapper:lint --scan
 
+  check-build-logic:
+    name: "Lint, test and check build logic"
+    runs-on: ubuntu-20.04
+    steps:
+      - name: Check out code
+        uses: actions/checkout@v3.0.1
+        with:
+          fetch-depth: 0
+
+      - name: Set up JDK
+        uses: actions/setup-java@v3.1.1
+        with:
+          java-version: 17.0.2+8
+          distribution: temurin
+
+      - name: Setup Gradle
+        uses: gradle/gradle-build-action@v2.1.5
+
+      - name: Run linting, tests and other checks
+        run: ./gradlew :build-logic:check
+
   publish:
     if: github.repository == 'batect/docker-client' && (github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/')) && github.event_name == 'push'
 
     needs:
       - build-and-test
       - check-wrapper
+      - check-build-logic
 
     env:
       SONATYPE_USERNAME: batect-docker-client-github-actions

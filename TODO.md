@@ -24,8 +24,6 @@
   * Add snippets to readme
 * Use https://github.com/square/kotlinpoet/ to generate Kotlin code rather than current string concatenation approach?
 * Re-enable Golang linter on CI once it supports Go 1.18: https://github.com/golangci/golangci-lint/issues/2649
-* Reduce impact of buildSrc build time on CI builds - currently takes 5 minutes before task even starts
-  * Use some kind of build cache? eg. Gradle Enterprise or https://github.com/gradle/gradle-build-action
 * Remove "be able to" prefixes from test descriptions
 * Run Mac CI tests with Colima?
 * Remove `IODispatcher` / `Dispatchers.kt` once https://github.com/Kotlin/kotlinx.coroutines/issues/3205 is resolved
