@@ -81,7 +81,7 @@ tasks.withType<GolangBuild> {
     dependsOn(generateTypes)
 }
 
-val assemble = tasks.register("assemble") {
+val assemble = tasks.named("assemble") {
     dependsOn(buildSharedLibs)
     dependsOn(buildArchiveLibs)
 }
@@ -123,7 +123,7 @@ val lint = tasks.named("lint") {
     mustRunAfter(tasks.withType<GolangBuild>())
 }
 
-tasks.register("check") {
+tasks.named("check") {
     dependsOn(assemble)
     dependsOn(lint)
 }
@@ -152,7 +152,7 @@ val removeBuildOutput = tasks.register<Delete>("removeBuildOutput") {
     delete(layout.buildDirectory)
 }
 
-tasks.register("clean") {
+tasks.named("clean") {
     dependsOn(cleanGolangCache)
     dependsOn(removeBuildOutput)
 }
