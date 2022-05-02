@@ -31,6 +31,8 @@ internal typealias OutputStreamHandle = Long
 
 internal typealias FileDescriptor = ULong
 
+internal typealias ContextHandle = Long
+
 internal class Error(runtime: Runtime) : Struct(runtime), AutoCloseable {
     constructor(pointer: jnr.ffi.Pointer) : this(pointer.runtime) {
         this.useMemory(pointer)

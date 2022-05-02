@@ -43,14 +43,14 @@ public interface DockerClient : AutoCloseable {
     public fun startContainer(container: ContainerReference)
     public fun stopContainer(container: ContainerReference, timeout: Duration)
     public fun removeContainer(container: ContainerReference, force: Boolean = false, removeVolumes: Boolean = false)
-    public fun attachToContainerOutput(container: ContainerReference, stdout: TextOutput, stderr: TextOutput, attachedNotification: ReadyNotification? = null)
+    public suspend fun attachToContainerOutput(container: ContainerReference, stdout: TextOutput, stderr: TextOutput, attachedNotification: ReadyNotification? = null)
 
     /**
      * Wait for a container to exit, and then return its exit code.
      *
      * @return the container's exit code
      */
-    public fun waitForContainerToExit(container: ContainerReference, waitingNotification: ReadyNotification? = null): Long
+    public suspend fun waitForContainerToExit(container: ContainerReference, waitingNotification: ReadyNotification? = null): Long
 
     public class Builder internal constructor(internal val factory: DockerClientFactory) {
         public constructor() : this({ config -> RealDockerClient(config) })

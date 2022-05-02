@@ -34,6 +34,8 @@ typedef uint64_t OutputStreamHandle;
 
 typedef uintptr_t FileDescriptor;
 
+typedef uint64_t ContextHandle;
+
 typedef struct {
     char* Type;
     char* Message;

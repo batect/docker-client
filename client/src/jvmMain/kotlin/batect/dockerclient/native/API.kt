@@ -26,30 +26,33 @@ import jnr.ffi.annotations.In
 @Suppress("FunctionName")
 internal interface API {
     fun CreateClient(@In cfg: ClientConfiguration): CreateClientReturn?
-    fun DisposeClient(@In clientHandle: Long): Error?
-    fun SetClientProxySettingsForTest(@In clientHandle: Long)
-    fun CreateContainer(@In clientHandle: Long, @In spec: CreateContainerRequest): CreateContainerReturn?
-    fun StartContainer(@In clientHandle: Long, @In id: kotlin.String): Error?
-    fun StopContainer(@In clientHandle: Long, @In id: kotlin.String, @In timeoutSeconds: Long): Error?
-    fun RemoveContainer(@In clientHandle: Long, @In id: kotlin.String, @In force: Boolean, @In removeVolumes: Boolean): Error?
-    fun AttachToContainerOutput(@In clientHandle: Long, @In id: kotlin.String, @In stdoutStreamHandle: Long, @In stderrStreamHandle: Long, @In onReady: ReadyCallback, @In callbackUserData: Pointer?): Error?
-    fun WaitForContainerToExit(@In clientHandle: Long, @In id: kotlin.String, @In onReady: ReadyCallback, @In callbackUserData: Pointer?): WaitForContainerToExitReturn?
-    fun Ping(@In clientHandle: Long): PingReturn?
-    fun GetDaemonVersionInformation(@In clientHandle: Long): GetDaemonVersionInformationReturn?
-    fun DeleteImage(@In clientHandle: Long, @In ref: kotlin.String, @In force: Boolean): Error?
-    fun GetImage(@In clientHandle: Long, @In ref: kotlin.String): GetImageReturn?
+    fun DisposeClient(@In clientHandle: DockerClientHandle): Error?
+    fun SetClientProxySettingsForTest(@In clientHandle: DockerClientHandle)
+    fun CreateContainer(@In clientHandle: DockerClientHandle, @In spec: CreateContainerRequest): CreateContainerReturn?
+    fun StartContainer(@In clientHandle: DockerClientHandle, @In id: kotlin.String): Error?
+    fun StopContainer(@In clientHandle: DockerClientHandle, @In id: kotlin.String, @In timeoutSeconds: Long): Error?
+    fun RemoveContainer(@In clientHandle: DockerClientHandle, @In id: kotlin.String, @In force: Boolean, @In removeVolumes: Boolean): Error?
+    fun AttachToContainerOutput(@In clientHandle: DockerClientHandle, @In contextHandle: ContextHandle, @In id: kotlin.String, @In stdoutStreamHandle: OutputStreamHandle, @In stderrStreamHandle: OutputStreamHandle, @In onReady: ReadyCallback, @In callbackUserData: Pointer?): Error?
+    fun WaitForContainerToExit(@In clientHandle: DockerClientHandle, @In contextHandle: ContextHandle, @In id: kotlin.String, @In onReady: ReadyCallback, @In callbackUserData: Pointer?): WaitForContainerToExitReturn?
+    fun CreateContext(): ContextHandle
+    fun CancelContext(@In contextHandle: ContextHandle)
+    fun DestroyContext(@In contextHandle: ContextHandle): Error?
+    fun Ping(@In clientHandle: DockerClientHandle): PingReturn?
+    fun GetDaemonVersionInformation(@In clientHandle: DockerClientHandle): GetDaemonVersionInformationReturn?
+    fun DeleteImage(@In clientHandle: DockerClientHandle, @In ref: kotlin.String, @In force: Boolean): Error?
+    fun GetImage(@In clientHandle: DockerClientHandle, @In ref: kotlin.String): GetImageReturn?
     fun ValidateImageTag(@In tag: kotlin.String): Error?
-    fun BuildImage(@In clientHandle: Long, @In request: BuildImageRequest, @In outputStreamHandle: Long, @In onProgressUpdate: BuildImageProgressCallback, @In callbackUserData: Pointer?): BuildImageReturn?
-    fun PruneImageBuildCache(@In clientHandle: Long): Error?
-    fun PullImage(@In clientHandle: Long, @In ref: kotlin.String, @In onProgressUpdate: PullImageProgressCallback, @In callbackUserData: Pointer?): PullImageReturn?
+    fun BuildImage(@In clientHandle: DockerClientHandle, @In request: BuildImageRequest, @In outputStreamHandle: OutputStreamHandle, @In onProgressUpdate: BuildImageProgressCallback, @In callbackUserData: Pointer?): BuildImageReturn?
+    fun PruneImageBuildCache(@In clientHandle: DockerClientHandle): Error?
+    fun PullImage(@In clientHandle: DockerClientHandle, @In ref: kotlin.String, @In onProgressUpdate: PullImageProgressCallback, @In callbackUserData: Pointer?): PullImageReturn?
     fun CreateOutputPipe(): CreateOutputPipeReturn?
-    fun DisposeOutputPipe(@In handle: Long): Error?
-    fun CreateNetwork(@In clientHandle: Long, @In name: kotlin.String, @In driver: kotlin.String): CreateNetworkReturn?
-    fun DeleteNetwork(@In clientHandle: Long, @In id: kotlin.String): Error?
-    fun GetNetworkByNameOrID(@In clientHandle: Long, @In searchFor: kotlin.String): GetNetworkByNameOrIDReturn?
-    fun CreateVolume(@In clientHandle: Long, @In name: kotlin.String): CreateVolumeReturn?
-    fun DeleteVolume(@In clientHandle: Long, @In name: kotlin.String): Error?
-    fun ListAllVolumes(@In clientHandle: Long): ListAllVolumesReturn?
+    fun DisposeOutputPipe(@In handle: OutputStreamHandle): Error?
+    fun CreateNetwork(@In clientHandle: DockerClientHandle, @In name: kotlin.String, @In driver: kotlin.String): CreateNetworkReturn?
+    fun DeleteNetwork(@In clientHandle: DockerClientHandle, @In id: kotlin.String): Error?
+    fun GetNetworkByNameOrID(@In clientHandle: DockerClientHandle, @In searchFor: kotlin.String): GetNetworkByNameOrIDReturn?
+    fun CreateVolume(@In clientHandle: DockerClientHandle, @In name: kotlin.String): CreateVolumeReturn?
+    fun DeleteVolume(@In clientHandle: DockerClientHandle, @In name: kotlin.String): Error?
+    fun ListAllVolumes(@In clientHandle: DockerClientHandle): ListAllVolumesReturn?
     fun FreeError(@In value: Error)
     fun AllocError(): Error?
     fun FreeTLSConfiguration(@In value: TLSConfiguration)

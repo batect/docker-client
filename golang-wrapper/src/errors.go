@@ -22,6 +22,7 @@ var (
 	ErrReadyCallbackFailed       = ReadyCallbackFailedError{}
 	ErrInvalidOutputStreamHandle = InvalidOutputStreamHandleError{}
 	ErrBuildKitNotSupported      = BuildKitNotSupportedError{}
+	ErrInvalidContextHandle      = InvalidContextHandleError{}
 )
 
 type InvalidDockerClientHandleError struct{}
@@ -60,4 +61,10 @@ type InvalidBuilderVersionError struct {
 
 func (e InvalidBuilderVersionError) Error() string {
 	return fmt.Sprintf("unknown builder version '%s'", e.InvalidVersion)
+}
+
+type InvalidContextHandleError struct{}
+
+func (e InvalidContextHandleError) Error() string {
+	return "invalid context handle"
 }

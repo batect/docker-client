@@ -239,7 +239,7 @@ abstract class GenerateKotlinJVMMethods : DefaultTask() {
         val name: String,
         val type: TypeInformation
     ) {
-        val kotlinDefinition: String = "@In $name: ${type.jvmName}"
+        val kotlinDefinition: String = "@In $name: ${type.jvmParameterName}"
     }
 
     private fun <K, V> Map<K, V>.groupByValues(): Map<V, Set<K>> {

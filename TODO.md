@@ -28,6 +28,7 @@
 * Run Mac CI tests with Colima?
 * Remove `IODispatcher` / `Dispatchers.kt` once https://github.com/Kotlin/kotlinx.coroutines/issues/3205 is resolved
 * Merge Golang Gradle plugins, distinction doesn't make sense any more
+* Refactor / rework code generation - it's a mess and needs tests
 
 # APIs
 
@@ -39,6 +40,7 @@
   * Add tests to verify this is working as expected
 * Cancellation for calls
   * Make all methods coroutines? https://kotlin.github.io/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines/suspend-cancellable-coroutine.html
+  * Go through all methods and check for any use of context.Background()
 * Pass structs to methods by value rather than by reference once jnr-ffi supports it
 
 * Check that Golang code can return an empty list (eg. listing all volumes returns no volumes)
@@ -103,6 +105,7 @@
       * Without TTY enabled: output split across streams according to source
     * Handle case where container hasn't been started or has already finished
   * Run - helper method that does start / attach / wait / stop / remove
+    * Test aborting this with a coroutine timeout
   * Stream events (for waiting for health check)
   * Inspect (for getting last health check result)
 * Exec

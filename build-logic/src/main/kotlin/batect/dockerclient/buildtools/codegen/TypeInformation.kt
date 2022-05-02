@@ -33,6 +33,9 @@ sealed interface TypeInformation {
     val cgoTypeName: String
     val jvmName: String
     val isPointer: Boolean
+
+    val jvmParameterName: String
+        get() = jvmName
 }
 
 @Serializable
@@ -55,6 +58,7 @@ data class AliasType(
     override val cName: String = name
     override val golangName: String = name
     override val cgoTypeName: String = "C.$name"
+    override val jvmParameterName: String = name
     val cgoConversionFunctionName: String = "C.$nativeType"
 
     override fun resolve(userDefinedTypes: Map<String, TypeFromConfigFile>): TypeInformation = this

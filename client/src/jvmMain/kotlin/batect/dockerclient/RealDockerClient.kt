@@ -46,6 +46,7 @@ import jnr.ffi.Struct
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.withContext
 import kotlin.time.Duration
 
 internal actual class RealDockerClient actual constructor(configuration: DockerClientConfiguration) : DockerClient, AutoCloseable {
@@ -298,17 +299,24 @@ internal actual class RealDockerClient actual constructor(configuration: DockerC
         }
     }
 
-    override fun attachToContainerOutput(container: ContainerReference, stdout: TextOutput, stderr: TextOutput, attachedNotification: ReadyNotification?) {
+    override suspend fun attachToContainerOutput(
+        container: ContainerReference,
+        stdout: TextOutput,
+        stderr: TextOutput,
+        attachedNotification: ReadyNotification?
+    ) {
         val callback = ReadyCallback(attachedNotification)
 
         stdout.prepareStream().use { stdoutStream ->
             stderr.prepareStream().use { stderrStream ->
-                runBlocking(IODispatcher) {
+                withContext(IODispatcher) {
                     launch { stdoutStream.run() }
                     launch { stderrStream.run() }
-                    launch {
+
+                    launchWithGolangContext { context ->
                         nativeAPI.AttachToContainerOutput(
                             clientHandle,
+                            context.handle,
                             container.id,
                             stdoutStream.outputStreamHandle.toLong(),
                             stderrStream.outputStreamHandle.toLong(),
@@ -329,19 +337,23 @@ internal actual class RealDockerClient actual constructor(configuration: DockerC
         }
     }
 
-    override fun waitForContainerToExit(container: ContainerReference, waitingNotification: ReadyNotification?): Long {
-        val callback = ReadyCallback(waitingNotification)
+    override suspend fun waitForContainerToExit(container: ContainerReference, waitingNotification: ReadyNotification?): Long {
+        return withContext(IODispatcher) {
+            launchWithGolangContext { context ->
+                val callback = ReadyCallback(waitingNotification)
 
-        nativeAPI.WaitForContainerToExit(clientHandle, container.id, callback, null)!!.use { ret ->
-            if (ret.error != null) {
-                if (ret.error!!.type.get() == "main.ReadyCallbackFailedError") {
-                    throw callback.exceptionThrownInCallback!!
+                nativeAPI.WaitForContainerToExit(clientHandle, context.handle, container.id, callback, null)!!.use { ret ->
+                    if (ret.error != null) {
+                        if (ret.error!!.type.get() == "main.ReadyCallbackFailedError") {
+                            throw callback.exceptionThrownInCallback!!
+                        }
+
+                        throw ContainerWaitFailedException(ret.error!!)
+                    }
+
+                    ret.exitCode.longValue()
                 }
-
-                throw ContainerWaitFailedException(ret.error!!)
             }
-
-            return ret.exitCode.longValue()
         }
     }
 

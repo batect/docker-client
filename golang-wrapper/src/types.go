@@ -28,6 +28,7 @@ import "unsafe"
 type DockerClientHandle C.DockerClientHandle
 type OutputStreamHandle C.OutputStreamHandle
 type FileDescriptor C.FileDescriptor
+type ContextHandle C.ContextHandle
 type Error *C.Error
 type TLSConfiguration *C.TLSConfiguration
 type ClientConfiguration *C.ClientConfiguration

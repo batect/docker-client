@@ -23,9 +23,11 @@ import io.kotest.common.ExperimentalKotest
 import io.kotest.core.spec.style.ShouldSpec
 import io.kotest.matchers.comparables.shouldBeLessThan
 import io.kotest.matchers.shouldBe
+import kotlinx.coroutines.TimeoutCancellationException
 import kotlinx.coroutines.async
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import kotlinx.coroutines.withTimeout
 import okio.Buffer
 import kotlin.time.Duration.Companion.seconds
 import kotlin.time.ExperimentalTime
@@ -188,6 +190,79 @@ class DockerClientContainerManagementSpec : ShouldSpec({
             val exception = shouldThrow<ContainerRemovalFailedException> { client.removeContainer(ContainerReference("does-not-exist")) }
 
             exception.message shouldBe "No such container: does-not-exist"
+        }
+
+        should("be able to use Kotlin timeouts to abort waiting for a container to exit") {
+            val spec = ContainerCreationSpec.Builder(image)
+                .withCommand(listOf("sh", "-c", "sleep 5"))
+                .build()
+
+            val container = client.createContainer(spec)
+
+            try {
+                val duration = measureTime {
+                    shouldThrow<TimeoutCancellationException> {
+                        withContext(IODispatcher) {
+                            withTimeout(2.seconds) {
+                                val waitingForContainerToExit = ReadyNotification()
+
+                                launch { client.waitForContainerToExit(container, waitingForContainerToExit) }
+
+                                launch {
+                                    waitingForContainerToExit.waitForReady()
+                                    client.startContainer(container)
+                                }
+                            }
+                        }
+                    }
+                }
+
+                duration shouldBeLessThan 3.seconds
+            } finally {
+                client.removeContainer(container, force = true)
+            }
+        }
+
+        should("be able to use Kotlin timeouts to abort streaming output from a container while still receiving any output from before the timeout") {
+            val spec = ContainerCreationSpec.Builder(image)
+                .withCommand(listOf("sh", "-c", "echo 'Hello stdout' >/dev/stdout && echo 'Hello stderr' >/dev/stderr && sleep 5 && echo 'Stdout should never receive this' >/dev/stdout && echo 'Stderr should never receive this' >/dev/stderr"))
+                .build()
+
+            val container = client.createContainer(spec)
+
+            try {
+                val stdout = Buffer()
+                val stderr = Buffer()
+
+                val duration = measureTime {
+                    shouldThrow<TimeoutCancellationException> {
+                        withContext(IODispatcher) {
+                            withTimeout(2.seconds) {
+                                val listeningToOutput = ReadyNotification()
+
+                                launch {
+                                    client.attachToContainerOutput(container, SinkTextOutput(stdout), SinkTextOutput(stderr), listeningToOutput)
+                                }
+
+                                launch {
+                                    listeningToOutput.waitForReady()
+                                    client.startContainer(container)
+                                }
+                            }
+                        }
+                    }
+                }
+
+                val stdoutText = stdout.readUtf8()
+                val stderrText = stderr.readUtf8()
+
+                stdoutText shouldBe "Hello stdout\n"
+                stderrText shouldBe "Hello stderr\n"
+
+                duration shouldBeLessThan 5.seconds
+            } finally {
+                client.removeContainer(container, force = true)
+            }
         }
     }
 })

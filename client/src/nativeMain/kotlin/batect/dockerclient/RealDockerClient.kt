@@ -73,6 +73,7 @@ import kotlinx.cinterop.staticCFunction
 import kotlinx.cinterop.toKString
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.withContext
 import kotlin.time.Duration
 
 internal actual class RealDockerClient actual constructor(configuration: DockerClientConfiguration) : DockerClient, AutoCloseable {
@@ -348,18 +349,20 @@ internal actual class RealDockerClient actual constructor(configuration: DockerC
         }
     }
 
-    override fun attachToContainerOutput(container: ContainerReference, stdout: TextOutput, stderr: TextOutput, attachedNotification: ReadyNotification?) {
+    override suspend fun attachToContainerOutput(container: ContainerReference, stdout: TextOutput, stderr: TextOutput, attachedNotification: ReadyNotification?) {
         stdout.prepareStream().use { stdoutStream ->
             stderr.prepareStream().use { stderrStream ->
-                runBlocking(IODispatcher) {
+                withContext(IODispatcher) {
                     launch { stdoutStream.run() }
                     launch { stderrStream.run() }
-                    launch {
+
+                    launchWithGolangContext { context ->
                         val callbackState = ReadyNotificationCallbackState(attachedNotification)
 
                         callbackState.use { callback, callbackUserData ->
                             AttachToContainerOutput(
                                 clientHandle,
+                                context.handle,
                                 container.id.cstr,
                                 stdoutStream.outputStreamHandle,
                                 stderrStream.outputStreamHandle,
@@ -385,20 +388,24 @@ internal actual class RealDockerClient actual constructor(configuration: DockerC
         }
     }
 
-    override fun waitForContainerToExit(container: ContainerReference, waitingNotification: ReadyNotification?): Long {
-        val callbackState = ReadyNotificationCallbackState(waitingNotification)
+    override suspend fun waitForContainerToExit(container: ContainerReference, waitingNotification: ReadyNotification?): Long {
+        return withContext(IODispatcher) {
+            launchWithGolangContext { context ->
+                val callbackState = ReadyNotificationCallbackState(waitingNotification)
 
-        return callbackState.use { callback, callbackUserData ->
-            WaitForContainerToExit(clientHandle, container.id.cstr, callback, callbackUserData)!!.use { ret ->
-                if (ret.pointed.Error != null) {
-                    if (ret.pointed.Error!!.pointed.Type!!.toKString() == "main.ReadyCallbackFailedError") {
-                        throw callbackState.exceptionThrown!!
+                callbackState.use { callback, callbackUserData ->
+                    WaitForContainerToExit(clientHandle, context.handle, container.id.cstr, callback, callbackUserData)!!.use { ret ->
+                        if (ret.pointed.Error != null) {
+                            if (ret.pointed.Error!!.pointed.Type!!.toKString() == "main.ReadyCallbackFailedError") {
+                                throw callbackState.exceptionThrown!!
+                            }
+
+                            throw ContainerWaitFailedException(ret.pointed.Error!!.pointed)
+                        }
+
+                        ret.pointed.ExitCode
                     }
-
-                    throw ContainerWaitFailedException(ret.pointed.Error!!.pointed)
                 }
-
-                ret.pointed.ExitCode
             }
         }
     }

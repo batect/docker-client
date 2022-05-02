@@ -91,14 +91,15 @@ func RemoveContainer(clientHandle DockerClientHandle, id *C.char, force C.bool, 
 }
 
 //export AttachToContainerOutput
-func AttachToContainerOutput(clientHandle DockerClientHandle, id *C.char, stdoutStreamHandle OutputStreamHandle, stderrStreamHandle OutputStreamHandle, onReady ReadyCallback, callbackUserData unsafe.Pointer) Error {
+func AttachToContainerOutput(clientHandle DockerClientHandle, contextHandle ContextHandle, id *C.char, stdoutStreamHandle OutputStreamHandle, stderrStreamHandle OutputStreamHandle, onReady ReadyCallback, callbackUserData unsafe.Pointer) Error {
 	defer stdoutStreamHandle.Close()
 	defer stderrStreamHandle.Close()
 
 	docker := clientHandle.DockerAPIClient()
+	ctx := contextHandle.Context()
 	containerID := C.GoString(id)
 
-	config, err := docker.ContainerInspect(context.Background(), containerID)
+	config, err := docker.ContainerInspect(ctx, containerID)
 
 	if err != nil {
 		return toError(err)
@@ -111,7 +112,7 @@ func AttachToContainerOutput(clientHandle DockerClientHandle, id *C.char, stdout
 		Stderr: true,
 	}
 
-	resp, err := docker.ContainerAttach(context.Background(), containerID, opts)
+	resp, err := docker.ContainerAttach(ctx, containerID, opts)
 
 	if err != nil {
 		return toError(err)
@@ -131,7 +132,7 @@ func AttachToContainerOutput(clientHandle DockerClientHandle, id *C.char, stdout
 		Tty:          config.Config.Tty,
 	}
 
-	if err := streamer.Stream(context.Background()); err != nil {
+	if err := streamer.Stream(ctx); err != nil {
 		return toError(err)
 	}
 
@@ -139,10 +140,11 @@ func AttachToContainerOutput(clientHandle DockerClientHandle, id *C.char, stdout
 }
 
 //export WaitForContainerToExit
-func WaitForContainerToExit(clientHandle DockerClientHandle, id *C.char, onReady ReadyCallback, callbackUserData unsafe.Pointer) WaitForContainerToExitReturn {
+func WaitForContainerToExit(clientHandle DockerClientHandle, contextHandle ContextHandle, id *C.char, onReady ReadyCallback, callbackUserData unsafe.Pointer) WaitForContainerToExitReturn {
 	docker := clientHandle.DockerAPIClient()
+	ctx := contextHandle.Context()
 
-	responseC, errC := docker.ContainerWait(context.Background(), C.GoString(id), container.WaitConditionNextExit)
+	responseC, errC := docker.ContainerWait(ctx, C.GoString(id), container.WaitConditionNextExit)
 
 	if !invokeReadyCallback(onReady, callbackUserData) {
 		return newWaitForContainerToExitReturn(-1, toError(ErrReadyCallbackFailed))

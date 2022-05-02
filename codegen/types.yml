@@ -16,6 +16,12 @@
   jvmName: ULong
   jnrType: uintptr_t
 
+- name: ContextHandle
+  type: alias
+  nativeType: uint64_t
+  jvmName: Long
+  jnrType: u_int64_t
+
 - name: Error
   type: struct
   fields:
