@@ -29,6 +29,7 @@
 * Remove `IODispatcher` / `Dispatchers.kt` once https://github.com/Kotlin/kotlinx.coroutines/issues/3205 is resolved
 * Merge Golang Gradle plugins, distinction doesn't make sense any more
 * Refactor / rework code generation - it's a mess and needs tests
+* Remove use of panics in Golang code
 
 # APIs
 
