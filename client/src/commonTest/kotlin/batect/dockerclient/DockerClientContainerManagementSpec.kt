@@ -43,7 +43,7 @@ class DockerClientContainerManagementSpec : ShouldSpec({
         context("using low-level methods") {
             should("be able to create, start, wait for and remove a container") {
                 val spec = ContainerCreationSpec.Builder(image)
-                    .withCommand(listOf("sh", "-c", "exit 123"))
+                    .withCommand("sh", "-c", "exit 123")
                     .build()
 
                 val container = client.createContainer(spec)
@@ -69,7 +69,7 @@ class DockerClientContainerManagementSpec : ShouldSpec({
 
             should("be able to stop a container, respecting any timeout provided") {
                 val spec = ContainerCreationSpec.Builder(image)
-                    .withCommand(listOf("sh", "-c", "sleep 9999")) // This command does not respond to signals and so must be forcibly terminated
+                    .withCommand("sh", "-c", "sleep 9999") // This command does not respond to signals and so must be forcibly terminated
                     .build()
 
                 val container = client.createContainer(spec)
@@ -86,7 +86,7 @@ class DockerClientContainerManagementSpec : ShouldSpec({
 
             should("be able to stream output from a container") {
                 val spec = ContainerCreationSpec.Builder(image)
-                    .withCommand(listOf("sh", "-c", "echo 'Hello stdout' >/dev/stdout && echo 'Hello stderr' >/dev/stderr"))
+                    .withCommand("sh", "-c", "echo 'Hello stdout' >/dev/stdout && echo 'Hello stderr' >/dev/stderr")
                     .build()
 
                 val container = client.createContainer(spec)
@@ -120,7 +120,7 @@ class DockerClientContainerManagementSpec : ShouldSpec({
 
             should("throw an appropriate exception when creating a container with an image that doesn't exist") {
                 val spec = ContainerCreationSpec.Builder(ImageReference("batect/this-image-does-not-exist:abc123"))
-                    .withCommand(listOf("sh", "-c", "exit 123"))
+                    .withCommand("sh", "-c", "exit 123")
                     .build()
 
                 val exception = shouldThrow<ContainerCreationFailedException> { client.createContainer(spec) }
@@ -136,7 +136,7 @@ class DockerClientContainerManagementSpec : ShouldSpec({
 
             should("not throw an exception when starting a container that has already been started") {
                 val spec = ContainerCreationSpec.Builder(image)
-                    .withCommand(listOf("sh", "-c", "sleep 9999"))
+                    .withCommand("sh", "-c", "sleep 9999")
                     .build()
 
                 val container = client.createContainer(spec)
@@ -158,7 +158,7 @@ class DockerClientContainerManagementSpec : ShouldSpec({
 
             should("not throw an exception when stopping a container that's already been stopped") {
                 val spec = ContainerCreationSpec.Builder(image)
-                    .withCommand(listOf("sh", "-c", "sleep 9999"))
+                    .withCommand("sh", "-c", "sleep 9999")
                     .build()
 
                 val container = client.createContainer(spec)
@@ -175,7 +175,7 @@ class DockerClientContainerManagementSpec : ShouldSpec({
 
             should("not throw an exception when stopping a container that's never been started") {
                 val spec = ContainerCreationSpec.Builder(image)
-                    .withCommand(listOf("sh", "-c", "sleep 9999"))
+                    .withCommand("sh", "-c", "sleep 9999")
                     .build()
 
                 val container = client.createContainer(spec)
@@ -195,7 +195,7 @@ class DockerClientContainerManagementSpec : ShouldSpec({
 
             should("be able to use Kotlin timeouts to abort waiting for a container to exit") {
                 val spec = ContainerCreationSpec.Builder(image)
-                    .withCommand(listOf("sh", "-c", "sleep 5"))
+                    .withCommand("sh", "-c", "sleep 5")
                     .build()
 
                 val container = client.createContainer(spec)
@@ -226,7 +226,7 @@ class DockerClientContainerManagementSpec : ShouldSpec({
 
             should("be able to use Kotlin timeouts to abort streaming output from a container while still receiving any output from before the timeout") {
                 val spec = ContainerCreationSpec.Builder(image)
-                    .withCommand(listOf("sh", "-c", "echo 'Hello stdout' >/dev/stdout && echo 'Hello stderr' >/dev/stderr && sleep 5 && echo 'Stdout should never receive this' >/dev/stdout && echo 'Stderr should never receive this' >/dev/stderr"))
+                    .withCommand("sh", "-c", "echo 'Hello stdout' >/dev/stdout && echo 'Hello stderr' >/dev/stderr && sleep 5 && echo 'Stdout should never receive this' >/dev/stdout && echo 'Stderr should never receive this' >/dev/stderr")
                     .build()
 
                 val container = client.createContainer(spec)
@@ -270,7 +270,7 @@ class DockerClientContainerManagementSpec : ShouldSpec({
         context("using the run() helper method") {
             should("be able to run a basic container") {
                 val spec = ContainerCreationSpec.Builder(image)
-                    .withCommand(listOf("sh", "-c", "echo 'Hello stdout' >/dev/stdout && echo 'Hello stderr' >/dev/stderr && exit 123"))
+                    .withCommand("sh", "-c", "echo 'Hello stdout' >/dev/stdout && echo 'Hello stderr' >/dev/stderr && exit 123")
                     .build()
 
                 val container = client.createContainer(spec)
@@ -293,7 +293,7 @@ class DockerClientContainerManagementSpec : ShouldSpec({
 
             should("be able to use Kotlin timeouts to abort running a container while still receiving any output from before the timeout") {
                 val spec = ContainerCreationSpec.Builder(image)
-                    .withCommand(listOf("sh", "-c", "echo 'Hello stdout' >/dev/stdout && echo 'Hello stderr' >/dev/stderr && sleep 5 && echo 'Stdout should never receive this' >/dev/stdout && echo 'Stderr should never receive this' >/dev/stderr"))
+                    .withCommand("sh", "-c", "echo 'Hello stdout' >/dev/stdout && echo 'Hello stderr' >/dev/stderr && sleep 5 && echo 'Stdout should never receive this' >/dev/stdout && echo 'Stderr should never receive this' >/dev/stderr")
                     .build()
 
                 val container = client.createContainer(spec)

@@ -23,6 +23,8 @@ public data class ContainerCreationSpec(
     public class Builder(image: ImageReference) {
         private var spec = ContainerCreationSpec(image)
 
+        public fun withCommand(vararg command: String): Builder = withCommand(command.toList())
+
         public fun withCommand(command: List<String>): Builder {
             spec = spec.copy(command = command)
 
