@@ -17,6 +17,9 @@
 package batect.dockerclient
 
 import batect.dockerclient.io.TextOutput
+import kotlinx.coroutines.async
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import okio.Path
 import kotlin.time.Duration
 
@@ -154,23 +157,38 @@ public interface DockerClient : AutoCloseable {
 
 internal expect class RealDockerClient(configuration: DockerClientConfiguration) : DockerClient, AutoCloseable
 
-public enum class TLSVerification {
-    Enabled,
-    InsecureDisabled
-}
-
 internal typealias DockerClientFactory = (DockerClientConfiguration) -> DockerClient
 
-internal data class DockerClientConfiguration(
-    val useConfigurationFromEnvironment: Boolean = true,
-    val host: String? = null,
-    val tls: DockerClientTLSConfiguration? = null,
-    val configDirectoryPath: String? = null
-)
+/**
+ * Runs the provided container until it exits, streaming output to the provided output streams.
+ *
+ * The container is not stopped or removed when it exits.
+ *
+ * @param container the container to run
+ * @param stdout the output stream to stream stdout to
+ * @param stderr the output stream to stream stderr to, not used if the container is configured to use a TTY
+ * @return the exit code from the container
+ */
+public suspend fun DockerClient.run(container: ContainerReference, stdout: TextOutput, stderr: TextOutput): Long {
+    return withContext(IODispatcher) {
+        val listeningToOutput = ReadyNotification()
+        val waitingForExitCode = ReadyNotification()
 
-internal data class DockerClientTLSConfiguration(
-    val caFilePath: String,
-    val certFilePath: String,
-    val keyFilePath: String,
-    val insecureSkipVerify: Boolean = false
-)
+        launch {
+            attachToContainerOutput(container, stdout, stderr, listeningToOutput)
+        }
+
+        val exitCodeSource = async {
+            waitForContainerToExit(container, waitingForExitCode)
+        }
+
+        launch {
+            listeningToOutput.waitForReady()
+            waitingForExitCode.waitForReady()
+
+            startContainer(container)
+        }
+
+        exitCodeSource.await()
+    }
+}

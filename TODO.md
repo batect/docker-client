@@ -105,8 +105,6 @@
       * With TTY enabled: all output goes to stdout stream
       * Without TTY enabled: output split across streams according to source
     * Handle case where container hasn't been started or has already finished
-  * Run - helper method that does start / attach / wait / stop / remove
-    * Test aborting this with a coroutine timeout
   * Stream events (for waiting for health check)
   * Inspect (for getting last health check result)
 * Exec
