@@ -273,18 +273,35 @@ kotlin.targets.withType(KotlinNativeTarget::class.java) {
     }
 }
 
+val kotestProperties = setOf(
+    "kotest.filter.specs",
+    "kotest.filter.tests"
+)
+
 val testEnvironmentVariables = setOf(
     "DISABLE_DOCKER_DAEMON_TESTS",
-    "DOCKER_CONTAINER_OPERATING_SYSTEM"
-)
+    "DOCKER_CONTAINER_OPERATING_SYSTEM",
+) + kotestProperties + kotestProperties.map { it.replace('.', '_') }
 
 tasks.named<Test>("jvmTest") {
     useJUnitPlatform()
 
+    kotestProperties.forEach { name ->
+        val value = System.getProperty(name)
+
+        if (value != null) {
+            inputs.property(name, value)
+            systemProperty(name, value)
+        }
+    }
+
     testEnvironmentVariables.forEach { name ->
-        val value = System.getenv(name) ?: ""
-        inputs.property(name, value)
-        environment(name, value)
+        val value = System.getenv(name)
+
+        if (value != null) {
+            inputs.property(name, value)
+            environment(name, value)
+        }
     }
 
     environment("GODEBUG", "cgocheck=2")
@@ -293,9 +310,12 @@ tasks.named<Test>("jvmTest") {
 
 tasks.withType<KotlinNativeHostTest>().configureEach {
     testEnvironmentVariables.forEach { name ->
-        val value = System.getenv(name) ?: ""
-        inputs.property(name, value)
-        environment(name, value)
+        val value = System.getenv(name)
+
+        if (value != null) {
+            inputs.property(name, value)
+            environment(name, value)
+        }
     }
 
     environment("GODEBUG", "cgocheck=2")
