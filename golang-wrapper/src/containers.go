@@ -30,12 +30,13 @@ import (
 )
 
 //export CreateContainer
-func CreateContainer(clientHandle DockerClientHandle, spec *C.CreateContainerRequest) CreateContainerReturn {
+func CreateContainer(clientHandle DockerClientHandle, request *C.CreateContainerRequest) CreateContainerReturn {
 	docker := clientHandle.DockerAPIClient()
 
 	config := container.Config{
-		Image: C.GoString(spec.ImageReference),
-		Cmd:   fromStringArray(spec.Command, spec.CommandCount),
+		Image:    C.GoString(request.ImageReference),
+		Cmd:      fromStringArray(request.Command, request.CommandCount),
+		Hostname: C.GoString(request.Hostname),
 	}
 
 	hostConfig := container.HostConfig{}

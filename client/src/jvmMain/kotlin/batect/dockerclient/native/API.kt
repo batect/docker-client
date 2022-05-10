@@ -28,7 +28,7 @@ internal interface API {
     fun CreateClient(@In cfg: ClientConfiguration): CreateClientReturn?
     fun DisposeClient(@In clientHandle: DockerClientHandle): Error?
     fun SetClientProxySettingsForTest(@In clientHandle: DockerClientHandle)
-    fun CreateContainer(@In clientHandle: DockerClientHandle, @In spec: CreateContainerRequest): CreateContainerReturn?
+    fun CreateContainer(@In clientHandle: DockerClientHandle, @In request: CreateContainerRequest): CreateContainerReturn?
     fun StartContainer(@In clientHandle: DockerClientHandle, @In id: kotlin.String): Error?
     fun StopContainer(@In clientHandle: DockerClientHandle, @In id: kotlin.String, @In timeoutSeconds: Long): Error?
     fun RemoveContainer(@In clientHandle: DockerClientHandle, @In id: kotlin.String, @In force: Boolean, @In removeVolumes: Boolean): Error?

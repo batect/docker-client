@@ -226,6 +226,7 @@ typedef struct {
     char* ImageReference;
     uint64_t CommandCount;
     char** Command;
+    char* Hostname;
 } CreateContainerRequest;
 
 typedef struct {

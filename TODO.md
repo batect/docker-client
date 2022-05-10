@@ -63,8 +63,6 @@
   * Create
     * Name
     * Network
-    * Host name
-      * If greater than 63 characters, throw exception
     * Network aliases
     * Extra hosts
     * Environment variables
@@ -72,6 +70,7 @@
       * Local directory
       * Volume
       * Docker socket
+      * tmpfs
     * Entrypoint
     * Working directory
     * Device mounts

@@ -456,6 +456,7 @@ internal actual class RealDockerClient actual constructor(configuration: DockerC
         val request = CreateContainerRequest(Runtime.getRuntime(nativeAPI))
         request.imageReference.set(jvm.image.id)
         request.command = jvm.command
+        request.hostname.set(jvm.hostname)
 
         return request
     }

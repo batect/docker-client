@@ -518,6 +518,7 @@ internal class CreateContainerRequest(runtime: Runtime) : Struct(runtime), AutoC
     val imageReference = UTF8StringRef()
     val commandCount = u_int64_t()
     val commandPointer = Pointer()
+    val hostname = UTF8StringRef()
 
     override fun close() {
         nativeAPI.FreeCreateContainerRequest(this)

@@ -19,6 +19,7 @@ package batect.dockerclient
 public data class ContainerCreationSpec(
     val image: ImageReference,
     val command: List<String> = emptyList(),
+    val hostname: String? = null
 ) {
     public class Builder(image: ImageReference) {
         private var spec = ContainerCreationSpec(image)
@@ -27,6 +28,12 @@ public data class ContainerCreationSpec(
 
         public fun withCommand(command: List<String>): Builder {
             spec = spec.copy(command = command)
+
+            return this
+        }
+
+        public fun withHostname(hostname: String): Builder {
+            spec = spec.copy(hostname = hostname)
 
             return this
         }

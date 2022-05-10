@@ -482,6 +482,7 @@ func newContainerReference(
 func newCreateContainerRequest(
     ImageReference string,
     Command []string,
+    Hostname string,
 ) CreateContainerRequest {
     value := C.AllocCreateContainerRequest()
     value.ImageReference = C.CString(ImageReference)
@@ -493,6 +494,7 @@ func newCreateContainerRequest(
         C.SetstringArrayElement(value.Command, C.uint64_t(i), C.CString(v))
     }
 
+    value.Hostname = C.CString(Hostname)
 
     return value
 }

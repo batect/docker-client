@@ -321,6 +321,44 @@ class DockerClientContainerManagementSpec : ShouldSpec({
                     client.removeContainer(container, force = true)
                 }
             }
+
+            data class TestScenario(
+                val description: String,
+                val creationSpec: ContainerCreationSpec,
+                val expectedOutput: String,
+                val expectedErrorOutput: String = ""
+            )
+
+            setOf(
+                TestScenario(
+                    "set a hostname for a container",
+                    ContainerCreationSpec.Builder(image)
+                        .withHostname("my-container-name")
+                        .withCommand("hostname")
+                        .build(),
+                    "my-container-name\n"
+                )
+            ).forEach { scenario ->
+                should("be able to ${scenario.description}") {
+                    val container = client.createContainer(scenario.creationSpec)
+
+                    try {
+                        val stdout = Buffer()
+                        val stderr = Buffer()
+
+                        val exitCode = client.run(container, SinkTextOutput(stdout), SinkTextOutput(stderr))
+                        val stdoutText = stdout.readUtf8()
+                        val stderrText = stderr.readUtf8()
+
+                        exitCode shouldBe 0
+                        stdoutText shouldBe scenario.expectedOutput
+                        stderrText shouldBe scenario.expectedErrorOutput
+                    } finally {
+                        client.removeContainer(container, force = true)
+                    }
+                }
+            }
+
         }
     }
 })

@@ -620,6 +620,7 @@ CreateContainerRequest* AllocCreateContainerRequest() {
     CreateContainerRequest* value = malloc(sizeof(CreateContainerRequest));
     value->ImageReference = NULL;
     value->Command = NULL;
+    value->Hostname = NULL;
     value->CommandCount = 0;
 
     return value;
@@ -636,6 +637,7 @@ void FreeCreateContainerRequest(CreateContainerRequest* value) {
     }
 
     free(value->Command);
+    free(value->Hostname);
     free(value);
 }
 
