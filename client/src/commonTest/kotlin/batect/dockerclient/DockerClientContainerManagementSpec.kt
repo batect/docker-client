@@ -655,7 +655,7 @@ class DockerClientContainerManagementSpec : ShouldSpec({
                 }
             }
 
-            should("be able to mount the Docker socket into a container") {
+            should("be able to mount the Docker socket into a container").onlyIfNotConnectingToDaemonOverTCP {
                 val imageWithDockerCLI = client.pullImage("docker:20.10.15")
 
                 val spec = ContainerCreationSpec.Builder(imageWithDockerCLI)

@@ -287,6 +287,7 @@ val kotestProperties = setOf(
 val testEnvironmentVariables = setOf(
     "DISABLE_DOCKER_DAEMON_TESTS",
     "DOCKER_CONTAINER_OPERATING_SYSTEM",
+    "DOCKER_CONNECTION_OVER_TCP",
 ) + kotestProperties + kotestProperties.map { it.replace('.', '_') }
 
 tasks.named<Test>("jvmTest") {

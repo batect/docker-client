@@ -48,6 +48,9 @@ internal val testEnvironmentContainerOperatingSystem: ContainerOperatingSystem
         else -> throw IllegalArgumentException("Unknown value for 'DOCKER_CONTAINER_OPERATING_SYSTEM' environment variable: $value")
     }
 
+internal suspend fun TestWithConfigBuilder.onlyIfNotConnectingToDaemonOverTCP(test: suspend TestContext.() -> Unit) =
+    this.config(enabledIf = { getEnvironmentVariable("DOCKER_CONNECTION_OVER_TCP") != "true" }, test = test)
+
 expect val testEnvironmentOperatingSystem: OperatingSystem
 
 expect fun getEnvironmentVariable(name: String): String?
