@@ -60,7 +60,6 @@
     * Network
       * Network aliases
     * Mounts
-      * Docker socket
       * tmpfs
     * Entrypoint
     * Working directory

@@ -21,7 +21,6 @@ import io.kotest.assertions.throwables.shouldNotThrowAny
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.common.ExperimentalKotest
 import io.kotest.core.spec.style.ShouldSpec
-import io.kotest.matchers.collections.shouldContain
 import io.kotest.matchers.comparables.shouldBeLessThan
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
@@ -32,7 +31,6 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import kotlinx.coroutines.withTimeout
 import okio.Buffer
-import okio.FileSystem
 import okio.Path
 import okio.Path.Companion.toPath
 import kotlin.random.Random
@@ -46,7 +44,7 @@ class DockerClientContainerManagementSpec : ShouldSpec({
     context("when working with Linux containers").onlyIfDockerDaemonSupportsLinuxContainers {
         val client = closeAfterTest(DockerClient.Builder().build())
         val image = client.pullImage("alpine:3.15.0")
-        val hostMountDirectory: Path = FileSystem.SYSTEM.canonicalize("./src/commonTest/resources/container-mount-directory".toPath())
+        val hostMountDirectory: Path = systemFileSystem.canonicalize("./src/commonTest/resources/container-mount-directory".toPath())
 
         context("using low-level methods") {
             should("be able to create, start, wait for and remove a container") {
@@ -531,6 +529,32 @@ class DockerClientContainerManagementSpec : ShouldSpec({
                     }
                 } finally {
                     client.deleteVolume(volume)
+                }
+            }
+
+            should("be able to mount the Docker socket into a container") {
+                val imageWithDockerCLI = client.pullImage("docker:20.10.15")
+
+                val spec = ContainerCreationSpec.Builder(imageWithDockerCLI)
+                    .withHostMount("/var/run/docker.sock".toPath(), "/var/run/docker.sock")
+                    .withCommand("docker", "version", "--format", "{{ .Server.Arch }}")
+                    .build()
+
+                val container = client.createContainer(spec)
+
+                try {
+                    val stdout = Buffer()
+                    val stderr = Buffer()
+
+                    val exitCode = client.run(container, SinkTextOutput(stdout), SinkTextOutput(stderr))
+                    val stdoutText = stdout.readUtf8()
+                    val stderrText = stderr.readUtf8()
+
+                    exitCode shouldBe 0
+                    stdoutText.trim() shouldNotBe ""
+                    stderrText.trim() shouldBe ""
+                } finally {
+                    client.removeContainer(container, force = true)
                 }
             }
         }
