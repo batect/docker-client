@@ -78,6 +78,12 @@ internal var CreateContainerRequest.tmpfsMounts by WriteOnlyList<CreateContainer
     CreateContainerRequest::tmpfsMountsPointer
 )
 
+internal var CreateContainerRequest.deviceMounts by WriteOnlyList<CreateContainerRequest, batect.dockerclient.DeviceMount>(
+    CreateContainerRequest::deviceMountsCount,
+    CreateContainerRequest::deviceMountsPointer,
+    ::deviceMountToNative
+)
+
 internal fun StringPair(key: String, value: String): StringPair {
     val pair = StringPair(Runtime.getRuntime(nativeAPI))
     pair.key.set(key)
@@ -125,6 +131,17 @@ private fun stringToPointer(value: String, memoryManager: MemoryManager): Pointe
     pointer.put(0, bytes, 0, bytes.size)
     pointer.putByte(bytes.size.toLong(), 0)
     return pointer
+}
+
+private fun deviceMountToNative(value: batect.dockerclient.DeviceMount, @Suppress("UNUSED_PARAMETER") memoryManager: MemoryManager): Pointer {
+    val runtime = Runtime.getRuntime(nativeAPI)
+    val mount = DeviceMount(runtime)
+
+    mount.localPath.set(value.localPath.toString())
+    mount.containerPath.set(value.containerPath)
+    mount.permissions.set(value.permissions)
+
+    return Struct.getMemory(mount)
 }
 
 private class WriteOnlyList<T : Struct, E>(

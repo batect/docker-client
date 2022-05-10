@@ -328,6 +328,16 @@
     - name: ID
       type: string
 
+- name: DeviceMount
+  type: struct
+  fields:
+    - name: LocalPath
+      type: string
+    - name: ContainerPath
+      type: string
+    - name: Permissions
+      type: string
+
 - name: CreateContainerRequest
   type: struct
   fields:
@@ -349,6 +359,8 @@
       type: string[]
     - name: TmpfsMounts
       type: StringPair[]
+    - name: DeviceMounts
+      type: DeviceMount[]
 
 - name: CreateContainerReturn
   type: struct

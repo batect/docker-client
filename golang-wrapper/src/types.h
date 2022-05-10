@@ -223,6 +223,12 @@ typedef struct {
 } ContainerReference;
 
 typedef struct {
+    char* LocalPath;
+    char* ContainerPath;
+    char* Permissions;
+} DeviceMount;
+
+typedef struct {
     char* ImageReference;
     uint64_t CommandCount;
     char** Command;
@@ -238,6 +244,8 @@ typedef struct {
     char** BindMounts;
     uint64_t TmpfsMountsCount;
     StringPair** TmpfsMounts;
+    uint64_t DeviceMountsCount;
+    DeviceMount** DeviceMounts;
 } CreateContainerRequest;
 
 typedef struct {
@@ -318,6 +326,8 @@ EXPORTED_FUNCTION void FreeBuildImageProgressUpdate(BuildImageProgressUpdate* va
 EXPORTED_FUNCTION bool InvokeBuildImageProgressCallback(BuildImageProgressCallback method, void* userData, BuildImageProgressUpdate* progress);
 EXPORTED_FUNCTION ContainerReference* AllocContainerReference();
 EXPORTED_FUNCTION void FreeContainerReference(ContainerReference* value);
+EXPORTED_FUNCTION DeviceMount* AllocDeviceMount();
+EXPORTED_FUNCTION void FreeDeviceMount(DeviceMount* value);
 EXPORTED_FUNCTION CreateContainerRequest* AllocCreateContainerRequest();
 EXPORTED_FUNCTION void FreeCreateContainerRequest(CreateContainerRequest* value);
 EXPORTED_FUNCTION CreateContainerReturn* AllocCreateContainerReturn();
@@ -334,4 +344,7 @@ EXPORTED_FUNCTION StringPair* GetStringPairArrayElement(StringPair** array, uint
 EXPORTED_FUNCTION char** CreatestringArray(uint64_t size);
 EXPORTED_FUNCTION void SetstringArrayElement(char** array, uint64_t index, char* value);
 EXPORTED_FUNCTION char* GetstringArrayElement(char** array, uint64_t index);
+EXPORTED_FUNCTION DeviceMount** CreateDeviceMountArray(uint64_t size);
+EXPORTED_FUNCTION void SetDeviceMountArrayElement(DeviceMount** array, uint64_t index, DeviceMount* value);
+EXPORTED_FUNCTION DeviceMount* GetDeviceMountArrayElement(DeviceMount** array, uint64_t index);
 #endif

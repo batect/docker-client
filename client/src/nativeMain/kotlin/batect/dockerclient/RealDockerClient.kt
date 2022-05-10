@@ -355,6 +355,17 @@ internal actual class RealDockerClient actual constructor(configuration: DockerC
             )
 
             TmpfsMountsCount = spec.tmpfsMounts.size.toULong()
+
+            DeviceMounts = allocArrayOf(spec.deviceMounts.map { allocDeviceMount(it).ptr })
+            DeviceMountsCount = spec.deviceMounts.size.toULong()
+        }
+    }
+
+    private fun MemScope.allocDeviceMount(mount: DeviceMount): batect.dockerclient.native.DeviceMount {
+        return alloc {
+            LocalPath = mount.localPath.toString().cstr.ptr
+            ContainerPath = mount.containerPath.cstr.ptr
+            Permissions = mount.permissions.cstr.ptr
         }
     }
 

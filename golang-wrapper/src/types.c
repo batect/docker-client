@@ -616,6 +616,26 @@ void FreeContainerReference(ContainerReference* value) {
     free(value);
 }
 
+DeviceMount* AllocDeviceMount() {
+    DeviceMount* value = malloc(sizeof(DeviceMount));
+    value->LocalPath = NULL;
+    value->ContainerPath = NULL;
+    value->Permissions = NULL;
+
+    return value;
+}
+
+void FreeDeviceMount(DeviceMount* value) {
+    if (value == NULL) {
+        return;
+    }
+
+    free(value->LocalPath);
+    free(value->ContainerPath);
+    free(value->Permissions);
+    free(value);
+}
+
 CreateContainerRequest* AllocCreateContainerRequest() {
     CreateContainerRequest* value = malloc(sizeof(CreateContainerRequest));
     value->ImageReference = NULL;
@@ -627,12 +647,14 @@ CreateContainerRequest* AllocCreateContainerRequest() {
     value->EnvironmentVariables = NULL;
     value->BindMounts = NULL;
     value->TmpfsMounts = NULL;
+    value->DeviceMounts = NULL;
     value->CommandCount = 0;
     value->EntrypointCount = 0;
     value->ExtraHostsCount = 0;
     value->EnvironmentVariablesCount = 0;
     value->BindMountsCount = 0;
     value->TmpfsMountsCount = 0;
+    value->DeviceMountsCount = 0;
 
     return value;
 }
@@ -675,6 +697,11 @@ void FreeCreateContainerRequest(CreateContainerRequest* value) {
     }
 
     free(value->TmpfsMounts);
+    for (uint64_t i = 0; i < value->DeviceMountsCount; i++) {
+        FreeDeviceMount(value->DeviceMounts[i]);
+    }
+
+    free(value->DeviceMounts);
     free(value);
 }
 
@@ -749,5 +776,17 @@ void SetstringArrayElement(char** array, uint64_t index, char* value) {
 }
 
 char* GetstringArrayElement(char** array, uint64_t index) {
+    return array[index];
+}
+
+DeviceMount** CreateDeviceMountArray(uint64_t size) {
+    return malloc(size * sizeof(DeviceMount*));
+}
+
+void SetDeviceMountArrayElement(DeviceMount** array, uint64_t index, DeviceMount* value) {
+    array[index] = value;
+}
+
+DeviceMount* GetDeviceMountArrayElement(DeviceMount** array, uint64_t index) {
     return array[index];
 }

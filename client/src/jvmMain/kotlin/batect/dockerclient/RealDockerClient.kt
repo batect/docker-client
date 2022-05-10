@@ -37,6 +37,7 @@ import batect.dockerclient.native.TLSConfiguration
 import batect.dockerclient.native.bindMounts
 import batect.dockerclient.native.buildArgs
 import batect.dockerclient.native.command
+import batect.dockerclient.native.deviceMounts
 import batect.dockerclient.native.entrypoint
 import batect.dockerclient.native.environmentVariables
 import batect.dockerclient.native.extraHosts
@@ -467,6 +468,7 @@ internal actual class RealDockerClient actual constructor(configuration: DockerC
         request.environmentVariables = jvm.environmentVariablesFormattedForDocker
         request.bindMounts = jvm.bindMountsFormattedForDocker
         request.tmpfsMounts = jvm.tmpfsMounts.map { StringPair(it.containerPath, it.options) }
+        request.deviceMounts = jvm.deviceMounts
 
         return request
     }

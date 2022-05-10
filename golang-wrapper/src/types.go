@@ -63,6 +63,7 @@ type BuildImageProgressUpdate_BuildFailed *C.BuildImageProgressUpdate_BuildFaile
 type BuildImageProgressUpdate *C.BuildImageProgressUpdate
 type BuildImageProgressCallback C.BuildImageProgressCallback
 type ContainerReference *C.ContainerReference
+type DeviceMount *C.DeviceMount
 type CreateContainerRequest *C.CreateContainerRequest
 type CreateContainerReturn *C.CreateContainerReturn
 type WaitForContainerToExitReturn *C.WaitForContainerToExitReturn
@@ -479,6 +480,19 @@ func newContainerReference(
     return value
 }
 
+func newDeviceMount(
+    LocalPath string,
+    ContainerPath string,
+    Permissions string,
+) DeviceMount {
+    value := C.AllocDeviceMount()
+    value.LocalPath = C.CString(LocalPath)
+    value.ContainerPath = C.CString(ContainerPath)
+    value.Permissions = C.CString(Permissions)
+
+    return value
+}
+
 func newCreateContainerRequest(
     ImageReference string,
     Command []string,
@@ -489,6 +503,7 @@ func newCreateContainerRequest(
     EnvironmentVariables []string,
     BindMounts []string,
     TmpfsMounts []StringPair,
+    DeviceMounts []DeviceMount,
 ) CreateContainerRequest {
     value := C.AllocCreateContainerRequest()
     value.ImageReference = C.CString(ImageReference)
@@ -540,6 +555,14 @@ func newCreateContainerRequest(
 
     for i, v := range TmpfsMounts {
         C.SetStringPairArrayElement(value.TmpfsMounts, C.uint64_t(i), v)
+    }
+
+
+    value.DeviceMountsCount = C.uint64_t(len(DeviceMounts))
+    value.DeviceMounts = C.CreateDeviceMountArray(value.DeviceMountsCount)
+
+    for i, v := range DeviceMounts {
+        C.SetDeviceMountArrayElement(value.DeviceMounts, C.uint64_t(i), v)
     }
 
 

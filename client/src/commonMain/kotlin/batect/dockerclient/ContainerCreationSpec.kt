@@ -27,7 +27,8 @@ public data class ContainerCreationSpec(
     val extraHosts: Set<ExtraHost> = emptySet(),
     val environmentVariables: Map<String, String> = emptyMap(),
     val bindMounts: Set<BindMount> = emptySet(),
-    val tmpfsMounts: Set<TmpfsMount> = emptySet()
+    val tmpfsMounts: Set<TmpfsMount> = emptySet(),
+    val deviceMounts: Set<DeviceMount> = emptySet()
 ) {
     public class Builder(image: ImageReference) {
         private var spec = ContainerCreationSpec(image)
@@ -101,6 +102,14 @@ public data class ContainerCreationSpec(
             return this
         }
 
+        public fun withDeviceMount(localPath: Path, containerPath: String, permissions: String = DeviceMount.defaultPermissions): Builder = withDeviceMount(DeviceMount(localPath, containerPath, permissions))
+
+        public fun withDeviceMount(mount: DeviceMount): Builder {
+            spec = spec.copy(deviceMounts = spec.deviceMounts + mount)
+
+            return this
+        }
+
         public fun build(): ContainerCreationSpec = spec
     }
 
@@ -123,3 +132,9 @@ public data class HostMount(val localPath: Path, override val containerPath: Str
 public data class VolumeMount(val volume: VolumeReference, override val containerPath: String, override val options: String? = null) : BindMount(volume.name)
 
 public data class TmpfsMount(val containerPath: String, val options: String)
+
+public data class DeviceMount(val localPath: Path, val containerPath: String, val permissions: String = defaultPermissions) {
+    public companion object {
+        public const val defaultPermissions: String = "rwm"
+    }
+}

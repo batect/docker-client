@@ -46,6 +46,9 @@ func CreateContainer(clientHandle DockerClientHandle, request *C.CreateContainer
 		ExtraHosts: fromStringArray(request.ExtraHosts, request.ExtraHostsCount),
 		Binds:      fromStringArray(request.BindMounts, request.BindMountsCount),
 		Tmpfs:      fromStringPairs(request.TmpfsMounts, request.TmpfsMountsCount),
+		Resources: container.Resources{
+			Devices: devicesForContainer(request),
+		},
 	}
 
 	networkingConfig := network.NetworkingConfig{}
@@ -184,4 +187,23 @@ func fromStringPairs(pairs **C.StringPair, count C.uint64_t) map[string]string {
 	}
 
 	return m
+}
+
+func devicesForContainer(request *C.CreateContainerRequest) []container.DeviceMapping {
+	count := request.DeviceMountsCount
+	devices := make([]container.DeviceMapping, 0, count)
+
+	for i := 0; i < int(count); i++ {
+		requested := C.GetDeviceMountArrayElement(request.DeviceMounts, C.uint64_t(i))
+
+		device := container.DeviceMapping{
+			PathOnHost:        C.GoString(requested.LocalPath),
+			PathInContainer:   C.GoString(requested.ContainerPath),
+			CgroupPermissions: C.GoString(requested.Permissions),
+		}
+
+		devices = append(devices, device)
+	}
+
+	return devices
 }

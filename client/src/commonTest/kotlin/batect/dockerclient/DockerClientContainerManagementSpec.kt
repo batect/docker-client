@@ -429,6 +429,15 @@ class DockerClientContainerManagementSpec : ShouldSpec({
                     expectedErrorOutput = "touch: /files/some-other-file.txt: Read-only file system",
                     shouldExitWithZeroExitCode = false
                 ),
+                TestScenario(
+                    "mount a device into a container",
+                    ContainerCreationSpec.Builder(image)
+                        .withDeviceMount("/dev/null".toPath(), "/dev/my-other-null")
+                        .withCommand("cat", "/dev/my-other-null")
+                        .build(),
+                    expectedOutput = "",
+                    expectedErrorOutput = "",
+                ),
             ).forEach { scenario ->
                 should("be able to ${scenario.description}") {
                     val container = client.createContainer(scenario.creationSpec)

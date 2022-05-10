@@ -117,6 +117,8 @@ internal interface API {
     fun AllocBuildImageProgressUpdate(): BuildImageProgressUpdate?
     fun FreeContainerReference(@In value: ContainerReference)
     fun AllocContainerReference(): ContainerReference?
+    fun FreeDeviceMount(@In value: DeviceMount)
+    fun AllocDeviceMount(): DeviceMount?
     fun FreeCreateContainerRequest(@In value: CreateContainerRequest)
     fun AllocCreateContainerRequest(): CreateContainerRequest?
     fun FreeCreateContainerReturn(@In value: CreateContainerReturn)

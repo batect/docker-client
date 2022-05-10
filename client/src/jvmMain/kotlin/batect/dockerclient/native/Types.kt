@@ -510,6 +510,20 @@ internal class ContainerReference(runtime: Runtime) : Struct(runtime), AutoClose
     }
 }
 
+internal class DeviceMount(runtime: Runtime) : Struct(runtime), AutoCloseable {
+    constructor(pointer: jnr.ffi.Pointer) : this(pointer.runtime) {
+        this.useMemory(pointer)
+    }
+
+    val localPath = UTF8StringRef()
+    val containerPath = UTF8StringRef()
+    val permissions = UTF8StringRef()
+
+    override fun close() {
+        nativeAPI.FreeDeviceMount(this)
+    }
+}
+
 internal class CreateContainerRequest(runtime: Runtime) : Struct(runtime), AutoCloseable {
     constructor(pointer: jnr.ffi.Pointer) : this(pointer.runtime) {
         this.useMemory(pointer)
@@ -530,6 +544,8 @@ internal class CreateContainerRequest(runtime: Runtime) : Struct(runtime), AutoC
     val bindMountsPointer = Pointer()
     val tmpfsMountsCount = u_int64_t()
     val tmpfsMountsPointer = Pointer()
+    val deviceMountsCount = u_int64_t()
+    val deviceMountsPointer = Pointer()
 
     override fun close() {
         nativeAPI.FreeCreateContainerRequest(this)

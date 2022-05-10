@@ -59,7 +59,6 @@
     * Name
     * Network
       * Network aliases
-    * Device mounts
     * Port mappings
       * Listed in `EXPOSE` instruction
       * Not listed in `EXPOSE`
