@@ -483,6 +483,7 @@ func newCreateContainerRequest(
     ImageReference string,
     Command []string,
     Hostname string,
+    ExtraHosts []string,
 ) CreateContainerRequest {
     value := C.AllocCreateContainerRequest()
     value.ImageReference = C.CString(ImageReference)
@@ -495,6 +496,14 @@ func newCreateContainerRequest(
     }
 
     value.Hostname = C.CString(Hostname)
+
+    value.ExtraHostsCount = C.uint64_t(len(ExtraHosts))
+    value.ExtraHosts = C.CreatestringArray(value.ExtraHostsCount)
+
+    for i, v := range ExtraHosts {
+        C.SetstringArrayElement(value.ExtraHosts, C.uint64_t(i), C.CString(v))
+    }
+
 
     return value
 }

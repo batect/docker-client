@@ -19,7 +19,8 @@ package batect.dockerclient
 public data class ContainerCreationSpec(
     val image: ImageReference,
     val command: List<String> = emptyList(),
-    val hostname: String? = null
+    val hostname: String? = null,
+    val extraHosts: Set<String> = emptySet()
 ) {
     public class Builder(image: ImageReference) {
         private var spec = ContainerCreationSpec(image)
@@ -34,6 +35,12 @@ public data class ContainerCreationSpec(
 
         public fun withHostname(hostname: String): Builder {
             spec = spec.copy(hostname = hostname)
+
+            return this
+        }
+
+        public fun withExtraHost(hostname: String, address: String): Builder {
+            spec = spec.copy(extraHosts = spec.extraHosts.plus("$hostname:$address"))
 
             return this
         }

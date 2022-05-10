@@ -37,6 +37,7 @@ import batect.dockerclient.native.StringPair
 import batect.dockerclient.native.TLSConfiguration
 import batect.dockerclient.native.buildArgs
 import batect.dockerclient.native.command
+import batect.dockerclient.native.extraHosts
 import batect.dockerclient.native.imageTags
 import batect.dockerclient.native.nativeAPI
 import batect.dockerclient.native.volumes
@@ -457,6 +458,7 @@ internal actual class RealDockerClient actual constructor(configuration: DockerC
         request.imageReference.set(jvm.image.id)
         request.command = jvm.command
         request.hostname.set(jvm.hostname)
+        request.extraHosts = jvm.extraHosts
 
         return request
     }

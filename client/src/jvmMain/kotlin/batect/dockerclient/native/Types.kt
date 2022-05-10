@@ -519,6 +519,8 @@ internal class CreateContainerRequest(runtime: Runtime) : Struct(runtime), AutoC
     val commandCount = u_int64_t()
     val commandPointer = Pointer()
     val hostname = UTF8StringRef()
+    val extraHostsCount = u_int64_t()
+    val extraHostsPointer = Pointer()
 
     override fun close() {
         nativeAPI.FreeCreateContainerRequest(this)

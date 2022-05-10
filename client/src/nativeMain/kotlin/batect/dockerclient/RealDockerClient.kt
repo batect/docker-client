@@ -335,6 +335,8 @@ internal actual class RealDockerClient actual constructor(configuration: DockerC
             Command = allocArrayOf(spec.command.map { it.cstr.ptr })
             CommandCount = spec.command.size.toULong()
             Hostname = spec.hostname?.cstr?.ptr
+            ExtraHosts = allocArrayOf(spec.extraHosts.map { it.cstr.ptr })
+            ExtraHostsCount = spec.extraHosts.size.toULong()
         }
     }
 

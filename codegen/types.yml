@@ -337,6 +337,8 @@
       type: string[]
     - name: Hostname
       type: string
+    - name: ExtraHosts
+      type: string[]
 
 - name: CreateContainerReturn
   type: struct

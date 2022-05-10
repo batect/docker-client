@@ -49,6 +49,12 @@ internal var CreateContainerRequest.command by WriteOnlyList<CreateContainerRequ
     ::stringToPointer
 )
 
+internal var CreateContainerRequest.extraHosts by WriteOnlyList<CreateContainerRequest, String>(
+    CreateContainerRequest::extraHostsCount,
+    CreateContainerRequest::extraHostsPointer,
+    ::stringToPointer
+)
+
 internal fun StringPair(key: String, value: String): StringPair {
     val pair = StringPair(Runtime.getRuntime(nativeAPI))
     pair.key.set(key)

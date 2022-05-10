@@ -63,8 +63,7 @@
   * Create
     * Name
     * Network
-    * Network aliases
-    * Extra hosts
+      * Network aliases
     * Environment variables
     * Mounts
       * Local directory

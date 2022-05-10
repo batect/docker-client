@@ -227,6 +227,8 @@ typedef struct {
     uint64_t CommandCount;
     char** Command;
     char* Hostname;
+    uint64_t ExtraHostsCount;
+    char** ExtraHosts;
 } CreateContainerRequest;
 
 typedef struct {

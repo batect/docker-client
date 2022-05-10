@@ -21,8 +21,10 @@ import io.kotest.assertions.throwables.shouldNotThrowAny
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.common.ExperimentalKotest
 import io.kotest.core.spec.style.ShouldSpec
+import io.kotest.matchers.collections.shouldContain
 import io.kotest.matchers.comparables.shouldBeLessThan
 import io.kotest.matchers.shouldBe
+import io.kotest.matchers.string.shouldContain
 import kotlinx.coroutines.TimeoutCancellationException
 import kotlinx.coroutines.async
 import kotlinx.coroutines.launch
@@ -359,6 +361,31 @@ class DockerClientContainerManagementSpec : ShouldSpec({
                 }
             }
 
+            should("be able to add additional hosts to a container's hosts file") {
+                val spec = ContainerCreationSpec.Builder(image)
+                    .withExtraHost("host-1", "1.2.3.1")
+                    .withExtraHost("host-2", "1.2.3.2")
+                    .withCommand("cat", "/etc/hosts")
+                    .build()
+
+                val container = client.createContainer(spec)
+
+                try {
+                    val stdout = Buffer()
+                    val stderr = Buffer()
+
+                    val exitCode = client.run(container, SinkTextOutput(stdout), SinkTextOutput(stderr))
+                    val stdoutText = stdout.readUtf8()
+                    val stderrText = stderr.readUtf8()
+
+                    exitCode shouldBe 0
+                    stdoutText shouldContain """^1.2.3.1\s+host-1$""".toRegex(RegexOption.MULTILINE)
+                    stdoutText shouldContain """^1.2.3.2\s+host-2$""".toRegex(RegexOption.MULTILINE)
+                    stderrText shouldBe ""
+                } finally {
+                    client.removeContainer(container, force = true)
+                }
+            }
         }
     }
 })

@@ -39,7 +39,10 @@ func CreateContainer(clientHandle DockerClientHandle, request *C.CreateContainer
 		Hostname: C.GoString(request.Hostname),
 	}
 
-	hostConfig := container.HostConfig{}
+	hostConfig := container.HostConfig{
+		ExtraHosts: fromStringArray(request.ExtraHosts, request.ExtraHostsCount),
+	}
+
 	networkingConfig := network.NetworkingConfig{}
 	containerName := "" // TODO
 

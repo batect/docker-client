@@ -621,7 +621,9 @@ CreateContainerRequest* AllocCreateContainerRequest() {
     value->ImageReference = NULL;
     value->Command = NULL;
     value->Hostname = NULL;
+    value->ExtraHosts = NULL;
     value->CommandCount = 0;
+    value->ExtraHostsCount = 0;
 
     return value;
 }
@@ -638,6 +640,11 @@ void FreeCreateContainerRequest(CreateContainerRequest* value) {
 
     free(value->Command);
     free(value->Hostname);
+    for (uint64_t i = 0; i < value->ExtraHostsCount; i++) {
+        free(value->ExtraHosts[i]);
+    }
+
+    free(value->ExtraHosts);
     free(value);
 }
 
