@@ -42,6 +42,7 @@ func CreateContainer(clientHandle DockerClientHandle, request *C.CreateContainer
 
 	hostConfig := container.HostConfig{
 		ExtraHosts: fromStringArray(request.ExtraHosts, request.ExtraHostsCount),
+		Binds:      fromStringArray(request.Mounts, request.MountsCount),
 	}
 
 	networkingConfig := network.NetworkingConfig{}

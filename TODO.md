@@ -65,8 +65,6 @@
     * Network
       * Network aliases
     * Mounts
-      * Local directory
-      * Volume
       * Docker socket
       * tmpfs
     * Entrypoint

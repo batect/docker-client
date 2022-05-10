@@ -61,6 +61,12 @@ internal var CreateContainerRequest.environmentVariables by WriteOnlyList<Create
     ::stringToPointer
 )
 
+internal var CreateContainerRequest.mounts by WriteOnlyList<CreateContainerRequest, String>(
+    CreateContainerRequest::mountsCount,
+    CreateContainerRequest::mountsPointer,
+    ::stringToPointer
+)
+
 internal fun StringPair(key: String, value: String): StringPair {
     val pair = StringPair(Runtime.getRuntime(nativeAPI))
     pair.key.set(key)

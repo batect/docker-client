@@ -523,6 +523,8 @@ internal class CreateContainerRequest(runtime: Runtime) : Struct(runtime), AutoC
     val extraHostsPointer = Pointer()
     val environmentVariablesCount = u_int64_t()
     val environmentVariablesPointer = Pointer()
+    val mountsCount = u_int64_t()
+    val mountsPointer = Pointer()
 
     override fun close() {
         nativeAPI.FreeCreateContainerRequest(this)

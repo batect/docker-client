@@ -40,6 +40,7 @@ import batect.dockerclient.native.command
 import batect.dockerclient.native.environmentVariables
 import batect.dockerclient.native.extraHosts
 import batect.dockerclient.native.imageTags
+import batect.dockerclient.native.mounts
 import batect.dockerclient.native.nativeAPI
 import batect.dockerclient.native.volumes
 import jnr.ffi.Pointer
@@ -461,6 +462,7 @@ internal actual class RealDockerClient actual constructor(configuration: DockerC
         request.hostname.set(jvm.hostname)
         request.extraHosts = jvm.extraHosts
         request.environmentVariables = jvm.environmentVariablesFormattedForDocker
+        request.mounts = jvm.mountsFormattedForDocker
 
         return request
     }

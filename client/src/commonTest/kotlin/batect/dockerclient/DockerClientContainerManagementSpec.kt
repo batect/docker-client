@@ -24,6 +24,7 @@ import io.kotest.core.spec.style.ShouldSpec
 import io.kotest.matchers.collections.shouldContain
 import io.kotest.matchers.comparables.shouldBeLessThan
 import io.kotest.matchers.shouldBe
+import io.kotest.matchers.shouldNotBe
 import io.kotest.matchers.string.shouldContain
 import kotlinx.coroutines.TimeoutCancellationException
 import kotlinx.coroutines.async
@@ -31,6 +32,10 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import kotlinx.coroutines.withTimeout
 import okio.Buffer
+import okio.FileSystem
+import okio.Path
+import okio.Path.Companion.toPath
+import kotlin.random.Random
 import kotlin.time.Duration.Companion.seconds
 import kotlin.time.ExperimentalTime
 import kotlin.time.measureTime
@@ -41,6 +46,7 @@ class DockerClientContainerManagementSpec : ShouldSpec({
     context("when working with Linux containers").onlyIfDockerDaemonSupportsLinuxContainers {
         val client = closeAfterTest(DockerClient.Builder().build())
         val image = client.pullImage("alpine:3.15.0")
+        val hostMountDirectory: Path = FileSystem.SYSTEM.canonicalize("./src/commonTest/resources/container-mount-directory".toPath())
 
         context("using low-level methods") {
             should("be able to create, start, wait for and remove a container") {
@@ -328,7 +334,8 @@ class DockerClientContainerManagementSpec : ShouldSpec({
                 val description: String,
                 val creationSpec: ContainerCreationSpec,
                 val expectedOutput: String,
-                val expectedErrorOutput: String = ""
+                val expectedErrorOutput: String = "",
+                val shouldExitWithZeroExitCode: Boolean = true
             )
 
             setOf(
@@ -353,6 +360,42 @@ class DockerClientContainerManagementSpec : ShouldSpec({
                         Third variable: the third value
                     """.trimIndent()
                 ),
+                TestScenario(
+                    "mount a file from the local machine into a container",
+                    ContainerCreationSpec.Builder(image)
+                        .withHostMount(hostMountDirectory.resolve("some-file.txt"), "/files/some-file.txt")
+                        .withCommand("cat", "/files/some-file.txt")
+                        .build(),
+                    "This is the file mounted into the container."
+                ),
+                TestScenario(
+                    "mount a directory from the local machine into a container",
+                    ContainerCreationSpec.Builder(image)
+                        .withHostMount(hostMountDirectory, "/files")
+                        .withCommand("cat", "/files/some-file.txt")
+                        .build(),
+                    "This is the file mounted into the container."
+                ),
+                TestScenario(
+                    "mount a file from the local machine into a container read-only",
+                    ContainerCreationSpec.Builder(image)
+                        .withHostMount(hostMountDirectory.resolve("some-file.txt"), "/files/some-file.txt", "ro")
+                        .withCommand("rm", "/files/some-file.txt")
+                        .build(),
+                    expectedOutput = "",
+                    expectedErrorOutput = "rm: can't remove '/files/some-file.txt': Resource busy",
+                    shouldExitWithZeroExitCode = false
+                ),
+                TestScenario(
+                    "mount a directory from the local machine into a container read-only",
+                    ContainerCreationSpec.Builder(image)
+                        .withHostMount(hostMountDirectory, "/files", "ro")
+                        .withCommand("touch", "/files/some-other-file.txt")
+                        .build(),
+                    expectedOutput = "",
+                    expectedErrorOutput = "touch: /files/some-other-file.txt: Read-only file system",
+                    shouldExitWithZeroExitCode = false
+                ),
             ).forEach { scenario ->
                 should("be able to ${scenario.description}") {
                     val container = client.createContainer(scenario.creationSpec)
@@ -365,9 +408,14 @@ class DockerClientContainerManagementSpec : ShouldSpec({
                         val stdoutText = stdout.readUtf8()
                         val stderrText = stderr.readUtf8()
 
-                        exitCode shouldBe 0
                         stdoutText.trim() shouldBe scenario.expectedOutput
                         stderrText.trim() shouldBe scenario.expectedErrorOutput
+
+                        if (scenario.shouldExitWithZeroExitCode) {
+                            exitCode shouldBe 0
+                        } else {
+                            exitCode shouldNotBe 0
+                        }
                     } finally {
                         client.removeContainer(container, force = true)
                     }
@@ -397,6 +445,92 @@ class DockerClientContainerManagementSpec : ShouldSpec({
                     stderrText shouldBe ""
                 } finally {
                     client.removeContainer(container, force = true)
+                }
+            }
+
+            suspend fun createFileInVolume(volume: VolumeReference, path: String) {
+                val spec = ContainerCreationSpec.Builder(image)
+                    .withVolumeMount(volume, "/volume")
+                    .withCommand("sh", "-c", "echo 'This is the file in the volume.' > $path")
+                    .build()
+
+                val container = client.createContainer(spec)
+
+                try {
+                    val stdout = Buffer()
+                    val stderr = Buffer()
+
+                    val exitCode = client.run(container, SinkTextOutput(stdout), SinkTextOutput(stderr))
+                    val stdoutText = stdout.readUtf8()
+                    val stderrText = stderr.readUtf8()
+
+                    exitCode shouldBe 0
+                    stdoutText.trim() shouldBe ""
+                    stderrText.trim() shouldBe ""
+                } finally {
+                    client.removeContainer(container, force = true)
+                }
+            }
+
+            should("be able to mount a volume into a container") {
+                val volume = client.createVolume("${DockerClientContainerManagementSpec::class.simpleName}-volume-test-${Random.nextInt()}")
+
+                try {
+                    createFileInVolume(volume, "/volume/some-other-file.txt")
+
+                    val spec = ContainerCreationSpec.Builder(image)
+                        .withVolumeMount(volume, "/volume")
+                        .withCommand("cat", "/volume/some-other-file.txt")
+                        .build()
+
+                    val container = client.createContainer(spec)
+
+                    try {
+                        val stdout = Buffer()
+                        val stderr = Buffer()
+
+                        val exitCode = client.run(container, SinkTextOutput(stdout), SinkTextOutput(stderr))
+                        val stdoutText = stdout.readUtf8()
+                        val stderrText = stderr.readUtf8()
+
+                        exitCode shouldBe 0
+                        stdoutText.trim() shouldBe "This is the file in the volume."
+                        stderrText.trim() shouldBe ""
+                    } finally {
+                        client.removeContainer(container, force = true)
+                    }
+                } finally {
+                    client.deleteVolume(volume)
+                }
+            }
+
+            should("be able to mount a volume into a container read-only") {
+                val volume = client.createVolume("${DockerClientContainerManagementSpec::class.simpleName}-read-only-volume-test-${Random.nextInt()}")
+
+                try {
+                    val spec = ContainerCreationSpec.Builder(image)
+                        .withVolumeMount(volume, "/files", "ro")
+                        .withCommand("touch", "/files/some-other-file.txt")
+                        .build()
+
+                    val container = client.createContainer(spec)
+
+                    try {
+                        val stdout = Buffer()
+                        val stderr = Buffer()
+
+                        val exitCode = client.run(container, SinkTextOutput(stdout), SinkTextOutput(stderr))
+                        val stdoutText = stdout.readUtf8()
+                        val stderrText = stderr.readUtf8()
+
+                        exitCode shouldNotBe 0
+                        stdoutText.trim() shouldBe ""
+                        stderrText.trim() shouldBe "touch: /files/some-other-file.txt: Read-only file system"
+                    } finally {
+                        client.removeContainer(container, force = true)
+                    }
+                } finally {
+                    client.deleteVolume(volume)
                 }
             }
         }
