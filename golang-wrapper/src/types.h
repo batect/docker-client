@@ -254,6 +254,7 @@ typedef struct {
     DeviceMount** DeviceMounts;
     uint64_t ExposedPortsCount;
     ExposedPort** ExposedPorts;
+    char* User;
 } CreateContainerRequest;
 
 typedef struct {

@@ -471,6 +471,7 @@ internal actual class RealDockerClient actual constructor(configuration: DockerC
         request.tmpfsMounts = jvm.tmpfsMounts.map { StringPair(it.containerPath, it.options) }
         request.deviceMounts = jvm.deviceMounts
         request.exposedPorts = jvm.exposedPorts
+        request.user.set(jvm.userAndGroupFormattedForDocker)
 
         return request
     }

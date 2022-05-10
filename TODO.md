@@ -60,7 +60,6 @@
     * Network
       * Network aliases
     * Health check configuration
-    * User and group
     * Privileged
     * Capabilities to add
     * Capabilities to drop

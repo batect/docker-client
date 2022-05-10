@@ -519,6 +519,7 @@ func newCreateContainerRequest(
     TmpfsMounts []StringPair,
     DeviceMounts []DeviceMount,
     ExposedPorts []ExposedPort,
+    User string,
 ) CreateContainerRequest {
     value := C.AllocCreateContainerRequest()
     value.ImageReference = C.CString(ImageReference)
@@ -588,6 +589,7 @@ func newCreateContainerRequest(
         C.SetExposedPortArrayElement(value.ExposedPorts, C.uint64_t(i), v)
     }
 
+    value.User = C.CString(User)
 
     return value
 }

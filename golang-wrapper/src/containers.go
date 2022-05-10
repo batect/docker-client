@@ -44,6 +44,7 @@ func CreateContainer(clientHandle DockerClientHandle, request *C.CreateContainer
 		Hostname:     C.GoString(request.Hostname),
 		Env:          fromStringArray(request.EnvironmentVariables, request.EnvironmentVariablesCount),
 		ExposedPorts: exposedPortsForContainer(request),
+		User:         C.GoString(request.User),
 	}
 
 	hostConfig := container.HostConfig{

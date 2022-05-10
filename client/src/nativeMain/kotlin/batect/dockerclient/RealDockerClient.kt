@@ -290,18 +290,8 @@ internal actual class RealDockerClient actual constructor(configuration: DockerC
         return alloc {
             ContextDirectory = spec.contextDirectory.toString().cstr.ptr
             PathToDockerfile = spec.pathToDockerfile.toString().cstr.ptr
-
-            BuildArgs = allocArrayOf(
-                spec.buildArgs.map {
-                    alloc<StringPair> {
-                        Key = it.key.cstr.ptr
-                        Value = it.value.cstr.ptr
-                    }.ptr
-                }
-            )
-
+            BuildArgs = allocArrayOf(spec.buildArgs.map { allocStringPair(it).ptr })
             BuildArgsCount = spec.buildArgs.size.toULong()
-
             ImageTags = allocArrayOf(spec.imageTags.map { it.cstr.ptr })
             ImageTagsCount = spec.imageTags.size.toULong()
             AlwaysPullBaseImages = spec.alwaysPullBaseImages
@@ -344,23 +334,23 @@ internal actual class RealDockerClient actual constructor(configuration: DockerC
             EnvironmentVariablesCount = spec.environmentVariablesFormattedForDocker.size.toULong()
             BindMounts = allocArrayOf(spec.bindMountsFormattedForDocker.map { it.cstr.ptr })
             BindMountsCount = spec.bindMountsFormattedForDocker.size.toULong()
-
-            TmpfsMounts = allocArrayOf(
-                spec.tmpfsMounts.map {
-                    alloc<StringPair> {
-                        Key = it.containerPath.cstr.ptr
-                        Value = it.options.cstr.ptr
-                    }.ptr
-                }
-            )
-
+            TmpfsMounts = allocArrayOf(spec.tmpfsMounts.map { allocStringPair(it).ptr })
             TmpfsMountsCount = spec.tmpfsMounts.size.toULong()
-
             DeviceMounts = allocArrayOf(spec.deviceMounts.map { allocDeviceMount(it).ptr })
             DeviceMountsCount = spec.deviceMounts.size.toULong()
-
             ExposedPorts = allocArrayOf(spec.exposedPorts.map { allocExposedPort(it).ptr })
             ExposedPortsCount = spec.exposedPorts.size.toULong()
+            User = spec.userAndGroupFormattedForDocker?.cstr?.ptr
+        }
+    }
+
+    private fun MemScope.allocStringPair(mount: TmpfsMount): StringPair = allocStringPair(mount.containerPath, mount.options)
+    private fun MemScope.allocStringPair(entry: Map.Entry<String, String>): StringPair = allocStringPair(entry.key, entry.value)
+
+    private fun MemScope.allocStringPair(key: String, value: String): StringPair {
+        return alloc {
+            Key = key.cstr.ptr
+            Value = value.cstr.ptr
         }
     }
 

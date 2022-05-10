@@ -468,6 +468,13 @@ class DockerClientContainerManagementSpec : ShouldSpec({
                     "/foo/bar"
                 ),
                 TestScenario(
+                    "use the default working directory",
+                    ContainerCreationSpec.Builder(image)
+                        .withCommand("pwd")
+                        .build(),
+                    "/"
+                ),
+                TestScenario(
                     "mount a tmpfs filesystem into a container",
                     ContainerCreationSpec.Builder(image)
                         .withTmpfsMount("/files")
@@ -494,6 +501,21 @@ class DockerClientContainerManagementSpec : ShouldSpec({
                         .build(),
                     expectedOutput = "",
                     expectedErrorOutput = "",
+                ),
+                TestScenario(
+                    "set the user and group for a container",
+                    ContainerCreationSpec.Builder(image)
+                        .withUserAndGroup(123, 456)
+                        .withCommand("sh", "-c", "id -u && id -g")
+                        .build(),
+                    "123\n456"
+                ),
+                TestScenario(
+                    "use the default user and group",
+                    ContainerCreationSpec.Builder(image)
+                        .withCommand("sh", "-c", "id -u && id -g")
+                        .build(),
+                    "0\n0"
                 ),
             ).forEach { scenario ->
                 should("be able to ${scenario.description}") {

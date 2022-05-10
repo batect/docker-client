@@ -665,6 +665,7 @@ CreateContainerRequest* AllocCreateContainerRequest() {
     value->TmpfsMounts = NULL;
     value->DeviceMounts = NULL;
     value->ExposedPorts = NULL;
+    value->User = NULL;
     value->CommandCount = 0;
     value->EntrypointCount = 0;
     value->ExtraHostsCount = 0;
@@ -725,6 +726,7 @@ void FreeCreateContainerRequest(CreateContainerRequest* value) {
     }
 
     free(value->ExposedPorts);
+    free(value->User);
     free(value);
 }
 

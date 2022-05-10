@@ -562,6 +562,7 @@ internal class CreateContainerRequest(runtime: Runtime) : Struct(runtime), AutoC
     val deviceMountsPointer = Pointer()
     val exposedPortsCount = u_int64_t()
     val exposedPortsPointer = Pointer()
+    val user = UTF8StringRef()
 
     override fun close() {
         nativeAPI.FreeCreateContainerRequest(this)

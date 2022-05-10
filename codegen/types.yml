@@ -373,6 +373,8 @@
       type: DeviceMount[]
     - name: ExposedPorts
       type: ExposedPort[]
+    - name: User
+      type: string
 
 - name: CreateContainerReturn
   type: struct

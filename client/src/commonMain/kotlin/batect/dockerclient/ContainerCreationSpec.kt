@@ -29,7 +29,8 @@ public data class ContainerCreationSpec(
     val bindMounts: Set<BindMount> = emptySet(),
     val tmpfsMounts: Set<TmpfsMount> = emptySet(),
     val deviceMounts: Set<DeviceMount> = emptySet(),
-    val exposedPorts: Set<ExposedPort> = emptySet()
+    val exposedPorts: Set<ExposedPort> = emptySet(),
+    val userAndGroup: UserAndGroup? = null
 ) {
     public class Builder(image: ImageReference) {
         private var spec = ContainerCreationSpec(image)
@@ -119,12 +120,21 @@ public data class ContainerCreationSpec(
             return this
         }
 
+        public fun withUserAndGroup(uid: Int, gid: Int): Builder = withUserAndGroup(UserAndGroup(uid, gid))
+
+        public fun withUserAndGroup(userAndGroup: UserAndGroup): Builder {
+            spec = spec.copy(userAndGroup = userAndGroup)
+
+            return this
+        }
+
         public fun build(): ContainerCreationSpec = spec
     }
 
     internal val environmentVariablesFormattedForDocker: List<String> = environmentVariables.map { "${it.key}=${it.value}" }
     internal val extraHostsFormattedForDocker: List<String> = extraHosts.map { "${it.hostname}:${it.address}" }
     internal val bindMountsFormattedForDocker: List<String> = bindMounts.map { it.formattedForDocker }
+    internal val userAndGroupFormattedForDocker: String? = if (userAndGroup == null) null else "${userAndGroup.uid}:${userAndGroup.gid}"
 }
 
 public data class ExtraHost(val hostname: String, val address: String)
@@ -153,3 +163,5 @@ public data class ExposedPort(val localPort: Long, val containerPort: Long, val 
         public const val defaultProtocol: String = "tcp"
     }
 }
+
+public data class UserAndGroup(val uid: Int, val gid: Int)
