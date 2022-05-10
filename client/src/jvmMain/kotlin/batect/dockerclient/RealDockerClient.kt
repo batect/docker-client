@@ -37,6 +37,7 @@ import batect.dockerclient.native.StringPair
 import batect.dockerclient.native.TLSConfiguration
 import batect.dockerclient.native.buildArgs
 import batect.dockerclient.native.command
+import batect.dockerclient.native.entrypoint
 import batect.dockerclient.native.environmentVariables
 import batect.dockerclient.native.extraHosts
 import batect.dockerclient.native.imageTags
@@ -463,6 +464,7 @@ internal actual class RealDockerClient actual constructor(configuration: DockerC
         request.extraHosts = jvm.extraHosts
         request.environmentVariables = jvm.environmentVariablesFormattedForDocker
         request.mounts = jvm.mountsFormattedForDocker
+        request.entrypoint = jvm.entrypoint
 
         return request
     }

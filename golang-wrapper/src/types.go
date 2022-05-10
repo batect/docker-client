@@ -482,6 +482,7 @@ func newContainerReference(
 func newCreateContainerRequest(
     ImageReference string,
     Command []string,
+    Entrypoint []string,
     Hostname string,
     ExtraHosts []string,
     EnvironmentVariables []string,
@@ -495,6 +496,14 @@ func newCreateContainerRequest(
 
     for i, v := range Command {
         C.SetstringArrayElement(value.Command, C.uint64_t(i), C.CString(v))
+    }
+
+
+    value.EntrypointCount = C.uint64_t(len(Entrypoint))
+    value.Entrypoint = C.CreatestringArray(value.EntrypointCount)
+
+    for i, v := range Entrypoint {
+        C.SetstringArrayElement(value.Entrypoint, C.uint64_t(i), C.CString(v))
     }
 
     value.Hostname = C.CString(Hostname)

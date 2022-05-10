@@ -226,6 +226,8 @@ typedef struct {
     char* ImageReference;
     uint64_t CommandCount;
     char** Command;
+    uint64_t EntrypointCount;
+    char** Entrypoint;
     char* Hostname;
     uint64_t ExtraHostsCount;
     char** ExtraHosts;

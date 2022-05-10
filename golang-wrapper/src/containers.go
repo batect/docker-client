@@ -34,10 +34,11 @@ func CreateContainer(clientHandle DockerClientHandle, request *C.CreateContainer
 	docker := clientHandle.DockerAPIClient()
 
 	config := container.Config{
-		Image:    C.GoString(request.ImageReference),
-		Cmd:      fromStringArray(request.Command, request.CommandCount),
-		Hostname: C.GoString(request.Hostname),
-		Env:      fromStringArray(request.EnvironmentVariables, request.EnvironmentVariablesCount),
+		Image:      C.GoString(request.ImageReference),
+		Cmd:        fromStringArray(request.Command, request.CommandCount),
+		Entrypoint: fromStringArray(request.Entrypoint, request.EntrypointCount),
+		Hostname:   C.GoString(request.Hostname),
+		Env:        fromStringArray(request.EnvironmentVariables, request.EnvironmentVariablesCount),
 	}
 
 	hostConfig := container.HostConfig{

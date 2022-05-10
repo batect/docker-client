@@ -394,6 +394,14 @@ class DockerClientContainerManagementSpec : ShouldSpec({
                     expectedErrorOutput = "touch: /files/some-other-file.txt: Read-only file system",
                     shouldExitWithZeroExitCode = false
                 ),
+                TestScenario(
+                    "set the entrypoint for a container",
+                    ContainerCreationSpec.Builder(image)
+                        .withEntrypoint("echo", "Hello from the entrypoint")
+                        .withCommand("Hello from the command")
+                        .build(),
+                    "Hello from the entrypoint Hello from the command"
+                ),
             ).forEach { scenario ->
                 should("be able to ${scenario.description}") {
                     val container = client.createContainer(scenario.creationSpec)

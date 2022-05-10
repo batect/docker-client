@@ -335,6 +335,8 @@
       type: string
     - name: Command
       type: string[]
+    - name: Entrypoint
+      type: string[]
     - name: Hostname
       type: string
     - name: ExtraHosts

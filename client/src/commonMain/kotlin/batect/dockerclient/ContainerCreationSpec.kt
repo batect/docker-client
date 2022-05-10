@@ -21,6 +21,7 @@ import okio.Path
 public data class ContainerCreationSpec(
     val image: ImageReference,
     val command: List<String> = emptyList(),
+    val entrypoint: List<String> = emptyList(),
     val hostname: String? = null,
     val extraHosts: Set<String> = emptySet(),
     val environmentVariables: Map<String, String> = emptyMap(),
@@ -33,6 +34,14 @@ public data class ContainerCreationSpec(
 
         public fun withCommand(command: List<String>): Builder {
             spec = spec.copy(command = command)
+
+            return this
+        }
+
+        public fun withEntrypoint(vararg entrypoint: String): Builder = withEntrypoint(entrypoint.toList())
+
+        public fun withEntrypoint(entrypoint: List<String>): Builder {
+            spec = spec.copy(entrypoint = entrypoint)
 
             return this
         }

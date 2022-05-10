@@ -620,11 +620,13 @@ CreateContainerRequest* AllocCreateContainerRequest() {
     CreateContainerRequest* value = malloc(sizeof(CreateContainerRequest));
     value->ImageReference = NULL;
     value->Command = NULL;
+    value->Entrypoint = NULL;
     value->Hostname = NULL;
     value->ExtraHosts = NULL;
     value->EnvironmentVariables = NULL;
     value->Mounts = NULL;
     value->CommandCount = 0;
+    value->EntrypointCount = 0;
     value->ExtraHostsCount = 0;
     value->EnvironmentVariablesCount = 0;
     value->MountsCount = 0;
@@ -643,6 +645,11 @@ void FreeCreateContainerRequest(CreateContainerRequest* value) {
     }
 
     free(value->Command);
+    for (uint64_t i = 0; i < value->EntrypointCount; i++) {
+        free(value->Entrypoint[i]);
+    }
+
+    free(value->Entrypoint);
     free(value->Hostname);
     for (uint64_t i = 0; i < value->ExtraHostsCount; i++) {
         free(value->ExtraHosts[i]);

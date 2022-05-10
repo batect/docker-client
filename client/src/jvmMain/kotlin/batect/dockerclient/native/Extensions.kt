@@ -49,6 +49,12 @@ internal var CreateContainerRequest.command by WriteOnlyList<CreateContainerRequ
     ::stringToPointer
 )
 
+internal var CreateContainerRequest.entrypoint by WriteOnlyList<CreateContainerRequest, String>(
+    CreateContainerRequest::entrypointCount,
+    CreateContainerRequest::entrypointPointer,
+    ::stringToPointer
+)
+
 internal var CreateContainerRequest.extraHosts by WriteOnlyList<CreateContainerRequest, String>(
     CreateContainerRequest::extraHostsCount,
     CreateContainerRequest::extraHostsPointer,

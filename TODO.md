@@ -61,7 +61,6 @@
       * Network aliases
     * Mounts
       * tmpfs
-    * Entrypoint
     * Working directory
     * Device mounts
     * Port mappings

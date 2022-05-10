@@ -518,6 +518,8 @@ internal class CreateContainerRequest(runtime: Runtime) : Struct(runtime), AutoC
     val imageReference = UTF8StringRef()
     val commandCount = u_int64_t()
     val commandPointer = Pointer()
+    val entrypointCount = u_int64_t()
+    val entrypointPointer = Pointer()
     val hostname = UTF8StringRef()
     val extraHostsCount = u_int64_t()
     val extraHostsPointer = Pointer()
