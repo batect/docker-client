@@ -463,7 +463,7 @@ internal actual class RealDockerClient actual constructor(configuration: DockerC
         request.entrypoint = jvm.entrypoint
         request.workingDirectory.set(jvm.workingDirectory)
         request.hostname.set(jvm.hostname)
-        request.extraHosts = jvm.extraHosts
+        request.extraHosts = jvm.extraHostsFormattedForDocker
         request.environmentVariables = jvm.environmentVariablesFormattedForDocker
         request.mounts = jvm.mountsFormattedForDocker
 

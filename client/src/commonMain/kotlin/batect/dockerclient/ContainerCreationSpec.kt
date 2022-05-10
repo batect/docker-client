@@ -24,7 +24,7 @@ public data class ContainerCreationSpec(
     val entrypoint: List<String> = emptyList(),
     val workingDirectory: String? = null,
     val hostname: String? = null,
-    val extraHosts: Set<String> = emptySet(),
+    val extraHosts: Set<ExtraHost> = emptySet(),
     val environmentVariables: Map<String, String> = emptyMap(),
     val mounts: Set<Mount> = emptySet()
 ) {
@@ -60,7 +60,7 @@ public data class ContainerCreationSpec(
         }
 
         public fun withExtraHost(hostname: String, address: String): Builder {
-            spec = spec.copy(extraHosts = spec.extraHosts.plus("$hostname:$address"))
+            spec = spec.copy(extraHosts = spec.extraHosts + ExtraHost(hostname, address))
 
             return this
         }
@@ -96,8 +96,11 @@ public data class ContainerCreationSpec(
     }
 
     internal val environmentVariablesFormattedForDocker: List<String> = environmentVariables.map { "${it.key}=${it.value}" }
+    internal val extraHostsFormattedForDocker: List<String> = extraHosts.map { "${it.hostname}:${it.address}" }
     internal val mountsFormattedForDocker: List<String> = mounts.map { it.formattedForDocker }
 }
+
+public data class ExtraHost(val hostname: String, val address: String)
 
 public sealed class Mount(private val source: String) {
     public abstract val containerPath: String
