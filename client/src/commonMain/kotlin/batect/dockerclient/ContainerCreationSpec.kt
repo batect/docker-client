@@ -57,4 +57,6 @@ public data class ContainerCreationSpec(
 
         public fun build(): ContainerCreationSpec = spec
     }
+
+    internal val environmentVariablesFormattedForDocker: List<String> = environmentVariables.map { "${it.key}=${it.value}" }
 }

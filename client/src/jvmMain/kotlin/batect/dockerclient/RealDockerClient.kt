@@ -460,7 +460,7 @@ internal actual class RealDockerClient actual constructor(configuration: DockerC
         request.command = jvm.command
         request.hostname.set(jvm.hostname)
         request.extraHosts = jvm.extraHosts
-        request.environmentVariables = jvm.environmentVariables.map { "${it.key}=${it.value}" }
+        request.environmentVariables = jvm.environmentVariablesFormattedForDocker
 
         return request
     }

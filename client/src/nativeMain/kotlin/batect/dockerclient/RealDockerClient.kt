@@ -60,6 +60,7 @@ import kotlinx.cinterop.CPointed
 import kotlinx.cinterop.CPointer
 import kotlinx.cinterop.CPointerVar
 import kotlinx.cinterop.MemScope
+import kotlinx.cinterop.NativePlacement
 import kotlinx.cinterop.StableRef
 import kotlinx.cinterop.alloc
 import kotlinx.cinterop.allocArrayOf
@@ -337,7 +338,7 @@ internal actual class RealDockerClient actual constructor(configuration: DockerC
             Hostname = spec.hostname?.cstr?.ptr
             ExtraHosts = allocArrayOf(spec.extraHosts.map { it.cstr.ptr })
             ExtraHostsCount = spec.extraHosts.size.toULong()
-            EnvironmentVariables = allocArrayOf(spec.environmentVariables.map { "${it.key}=${it.value}".cstr.ptr })
+            EnvironmentVariables = allocArrayOf(spec.environmentVariablesFormattedForDocker.map { it.cstr.ptr })
             EnvironmentVariablesCount = spec.environmentVariables.size.toULong()
         }
     }
