@@ -625,12 +625,12 @@ CreateContainerRequest* AllocCreateContainerRequest() {
     value->Hostname = NULL;
     value->ExtraHosts = NULL;
     value->EnvironmentVariables = NULL;
-    value->Mounts = NULL;
+    value->BindMounts = NULL;
     value->CommandCount = 0;
     value->EntrypointCount = 0;
     value->ExtraHostsCount = 0;
     value->EnvironmentVariablesCount = 0;
-    value->MountsCount = 0;
+    value->BindMountsCount = 0;
 
     return value;
 }
@@ -663,11 +663,11 @@ void FreeCreateContainerRequest(CreateContainerRequest* value) {
     }
 
     free(value->EnvironmentVariables);
-    for (uint64_t i = 0; i < value->MountsCount; i++) {
-        free(value->Mounts[i]);
+    for (uint64_t i = 0; i < value->BindMountsCount; i++) {
+        free(value->BindMounts[i]);
     }
 
-    free(value->Mounts);
+    free(value->BindMounts);
     free(value);
 }
 

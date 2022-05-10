@@ -32,16 +32,15 @@ import batect.dockerclient.native.CreateContainerRequest
 import batect.dockerclient.native.DockerClientHandle
 import batect.dockerclient.native.PullImageProgressCallback
 import batect.dockerclient.native.PullImageProgressUpdate
-import batect.dockerclient.native.ReadyCallback
 import batect.dockerclient.native.StringPair
 import batect.dockerclient.native.TLSConfiguration
+import batect.dockerclient.native.bindMounts
 import batect.dockerclient.native.buildArgs
 import batect.dockerclient.native.command
 import batect.dockerclient.native.entrypoint
 import batect.dockerclient.native.environmentVariables
 import batect.dockerclient.native.extraHosts
 import batect.dockerclient.native.imageTags
-import batect.dockerclient.native.mounts
 import batect.dockerclient.native.nativeAPI
 import batect.dockerclient.native.volumes
 import jnr.ffi.Pointer
@@ -465,7 +464,7 @@ internal actual class RealDockerClient actual constructor(configuration: DockerC
         request.hostname.set(jvm.hostname)
         request.extraHosts = jvm.extraHostsFormattedForDocker
         request.environmentVariables = jvm.environmentVariablesFormattedForDocker
-        request.mounts = jvm.mountsFormattedForDocker
+        request.bindMounts = jvm.bindMountsFormattedForDocker
 
         return request
     }

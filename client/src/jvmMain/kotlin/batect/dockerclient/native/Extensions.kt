@@ -67,9 +67,9 @@ internal var CreateContainerRequest.environmentVariables by WriteOnlyList<Create
     ::stringToPointer
 )
 
-internal var CreateContainerRequest.mounts by WriteOnlyList<CreateContainerRequest, String>(
-    CreateContainerRequest::mountsCount,
-    CreateContainerRequest::mountsPointer,
+internal var CreateContainerRequest.bindMounts by WriteOnlyList<CreateContainerRequest, String>(
+    CreateContainerRequest::bindMountsCount,
+    CreateContainerRequest::bindMountsPointer,
     ::stringToPointer
 )
 

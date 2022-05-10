@@ -26,7 +26,7 @@ public data class ContainerCreationSpec(
     val hostname: String? = null,
     val extraHosts: Set<ExtraHost> = emptySet(),
     val environmentVariables: Map<String, String> = emptyMap(),
-    val mounts: Set<Mount> = emptySet()
+    val bindMounts: Set<BindMount> = emptySet()
 ) {
     public class Builder(image: ImageReference) {
         private var spec = ContainerCreationSpec(image)
@@ -78,7 +78,7 @@ public data class ContainerCreationSpec(
             withHostMount(HostMount(localPath, containerPath, options))
 
         public fun withHostMount(mount: HostMount): Builder {
-            spec = spec.copy(mounts = spec.mounts + mount)
+            spec = spec.copy(bindMounts = spec.bindMounts + mount)
 
             return this
         }
@@ -87,7 +87,7 @@ public data class ContainerCreationSpec(
             withVolumeMount(VolumeMount(volume, containerPath, options))
 
         public fun withVolumeMount(mount: VolumeMount): Builder {
-            spec = spec.copy(mounts = spec.mounts + mount)
+            spec = spec.copy(bindMounts = spec.bindMounts + mount)
 
             return this
         }
@@ -97,12 +97,12 @@ public data class ContainerCreationSpec(
 
     internal val environmentVariablesFormattedForDocker: List<String> = environmentVariables.map { "${it.key}=${it.value}" }
     internal val extraHostsFormattedForDocker: List<String> = extraHosts.map { "${it.hostname}:${it.address}" }
-    internal val mountsFormattedForDocker: List<String> = mounts.map { it.formattedForDocker }
+    internal val bindMountsFormattedForDocker: List<String> = bindMounts.map { it.formattedForDocker }
 }
 
 public data class ExtraHost(val hostname: String, val address: String)
 
-public sealed class Mount(private val source: String) {
+public sealed class BindMount(private val source: String) {
     public abstract val containerPath: String
     public abstract val options: String?
 
@@ -110,5 +110,5 @@ public sealed class Mount(private val source: String) {
         get() = if (options == null) "$source:$containerPath" else "$source:$containerPath:$options"
 }
 
-public data class HostMount(val localPath: Path, override val containerPath: String, override val options: String? = null) : Mount(localPath.toString())
-public data class VolumeMount(val volume: VolumeReference, override val containerPath: String, override val options: String? = null) : Mount(volume.name)
+public data class HostMount(val localPath: Path, override val containerPath: String, override val options: String? = null) : BindMount(localPath.toString())
+public data class VolumeMount(val volume: VolumeReference, override val containerPath: String, override val options: String? = null) : BindMount(volume.name)

@@ -234,8 +234,8 @@ typedef struct {
     char** ExtraHosts;
     uint64_t EnvironmentVariablesCount;
     char** EnvironmentVariables;
-    uint64_t MountsCount;
-    char** Mounts;
+    uint64_t BindMountsCount;
+    char** BindMounts;
 } CreateContainerRequest;
 
 typedef struct {

@@ -345,7 +345,7 @@
       type: string[]
     - name: EnvironmentVariables
       type: string[]
-    - name: Mounts
+    - name: BindMounts
       type: string[]
 
 - name: CreateContainerReturn

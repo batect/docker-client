@@ -342,8 +342,8 @@ internal actual class RealDockerClient actual constructor(configuration: DockerC
             ExtraHostsCount = spec.extraHostsFormattedForDocker.size.toULong()
             EnvironmentVariables = allocArrayOf(spec.environmentVariablesFormattedForDocker.map { it.cstr.ptr })
             EnvironmentVariablesCount = spec.environmentVariablesFormattedForDocker.size.toULong()
-            Mounts = allocArrayOf(spec.mountsFormattedForDocker.map { it.cstr.ptr })
-            MountsCount = spec.mountsFormattedForDocker.size.toULong()
+            BindMounts = allocArrayOf(spec.bindMountsFormattedForDocker.map { it.cstr.ptr })
+            BindMountsCount = spec.bindMountsFormattedForDocker.size.toULong()
         }
     }
 
