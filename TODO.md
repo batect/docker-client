@@ -1,11 +1,10 @@
 # Project setup
 
 * Demo / sample project
+  * Add snippets to readme
 * License checking
   * Gradle dependencies
   * Golang dependencies
-* Readme
-  * Add examples
 * Test more environments:
   * Podman?
   * Colima?
@@ -16,19 +15,15 @@
 * KDoc comments for public API
   * Enforce this somehow?
 * Go build: use Zig for compilation
-  * Share Golang and Zig build cache between tasks in same CI build run?
   * Set ZIG_LOCAL_CACHE_DIR and ZIG_GLOBAL_CACHE_DIR to the same thing for all builds once https://github.com/ziglang/zig/issues/9711 is resolved
 * Run tests with memory leak detector - eg. valgrind
 * Linter to catch when memory is not freed (eg. Golang code allocates struct that is used as callback parameter)
-* Sample app
-  * Add snippets to readme
-* Use https://github.com/square/kotlinpoet/ to generate Kotlin code rather than current string concatenation approach?
 * Re-enable Golang linter on CI once it supports Go 1.18: https://github.com/golangci/golangci-lint/issues/2649
 * Remove "be able to" prefixes from test descriptions
-* Run Mac CI tests with Colima?
 * Remove `IODispatcher` / `Dispatchers.kt` once https://github.com/Kotlin/kotlinx.coroutines/issues/3205 is resolved
 * Merge Golang Gradle plugins, distinction doesn't make sense any more
 * Refactor / rework code generation - it's a mess and needs tests
+  * Use https://github.com/square/kotlinpoet/ to generate Kotlin code rather than current string concatenation approach?
 * Remove use of panics in Golang code
 
 # APIs
