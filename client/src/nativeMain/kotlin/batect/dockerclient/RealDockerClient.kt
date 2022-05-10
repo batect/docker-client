@@ -358,6 +358,9 @@ internal actual class RealDockerClient actual constructor(configuration: DockerC
 
             DeviceMounts = allocArrayOf(spec.deviceMounts.map { allocDeviceMount(it).ptr })
             DeviceMountsCount = spec.deviceMounts.size.toULong()
+
+            ExposedPorts = allocArrayOf(spec.exposedPorts.map { allocExposedPort(it).ptr })
+            ExposedPortsCount = spec.exposedPorts.size.toULong()
         }
     }
 
@@ -366,6 +369,14 @@ internal actual class RealDockerClient actual constructor(configuration: DockerC
             LocalPath = mount.localPath.toString().cstr.ptr
             ContainerPath = mount.containerPath.cstr.ptr
             Permissions = mount.permissions.cstr.ptr
+        }
+    }
+
+    private fun MemScope.allocExposedPort(port: ExposedPort): batect.dockerclient.native.ExposedPort {
+        return alloc {
+            LocalPort = port.localPort
+            ContainerPort = port.containerPort
+            Protocol = port.protocol.cstr.ptr
         }
     }
 

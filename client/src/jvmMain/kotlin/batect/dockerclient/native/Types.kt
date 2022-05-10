@@ -524,6 +524,20 @@ internal class DeviceMount(runtime: Runtime) : Struct(runtime), AutoCloseable {
     }
 }
 
+internal class ExposedPort(runtime: Runtime) : Struct(runtime), AutoCloseable {
+    constructor(pointer: jnr.ffi.Pointer) : this(pointer.runtime) {
+        this.useMemory(pointer)
+    }
+
+    val localPort = int64_t()
+    val containerPort = int64_t()
+    val protocol = UTF8StringRef()
+
+    override fun close() {
+        nativeAPI.FreeExposedPort(this)
+    }
+}
+
 internal class CreateContainerRequest(runtime: Runtime) : Struct(runtime), AutoCloseable {
     constructor(pointer: jnr.ffi.Pointer) : this(pointer.runtime) {
         this.useMemory(pointer)
@@ -546,6 +560,8 @@ internal class CreateContainerRequest(runtime: Runtime) : Struct(runtime), AutoC
     val tmpfsMountsPointer = Pointer()
     val deviceMountsCount = u_int64_t()
     val deviceMountsPointer = Pointer()
+    val exposedPortsCount = u_int64_t()
+    val exposedPortsPointer = Pointer()
 
     override fun close() {
         nativeAPI.FreeCreateContainerRequest(this)

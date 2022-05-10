@@ -20,6 +20,8 @@ import (
 	*/
 	"C"
 	"context"
+	"fmt"
+	"strconv"
 	"time"
 	"unsafe"
 
@@ -27,6 +29,7 @@ import (
 	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/api/types/container"
 	"github.com/docker/docker/api/types/network"
+	"github.com/docker/go-connections/nat"
 )
 
 //export CreateContainer
@@ -49,9 +52,11 @@ func CreateContainer(clientHandle DockerClientHandle, request *C.CreateContainer
 		Resources: container.Resources{
 			Devices: devicesForContainer(request),
 		},
+		PortBindings: portBindingsForContainer(request),
 	}
 
 	networkingConfig := network.NetworkingConfig{}
+
 	containerName := "" // TODO
 
 	createdContainer, err := docker.ContainerCreate(context.Background(), &config, &hostConfig, &networkingConfig, nil, containerName)
@@ -206,4 +211,23 @@ func devicesForContainer(request *C.CreateContainerRequest) []container.DeviceMa
 	}
 
 	return devices
+}
+
+func portBindingsForContainer(request *C.CreateContainerRequest) nat.PortMap {
+	portMap := nat.PortMap{}
+	count := request.ExposedPortsCount
+
+	for i := 0; i < int(count); i++ {
+		requested := C.GetExposedPortArrayElement(request.ExposedPorts, C.uint64_t(i))
+		port := fmt.Sprintf("%v/%v", requested.ContainerPort, C.GoString(requested.Protocol))
+
+		portMap[nat.Port(port)] = []nat.PortBinding{
+			{
+				HostIP:   "",
+				HostPort: strconv.FormatInt(int64(requested.LocalPort), 10),
+			},
+		}
+	}
+
+	return portMap
 }

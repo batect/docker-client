@@ -636,6 +636,22 @@ void FreeDeviceMount(DeviceMount* value) {
     free(value);
 }
 
+ExposedPort* AllocExposedPort() {
+    ExposedPort* value = malloc(sizeof(ExposedPort));
+    value->Protocol = NULL;
+
+    return value;
+}
+
+void FreeExposedPort(ExposedPort* value) {
+    if (value == NULL) {
+        return;
+    }
+
+    free(value->Protocol);
+    free(value);
+}
+
 CreateContainerRequest* AllocCreateContainerRequest() {
     CreateContainerRequest* value = malloc(sizeof(CreateContainerRequest));
     value->ImageReference = NULL;
@@ -648,6 +664,7 @@ CreateContainerRequest* AllocCreateContainerRequest() {
     value->BindMounts = NULL;
     value->TmpfsMounts = NULL;
     value->DeviceMounts = NULL;
+    value->ExposedPorts = NULL;
     value->CommandCount = 0;
     value->EntrypointCount = 0;
     value->ExtraHostsCount = 0;
@@ -655,6 +672,7 @@ CreateContainerRequest* AllocCreateContainerRequest() {
     value->BindMountsCount = 0;
     value->TmpfsMountsCount = 0;
     value->DeviceMountsCount = 0;
+    value->ExposedPortsCount = 0;
 
     return value;
 }
@@ -702,6 +720,11 @@ void FreeCreateContainerRequest(CreateContainerRequest* value) {
     }
 
     free(value->DeviceMounts);
+    for (uint64_t i = 0; i < value->ExposedPortsCount; i++) {
+        FreeExposedPort(value->ExposedPorts[i]);
+    }
+
+    free(value->ExposedPorts);
     free(value);
 }
 
@@ -788,5 +811,17 @@ void SetDeviceMountArrayElement(DeviceMount** array, uint64_t index, DeviceMount
 }
 
 DeviceMount* GetDeviceMountArrayElement(DeviceMount** array, uint64_t index) {
+    return array[index];
+}
+
+ExposedPort** CreateExposedPortArray(uint64_t size) {
+    return malloc(size * sizeof(ExposedPort*));
+}
+
+void SetExposedPortArrayElement(ExposedPort** array, uint64_t index, ExposedPort* value) {
+    array[index] = value;
+}
+
+ExposedPort* GetExposedPortArrayElement(ExposedPort** array, uint64_t index) {
     return array[index];
 }

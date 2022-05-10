@@ -64,6 +64,7 @@ type BuildImageProgressUpdate *C.BuildImageProgressUpdate
 type BuildImageProgressCallback C.BuildImageProgressCallback
 type ContainerReference *C.ContainerReference
 type DeviceMount *C.DeviceMount
+type ExposedPort *C.ExposedPort
 type CreateContainerRequest *C.CreateContainerRequest
 type CreateContainerReturn *C.CreateContainerReturn
 type WaitForContainerToExitReturn *C.WaitForContainerToExitReturn
@@ -493,6 +494,19 @@ func newDeviceMount(
     return value
 }
 
+func newExposedPort(
+    LocalPort int64,
+    ContainerPort int64,
+    Protocol string,
+) ExposedPort {
+    value := C.AllocExposedPort()
+    value.LocalPort = C.int64_t(LocalPort)
+    value.ContainerPort = C.int64_t(ContainerPort)
+    value.Protocol = C.CString(Protocol)
+
+    return value
+}
+
 func newCreateContainerRequest(
     ImageReference string,
     Command []string,
@@ -504,6 +518,7 @@ func newCreateContainerRequest(
     BindMounts []string,
     TmpfsMounts []StringPair,
     DeviceMounts []DeviceMount,
+    ExposedPorts []ExposedPort,
 ) CreateContainerRequest {
     value := C.AllocCreateContainerRequest()
     value.ImageReference = C.CString(ImageReference)
@@ -563,6 +578,14 @@ func newCreateContainerRequest(
 
     for i, v := range DeviceMounts {
         C.SetDeviceMountArrayElement(value.DeviceMounts, C.uint64_t(i), v)
+    }
+
+
+    value.ExposedPortsCount = C.uint64_t(len(ExposedPorts))
+    value.ExposedPorts = C.CreateExposedPortArray(value.ExposedPortsCount)
+
+    for i, v := range ExposedPorts {
+        C.SetExposedPortArrayElement(value.ExposedPorts, C.uint64_t(i), v)
     }
 
 

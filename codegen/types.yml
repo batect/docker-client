@@ -338,6 +338,16 @@
     - name: Permissions
       type: string
 
+- name: ExposedPort
+  type: struct
+  fields:
+    - name: LocalPort
+      type: int64
+    - name: ContainerPort
+      type: int64
+    - name: Protocol
+      type: string
+
 - name: CreateContainerRequest
   type: struct
   fields:
@@ -361,6 +371,8 @@
       type: StringPair[]
     - name: DeviceMounts
       type: DeviceMount[]
+    - name: ExposedPorts
+      type: ExposedPort[]
 
 - name: CreateContainerReturn
   type: struct

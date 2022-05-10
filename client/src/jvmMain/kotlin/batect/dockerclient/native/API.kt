@@ -119,6 +119,8 @@ internal interface API {
     fun AllocContainerReference(): ContainerReference?
     fun FreeDeviceMount(@In value: DeviceMount)
     fun AllocDeviceMount(): DeviceMount?
+    fun FreeExposedPort(@In value: ExposedPort)
+    fun AllocExposedPort(): ExposedPort?
     fun FreeCreateContainerRequest(@In value: CreateContainerRequest)
     fun AllocCreateContainerRequest(): CreateContainerRequest?
     fun FreeCreateContainerReturn(@In value: CreateContainerReturn)

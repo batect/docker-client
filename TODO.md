@@ -60,7 +60,6 @@
     * Network
       * Network aliases
     * Port mappings
-      * Listed in `EXPOSE` instruction
       * Not listed in `EXPOSE`
     * Health check configuration
     * User and group

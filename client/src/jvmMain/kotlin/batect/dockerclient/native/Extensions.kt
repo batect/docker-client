@@ -84,6 +84,12 @@ internal var CreateContainerRequest.deviceMounts by WriteOnlyList<CreateContaine
     ::deviceMountToNative
 )
 
+internal var CreateContainerRequest.exposedPorts by WriteOnlyList<CreateContainerRequest, batect.dockerclient.ExposedPort>(
+    CreateContainerRequest::exposedPortsCount,
+    CreateContainerRequest::exposedPortsPointer,
+    ::exposedPortToNative
+)
+
 internal fun StringPair(key: String, value: String): StringPair {
     val pair = StringPair(Runtime.getRuntime(nativeAPI))
     pair.key.set(key)
@@ -142,6 +148,17 @@ private fun deviceMountToNative(value: batect.dockerclient.DeviceMount, @Suppres
     mount.permissions.set(value.permissions)
 
     return Struct.getMemory(mount)
+}
+
+private fun exposedPortToNative(value: batect.dockerclient.ExposedPort, @Suppress("UNUSED_PARAMETER") memoryManager: MemoryManager): Pointer {
+    val runtime = Runtime.getRuntime(nativeAPI)
+    val port = ExposedPort(runtime)
+
+    port.localPort.set(value.localPort)
+    port.containerPort.set(value.containerPort)
+    port.protocol.set(value.protocol)
+
+    return Struct.getMemory(port)
 }
 
 private class WriteOnlyList<T : Struct, E>(

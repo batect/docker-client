@@ -121,17 +121,23 @@ kotlin {
                 implementation(libs.kotest.assertions.core)
                 implementation(libs.kotest.framework.api)
                 implementation(libs.kotest.framework.engine)
+                implementation(libs.ktor.client)
             }
         }
 
         val jvmTest by getting {
             dependencies {
                 implementation(libs.kotest.runner.junit5)
+                implementation(libs.ktor.client.cio)
             }
         }
 
         val nativeTest by creating {
             dependsOn(commonTest)
+
+            dependencies {
+                implementation(libs.ktor.client.curl)
+            }
         }
 
         val linuxTest by creating {

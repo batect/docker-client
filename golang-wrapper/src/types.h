@@ -229,6 +229,12 @@ typedef struct {
 } DeviceMount;
 
 typedef struct {
+    int64_t LocalPort;
+    int64_t ContainerPort;
+    char* Protocol;
+} ExposedPort;
+
+typedef struct {
     char* ImageReference;
     uint64_t CommandCount;
     char** Command;
@@ -246,6 +252,8 @@ typedef struct {
     StringPair** TmpfsMounts;
     uint64_t DeviceMountsCount;
     DeviceMount** DeviceMounts;
+    uint64_t ExposedPortsCount;
+    ExposedPort** ExposedPorts;
 } CreateContainerRequest;
 
 typedef struct {
@@ -328,6 +336,8 @@ EXPORTED_FUNCTION ContainerReference* AllocContainerReference();
 EXPORTED_FUNCTION void FreeContainerReference(ContainerReference* value);
 EXPORTED_FUNCTION DeviceMount* AllocDeviceMount();
 EXPORTED_FUNCTION void FreeDeviceMount(DeviceMount* value);
+EXPORTED_FUNCTION ExposedPort* AllocExposedPort();
+EXPORTED_FUNCTION void FreeExposedPort(ExposedPort* value);
 EXPORTED_FUNCTION CreateContainerRequest* AllocCreateContainerRequest();
 EXPORTED_FUNCTION void FreeCreateContainerRequest(CreateContainerRequest* value);
 EXPORTED_FUNCTION CreateContainerReturn* AllocCreateContainerReturn();
@@ -347,4 +357,7 @@ EXPORTED_FUNCTION char* GetstringArrayElement(char** array, uint64_t index);
 EXPORTED_FUNCTION DeviceMount** CreateDeviceMountArray(uint64_t size);
 EXPORTED_FUNCTION void SetDeviceMountArrayElement(DeviceMount** array, uint64_t index, DeviceMount* value);
 EXPORTED_FUNCTION DeviceMount* GetDeviceMountArrayElement(DeviceMount** array, uint64_t index);
+EXPORTED_FUNCTION ExposedPort** CreateExposedPortArray(uint64_t size);
+EXPORTED_FUNCTION void SetExposedPortArrayElement(ExposedPort** array, uint64_t index, ExposedPort* value);
+EXPORTED_FUNCTION ExposedPort* GetExposedPortArrayElement(ExposedPort** array, uint64_t index);
 #endif

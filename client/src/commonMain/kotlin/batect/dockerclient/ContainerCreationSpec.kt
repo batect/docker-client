@@ -28,7 +28,8 @@ public data class ContainerCreationSpec(
     val environmentVariables: Map<String, String> = emptyMap(),
     val bindMounts: Set<BindMount> = emptySet(),
     val tmpfsMounts: Set<TmpfsMount> = emptySet(),
-    val deviceMounts: Set<DeviceMount> = emptySet()
+    val deviceMounts: Set<DeviceMount> = emptySet(),
+    val exposedPorts: Set<ExposedPort> = emptySet()
 ) {
     public class Builder(image: ImageReference) {
         private var spec = ContainerCreationSpec(image)
@@ -110,6 +111,14 @@ public data class ContainerCreationSpec(
             return this
         }
 
+        public fun withExposedPort(localPort: Long, containerPort: Long, protocol: String = ExposedPort.defaultProtocol): Builder = withExposedPort(ExposedPort(localPort, containerPort, protocol))
+
+        public fun withExposedPort(port: ExposedPort): Builder {
+            spec = spec.copy(exposedPorts = spec.exposedPorts + port)
+
+            return this
+        }
+
         public fun build(): ContainerCreationSpec = spec
     }
 
@@ -136,5 +145,11 @@ public data class TmpfsMount(val containerPath: String, val options: String)
 public data class DeviceMount(val localPath: Path, val containerPath: String, val permissions: String = defaultPermissions) {
     public companion object {
         public const val defaultPermissions: String = "rwm"
+    }
+}
+
+public data class ExposedPort(val localPort: Long, val containerPort: Long, val protocol: String = defaultProtocol) {
+    public companion object {
+        public const val defaultProtocol: String = "tcp"
     }
 }

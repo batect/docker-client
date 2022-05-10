@@ -19,12 +19,17 @@ package batect.dockerclient
 import batect.dockerclient.io.SinkTextOutput
 import io.kotest.assertions.throwables.shouldNotThrowAny
 import io.kotest.assertions.throwables.shouldThrow
+import io.kotest.assertions.timing.eventually
 import io.kotest.common.ExperimentalKotest
 import io.kotest.core.spec.style.ShouldSpec
 import io.kotest.matchers.comparables.shouldBeLessThan
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
 import io.kotest.matchers.string.shouldContain
+import io.ktor.client.HttpClient
+import io.ktor.client.request.get
+import io.ktor.http.HttpStatusCode
+import io.ktor.utils.io.core.use
 import kotlinx.coroutines.TimeoutCancellationException
 import kotlinx.coroutines.async
 import kotlinx.coroutines.launch
@@ -34,6 +39,7 @@ import okio.Buffer
 import okio.Path
 import okio.Path.Companion.toPath
 import kotlin.random.Random
+import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Duration.Companion.seconds
 import kotlin.time.ExperimentalTime
 import kotlin.time.measureTime
@@ -267,6 +273,31 @@ class DockerClientContainerManagementSpec : ShouldSpec({
                     stderrText shouldBe "Hello stderr\n"
 
                     duration shouldBeLessThan 5.seconds
+                } finally {
+                    client.removeContainer(container, force = true)
+                }
+            }
+
+            should("be able to connect to a published port from a container with a corresponding EXPOSE instruction in the image") {
+                val httpServerImage = client.pullImage("nginx:1.21.6")
+
+                val spec = ContainerCreationSpec.Builder(httpServerImage)
+                    .withExposedPort(9000, 80) // Port 80 has a corresponding EXPOSE instruction in the nginx image referenced above.
+                    .build()
+
+                val container = client.createContainer(spec)
+
+                try {
+                    client.startContainer(container)
+
+                    eventually(3.seconds, 200.milliseconds) {
+                        withTimeout(200) {
+                            HttpClient().use { httpClient ->
+                                val response = httpClient.get("http://localhost:9000")
+                                response.status shouldBe HttpStatusCode.OK
+                            }
+                        }
+                    }
                 } finally {
                     client.removeContainer(container, force = true)
                 }

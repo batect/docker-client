@@ -40,6 +40,7 @@ import batect.dockerclient.native.command
 import batect.dockerclient.native.deviceMounts
 import batect.dockerclient.native.entrypoint
 import batect.dockerclient.native.environmentVariables
+import batect.dockerclient.native.exposedPorts
 import batect.dockerclient.native.extraHosts
 import batect.dockerclient.native.imageTags
 import batect.dockerclient.native.nativeAPI
@@ -469,6 +470,7 @@ internal actual class RealDockerClient actual constructor(configuration: DockerC
         request.bindMounts = jvm.bindMountsFormattedForDocker
         request.tmpfsMounts = jvm.tmpfsMounts.map { StringPair(it.containerPath, it.options) }
         request.deviceMounts = jvm.deviceMounts
+        request.exposedPorts = jvm.exposedPorts
 
         return request
     }
