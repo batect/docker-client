@@ -37,12 +37,13 @@ func CreateContainer(clientHandle DockerClientHandle, request *C.CreateContainer
 	docker := clientHandle.DockerAPIClient()
 
 	config := container.Config{
-		Image:      C.GoString(request.ImageReference),
-		Cmd:        fromStringArray(request.Command, request.CommandCount),
-		Entrypoint: fromStringArray(request.Entrypoint, request.EntrypointCount),
-		WorkingDir: C.GoString(request.WorkingDirectory),
-		Hostname:   C.GoString(request.Hostname),
-		Env:        fromStringArray(request.EnvironmentVariables, request.EnvironmentVariablesCount),
+		Image:        C.GoString(request.ImageReference),
+		Cmd:          fromStringArray(request.Command, request.CommandCount),
+		Entrypoint:   fromStringArray(request.Entrypoint, request.EntrypointCount),
+		WorkingDir:   C.GoString(request.WorkingDirectory),
+		Hostname:     C.GoString(request.Hostname),
+		Env:          fromStringArray(request.EnvironmentVariables, request.EnvironmentVariablesCount),
+		ExposedPorts: exposedPortsForContainer(request),
 	}
 
 	hostConfig := container.HostConfig{
@@ -230,4 +231,18 @@ func portBindingsForContainer(request *C.CreateContainerRequest) nat.PortMap {
 	}
 
 	return portMap
+}
+
+func exposedPortsForContainer(request *C.CreateContainerRequest) nat.PortSet {
+	portSet := nat.PortSet{}
+	count := request.ExposedPortsCount
+
+	for i := 0; i < int(count); i++ {
+		requested := C.GetExposedPortArrayElement(request.ExposedPorts, C.uint64_t(i))
+		port := fmt.Sprintf("%v/%v", requested.ContainerPort, C.GoString(requested.Protocol))
+
+		portSet[nat.Port(port)] = struct{}{}
+	}
+
+	return portSet
 }

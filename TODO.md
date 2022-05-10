@@ -59,8 +59,6 @@
     * Name
     * Network
       * Network aliases
-    * Port mappings
-      * Not listed in `EXPOSE`
     * Health check configuration
     * User and group
     * Privileged

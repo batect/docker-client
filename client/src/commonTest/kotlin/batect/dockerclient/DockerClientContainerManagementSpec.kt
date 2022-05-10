@@ -302,6 +302,32 @@ class DockerClientContainerManagementSpec : ShouldSpec({
                     client.removeContainer(container, force = true)
                 }
             }
+
+            should("be able to connect to a published port from a container without a corresponding EXPOSE instruction in the image") {
+                val imagePath = systemFileSystem.canonicalize("./src/commonTest/resources/images/http-server-without-expose".toPath())
+                val httpServerImage = client.buildImage(ImageBuildSpec.Builder(imagePath).build(), SinkTextOutput(Buffer()))
+
+                val spec = ContainerCreationSpec.Builder(httpServerImage)
+                    .withExposedPort(9000, 81) // Port 81 does not a corresponding EXPOSE instruction in the image built above.
+                    .build()
+
+                val container = client.createContainer(spec)
+
+                try {
+                    client.startContainer(container)
+
+                    eventually(3.seconds, 200.milliseconds) {
+                        withTimeout(200) {
+                            HttpClient().use { httpClient ->
+                                val response = httpClient.get("http://localhost:9000")
+                                response.status shouldBe HttpStatusCode.OK
+                            }
+                        }
+                    }
+                } finally {
+                    client.removeContainer(container, force = true)
+                }
+            }
         }
 
         context("using the run() helper method") {
