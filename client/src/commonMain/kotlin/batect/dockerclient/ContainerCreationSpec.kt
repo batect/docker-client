@@ -22,6 +22,7 @@ public data class ContainerCreationSpec(
     val image: ImageReference,
     val command: List<String> = emptyList(),
     val entrypoint: List<String> = emptyList(),
+    val workingDirectory: String? = null,
     val hostname: String? = null,
     val extraHosts: Set<String> = emptySet(),
     val environmentVariables: Map<String, String> = emptyMap(),
@@ -42,6 +43,12 @@ public data class ContainerCreationSpec(
 
         public fun withEntrypoint(entrypoint: List<String>): Builder {
             spec = spec.copy(entrypoint = entrypoint)
+
+            return this
+        }
+
+        public fun withWorkingDirectory(directory: String): Builder {
+            spec = spec.copy(workingDirectory = directory)
 
             return this
         }

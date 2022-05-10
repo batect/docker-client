@@ -61,7 +61,6 @@
       * Network aliases
     * Mounts
       * tmpfs
-    * Working directory
     * Device mounts
     * Port mappings
       * Listed in `EXPOSE` instruction

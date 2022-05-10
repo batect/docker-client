@@ -483,6 +483,7 @@ func newCreateContainerRequest(
     ImageReference string,
     Command []string,
     Entrypoint []string,
+    WorkingDirectory string,
     Hostname string,
     ExtraHosts []string,
     EnvironmentVariables []string,
@@ -506,6 +507,7 @@ func newCreateContainerRequest(
         C.SetstringArrayElement(value.Entrypoint, C.uint64_t(i), C.CString(v))
     }
 
+    value.WorkingDirectory = C.CString(WorkingDirectory)
     value.Hostname = C.CString(Hostname)
 
     value.ExtraHostsCount = C.uint64_t(len(ExtraHosts))

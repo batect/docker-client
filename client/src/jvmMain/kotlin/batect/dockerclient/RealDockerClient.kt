@@ -460,11 +460,12 @@ internal actual class RealDockerClient actual constructor(configuration: DockerC
         val request = CreateContainerRequest(Runtime.getRuntime(nativeAPI))
         request.imageReference.set(jvm.image.id)
         request.command = jvm.command
+        request.entrypoint = jvm.entrypoint
+        request.workingDirectory.set(jvm.workingDirectory)
         request.hostname.set(jvm.hostname)
         request.extraHosts = jvm.extraHosts
         request.environmentVariables = jvm.environmentVariablesFormattedForDocker
         request.mounts = jvm.mountsFormattedForDocker
-        request.entrypoint = jvm.entrypoint
 
         return request
     }

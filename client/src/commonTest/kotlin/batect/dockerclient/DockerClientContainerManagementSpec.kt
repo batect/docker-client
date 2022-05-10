@@ -402,6 +402,14 @@ class DockerClientContainerManagementSpec : ShouldSpec({
                         .build(),
                     "Hello from the entrypoint Hello from the command"
                 ),
+                TestScenario(
+                    "set the working directory for a container",
+                    ContainerCreationSpec.Builder(image)
+                        .withWorkingDirectory("/foo/bar")
+                        .withCommand("pwd")
+                        .build(),
+                    "/foo/bar"
+                ),
             ).forEach { scenario ->
                 should("be able to ${scenario.description}") {
                     val container = client.createContainer(scenario.creationSpec)

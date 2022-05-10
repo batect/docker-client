@@ -337,6 +337,8 @@
       type: string[]
     - name: Entrypoint
       type: string[]
+    - name: WorkingDirectory
+      type: string
     - name: Hostname
       type: string
     - name: ExtraHosts

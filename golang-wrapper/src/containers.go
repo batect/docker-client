@@ -37,6 +37,7 @@ func CreateContainer(clientHandle DockerClientHandle, request *C.CreateContainer
 		Image:      C.GoString(request.ImageReference),
 		Cmd:        fromStringArray(request.Command, request.CommandCount),
 		Entrypoint: fromStringArray(request.Entrypoint, request.EntrypointCount),
+		WorkingDir: C.GoString(request.WorkingDirectory),
 		Hostname:   C.GoString(request.Hostname),
 		Env:        fromStringArray(request.EnvironmentVariables, request.EnvironmentVariablesCount),
 	}

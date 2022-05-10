@@ -228,6 +228,7 @@ typedef struct {
     char** Command;
     uint64_t EntrypointCount;
     char** Entrypoint;
+    char* WorkingDirectory;
     char* Hostname;
     uint64_t ExtraHostsCount;
     char** ExtraHosts;
