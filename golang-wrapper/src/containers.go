@@ -45,6 +45,7 @@ func CreateContainer(clientHandle DockerClientHandle, request *C.CreateContainer
 	hostConfig := container.HostConfig{
 		ExtraHosts: fromStringArray(request.ExtraHosts, request.ExtraHostsCount),
 		Binds:      fromStringArray(request.BindMounts, request.BindMountsCount),
+		Tmpfs:      fromStringPairs(request.TmpfsMounts, request.TmpfsMountsCount),
 	}
 
 	networkingConfig := network.NetworkingConfig{}
@@ -169,4 +170,18 @@ func WaitForContainerToExit(clientHandle DockerClientHandle, contextHandle Conte
 	case err := <-errC:
 		return newWaitForContainerToExitReturn(-1, toError(err))
 	}
+}
+
+func fromStringPairs(pairs **C.StringPair, count C.uint64_t) map[string]string {
+	m := make(map[string]string, count)
+
+	for i := 0; i < int(count); i++ {
+		pair := C.GetStringPairArrayElement(pairs, C.uint64_t(i))
+		key := C.GoString(pair.Key)
+		value := C.GoString(pair.Value)
+
+		m[key] = value
+	}
+
+	return m
 }

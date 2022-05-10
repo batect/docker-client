@@ -73,6 +73,11 @@ internal var CreateContainerRequest.bindMounts by WriteOnlyList<CreateContainerR
     ::stringToPointer
 )
 
+internal var CreateContainerRequest.tmpfsMounts by WriteOnlyList<CreateContainerRequest, StringPair>(
+    CreateContainerRequest::tmpfsMountsCount,
+    CreateContainerRequest::tmpfsMountsPointer
+)
+
 internal fun StringPair(key: String, value: String): StringPair {
     val pair = StringPair(Runtime.getRuntime(nativeAPI))
     pair.key.set(key)

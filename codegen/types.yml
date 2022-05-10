@@ -347,6 +347,8 @@
       type: string[]
     - name: BindMounts
       type: string[]
+    - name: TmpfsMounts
+      type: StringPair[]
 
 - name: CreateContainerReturn
   type: struct

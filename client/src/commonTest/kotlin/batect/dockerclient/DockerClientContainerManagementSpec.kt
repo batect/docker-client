@@ -410,6 +410,25 @@ class DockerClientContainerManagementSpec : ShouldSpec({
                         .build(),
                     "/foo/bar"
                 ),
+                TestScenario(
+                    "mount a tmpfs filesystem into a container",
+                    ContainerCreationSpec.Builder(image)
+                        .withTmpfsMount("/files")
+                        .withCommand("touch", "/files/some-file.txt")
+                        .build(),
+                    expectedOutput = "",
+                    expectedErrorOutput = "",
+                ),
+                TestScenario(
+                    "mount a tmpfs filesystem into a container with options",
+                    ContainerCreationSpec.Builder(image)
+                        .withTmpfsMount("/files", "ro")
+                        .withCommand("touch", "/files/some-other-file.txt")
+                        .build(),
+                    expectedOutput = "",
+                    expectedErrorOutput = "touch: /files/some-other-file.txt: Read-only file system",
+                    shouldExitWithZeroExitCode = false
+                ),
             ).forEach { scenario ->
                 should("be able to ${scenario.description}") {
                     val container = client.createContainer(scenario.creationSpec)

@@ -59,8 +59,6 @@
     * Name
     * Network
       * Network aliases
-    * Mounts
-      * tmpfs
     * Device mounts
     * Port mappings
       * Listed in `EXPOSE` instruction

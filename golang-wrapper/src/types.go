@@ -488,6 +488,7 @@ func newCreateContainerRequest(
     ExtraHosts []string,
     EnvironmentVariables []string,
     BindMounts []string,
+    TmpfsMounts []StringPair,
 ) CreateContainerRequest {
     value := C.AllocCreateContainerRequest()
     value.ImageReference = C.CString(ImageReference)
@@ -531,6 +532,14 @@ func newCreateContainerRequest(
 
     for i, v := range BindMounts {
         C.SetstringArrayElement(value.BindMounts, C.uint64_t(i), C.CString(v))
+    }
+
+
+    value.TmpfsMountsCount = C.uint64_t(len(TmpfsMounts))
+    value.TmpfsMounts = C.CreateStringPairArray(value.TmpfsMountsCount)
+
+    for i, v := range TmpfsMounts {
+        C.SetStringPairArrayElement(value.TmpfsMounts, C.uint64_t(i), v)
     }
 
 

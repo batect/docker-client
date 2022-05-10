@@ -26,7 +26,8 @@ public data class ContainerCreationSpec(
     val hostname: String? = null,
     val extraHosts: Set<ExtraHost> = emptySet(),
     val environmentVariables: Map<String, String> = emptyMap(),
-    val bindMounts: Set<BindMount> = emptySet()
+    val bindMounts: Set<BindMount> = emptySet(),
+    val tmpfsMounts: Set<TmpfsMount> = emptySet()
 ) {
     public class Builder(image: ImageReference) {
         private var spec = ContainerCreationSpec(image)
@@ -92,6 +93,14 @@ public data class ContainerCreationSpec(
             return this
         }
 
+        public fun withTmpfsMount(containerPath: String, options: String = ""): Builder = withTmpfsMount(TmpfsMount(containerPath, options))
+
+        public fun withTmpfsMount(mount: TmpfsMount): Builder {
+            spec = spec.copy(tmpfsMounts = spec.tmpfsMounts + mount)
+
+            return this
+        }
+
         public fun build(): ContainerCreationSpec = spec
     }
 
@@ -112,3 +121,5 @@ public sealed class BindMount(private val source: String) {
 
 public data class HostMount(val localPath: Path, override val containerPath: String, override val options: String? = null) : BindMount(localPath.toString())
 public data class VolumeMount(val volume: VolumeReference, override val containerPath: String, override val options: String? = null) : BindMount(volume.name)
+
+public data class TmpfsMount(val containerPath: String, val options: String)

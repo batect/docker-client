@@ -626,11 +626,13 @@ CreateContainerRequest* AllocCreateContainerRequest() {
     value->ExtraHosts = NULL;
     value->EnvironmentVariables = NULL;
     value->BindMounts = NULL;
+    value->TmpfsMounts = NULL;
     value->CommandCount = 0;
     value->EntrypointCount = 0;
     value->ExtraHostsCount = 0;
     value->EnvironmentVariablesCount = 0;
     value->BindMountsCount = 0;
+    value->TmpfsMountsCount = 0;
 
     return value;
 }
@@ -668,6 +670,11 @@ void FreeCreateContainerRequest(CreateContainerRequest* value) {
     }
 
     free(value->BindMounts);
+    for (uint64_t i = 0; i < value->TmpfsMountsCount; i++) {
+        FreeStringPair(value->TmpfsMounts[i]);
+    }
+
+    free(value->TmpfsMounts);
     free(value);
 }
 

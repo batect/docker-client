@@ -74,7 +74,7 @@ func fromCBuildImageRequest(request *C.BuildImageRequest) *imageBuildRequest {
 	return &imageBuildRequest{
 		ContextDirectory:     C.GoString(request.ContextDirectory),
 		PathToDockerfile:     C.GoString(request.PathToDockerfile),
-		BuildArgs:            fromStringPairs(request.BuildArgs, request.BuildArgsCount),
+		BuildArgs:            buildArgsFromStringPairs(request.BuildArgs, request.BuildArgsCount),
 		ImageTags:            fromStringArray(request.ImageTags, request.ImageTagsCount),
 		AlwaysPullBaseImages: bool(request.AlwaysPullBaseImages),
 		NoCache:              bool(request.NoCache),
@@ -82,7 +82,7 @@ func fromCBuildImageRequest(request *C.BuildImageRequest) *imageBuildRequest {
 	}
 }
 
-func fromStringPairs(pairs **C.StringPair, count C.uint64_t) map[string]*string {
+func buildArgsFromStringPairs(pairs **C.StringPair, count C.uint64_t) map[string]*string {
 	m := make(map[string]*string, count)
 
 	for i := 0; i < int(count); i++ {

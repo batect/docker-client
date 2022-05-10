@@ -236,6 +236,8 @@ typedef struct {
     char** EnvironmentVariables;
     uint64_t BindMountsCount;
     char** BindMounts;
+    uint64_t TmpfsMountsCount;
+    StringPair** TmpfsMounts;
 } CreateContainerRequest;
 
 typedef struct {
