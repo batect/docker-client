@@ -622,8 +622,10 @@ CreateContainerRequest* AllocCreateContainerRequest() {
     value->Command = NULL;
     value->Hostname = NULL;
     value->ExtraHosts = NULL;
+    value->EnvironmentVariables = NULL;
     value->CommandCount = 0;
     value->ExtraHostsCount = 0;
+    value->EnvironmentVariablesCount = 0;
 
     return value;
 }
@@ -645,6 +647,11 @@ void FreeCreateContainerRequest(CreateContainerRequest* value) {
     }
 
     free(value->ExtraHosts);
+    for (uint64_t i = 0; i < value->EnvironmentVariablesCount; i++) {
+        free(value->EnvironmentVariables[i]);
+    }
+
+    free(value->EnvironmentVariables);
     free(value);
 }
 

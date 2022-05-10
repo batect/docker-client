@@ -229,6 +229,8 @@ typedef struct {
     char* Hostname;
     uint64_t ExtraHostsCount;
     char** ExtraHosts;
+    uint64_t EnvironmentVariablesCount;
+    char** EnvironmentVariables;
 } CreateContainerRequest;
 
 typedef struct {

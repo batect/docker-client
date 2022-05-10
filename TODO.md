@@ -64,7 +64,6 @@
     * Name
     * Network
       * Network aliases
-    * Environment variables
     * Mounts
       * Local directory
       * Volume

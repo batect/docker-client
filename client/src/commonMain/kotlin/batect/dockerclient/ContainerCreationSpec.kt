@@ -20,7 +20,8 @@ public data class ContainerCreationSpec(
     val image: ImageReference,
     val command: List<String> = emptyList(),
     val hostname: String? = null,
-    val extraHosts: Set<String> = emptySet()
+    val extraHosts: Set<String> = emptySet(),
+    val environmentVariables: Map<String, String> = emptyMap()
 ) {
     public class Builder(image: ImageReference) {
         private var spec = ContainerCreationSpec(image)
@@ -41,6 +42,15 @@ public data class ContainerCreationSpec(
 
         public fun withExtraHost(hostname: String, address: String): Builder {
             spec = spec.copy(extraHosts = spec.extraHosts.plus("$hostname:$address"))
+
+            return this
+        }
+
+        public fun withEnvironmentVariable(name: String, value: String): Builder = withEnvironmentVariables(mapOf(name to value))
+        public fun withEnvironmentVariables(vararg variables: Pair<String, String>): Builder = withEnvironmentVariables(mapOf(*variables))
+
+        public fun withEnvironmentVariables(variables: Map<String, String>): Builder {
+            spec = spec.copy(environmentVariables = spec.environmentVariables + variables)
 
             return this
         }

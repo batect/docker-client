@@ -339,6 +339,8 @@
       type: string
     - name: ExtraHosts
       type: string[]
+    - name: EnvironmentVariables
+      type: string[]
 
 - name: CreateContainerReturn
   type: struct

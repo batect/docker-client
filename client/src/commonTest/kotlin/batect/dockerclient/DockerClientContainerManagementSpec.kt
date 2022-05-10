@@ -338,8 +338,21 @@ class DockerClientContainerManagementSpec : ShouldSpec({
                         .withHostname("my-container-name")
                         .withCommand("hostname")
                         .build(),
-                    "my-container-name\n"
-                )
+                    "my-container-name"
+                ),
+                TestScenario(
+                    "set environment variables for a container",
+                    ContainerCreationSpec.Builder(image)
+                        .withEnvironmentVariables("FIRST_VAR" to "the first value", "SECOND_VAR" to "the second value")
+                        .withEnvironmentVariable("THIRD_VAR", "the third value")
+                        .withCommand("sh", "-c", "echo First variable: \$FIRST_VAR && echo Second variable: \$SECOND_VAR && echo Third variable: \$THIRD_VAR")
+                        .build(),
+                    """
+                        First variable: the first value
+                        Second variable: the second value
+                        Third variable: the third value
+                    """.trimIndent()
+                ),
             ).forEach { scenario ->
                 should("be able to ${scenario.description}") {
                     val container = client.createContainer(scenario.creationSpec)
@@ -353,8 +366,8 @@ class DockerClientContainerManagementSpec : ShouldSpec({
                         val stderrText = stderr.readUtf8()
 
                         exitCode shouldBe 0
-                        stdoutText shouldBe scenario.expectedOutput
-                        stderrText shouldBe scenario.expectedErrorOutput
+                        stdoutText.trim() shouldBe scenario.expectedOutput
+                        stderrText.trim() shouldBe scenario.expectedErrorOutput
                     } finally {
                         client.removeContainer(container, force = true)
                     }
