@@ -134,14 +134,14 @@ kotlin {
 
         val nativeTest by creating {
             dependsOn(commonTest)
-
-            dependencies {
-                implementation(libs.ktor.client.curl)
-            }
         }
 
         val linuxTest by creating {
             dependsOn(nativeTest)
+
+            dependencies {
+                implementation(libs.ktor.client.cio)
+            }
         }
 
         val linuxX64Test by getting {
@@ -150,6 +150,10 @@ kotlin {
 
         val mingwTest by creating {
             dependsOn(nativeTest)
+
+            dependencies {
+                implementation(libs.ktor.client.curl)
+            }
         }
 
         val mingwX64Test by getting {
@@ -158,6 +162,10 @@ kotlin {
 
         val macosTest by creating {
             dependsOn(nativeTest)
+
+            dependencies {
+                implementation(libs.ktor.client.cio)
+            }
         }
 
         val macosX64Test by getting {
