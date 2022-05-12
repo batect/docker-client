@@ -165,6 +165,11 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         if: matrix.disableDockerDaemonTests != 1
 
+      # This is only required while the Kotlin/Native tests for Windows use ktor-client-curl - frustratingly, it doesn't bundle in libcurl.
+      - name: Install libcurl
+        run: pacman -S mingw-w64-x86_64-curl
+        if: runner.os == 'Windows'
+
       - name: Build, test and package
         run: ./gradlew client:check client:jvmJar --scan
         env:
