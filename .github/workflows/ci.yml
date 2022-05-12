@@ -165,15 +165,12 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         if: matrix.disableDockerDaemonTests != 1
 
-      # These two steps are only required while the Kotlin/Native tests for Windows use ktor-client-curl - frustratingly, ktor-client-curl doesn't bundle in libcurl.
+      # This is only required while the Kotlin/Native tests for Windows use ktor-client-curl - frustratingly, ktor-client-curl doesn't bundle in libcurl.
       - name: Set up MSYS2
         uses: msys2/setup-msys2@v2
         with:
           release: false
-        if: runner.os == 'Windows'
-
-      - name: Install libcurl
-        run: msys2 -c 'pacman -S mingw-w64-x86_64-curl'
+          install: mingw-w64-x86_64-curl
         if: runner.os == 'Windows'
 
       - name: Build, test and package
