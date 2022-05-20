@@ -63,7 +63,7 @@ jobs:
         run: ./gradlew golang-wrapper:buildSharedLibs --scan
 
       - name: Upload Golang wrapper libraries
-        uses: actions/upload-artifact@v3.0.0
+        uses: actions/upload-artifact@v3.1.0
         with:
           name: wrapper-libs
           path: golang-wrapper/build/libs
