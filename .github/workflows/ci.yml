@@ -165,16 +165,9 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         if: matrix.disableDockerDaemonTests != 1
 
-      # This is only required while the Kotlin/Native tests for Windows use ktor-client-curl - frustratingly, ktor-client-curl doesn't bundle in libcurl.
-      - name: Set up MSYS2
-        uses: msys2/setup-msys2@v2
-        with:
-          release: false
-          install: mingw-w64-x86_64-curl
-        if: runner.os == 'Windows'
-
+      # linkDebugTestMingwX64 and mingwX64Test are disabled until https://youtrack.jetbrains.com/issue/KTOR-4307 is resolved.
       - name: Build, test and package
-        run: ./gradlew client:check client:jvmJar --scan
+        run: ./gradlew client:check client:jvmJar --scan --exclude-task linkDebugTestMingwX64 --exclude-task mingwX64Test
         env:
           DISABLE_DOCKER_DAEMON_TESTS: ${{ matrix.disableDockerDaemonTests }}
           DOCKER_CONTAINER_OPERATING_SYSTEM: ${{ matrix.containerOperatingSystem }}
