@@ -36,7 +36,7 @@ jobs:
           distribution: temurin
 
       - name: Setup Gradle
-        uses: gradle/gradle-build-action@v2.1.5
+        uses: gradle/gradle-build-action@v2.1.6
 
       - name: Cache Golang packages
         id: cache-golang-packages
@@ -118,7 +118,7 @@ jobs:
           distribution: temurin
 
       - name: Setup Gradle
-        uses: gradle/gradle-build-action@v2.1.5
+        uses: gradle/gradle-build-action@v2.1.6
 
       - name: Cache Golang packages
         id: cache-golang-packages
@@ -196,7 +196,7 @@ jobs:
           distribution: temurin
 
       - name: Setup Gradle
-        uses: gradle/gradle-build-action@v2.1.5
+        uses: gradle/gradle-build-action@v2.1.6
 
       - name: Cache Golang packages
         id: cache-golang-packages
@@ -239,7 +239,7 @@ jobs:
           distribution: temurin
 
       - name: Setup Gradle
-        uses: gradle/gradle-build-action@v2.1.5
+        uses: gradle/gradle-build-action@v2.1.6
 
       - name: Run linting, tests and other checks
         run: ./gradlew :build-logic:check
@@ -270,7 +270,7 @@ jobs:
           distribution: temurin
 
       - name: Setup Gradle
-        uses: gradle/gradle-build-action@v2.1.5
+        uses: gradle/gradle-build-action@v2.1.6
 
       - name: Cache Golang packages
         id: cache-golang-packages
