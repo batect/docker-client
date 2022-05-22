@@ -470,7 +470,7 @@ func (v *vertexSortingInterface) extractStageNameAndStepNumber(vertexName string
 	stepCounter := identifier
 
 	if delimiter != -1 {
-		stageName = identifier[0:delimiter]
+		stageName = strings.TrimSpace(identifier[0:delimiter])
 		stepCounter = identifier[delimiter+1:]
 	}
 
