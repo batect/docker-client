@@ -553,17 +553,48 @@ class DockerClientContainerManagementSpec : ShouldSpec({
                 TestScenario(
                     "run without a TTY attached",
                     ContainerCreationSpec.Builder(image)
-                        .withCommand("sh", "-c", "if [ -t 0 ]; then echo 'Is a TTY'; else echo 'Is not a TTY'; fi")
+                        .withCommand(
+                            "sh",
+                            "-c",
+                            """
+                                if [ -t 0 ]; then
+                                    echo 'Is a TTY'
+                                else
+                                    echo 'Is not a TTY'
+                                fi
+
+                                echo "This is stdout" >/dev/stdout
+                                echo "This is stderr" >/dev/stderr
+                            """.trimIndent()
+                        )
                         .build(),
-                    "Is not a TTY"
+                    expectedOutput = """
+                            Is not a TTY
+                            This is stdout
+                    """.trimIndent(),
+                    expectedErrorOutput = "This is stderr"
                 ),
                 TestScenario(
                     "run with a TTY attached",
                     ContainerCreationSpec.Builder(image)
-                        .withCommand("sh", "-c", "if [ -t 0 ]; then echo 'Is a TTY'; else echo 'Is not a TTY'; fi")
+                        .withCommand(
+                            "sh",
+                            "-c",
+                            """
+                                if [ -t 0 ]; then
+                                    echo 'Is a TTY'
+                                else
+                                    echo 'Is not a TTY'
+                                fi
+
+                                echo "This is stdout" >/dev/stdout
+                                echo "This is stderr" >/dev/stderr
+                            """.trimIndent()
+                        )
                         .withTTY()
                         .build(),
-                    "Is a TTY"
+                    expectedOutput = "Is a TTY\r\nThis is stdout\r\nThis is stderr",
+                    expectedErrorOutput = ""
                 ),
                 TestScenario(
                     "run an unprivileged container",

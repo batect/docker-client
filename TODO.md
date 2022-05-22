@@ -75,9 +75,6 @@
     * Forward signals to container (test by sending Ctrl-C to self)
     * Set and update TTY size
     * Handle case where only one stream is provided (eg. only stdout, no stderr)
-    * Test with and without TTY enabled
-      * With TTY enabled: all output goes to stdout stream
-      * Without TTY enabled: output split across streams according to source
     * Handle case where container hasn't been started or has already finished
   * Stream events (for waiting for health check)
   * Inspect (for getting last health check result)
