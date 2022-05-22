@@ -473,6 +473,7 @@ internal actual class RealDockerClient actual constructor(configuration: DockerC
         request.exposedPorts = jvm.exposedPorts
         request.user.set(jvm.userAndGroupFormattedForDocker)
         request.useInitProcess.set(jvm.useInitProcess)
+        request.shmSizeInBytes.set(jvm.shmSizeInBytes ?: 0)
 
         return request
     }

@@ -527,6 +527,27 @@ class DockerClientContainerManagementSpec : ShouldSpec({
                         |PID   COMMAND
                         |    1 ps
                     """.trimMargin()
+                ),
+                TestScenario(
+                    "use the default size for /dev/shm",
+                    ContainerCreationSpec.Builder(image)
+                        .withCommand("df", "-k", "/dev/shm")
+                        .build(),
+                    """
+                        |Filesystem           1K-blocks      Used Available Use% Mounted on
+                        |shm                      65536         0     65536   0% /dev/shm
+                    """.trimMargin()
+                ),
+                TestScenario(
+                    "use a custom size for /dev/shm",
+                    ContainerCreationSpec.Builder(image)
+                        .withCommand("df", "-k", "/dev/shm")
+                        .withShmSize(20480)
+                        .build(),
+                    """
+                        |Filesystem           1K-blocks      Used Available Use% Mounted on
+                        |shm                         20         0        20   0% /dev/shm
+                    """.trimMargin()
                 )
             ).forEach { scenario ->
                 should("be able to ${scenario.description}") {

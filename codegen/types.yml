@@ -377,6 +377,8 @@
       type: string
     - name: UseInitProcess
       type: boolean
+    - name: ShmSizeInBytes
+      type: int64
 
 - name: CreateContainerReturn
   type: struct

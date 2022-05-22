@@ -256,6 +256,7 @@ typedef struct {
     ExposedPort** ExposedPorts;
     char* User;
     bool UseInitProcess;
+    int64_t ShmSizeInBytes;
 } CreateContainerRequest;
 
 typedef struct {

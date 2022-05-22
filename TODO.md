@@ -67,7 +67,6 @@
     * STDIN attached
     * Log driver
     * Log configuration
-    * SHM size
     * Scenarios to test:
       * Windows containers
       * Default command

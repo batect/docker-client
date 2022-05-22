@@ -342,6 +342,7 @@ internal actual class RealDockerClient actual constructor(configuration: DockerC
             ExposedPortsCount = spec.exposedPorts.size.toULong()
             User = spec.userAndGroupFormattedForDocker?.cstr?.ptr
             UseInitProcess = spec.useInitProcess
+            ShmSizeInBytes = spec.shmSizeInBytes ?: 0
         }
     }
 

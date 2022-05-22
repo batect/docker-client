@@ -58,6 +58,7 @@ func CreateContainer(clientHandle DockerClientHandle, request *C.CreateContainer
 		},
 		PortBindings: portBindingsForContainer(request),
 		Init:         &useInitProcess,
+		ShmSize:      int64(request.ShmSizeInBytes),
 	}
 
 	networkingConfig := network.NetworkingConfig{}

@@ -31,7 +31,8 @@ public data class ContainerCreationSpec(
     val deviceMounts: Set<DeviceMount> = emptySet(),
     val exposedPorts: Set<ExposedPort> = emptySet(),
     val userAndGroup: UserAndGroup? = null,
-    val useInitProcess: Boolean = false
+    val useInitProcess: Boolean = false,
+    val shmSizeInBytes: Long? = null
 ) {
     public class Builder(image: ImageReference) {
         private var spec = ContainerCreationSpec(image)
@@ -131,6 +132,12 @@ public data class ContainerCreationSpec(
 
         public fun withInitProcess(): Builder {
             spec = spec.copy(useInitProcess = true)
+
+            return this
+        }
+
+        public fun withShmSize(sizeInBytes: Long): Builder {
+            spec = spec.copy(shmSizeInBytes = sizeInBytes)
 
             return this
         }

@@ -521,6 +521,7 @@ func newCreateContainerRequest(
     ExposedPorts []ExposedPort,
     User string,
     UseInitProcess bool,
+    ShmSizeInBytes int64,
 ) CreateContainerRequest {
     value := C.AllocCreateContainerRequest()
     value.ImageReference = C.CString(ImageReference)
@@ -592,6 +593,7 @@ func newCreateContainerRequest(
 
     value.User = C.CString(User)
     value.UseInitProcess = C.bool(UseInitProcess)
+    value.ShmSizeInBytes = C.int64_t(ShmSizeInBytes)
 
     return value
 }
