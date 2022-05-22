@@ -59,9 +59,6 @@
     * Network
       * Network aliases
     * Health check configuration
-    * Privileged
-    * Capabilities to add
-    * Capabilities to drop
     * STDIN attached
     * Log driver
     * Log configuration

@@ -36,6 +36,8 @@ import batect.dockerclient.native.StringPair
 import batect.dockerclient.native.TLSConfiguration
 import batect.dockerclient.native.bindMounts
 import batect.dockerclient.native.buildArgs
+import batect.dockerclient.native.capabilitiesToAdd
+import batect.dockerclient.native.capabilitiesToDrop
 import batect.dockerclient.native.command
 import batect.dockerclient.native.deviceMounts
 import batect.dockerclient.native.entrypoint
@@ -475,6 +477,9 @@ internal actual class RealDockerClient actual constructor(configuration: DockerC
         request.useInitProcess.set(jvm.useInitProcess)
         request.shmSizeInBytes.set(jvm.shmSizeInBytes ?: 0)
         request.attachTTY.set(jvm.attachTTY)
+        request.privileged.set(jvm.privileged)
+        request.capabilitiesToAdd = jvm.capabilitiesToAdd.map { it.name }
+        request.capabilitiesToDrop = jvm.capabilitiesToDrop.map { it.name }
 
         return request
     }

@@ -523,6 +523,9 @@ func newCreateContainerRequest(
     UseInitProcess bool,
     ShmSizeInBytes int64,
     AttachTTY bool,
+    Privileged bool,
+    CapabilitiesToAdd []string,
+    CapabilitiesToDrop []string,
 ) CreateContainerRequest {
     value := C.AllocCreateContainerRequest()
     value.ImageReference = C.CString(ImageReference)
@@ -596,6 +599,23 @@ func newCreateContainerRequest(
     value.UseInitProcess = C.bool(UseInitProcess)
     value.ShmSizeInBytes = C.int64_t(ShmSizeInBytes)
     value.AttachTTY = C.bool(AttachTTY)
+    value.Privileged = C.bool(Privileged)
+
+    value.CapabilitiesToAddCount = C.uint64_t(len(CapabilitiesToAdd))
+    value.CapabilitiesToAdd = C.CreatestringArray(value.CapabilitiesToAddCount)
+
+    for i, v := range CapabilitiesToAdd {
+        C.SetstringArrayElement(value.CapabilitiesToAdd, C.uint64_t(i), C.CString(v))
+    }
+
+
+    value.CapabilitiesToDropCount = C.uint64_t(len(CapabilitiesToDrop))
+    value.CapabilitiesToDrop = C.CreatestringArray(value.CapabilitiesToDropCount)
+
+    for i, v := range CapabilitiesToDrop {
+        C.SetstringArrayElement(value.CapabilitiesToDrop, C.uint64_t(i), C.CString(v))
+    }
+
 
     return value
 }

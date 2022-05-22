@@ -258,6 +258,11 @@ typedef struct {
     bool UseInitProcess;
     int64_t ShmSizeInBytes;
     bool AttachTTY;
+    bool Privileged;
+    uint64_t CapabilitiesToAddCount;
+    char** CapabilitiesToAdd;
+    uint64_t CapabilitiesToDropCount;
+    char** CapabilitiesToDrop;
 } CreateContainerRequest;
 
 typedef struct {

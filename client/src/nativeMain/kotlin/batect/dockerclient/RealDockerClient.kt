@@ -344,6 +344,11 @@ internal actual class RealDockerClient actual constructor(configuration: DockerC
             UseInitProcess = spec.useInitProcess
             ShmSizeInBytes = spec.shmSizeInBytes ?: 0
             AttachTTY = spec.attachTTY
+            Privileged = spec.privileged
+            CapabilitiesToAdd = allocArrayOf(spec.capabilitiesToAdd.map { it.name.cstr.ptr })
+            CapabilitiesToAddCount = spec.capabilitiesToAdd.size.toULong()
+            CapabilitiesToDrop = allocArrayOf(spec.capabilitiesToDrop.map { it.name.cstr.ptr })
+            CapabilitiesToDropCount = spec.capabilitiesToDrop.size.toULong()
         }
     }
 

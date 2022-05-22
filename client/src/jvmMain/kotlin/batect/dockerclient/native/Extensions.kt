@@ -90,6 +90,18 @@ internal var CreateContainerRequest.exposedPorts by WriteOnlyList<CreateContaine
     ::exposedPortToNative
 )
 
+internal var CreateContainerRequest.capabilitiesToAdd by WriteOnlyList<CreateContainerRequest, String>(
+    CreateContainerRequest::capabilitiesToAddCount,
+    CreateContainerRequest::capabilitiesToAddPointer,
+    ::stringToPointer
+)
+
+internal var CreateContainerRequest.capabilitiesToDrop by WriteOnlyList<CreateContainerRequest, String>(
+    CreateContainerRequest::capabilitiesToDropCount,
+    CreateContainerRequest::capabilitiesToDropPointer,
+    ::stringToPointer
+)
+
 internal fun StringPair(key: String, value: String): StringPair {
     val pair = StringPair(Runtime.getRuntime(nativeAPI))
     pair.key.set(key)

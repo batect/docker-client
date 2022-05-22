@@ -51,6 +51,7 @@ class DockerClientContainerManagementSpec : ShouldSpec({
     context("when working with Linux containers").onlyIfDockerDaemonSupportsLinuxContainers {
         val client = closeAfterTest(DockerClient.Builder().build())
         val image = client.pullImage("alpine:3.15.0")
+        val privilegesCheckImage = client.buildImage(ImageBuildSpec.Builder(systemFileSystem.canonicalize("./src/commonTest/resources/images/privileges-check".toPath())).build(), SinkTextOutput(Buffer()))
         val hostMountDirectory: Path = systemFileSystem.canonicalize("./src/commonTest/resources/container-mount-directory".toPath())
 
         context("using low-level methods") {
@@ -563,7 +564,46 @@ class DockerClientContainerManagementSpec : ShouldSpec({
                         .withTTY()
                         .build(),
                     "Is a TTY"
-                )
+                ),
+                TestScenario(
+                    "run an unprivileged container",
+                    ContainerCreationSpec.Builder(privilegesCheckImage)
+                        .build(),
+                    """
+                        Container does not have NET_ADMIN capability
+                        Container has CHOWN capability
+                    """.trimIndent()
+                ),
+                TestScenario(
+                    "run a privileged container",
+                    ContainerCreationSpec.Builder(privilegesCheckImage)
+                        .withPrivileged()
+                        .build(),
+                    """
+                        Container has NET_ADMIN capability
+                        Container has CHOWN capability
+                    """.trimIndent()
+                ),
+                TestScenario(
+                    "run a container with additional capabilities",
+                    ContainerCreationSpec.Builder(privilegesCheckImage)
+                        .withCapabilityAdded(Capability.NET_ADMIN)
+                        .build(),
+                    """
+                        Container has NET_ADMIN capability
+                        Container has CHOWN capability
+                    """.trimIndent()
+                ),
+                TestScenario(
+                    "run a container with reduced capabilities",
+                    ContainerCreationSpec.Builder(privilegesCheckImage)
+                        .withCapabilityDropped(Capability.CHOWN)
+                        .build(),
+                    """
+                        Container does not have NET_ADMIN capability
+                        Container does not have CHOWN capability
+                    """.trimIndent()
+                ),
             ).forEach { scenario ->
                 should("be able to ${scenario.description}") {
                     val container = client.createContainer(scenario.creationSpec)

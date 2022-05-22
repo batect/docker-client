@@ -666,6 +666,8 @@ CreateContainerRequest* AllocCreateContainerRequest() {
     value->DeviceMounts = NULL;
     value->ExposedPorts = NULL;
     value->User = NULL;
+    value->CapabilitiesToAdd = NULL;
+    value->CapabilitiesToDrop = NULL;
     value->CommandCount = 0;
     value->EntrypointCount = 0;
     value->ExtraHostsCount = 0;
@@ -674,6 +676,8 @@ CreateContainerRequest* AllocCreateContainerRequest() {
     value->TmpfsMountsCount = 0;
     value->DeviceMountsCount = 0;
     value->ExposedPortsCount = 0;
+    value->CapabilitiesToAddCount = 0;
+    value->CapabilitiesToDropCount = 0;
 
     return value;
 }
@@ -727,6 +731,16 @@ void FreeCreateContainerRequest(CreateContainerRequest* value) {
 
     free(value->ExposedPorts);
     free(value->User);
+    for (uint64_t i = 0; i < value->CapabilitiesToAddCount; i++) {
+        free(value->CapabilitiesToAdd[i]);
+    }
+
+    free(value->CapabilitiesToAdd);
+    for (uint64_t i = 0; i < value->CapabilitiesToDropCount; i++) {
+        free(value->CapabilitiesToDrop[i]);
+    }
+
+    free(value->CapabilitiesToDrop);
     free(value);
 }
 

@@ -33,7 +33,10 @@ public data class ContainerCreationSpec(
     val userAndGroup: UserAndGroup? = null,
     val useInitProcess: Boolean = false,
     val shmSizeInBytes: Long? = null,
-    val attachTTY: Boolean = false
+    val attachTTY: Boolean = false,
+    val privileged: Boolean = false,
+    val capabilitiesToAdd: Set<Capability> = emptySet(),
+    val capabilitiesToDrop: Set<Capability> = emptySet()
 ) {
     public class Builder(image: ImageReference) {
         private var spec = ContainerCreationSpec(image)
@@ -145,6 +148,30 @@ public data class ContainerCreationSpec(
 
         public fun withTTY(): Builder {
             spec = spec.copy(attachTTY = true)
+
+            return this
+        }
+
+        public fun withPrivileged(): Builder {
+            spec = spec.copy(privileged = true)
+
+            return this
+        }
+
+        public fun withCapabilityAdded(capability: Capability): Builder = withCapabilitiesAdded(setOf(capability))
+        public fun withCapabilitiesAdded(vararg capabilities: Capability): Builder = withCapabilitiesAdded(capabilities.toSet())
+
+        public fun withCapabilitiesAdded(capabilities: Set<Capability>): Builder {
+            spec = spec.copy(capabilitiesToAdd = spec.capabilitiesToAdd + capabilities)
+
+            return this
+        }
+
+        public fun withCapabilityDropped(capability: Capability): Builder = withCapabilitiesDropped(setOf(capability))
+        public fun withCapabilitiesDropped(vararg capabilities: Capability): Builder = withCapabilitiesDropped(capabilities.toSet())
+
+        public fun withCapabilitiesDropped(capabilities: Set<Capability>): Builder {
+            spec = spec.copy(capabilitiesToDrop = spec.capabilitiesToDrop + capabilities)
 
             return this
         }

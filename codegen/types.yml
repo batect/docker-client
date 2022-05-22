@@ -381,6 +381,12 @@
       type: int64
     - name: AttachTTY
       type: boolean
+    - name: Privileged
+      type: boolean
+    - name: CapabilitiesToAdd
+      type: string[]
+    - name: CapabilitiesToDrop
+      type: string[]
 
 - name: CreateContainerReturn
   type: struct

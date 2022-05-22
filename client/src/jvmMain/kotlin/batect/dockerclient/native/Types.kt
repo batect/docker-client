@@ -566,6 +566,11 @@ internal class CreateContainerRequest(runtime: Runtime) : Struct(runtime), AutoC
     val useInitProcess = Boolean()
     val shmSizeInBytes = int64_t()
     val attachTTY = Boolean()
+    val privileged = Boolean()
+    val capabilitiesToAddCount = u_int64_t()
+    val capabilitiesToAddPointer = Pointer()
+    val capabilitiesToDropCount = u_int64_t()
+    val capabilitiesToDropPointer = Pointer()
 
     override fun close() {
         nativeAPI.FreeCreateContainerRequest(this)
