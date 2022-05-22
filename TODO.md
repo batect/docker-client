@@ -63,7 +63,6 @@
     * Privileged
     * Capabilities to add
     * Capabilities to drop
-    * Init process enabled
     * TTY enabled
     * STDIN attached
     * Log driver

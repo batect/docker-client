@@ -30,7 +30,8 @@ public data class ContainerCreationSpec(
     val tmpfsMounts: Set<TmpfsMount> = emptySet(),
     val deviceMounts: Set<DeviceMount> = emptySet(),
     val exposedPorts: Set<ExposedPort> = emptySet(),
-    val userAndGroup: UserAndGroup? = null
+    val userAndGroup: UserAndGroup? = null,
+    val useInitProcess: Boolean = false
 ) {
     public class Builder(image: ImageReference) {
         private var spec = ContainerCreationSpec(image)
@@ -124,6 +125,12 @@ public data class ContainerCreationSpec(
 
         public fun withUserAndGroup(userAndGroup: UserAndGroup): Builder {
             spec = spec.copy(userAndGroup = userAndGroup)
+
+            return this
+        }
+
+        public fun withInitProcess(): Builder {
+            spec = spec.copy(useInitProcess = true)
 
             return this
         }

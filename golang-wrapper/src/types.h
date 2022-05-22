@@ -255,6 +255,7 @@ typedef struct {
     uint64_t ExposedPortsCount;
     ExposedPort** ExposedPorts;
     char* User;
+    bool UseInitProcess;
 } CreateContainerRequest;
 
 typedef struct {

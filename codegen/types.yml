@@ -375,6 +375,8 @@
       type: ExposedPort[]
     - name: User
       type: string
+    - name: UseInitProcess
+      type: boolean
 
 - name: CreateContainerReturn
   type: struct

@@ -26,6 +26,7 @@ import io.kotest.matchers.comparables.shouldBeLessThan
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
 import io.kotest.matchers.string.shouldContain
+import io.kotest.matchers.string.shouldStartWith
 import io.ktor.client.HttpClient
 import io.ktor.client.request.get
 import io.ktor.http.HttpStatusCode
@@ -517,6 +518,16 @@ class DockerClientContainerManagementSpec : ShouldSpec({
                         .build(),
                     "0\n0"
                 ),
+                TestScenario(
+                    "run a container without an init process",
+                    ContainerCreationSpec.Builder(image)
+                        .withCommand("ps", "-o", "pid,comm")
+                        .build(),
+                    """
+                        |PID   COMMAND
+                        |    1 ps
+                    """.trimMargin()
+                )
             ).forEach { scenario ->
                 should("be able to ${scenario.description}") {
                     val container = client.createContainer(scenario.creationSpec)
@@ -675,6 +686,37 @@ class DockerClientContainerManagementSpec : ShouldSpec({
 
                     exitCode shouldBe 0
                     stdoutText.trim() shouldNotBe ""
+                    stderrText.trim() shouldBe ""
+                } finally {
+                    client.removeContainer(container, force = true)
+                }
+            }
+
+            should("be able to run a container with an init process") {
+                val spec = ContainerCreationSpec.Builder(image)
+                    .withCommand("ps", "-o", "pid,comm")
+                    .withInitProcess()
+                    .build()
+
+                val container = client.createContainer(spec)
+
+                try {
+                    val stdout = Buffer()
+                    val stderr = Buffer()
+
+                    val exitCode = client.run(container, SinkTextOutput(stdout), SinkTextOutput(stderr))
+                    val stdoutText = stdout.readUtf8()
+                    val stderrText = stderr.readUtf8()
+
+                    exitCode shouldBe 0
+
+                    stdoutText.trim() shouldStartWith """
+                        |PID   COMMAND
+                        |    1 docker-init
+                    """.trimMargin()
+
+                    stdoutText shouldContain """^\s+\d+\sps$""".toRegex(RegexOption.MULTILINE)
+
                     stderrText.trim() shouldBe ""
                 } finally {
                     client.removeContainer(container, force = true)

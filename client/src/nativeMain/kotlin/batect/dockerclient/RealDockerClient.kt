@@ -341,6 +341,7 @@ internal actual class RealDockerClient actual constructor(configuration: DockerC
             ExposedPorts = allocArrayOf(spec.exposedPorts.map { allocExposedPort(it).ptr })
             ExposedPortsCount = spec.exposedPorts.size.toULong()
             User = spec.userAndGroupFormattedForDocker?.cstr?.ptr
+            UseInitProcess = spec.useInitProcess
         }
     }
 

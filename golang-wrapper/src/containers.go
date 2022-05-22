@@ -47,6 +47,8 @@ func CreateContainer(clientHandle DockerClientHandle, request *C.CreateContainer
 		User:         C.GoString(request.User),
 	}
 
+	useInitProcess := bool(request.UseInitProcess)
+
 	hostConfig := container.HostConfig{
 		ExtraHosts: fromStringArray(request.ExtraHosts, request.ExtraHostsCount),
 		Binds:      fromStringArray(request.BindMounts, request.BindMountsCount),
@@ -55,6 +57,7 @@ func CreateContainer(clientHandle DockerClientHandle, request *C.CreateContainer
 			Devices: devicesForContainer(request),
 		},
 		PortBindings: portBindingsForContainer(request),
+		Init:         &useInitProcess,
 	}
 
 	networkingConfig := network.NetworkingConfig{}

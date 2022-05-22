@@ -520,6 +520,7 @@ func newCreateContainerRequest(
     DeviceMounts []DeviceMount,
     ExposedPorts []ExposedPort,
     User string,
+    UseInitProcess bool,
 ) CreateContainerRequest {
     value := C.AllocCreateContainerRequest()
     value.ImageReference = C.CString(ImageReference)
@@ -590,6 +591,7 @@ func newCreateContainerRequest(
     }
 
     value.User = C.CString(User)
+    value.UseInitProcess = C.bool(UseInitProcess)
 
     return value
 }
