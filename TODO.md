@@ -36,15 +36,11 @@
       * use default CLI context (which falls back to environment variables, then hard-coded defaults)
       * use specific CLI context
       * provide all configuration
-* Timeouts for calls?
+* Timeouts and cancellation for calls
   * Add tests to verify this is working as expected
-* Cancellation for calls
-  * Make all methods coroutines? https://kotlin.github.io/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines/suspend-cancellable-coroutine.html
   * Go through all methods and check for any use of context.Background()
-* Pass structs to methods by value rather than by reference once jnr-ffi supports it
 
 * Check that Golang code can return an empty list (eg. listing all volumes returns no volumes)
-* Autogenerate struct accessors for arrays in structs (eg. BuildImageRequest.BuildArgs)
 
 * Remove `with...` prefixes from ImageBuildSpec / ContainerCreationSpec?
 * Add `ifFailed` helper method to JVM `RealDockerClient`
