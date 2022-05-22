@@ -53,6 +53,7 @@
       * Support for SSH passthrough - fail if attempted with legacy builder
       * Support for secrets - fail if attempted with legacy builder
       * Add support for warnings (added in BuildKit 0.10.0)
+      * Upgrade to most recent version of BuildKit library (currently blocked due to version hell)
     * Test that we can run a built image
 * Containers
   * Create
@@ -66,6 +67,7 @@
     * STDIN attached
     * Log driver
     * Log configuration
+    * Labels
     * Scenarios to test:
       * Windows containers
       * Default command
