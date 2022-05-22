@@ -45,6 +45,7 @@ func CreateContainer(clientHandle DockerClientHandle, request *C.CreateContainer
 		Env:          fromStringArray(request.EnvironmentVariables, request.EnvironmentVariablesCount),
 		ExposedPorts: exposedPortsForContainer(request),
 		User:         C.GoString(request.User),
+		Tty:          bool(request.AttachTTY),
 	}
 
 	useInitProcess := bool(request.UseInitProcess)

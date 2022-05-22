@@ -522,6 +522,7 @@ func newCreateContainerRequest(
     User string,
     UseInitProcess bool,
     ShmSizeInBytes int64,
+    AttachTTY bool,
 ) CreateContainerRequest {
     value := C.AllocCreateContainerRequest()
     value.ImageReference = C.CString(ImageReference)
@@ -594,6 +595,7 @@ func newCreateContainerRequest(
     value.User = C.CString(User)
     value.UseInitProcess = C.bool(UseInitProcess)
     value.ShmSizeInBytes = C.int64_t(ShmSizeInBytes)
+    value.AttachTTY = C.bool(AttachTTY)
 
     return value
 }

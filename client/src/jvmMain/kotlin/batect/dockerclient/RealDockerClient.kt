@@ -474,6 +474,7 @@ internal actual class RealDockerClient actual constructor(configuration: DockerC
         request.user.set(jvm.userAndGroupFormattedForDocker)
         request.useInitProcess.set(jvm.useInitProcess)
         request.shmSizeInBytes.set(jvm.shmSizeInBytes ?: 0)
+        request.attachTTY.set(jvm.attachTTY)
 
         return request
     }

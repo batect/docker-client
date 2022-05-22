@@ -32,7 +32,8 @@ public data class ContainerCreationSpec(
     val exposedPorts: Set<ExposedPort> = emptySet(),
     val userAndGroup: UserAndGroup? = null,
     val useInitProcess: Boolean = false,
-    val shmSizeInBytes: Long? = null
+    val shmSizeInBytes: Long? = null,
+    val attachTTY: Boolean = false
 ) {
     public class Builder(image: ImageReference) {
         private var spec = ContainerCreationSpec(image)
@@ -138,6 +139,12 @@ public data class ContainerCreationSpec(
 
         public fun withShmSize(sizeInBytes: Long): Builder {
             spec = spec.copy(shmSizeInBytes = sizeInBytes)
+
+            return this
+        }
+
+        public fun withTTY(): Builder {
+            spec = spec.copy(attachTTY = true)
 
             return this
         }

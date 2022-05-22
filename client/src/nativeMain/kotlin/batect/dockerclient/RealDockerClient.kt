@@ -343,6 +343,7 @@ internal actual class RealDockerClient actual constructor(configuration: DockerC
             User = spec.userAndGroupFormattedForDocker?.cstr?.ptr
             UseInitProcess = spec.useInitProcess
             ShmSizeInBytes = spec.shmSizeInBytes ?: 0
+            AttachTTY = spec.attachTTY
         }
     }
 

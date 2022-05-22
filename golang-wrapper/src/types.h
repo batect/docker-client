@@ -257,6 +257,7 @@ typedef struct {
     char* User;
     bool UseInitProcess;
     int64_t ShmSizeInBytes;
+    bool AttachTTY;
 } CreateContainerRequest;
 
 typedef struct {

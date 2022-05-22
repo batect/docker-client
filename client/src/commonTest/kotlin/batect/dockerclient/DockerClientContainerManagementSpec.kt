@@ -548,6 +548,21 @@ class DockerClientContainerManagementSpec : ShouldSpec({
                         |Filesystem           1K-blocks      Used Available Use% Mounted on
                         |shm                         20         0        20   0% /dev/shm
                     """.trimMargin()
+                ),
+                TestScenario(
+                    "run without a TTY attached",
+                    ContainerCreationSpec.Builder(image)
+                        .withCommand("sh", "-c", "if [ -t 0 ]; then echo 'Is a TTY'; else echo 'Is not a TTY'; fi")
+                        .build(),
+                    "Is not a TTY"
+                ),
+                TestScenario(
+                    "run with a TTY attached",
+                    ContainerCreationSpec.Builder(image)
+                        .withCommand("sh", "-c", "if [ -t 0 ]; then echo 'Is a TTY'; else echo 'Is not a TTY'; fi")
+                        .withTTY()
+                        .build(),
+                    "Is a TTY"
                 )
             ).forEach { scenario ->
                 should("be able to ${scenario.description}") {
