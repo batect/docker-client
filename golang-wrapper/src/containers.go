@@ -38,14 +38,20 @@ func CreateContainer(clientHandle DockerClientHandle, request *C.CreateContainer
 
 	config := container.Config{
 		Image:        C.GoString(request.ImageReference),
-		Cmd:          fromStringArray(request.Command, request.CommandCount),
-		Entrypoint:   fromStringArray(request.Entrypoint, request.EntrypointCount),
 		WorkingDir:   C.GoString(request.WorkingDirectory),
 		Hostname:     C.GoString(request.Hostname),
 		Env:          fromStringArray(request.EnvironmentVariables, request.EnvironmentVariablesCount),
 		ExposedPorts: exposedPortsForContainer(request),
 		User:         C.GoString(request.User),
 		Tty:          bool(request.AttachTTY),
+	}
+
+	if request.CommandCount > 0 {
+		config.Cmd = fromStringArray(request.Command, request.CommandCount)
+	}
+
+	if request.EntrypointCount > 0 {
+		config.Entrypoint = fromStringArray(request.Entrypoint, request.EntrypointCount)
 	}
 
 	useInitProcess := bool(request.UseInitProcess)

@@ -63,8 +63,6 @@
     * Labels
     * Scenarios to test:
       * Windows containers
-      * Default command
-      * Default entrypoint
   * Upload files
   * Attach
     * Stream input to stdin - from console or from buffer

@@ -51,8 +51,6 @@ class DockerClientContainerManagementSpec : ShouldSpec({
     context("when working with Linux containers").onlyIfDockerDaemonSupportsLinuxContainers {
         val client = closeAfterTest(DockerClient.Builder().build())
         val image = client.pullImage("alpine:3.15.0")
-        val privilegesCheckImage = client.buildImage(ImageBuildSpec.Builder(systemFileSystem.canonicalize("./src/commonTest/resources/images/privileges-check".toPath())).build(), SinkTextOutput(Buffer()))
-        val hostMountDirectory: Path = systemFileSystem.canonicalize("./src/commonTest/resources/container-mount-directory".toPath())
 
         context("using low-level methods") {
             should("be able to create, start, wait for and remove a container") {
@@ -343,6 +341,18 @@ class DockerClientContainerManagementSpec : ShouldSpec({
         }
 
         context("using the run() helper method") {
+            fun buildTestImage(name: String): ImageReference {
+                val path = systemFileSystem.canonicalize("./src/commonTest/resources/images/$name".toPath())
+                val spec = ImageBuildSpec.Builder(path).build()
+
+                return client.buildImage(spec, SinkTextOutput(Buffer()))
+            }
+
+            val privilegesCheckImage = buildTestImage("privileges-check")
+            val defaultCommandImage = buildTestImage("default-command")
+            val defaultEntrypointImage = buildTestImage("default-entrypoint")
+            val hostMountDirectory: Path = systemFileSystem.canonicalize("./src/commonTest/resources/container-mount-directory".toPath())
+
             should("be able to run a basic container") {
                 val spec = ContainerCreationSpec.Builder(image)
                     .withCommand("sh", "-c", "echo 'Hello stdout' >/dev/stdout && echo 'Hello stderr' >/dev/stderr && exit 123")
@@ -644,6 +654,32 @@ class DockerClientContainerManagementSpec : ShouldSpec({
                         Container does not have NET_ADMIN capability
                         Container does not have CHOWN capability
                     """.trimIndent()
+                ),
+                TestScenario(
+                    "use the default command on a container",
+                    ContainerCreationSpec.Builder(defaultCommandImage)
+                        .build(),
+                    "This is the default command"
+                ),
+                TestScenario(
+                    "override the default command on a container",
+                    ContainerCreationSpec.Builder(defaultCommandImage)
+                        .withCommand("echo", "This is the overriding command")
+                        .build(),
+                    "This is the overriding command"
+                ),
+                TestScenario(
+                    "use the default entrypoint on a container",
+                    ContainerCreationSpec.Builder(defaultEntrypointImage)
+                        .build(),
+                    "This is the default entrypoint"
+                ),
+                TestScenario(
+                    "override the default entrypoint on a container",
+                    ContainerCreationSpec.Builder(defaultEntrypointImage)
+                        .withEntrypoint("echo", "This is the overriding entrypoint")
+                        .build(),
+                    "This is the overriding entrypoint"
                 ),
             ).forEach { scenario ->
                 should("be able to ${scenario.description}") {
