@@ -887,6 +887,19 @@ class DockerClientContainerManagementSpec : ShouldSpec({
                             "sh",
                             "-c",
                             """
+                                attempts=0
+
+                                until nslookup the-test-container >/dev/null; do
+                                    attempts=${'$'}((attempts+1))
+
+                                    if [ ${'$'}attempts -gt 5 ]; then
+                                        echo "Gave up trying to resolve name after five attempts"
+                                        exit 1
+                                    fi
+
+                                    sleep 1
+                                done
+
                                 ETH0_IP=$(ifconfig eth0 | grep 'inet addr' | cut -d: -f2 | awk '{print ${'$'}1}')
                                 ALIAS_IP=$(nslookup the-test-container | tail -n2 | grep 'Address: ' | cut -d: -f2)
 
@@ -906,14 +919,13 @@ class DockerClientContainerManagementSpec : ShouldSpec({
                         val stdoutText = stdout.readUtf8()
                         val stderrText = stderr.readUtf8()
 
-                        exitCode shouldBe 0
-
                         stdoutText shouldContain """
                             eth0 is (\d+\.\d+\.\d+\.\d+)
                             alias is \1
                         """.trimIndent().toRegex()
 
                         stderrText.trim() shouldBe ""
+                        exitCode shouldBe 0
                     } finally {
                         client.removeContainer(container, force = true)
                     }
