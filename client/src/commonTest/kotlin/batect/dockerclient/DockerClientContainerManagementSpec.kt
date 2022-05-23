@@ -877,30 +877,18 @@ class DockerClientContainerManagementSpec : ShouldSpec({
             }
 
             should("be able to run a container in a non-default network with an alias") {
+                val networkingImage = buildTestImage("networking")
                 val network = client.createNetwork("container-networking-test-${Random.nextInt()}", "bridge")
 
                 try {
-                    val spec = ContainerCreationSpec.Builder(image)
+                    val spec = ContainerCreationSpec.Builder(networkingImage)
                         .withNetwork(network)
                         .withNetworkAlias("the-test-container")
                         .withCommand(
                             "sh",
                             "-c",
                             """
-                                attempts=0
-
-                                until nslookup the-test-container >/dev/null; do
-                                    attempts=${'$'}((attempts+1))
-
-                                    if [ ${'$'}attempts -gt 5 ]; then
-                                        echo "Gave up trying to resolve name after five attempts"
-                                        exit 1
-                                    fi
-
-                                    sleep 1
-                                done
-
-                                ETH0_IP=$(ifconfig eth0 | grep 'inet addr' | cut -d: -f2 | awk '{print ${'$'}1}')
+                                ETH0_IP=$(ifconfig eth0 | grep 'inet ' | sed -E 's/\s+inet ([0-9]+\.[0-9]+\.[0-9]+\.[0-9]+).*/\1/g')
                                 ALIAS_IP=$(nslookup the-test-container | tail -n2 | grep 'Address: ' | cut -d: -f2)
 
                                 echo "eth0 is ${'$'}ETH0_IP"
