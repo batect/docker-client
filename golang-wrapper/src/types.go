@@ -526,6 +526,8 @@ func newCreateContainerRequest(
     Privileged bool,
     CapabilitiesToAdd []string,
     CapabilitiesToDrop []string,
+    NetworkReference string,
+    NetworkAliases []string,
 ) CreateContainerRequest {
     value := C.AllocCreateContainerRequest()
     value.ImageReference = C.CString(ImageReference)
@@ -614,6 +616,15 @@ func newCreateContainerRequest(
 
     for i, v := range CapabilitiesToDrop {
         C.SetstringArrayElement(value.CapabilitiesToDrop, C.uint64_t(i), C.CString(v))
+    }
+
+    value.NetworkReference = C.CString(NetworkReference)
+
+    value.NetworkAliasesCount = C.uint64_t(len(NetworkAliases))
+    value.NetworkAliases = C.CreatestringArray(value.NetworkAliasesCount)
+
+    for i, v := range NetworkAliases {
+        C.SetstringArrayElement(value.NetworkAliases, C.uint64_t(i), C.CString(v))
     }
 
 

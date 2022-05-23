@@ -571,6 +571,9 @@ internal class CreateContainerRequest(runtime: Runtime) : Struct(runtime), AutoC
     val capabilitiesToAddPointer = Pointer()
     val capabilitiesToDropCount = u_int64_t()
     val capabilitiesToDropPointer = Pointer()
+    val networkReference = UTF8StringRef()
+    val networkAliasesCount = u_int64_t()
+    val networkAliasesPointer = Pointer()
 
     override fun close() {
         nativeAPI.FreeCreateContainerRequest(this)

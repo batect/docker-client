@@ -36,8 +36,16 @@ public data class ContainerCreationSpec(
     val attachTTY: Boolean = false,
     val privileged: Boolean = false,
     val capabilitiesToAdd: Set<Capability> = emptySet(),
-    val capabilitiesToDrop: Set<Capability> = emptySet()
+    val capabilitiesToDrop: Set<Capability> = emptySet(),
+    val network: NetworkReference? = null,
+    val networkAliases: Set<String> = emptySet()
 ) {
+    internal fun ensureValid() {
+        if (networkAliases.isNotEmpty() && network == null) {
+            throw ContainerCreationFailedException("Container creation spec is not valid: must provide explicit network if using network aliases.")
+        }
+    }
+
     public class Builder(image: ImageReference) {
         private var spec = ContainerCreationSpec(image)
 
@@ -172,6 +180,21 @@ public data class ContainerCreationSpec(
 
         public fun withCapabilitiesDropped(capabilities: Set<Capability>): Builder {
             spec = spec.copy(capabilitiesToDrop = spec.capabilitiesToDrop + capabilities)
+
+            return this
+        }
+
+        public fun withNetwork(network: NetworkReference): Builder {
+            spec = spec.copy(network = network)
+
+            return this
+        }
+
+        public fun withNetworkAlias(alias: String): Builder = withNetworkAliases(setOf(alias))
+        public fun withNetworkAliases(vararg aliases: String): Builder = withNetworkAliases(aliases.toSet())
+
+        public fun withNetworkAliases(aliases: Set<String>): Builder {
+            spec = spec.copy(networkAliases = spec.networkAliases + aliases)
 
             return this
         }

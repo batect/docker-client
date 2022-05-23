@@ -263,6 +263,9 @@ typedef struct {
     char** CapabilitiesToAdd;
     uint64_t CapabilitiesToDropCount;
     char** CapabilitiesToDrop;
+    char* NetworkReference;
+    uint64_t NetworkAliasesCount;
+    char** NetworkAliases;
 } CreateContainerRequest;
 
 typedef struct {

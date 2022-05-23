@@ -142,6 +142,16 @@ class DockerClientContainerManagementSpec : ShouldSpec({
                 exception.message shouldBe "Error response from daemon: No such image: batect/this-image-does-not-exist:abc123"
             }
 
+            should("throw an appropriate exception when creating a container with network aliases but no explicit network") {
+                val spec = ContainerCreationSpec.Builder(image)
+                    .withNetworkAlias("some-alias")
+                    .build()
+
+                val exception = shouldThrow<ContainerCreationFailedException> { client.createContainer(spec) }
+
+                exception.message shouldBe "Container creation spec is not valid: must provide explicit network if using network aliases."
+            }
+
             should("throw an appropriate exception when starting a container that doesn't exist") {
                 val exception = shouldThrow<ContainerStartFailedException> { client.startContainer(ContainerReference("does-not-exist")) }
 
@@ -827,6 +837,52 @@ class DockerClientContainerManagementSpec : ShouldSpec({
                     stderrText.trim() shouldBe ""
                 } finally {
                     client.removeContainer(container, force = true)
+                }
+            }
+
+            should("be able to run a container in a non-default network with an alias") {
+                val network = client.createNetwork("container-networking-test-${Random.nextInt()}", "bridge")
+
+                try {
+                    val spec = ContainerCreationSpec.Builder(image)
+                        .withNetwork(network)
+                        .withNetworkAlias("the-test-container")
+                        .withCommand(
+                            "sh",
+                            "-c",
+                            """
+                                ETH0_IP=$(ifconfig eth0 | grep 'inet addr' | cut -d: -f2 | awk '{print ${'$'}1}')
+                                ALIAS_IP=$(nslookup the-test-container | tail -n2 | grep 'Address: ' | cut -d: -f2)
+
+                                echo "eth0 is ${'$'}ETH0_IP"
+                                echo "alias is ${'$'}{ALIAS_IP## }"
+                            """.trimIndent()
+                        )
+                        .build()
+
+                    val container = client.createContainer(spec)
+
+                    try {
+                        val stdout = Buffer()
+                        val stderr = Buffer()
+
+                        val exitCode = client.run(container, SinkTextOutput(stdout), SinkTextOutput(stderr))
+                        val stdoutText = stdout.readUtf8()
+                        val stderrText = stderr.readUtf8()
+
+                        exitCode shouldBe 0
+
+                        stdoutText shouldContain """
+                            eth0 is (\d+\.\d+\.\d+\.\d+)
+                            alias is \1
+                        """.trimIndent().toRegex()
+
+                        stderrText.trim() shouldBe ""
+                    } finally {
+                        client.removeContainer(container, force = true)
+                    }
+                } finally {
+                    client.deleteNetwork(network)
                 }
             }
         }

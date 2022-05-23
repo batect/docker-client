@@ -308,6 +308,8 @@ internal actual class RealDockerClient actual constructor(configuration: DockerC
     }
 
     override fun createContainer(spec: ContainerCreationSpec): ContainerReference {
+        spec.ensureValid()
+
         memScoped {
             CreateContainer(clientHandle, allocCreateContainerRequest(spec).ptr)!!.use { ret ->
                 if (ret.pointed.Error != null) {
@@ -349,6 +351,9 @@ internal actual class RealDockerClient actual constructor(configuration: DockerC
             CapabilitiesToAddCount = spec.capabilitiesToAdd.size.toULong()
             CapabilitiesToDrop = allocArrayOf(spec.capabilitiesToDrop.map { it.name.cstr.ptr })
             CapabilitiesToDropCount = spec.capabilitiesToDrop.size.toULong()
+            NetworkReference = spec.network?.id?.cstr?.ptr
+            NetworkAliases = allocArrayOf(spec.networkAliases.map { it.cstr.ptr })
+            NetworkAliasesCount = spec.networkAliases.size.toULong()
         }
     }
 

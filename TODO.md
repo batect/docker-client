@@ -56,8 +56,6 @@
 * Containers
   * Create
     * Name
-    * Network
-      * Network aliases
     * Health check configuration
     * STDIN attached
     * Log driver

@@ -46,6 +46,7 @@ import batect.dockerclient.native.exposedPorts
 import batect.dockerclient.native.extraHosts
 import batect.dockerclient.native.imageTags
 import batect.dockerclient.native.nativeAPI
+import batect.dockerclient.native.networkAliases
 import batect.dockerclient.native.tmpfsMounts
 import batect.dockerclient.native.volumes
 import jnr.ffi.Pointer
@@ -274,6 +275,8 @@ internal actual class RealDockerClient actual constructor(configuration: DockerC
     }
 
     override fun createContainer(spec: ContainerCreationSpec): ContainerReference {
+        spec.ensureValid()
+
         nativeAPI.CreateContainer(clientHandle, CreateContainerRequest(spec))!!.use { ret ->
             if (ret.error != null) {
                 throw ContainerCreationFailedException(ret.error!!)
@@ -480,6 +483,8 @@ internal actual class RealDockerClient actual constructor(configuration: DockerC
         request.privileged.set(jvm.privileged)
         request.capabilitiesToAdd = jvm.capabilitiesToAdd.map { it.name }
         request.capabilitiesToDrop = jvm.capabilitiesToDrop.map { it.name }
+        request.networkReference.set(jvm.network?.id)
+        request.networkAliases = jvm.networkAliases
 
         return request
     }

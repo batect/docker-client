@@ -668,6 +668,8 @@ CreateContainerRequest* AllocCreateContainerRequest() {
     value->User = NULL;
     value->CapabilitiesToAdd = NULL;
     value->CapabilitiesToDrop = NULL;
+    value->NetworkReference = NULL;
+    value->NetworkAliases = NULL;
     value->CommandCount = 0;
     value->EntrypointCount = 0;
     value->ExtraHostsCount = 0;
@@ -678,6 +680,7 @@ CreateContainerRequest* AllocCreateContainerRequest() {
     value->ExposedPortsCount = 0;
     value->CapabilitiesToAddCount = 0;
     value->CapabilitiesToDropCount = 0;
+    value->NetworkAliasesCount = 0;
 
     return value;
 }
@@ -741,6 +744,12 @@ void FreeCreateContainerRequest(CreateContainerRequest* value) {
     }
 
     free(value->CapabilitiesToDrop);
+    free(value->NetworkReference);
+    for (uint64_t i = 0; i < value->NetworkAliasesCount; i++) {
+        free(value->NetworkAliases[i]);
+    }
+
+    free(value->NetworkAliases);
     free(value);
 }
 

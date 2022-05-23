@@ -102,6 +102,12 @@ internal var CreateContainerRequest.capabilitiesToDrop by WriteOnlyList<CreateCo
     ::stringToPointer
 )
 
+internal var CreateContainerRequest.networkAliases by WriteOnlyList<CreateContainerRequest, String>(
+    CreateContainerRequest::networkAliasesCount,
+    CreateContainerRequest::networkAliasesPointer,
+    ::stringToPointer
+)
+
 internal fun StringPair(key: String, value: String): StringPair {
     val pair = StringPair(Runtime.getRuntime(nativeAPI))
     pair.key.set(key)

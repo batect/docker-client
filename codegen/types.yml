@@ -387,6 +387,10 @@
       type: string[]
     - name: CapabilitiesToDrop
       type: string[]
+    - name: NetworkReference
+      type: string
+    - name: NetworkAliases
+      type: string[]
 
 - name: CreateContainerReturn
   type: struct

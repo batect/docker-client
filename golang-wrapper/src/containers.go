@@ -66,6 +66,17 @@ func CreateContainer(clientHandle DockerClientHandle, request *C.CreateContainer
 	}
 
 	networkingConfig := network.NetworkingConfig{}
+	networkName := C.GoString(request.NetworkReference)
+
+	if networkName != "" {
+		hostConfig.NetworkMode = container.NetworkMode(networkName)
+
+		networkingConfig.EndpointsConfig = map[string]*network.EndpointSettings{
+			networkName: {
+				Aliases: fromStringArray(request.NetworkAliases, request.NetworkAliasesCount),
+			},
+		}
+	}
 
 	containerName := "" // TODO
 
