@@ -20,6 +20,7 @@ import okio.Path
 
 public data class ContainerCreationSpec(
     val image: ImageReference,
+    val name: String? = null,
     val command: List<String> = emptyList(),
     val entrypoint: List<String> = emptyList(),
     val workingDirectory: String? = null,
@@ -38,7 +39,9 @@ public data class ContainerCreationSpec(
     val capabilitiesToAdd: Set<Capability> = emptySet(),
     val capabilitiesToDrop: Set<Capability> = emptySet(),
     val network: NetworkReference? = null,
-    val networkAliases: Set<String> = emptySet()
+    val networkAliases: Set<String> = emptySet(),
+    val logDriver: String? = null,
+    val loggingOptions: Map<String, String> = emptyMap()
 ) {
     internal fun ensureValid() {
         if (networkAliases.isNotEmpty() && network == null) {
@@ -48,6 +51,12 @@ public data class ContainerCreationSpec(
 
     public class Builder(image: ImageReference) {
         private var spec = ContainerCreationSpec(image)
+
+        public fun withName(name: String): Builder {
+            spec = spec.copy(name = name)
+
+            return this
+        }
 
         public fun withCommand(vararg command: String): Builder = withCommand(command.toList())
 
@@ -195,6 +204,21 @@ public data class ContainerCreationSpec(
 
         public fun withNetworkAliases(aliases: Set<String>): Builder {
             spec = spec.copy(networkAliases = spec.networkAliases + aliases)
+
+            return this
+        }
+
+        public fun withLogDriver(driverName: String): Builder {
+            spec = spec.copy(logDriver = driverName)
+
+            return this
+        }
+
+        public fun withLoggingOption(name: String, value: String): Builder = withLoggingOptions(mapOf(name to value))
+        public fun withLoggingOptions(vararg options: Pair<String, String>): Builder = withLoggingOptions(mapOf(*options))
+
+        public fun withLoggingOptions(options: Map<String, String>): Builder {
+            spec = spec.copy(loggingOptions = spec.loggingOptions + options)
 
             return this
         }

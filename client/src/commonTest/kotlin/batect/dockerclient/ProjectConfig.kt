@@ -20,5 +20,6 @@ import io.kotest.core.config.AbstractProjectConfig
 import io.kotest.core.test.AssertionMode
 
 object ProjectConfig : AbstractProjectConfig() {
-    override val assertionMode = AssertionMode.Error
+    // Override our default configuration (of Error) until https://kotlinlang.slack.com/archives/CT0G9SD7Z/p1653346298893609 is resolved.
+    override val assertionMode = AssertionMode.Warn
 }

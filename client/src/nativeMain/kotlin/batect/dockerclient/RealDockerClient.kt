@@ -42,6 +42,7 @@ import batect.dockerclient.native.DockerClientHandle
 import batect.dockerclient.native.GetDaemonVersionInformation
 import batect.dockerclient.native.GetImage
 import batect.dockerclient.native.GetNetworkByNameOrID
+import batect.dockerclient.native.InspectContainer
 import batect.dockerclient.native.ListAllVolumes
 import batect.dockerclient.native.Ping
 import batect.dockerclient.native.PruneImageBuildCache
@@ -74,7 +75,9 @@ import kotlinx.cinterop.toKString
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withContext
+import kotlinx.datetime.Instant
 import kotlin.time.Duration
+import kotlin.time.Duration.Companion.nanoseconds
 
 internal actual class RealDockerClient actual constructor(configuration: DockerClientConfiguration) : DockerClient, AutoCloseable {
     // This property is internally visible so that tests can get this value to establish scenarios
@@ -324,6 +327,7 @@ internal actual class RealDockerClient actual constructor(configuration: DockerC
     private fun MemScope.allocCreateContainerRequest(spec: ContainerCreationSpec): CreateContainerRequest {
         return alloc {
             ImageReference = spec.image.id.cstr.ptr
+            Name = spec.name?.cstr?.ptr
             Command = allocArrayOf(spec.command.map { it.cstr.ptr })
             CommandCount = spec.command.size.toULong()
             Entrypoint = allocArrayOf(spec.entrypoint.map { it.cstr.ptr })
@@ -354,6 +358,9 @@ internal actual class RealDockerClient actual constructor(configuration: DockerC
             NetworkReference = spec.network?.id?.cstr?.ptr
             NetworkAliases = allocArrayOf(spec.networkAliases.map { it.cstr.ptr })
             NetworkAliasesCount = spec.networkAliases.size.toULong()
+            LogDriver = spec.logDriver?.cstr?.ptr
+            LoggingOptions = allocArrayOf(spec.loggingOptions.map { allocStringPair(it).ptr })
+            LoggingOptionsCount = spec.loggingOptions.size.toULong()
         }
     }
 
@@ -456,6 +463,20 @@ internal actual class RealDockerClient actual constructor(configuration: DockerC
         }
     }
 
+    override suspend fun inspectContainer(idOrName: String): ContainerInspectionResult {
+        return withContext(IODispatcher) {
+            launchWithGolangContext { context ->
+                InspectContainer(clientHandle, context.handle, idOrName.cstr)!!.use { ret ->
+                    if (ret.pointed.Error != null) {
+                        throw ContainerInspectionFailedException(ret.pointed.Error!!.pointed)
+                    }
+
+                    ContainerInspectionResult(ret.pointed.Response!!.pointed)
+                }
+            }
+        }
+    }
+
     override fun close() {
         DisposeClient(clientHandle).ifFailed { error ->
             throw DockerClientException(error.pointed)
@@ -529,6 +550,57 @@ private fun StepFinished(native: BuildImageProgressUpdate_StepFinished): StepFin
 
 private fun BuildFailed(native: BuildImageProgressUpdate_BuildFailed): BuildFailed =
     BuildFailed(native.Message!!.toKString())
+
+private fun ContainerInspectionResult(native: batect.dockerclient.native.ContainerInspectionResult): ContainerInspectionResult = ContainerInspectionResult(
+    ContainerReference(native.ID!!.toKString()),
+    native.Name!!.toKString(),
+    ContainerHostConfig(native.HostConfig!!.pointed),
+    ContainerState(native.State!!.pointed),
+    ContainerConfig(native.Config!!.pointed)
+)
+
+private fun ContainerHostConfig(native: batect.dockerclient.native.ContainerHostConfig): ContainerHostConfig =
+    ContainerHostConfig(ContainerLogConfig(native.LogConfig!!.pointed))
+
+private fun ContainerLogConfig(native: batect.dockerclient.native.ContainerLogConfig): ContainerLogConfig =
+    ContainerLogConfig(
+        native.Type!!.toKString(),
+        fromArray(native.Config!!, native.ConfigCount) { it.Key!!.toKString() to it.Value!!.toKString() }.associate { it }
+    )
+
+private fun ContainerState(native: batect.dockerclient.native.ContainerState): ContainerState =
+    ContainerState(
+        if (native.Health == null) null else ContainerHealthState(native.Health!!.pointed)
+    )
+
+private fun ContainerHealthState(native: batect.dockerclient.native.ContainerHealthState): ContainerHealthState =
+    ContainerHealthState(
+        native.Status!!.toKString(),
+        fromArray(native.Log!!, native.LogCount) { ContainerHealthLogEntry(it) }
+    )
+
+private fun ContainerHealthLogEntry(native: batect.dockerclient.native.ContainerHealthLogEntry): ContainerHealthLogEntry =
+    ContainerHealthLogEntry(
+        Instant.fromEpochMilliseconds(native.Start),
+        Instant.fromEpochMilliseconds(native.End),
+        native.ExitCode,
+        native.Output!!.toKString()
+    )
+
+private fun ContainerConfig(native: batect.dockerclient.native.ContainerConfig): ContainerConfig =
+    ContainerConfig(
+        emptyMap(),
+        if (native.Healthcheck == null) null else ContainerHealthcheckConfig(native.Healthcheck!!.pointed)
+    )
+
+private fun ContainerHealthcheckConfig(native: batect.dockerclient.native.ContainerHealthcheckConfig): ContainerHealthcheckConfig =
+    ContainerHealthcheckConfig(
+        fromArray(native.Test!!, native.TestCount) { it.ptr.toKString() },
+        native.Interval.nanoseconds,
+        native.Timeout.nanoseconds,
+        native.StartPeriod.nanoseconds,
+        native.Retries.toInt()
+    )
 
 private inline fun <reified NativeType : CPointed, KotlinType> fromArray(
     source: CPointer<CPointerVar<NativeType>>,

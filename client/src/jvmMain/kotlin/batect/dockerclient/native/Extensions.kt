@@ -108,6 +108,29 @@ internal var CreateContainerRequest.networkAliases by WriteOnlyList<CreateContai
     ::stringToPointer
 )
 
+internal var CreateContainerRequest.loggingOptions by WriteOnlyList<CreateContainerRequest, StringPair>(
+    CreateContainerRequest::loggingOptionsCount,
+    CreateContainerRequest::loggingOptionsPointer
+)
+
+internal val ContainerLogConfig.config by ReadOnlyList(
+    ContainerLogConfig::configCount,
+    ContainerLogConfig::configPointer,
+    ::StringPair
+)
+
+internal val ContainerHealthState.log by ReadOnlyList(
+    ContainerHealthState::logCount,
+    ContainerHealthState::logPointer,
+    ::ContainerHealthLogEntry
+)
+
+internal val ContainerHealthcheckConfig.test by ReadOnlyList(
+    ContainerHealthcheckConfig::testCount,
+    ContainerHealthcheckConfig::testPointer,
+    ::pointerToString
+)
+
 internal fun StringPair(key: String, value: String): StringPair {
     val pair = StringPair(Runtime.getRuntime(nativeAPI))
     pair.key.set(key)
@@ -155,6 +178,10 @@ private fun stringToPointer(value: String, memoryManager: MemoryManager): Pointe
     pointer.put(0, bytes, 0, bytes.size)
     pointer.putByte(bytes.size.toLong(), 0)
     return pointer
+}
+
+private fun pointerToString(value: Pointer): String {
+    return value.getString(0)
 }
 
 private fun deviceMountToNative(value: batect.dockerclient.DeviceMount, @Suppress("UNUSED_PARAMETER") memoryManager: MemoryManager): Pointer {

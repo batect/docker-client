@@ -34,6 +34,7 @@ internal interface API {
     fun RemoveContainer(@In clientHandle: DockerClientHandle, @In id: kotlin.String, @In force: Boolean, @In removeVolumes: Boolean): Error?
     fun AttachToContainerOutput(@In clientHandle: DockerClientHandle, @In contextHandle: ContextHandle, @In id: kotlin.String, @In stdoutStreamHandle: OutputStreamHandle, @In stderrStreamHandle: OutputStreamHandle, @In onReady: ReadyCallback, @In callbackUserData: Pointer?): Error?
     fun WaitForContainerToExit(@In clientHandle: DockerClientHandle, @In contextHandle: ContextHandle, @In id: kotlin.String, @In onReady: ReadyCallback, @In callbackUserData: Pointer?): WaitForContainerToExitReturn?
+    fun InspectContainer(@In clientHandle: DockerClientHandle, @In contextHandle: ContextHandle, @In idOrName: kotlin.String): InspectContainerReturn?
     fun CreateContext(): ContextHandle
     fun CancelContext(@In contextHandle: ContextHandle)
     fun DestroyContext(@In contextHandle: ContextHandle): Error?
@@ -127,4 +128,22 @@ internal interface API {
     fun AllocCreateContainerReturn(): CreateContainerReturn?
     fun FreeWaitForContainerToExitReturn(@In value: WaitForContainerToExitReturn)
     fun AllocWaitForContainerToExitReturn(): WaitForContainerToExitReturn?
+    fun FreeContainerHealthcheckConfig(@In value: ContainerHealthcheckConfig)
+    fun AllocContainerHealthcheckConfig(): ContainerHealthcheckConfig?
+    fun FreeContainerConfig(@In value: ContainerConfig)
+    fun AllocContainerConfig(): ContainerConfig?
+    fun FreeContainerHealthLogEntry(@In value: ContainerHealthLogEntry)
+    fun AllocContainerHealthLogEntry(): ContainerHealthLogEntry?
+    fun FreeContainerHealthState(@In value: ContainerHealthState)
+    fun AllocContainerHealthState(): ContainerHealthState?
+    fun FreeContainerState(@In value: ContainerState)
+    fun AllocContainerState(): ContainerState?
+    fun FreeContainerLogConfig(@In value: ContainerLogConfig)
+    fun AllocContainerLogConfig(): ContainerLogConfig?
+    fun FreeContainerHostConfig(@In value: ContainerHostConfig)
+    fun AllocContainerHostConfig(): ContainerHostConfig?
+    fun FreeContainerInspectionResult(@In value: ContainerInspectionResult)
+    fun AllocContainerInspectionResult(): ContainerInspectionResult?
+    fun FreeInspectContainerReturn(@In value: InspectContainerReturn)
+    fun AllocInspectContainerReturn(): InspectContainerReturn?
 }

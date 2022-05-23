@@ -544,6 +544,7 @@ internal class CreateContainerRequest(runtime: Runtime) : Struct(runtime), AutoC
     }
 
     val imageReference = UTF8StringRef()
+    val name = UTF8StringRef()
     val commandCount = u_int64_t()
     val commandPointer = Pointer()
     val entrypointCount = u_int64_t()
@@ -574,6 +575,9 @@ internal class CreateContainerRequest(runtime: Runtime) : Struct(runtime), AutoC
     val networkReference = UTF8StringRef()
     val networkAliasesCount = u_int64_t()
     val networkAliasesPointer = Pointer()
+    val logDriver = UTF8StringRef()
+    val loggingOptionsCount = u_int64_t()
+    val loggingOptionsPointer = Pointer()
 
     override fun close() {
         nativeAPI.FreeCreateContainerRequest(this)
@@ -612,4 +616,139 @@ internal class WaitForContainerToExitReturn(runtime: Runtime) : Struct(runtime),
 internal interface ReadyCallback {
     @Delegate
     fun invoke(userData: Pointer?): Boolean
+}
+
+internal class ContainerHealthcheckConfig(runtime: Runtime) : Struct(runtime), AutoCloseable {
+    constructor(pointer: jnr.ffi.Pointer) : this(pointer.runtime) {
+        this.useMemory(pointer)
+    }
+
+    val testCount = u_int64_t()
+    val testPointer = Pointer()
+    val interval = int64_t()
+    val timeout = int64_t()
+    val startPeriod = int64_t()
+    val retries = int64_t()
+
+    override fun close() {
+        nativeAPI.FreeContainerHealthcheckConfig(this)
+    }
+}
+
+internal class ContainerConfig(runtime: Runtime) : Struct(runtime), AutoCloseable {
+    constructor(pointer: jnr.ffi.Pointer) : this(pointer.runtime) {
+        this.useMemory(pointer)
+    }
+
+    val labelsCount = u_int64_t()
+    val labelsPointer = Pointer()
+    val healthcheckPointer = Pointer()
+    val healthcheck: ContainerHealthcheckConfig? by lazy { if (healthcheckPointer.intValue() == 0) null else ContainerHealthcheckConfig(healthcheckPointer.get()) }
+
+    override fun close() {
+        nativeAPI.FreeContainerConfig(this)
+    }
+}
+
+internal class ContainerHealthLogEntry(runtime: Runtime) : Struct(runtime), AutoCloseable {
+    constructor(pointer: jnr.ffi.Pointer) : this(pointer.runtime) {
+        this.useMemory(pointer)
+    }
+
+    val start = int64_t()
+    val end = int64_t()
+    val exitCode = int64_t()
+    val output = UTF8StringRef()
+
+    override fun close() {
+        nativeAPI.FreeContainerHealthLogEntry(this)
+    }
+}
+
+internal class ContainerHealthState(runtime: Runtime) : Struct(runtime), AutoCloseable {
+    constructor(pointer: jnr.ffi.Pointer) : this(pointer.runtime) {
+        this.useMemory(pointer)
+    }
+
+    val status = UTF8StringRef()
+    val logCount = u_int64_t()
+    val logPointer = Pointer()
+
+    override fun close() {
+        nativeAPI.FreeContainerHealthState(this)
+    }
+}
+
+internal class ContainerState(runtime: Runtime) : Struct(runtime), AutoCloseable {
+    constructor(pointer: jnr.ffi.Pointer) : this(pointer.runtime) {
+        this.useMemory(pointer)
+    }
+
+    val healthPointer = Pointer()
+    val health: ContainerHealthState? by lazy { if (healthPointer.intValue() == 0) null else ContainerHealthState(healthPointer.get()) }
+
+    override fun close() {
+        nativeAPI.FreeContainerState(this)
+    }
+}
+
+internal class ContainerLogConfig(runtime: Runtime) : Struct(runtime), AutoCloseable {
+    constructor(pointer: jnr.ffi.Pointer) : this(pointer.runtime) {
+        this.useMemory(pointer)
+    }
+
+    val type = UTF8StringRef()
+    val configCount = u_int64_t()
+    val configPointer = Pointer()
+
+    override fun close() {
+        nativeAPI.FreeContainerLogConfig(this)
+    }
+}
+
+internal class ContainerHostConfig(runtime: Runtime) : Struct(runtime), AutoCloseable {
+    constructor(pointer: jnr.ffi.Pointer) : this(pointer.runtime) {
+        this.useMemory(pointer)
+    }
+
+    val logConfigPointer = Pointer()
+    val logConfig: ContainerLogConfig? by lazy { if (logConfigPointer.intValue() == 0) null else ContainerLogConfig(logConfigPointer.get()) }
+
+    override fun close() {
+        nativeAPI.FreeContainerHostConfig(this)
+    }
+}
+
+internal class ContainerInspectionResult(runtime: Runtime) : Struct(runtime), AutoCloseable {
+    constructor(pointer: jnr.ffi.Pointer) : this(pointer.runtime) {
+        this.useMemory(pointer)
+    }
+
+    val id = UTF8StringRef()
+    val name = UTF8StringRef()
+    val hostConfigPointer = Pointer()
+    val hostConfig: ContainerHostConfig? by lazy { if (hostConfigPointer.intValue() == 0) null else ContainerHostConfig(hostConfigPointer.get()) }
+    val statePointer = Pointer()
+    val state: ContainerState? by lazy { if (statePointer.intValue() == 0) null else ContainerState(statePointer.get()) }
+    val configPointer = Pointer()
+    val config: ContainerConfig? by lazy { if (configPointer.intValue() == 0) null else ContainerConfig(configPointer.get()) }
+
+    override fun close() {
+        nativeAPI.FreeContainerInspectionResult(this)
+    }
+}
+
+internal class InspectContainerReturn(runtime: Runtime) : Struct(runtime), AutoCloseable {
+    constructor(pointer: jnr.ffi.Pointer) : this(pointer.runtime) {
+        this.useMemory(pointer)
+    }
+
+    val responsePointer = Pointer()
+    val response: ContainerInspectionResult? by lazy { if (responsePointer.intValue() == 0) null else ContainerInspectionResult(responsePointer.get()) }
+    val errorPointer = Pointer()
+    val error: Error? by lazy { if (errorPointer.intValue() == 0) null else Error(errorPointer.get()) }
+
+    override fun close() {
+        nativeAPI.FreeInspectContainerReturn(this)
+    }
 }

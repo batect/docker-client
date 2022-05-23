@@ -17,12 +17,18 @@
 package batect.dockerclient
 
 import batect.dockerclient.io.SinkTextOutput
+import io.kotest.assertions.asClue
 import io.kotest.assertions.throwables.shouldNotThrowAny
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.assertions.timing.eventually
 import io.kotest.common.ExperimentalKotest
 import io.kotest.core.spec.style.ShouldSpec
+import io.kotest.inspectors.forAll
+import io.kotest.matchers.collections.shouldHaveAtLeastSize
+import io.kotest.matchers.collections.shouldHaveAtMostSize
+import io.kotest.matchers.comparables.shouldBeGreaterThan
 import io.kotest.matchers.comparables.shouldBeLessThan
+import io.kotest.matchers.nulls.shouldNotBeNull
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
 import io.kotest.matchers.string.shouldContain
@@ -36,6 +42,7 @@ import kotlinx.coroutines.async
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import kotlinx.coroutines.withTimeout
+import kotlinx.datetime.Clock
 import okio.Buffer
 import okio.Path
 import okio.Path.Companion.toPath
@@ -51,6 +58,13 @@ class DockerClientContainerManagementSpec : ShouldSpec({
     context("when working with Linux containers").onlyIfDockerDaemonSupportsLinuxContainers {
         val client = closeAfterTest(DockerClient.Builder().build())
         val image = client.pullImage("alpine:3.15.0")
+
+        fun buildTestImage(name: String): ImageReference {
+            val path = systemFileSystem.canonicalize("./src/commonTest/resources/images/$name".toPath())
+            val spec = ImageBuildSpec.Builder(path).build()
+
+            return client.buildImage(spec, SinkTextOutput(Buffer()))
+        }
 
         context("using low-level methods") {
             should("be able to create, start, wait for and remove a container") {
@@ -338,16 +352,161 @@ class DockerClientContainerManagementSpec : ShouldSpec({
                     client.removeContainer(container, force = true)
                 }
             }
+
+            should("throw an appropriate exception when inspecting a container that doesn't exist") {
+                val exception = shouldThrow<ContainerInspectionFailedException> { client.inspectContainer("does-not-exist") }
+
+                exception.message shouldBe "No such container: does-not-exist"
+            }
+
+            should("be able to set a container's name") {
+                val spec = ContainerCreationSpec.Builder(image)
+                    .withName("my-test-container")
+                    .build()
+
+                val container = client.createContainer(spec)
+
+                try {
+                    val inspectionResult = client.inspectContainer(container.id)
+
+                    inspectionResult.reference shouldBe container
+                    inspectionResult.name shouldBe "/my-test-container"
+                } finally {
+                    client.removeContainer(container, force = true)
+                }
+            }
+
+            should("be able to inspect a container by name") {
+                val spec = ContainerCreationSpec.Builder(image)
+                    .withName("my-test-container")
+                    .build()
+
+                val container = client.createContainer(spec)
+
+                try {
+                    val inspectionResult = client.inspectContainer("my-test-container")
+
+                    inspectionResult.reference shouldBe container
+                    inspectionResult.name shouldBe "/my-test-container"
+                } finally {
+                    client.removeContainer(container, force = true)
+                }
+            }
+
+            should("be able to configure logging for a container") {
+                val loggingOptions = mapOf("gelf-address" to "udp://127.0.0.1:12201")
+
+                val spec = ContainerCreationSpec.Builder(image)
+                    .withLogDriver("gelf")
+                    .withLoggingOptions(loggingOptions)
+                    .build()
+
+                val container = client.createContainer(spec)
+
+                try {
+                    val inspectionResult = client.inspectContainer(container)
+
+                    inspectionResult.hostConfig.logConfig.asClue {
+                        it.type shouldBe "gelf"
+                        it.config shouldBe loggingOptions
+                    }
+                } finally {
+                    client.removeContainer(container, force = true)
+                }
+            }
+
+            should("be able to create a container that uses healthcheck configuration from its image") {
+                val healthcheckImage = buildTestImage("healthcheck")
+
+                val spec = ContainerCreationSpec.Builder(healthcheckImage)
+                    .build()
+
+                val container = client.createContainer(spec)
+
+                try {
+                    val inspectionResult = client.inspectContainer(container)
+
+                    inspectionResult.config.healthcheck.shouldNotBeNull()
+                    inspectionResult.config.healthcheck!!.asClue {
+                        it.test shouldBe listOf("CMD-SHELL", "/healthcheck.sh")
+                        it.interval shouldBe 200.milliseconds
+                        it.timeout shouldBe 1.seconds
+                        it.startPeriod shouldBe 500.milliseconds
+                        it.retries shouldBe 2
+                    }
+                } finally {
+                    client.removeContainer(container, force = true)
+                }
+            }
+
+            should("be able to inspect a container's healthcheck results") {
+                val healthcheckImage = buildTestImage("healthcheck")
+
+                val spec = ContainerCreationSpec.Builder(healthcheckImage)
+                    .withCommand("sh", "-c", "sleep 1; ls /healthchecks")
+                    .build()
+
+                val container = client.createContainer(spec)
+
+                try {
+                    withContext(IODispatcher) {
+                        val stdout = Buffer()
+                        val stderr = Buffer()
+                        val startedAt = Clock.System.now()
+
+                        val listeningToOutput = ReadyNotification()
+                        val waitingForExitCode = ReadyNotification()
+
+                        launch {
+                            client.attachToContainerOutput(container, SinkTextOutput(stdout), SinkTextOutput(stderr), listeningToOutput)
+                        }
+
+                        val exitCodeSource = async {
+                            client.waitForContainerToExit(container, waitingForExitCode)
+                        }
+
+                        listeningToOutput.waitForReady()
+                        waitingForExitCode.waitForReady()
+                        client.startContainer(container)
+
+                        eventually(1.seconds, poll = 100.milliseconds) {
+                            // We must inspect the container while it is running - otherwise Docker will always consider the container unhealthy if it is stopped.
+                            val inspectionResult = client.inspectContainer(container)
+
+                            inspectionResult.state.health.shouldNotBeNull()
+                            inspectionResult.state.health!!.asClue {
+                                it.status shouldBe "healthy"
+                                it.log shouldHaveAtLeastSize 1
+
+                                // On Windows and macOS machines where Docker is running in a VM, it's possible that the daemon's clock is out of sync with the machine's clock.
+                                val clockSkewFudgeFactor = 60.seconds
+
+                                it.log.forAll { log ->
+                                    log.start shouldBeLessThan log.end
+                                    log.start shouldBeGreaterThan startedAt.minus(clockSkewFudgeFactor)
+                                    log.end shouldBeLessThan Clock.System.now()
+                                    log.exitCode shouldBe 0
+                                    log.output shouldBe "Healthy!\n"
+                                }
+                            }
+                        }
+
+                        val exitCode = exitCodeSource.await()
+                        val stdoutText = stdout.readUtf8()
+                        val stderrText = stderr.readUtf8()
+
+                        stdoutText.lines() shouldHaveAtLeastSize 4
+                        stdoutText.lines() shouldHaveAtMostSize 6
+                        stderrText shouldBe ""
+                        exitCode shouldBe 0
+                    }
+                } finally {
+                    client.removeContainer(container, force = true)
+                }
+            }
         }
 
         context("using the run() helper method") {
-            fun buildTestImage(name: String): ImageReference {
-                val path = systemFileSystem.canonicalize("./src/commonTest/resources/images/$name".toPath())
-                val spec = ImageBuildSpec.Builder(path).build()
-
-                return client.buildImage(spec, SinkTextOutput(Buffer()))
-            }
-
             val privilegesCheckImage = buildTestImage("privileges-check")
             val defaultCommandImage = buildTestImage("default-command")
             val defaultEntrypointImage = buildTestImage("default-entrypoint")

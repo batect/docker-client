@@ -72,6 +72,7 @@ kotlin {
             dependencies {
                 implementation(libs.okio)
                 implementation(libs.kotlinx.coroutines.core)
+                implementation(libs.kotlinx.datetime)
             }
         }
 

@@ -655,6 +655,7 @@ void FreeExposedPort(ExposedPort* value) {
 CreateContainerRequest* AllocCreateContainerRequest() {
     CreateContainerRequest* value = malloc(sizeof(CreateContainerRequest));
     value->ImageReference = NULL;
+    value->Name = NULL;
     value->Command = NULL;
     value->Entrypoint = NULL;
     value->WorkingDirectory = NULL;
@@ -670,6 +671,8 @@ CreateContainerRequest* AllocCreateContainerRequest() {
     value->CapabilitiesToDrop = NULL;
     value->NetworkReference = NULL;
     value->NetworkAliases = NULL;
+    value->LogDriver = NULL;
+    value->LoggingOptions = NULL;
     value->CommandCount = 0;
     value->EntrypointCount = 0;
     value->ExtraHostsCount = 0;
@@ -681,6 +684,7 @@ CreateContainerRequest* AllocCreateContainerRequest() {
     value->CapabilitiesToAddCount = 0;
     value->CapabilitiesToDropCount = 0;
     value->NetworkAliasesCount = 0;
+    value->LoggingOptionsCount = 0;
 
     return value;
 }
@@ -691,6 +695,7 @@ void FreeCreateContainerRequest(CreateContainerRequest* value) {
     }
 
     free(value->ImageReference);
+    free(value->Name);
     for (uint64_t i = 0; i < value->CommandCount; i++) {
         free(value->Command[i]);
     }
@@ -750,6 +755,12 @@ void FreeCreateContainerRequest(CreateContainerRequest* value) {
     }
 
     free(value->NetworkAliases);
+    free(value->LogDriver);
+    for (uint64_t i = 0; i < value->LoggingOptionsCount; i++) {
+        FreeStringPair(value->LoggingOptions[i]);
+    }
+
+    free(value->LoggingOptions);
     free(value);
 }
 
@@ -789,6 +800,186 @@ void FreeWaitForContainerToExitReturn(WaitForContainerToExitReturn* value) {
 
 bool InvokeReadyCallback(ReadyCallback method, void* userData) {
     return method(userData);
+}
+
+ContainerHealthcheckConfig* AllocContainerHealthcheckConfig() {
+    ContainerHealthcheckConfig* value = malloc(sizeof(ContainerHealthcheckConfig));
+    value->Test = NULL;
+    value->TestCount = 0;
+
+    return value;
+}
+
+void FreeContainerHealthcheckConfig(ContainerHealthcheckConfig* value) {
+    if (value == NULL) {
+        return;
+    }
+
+    for (uint64_t i = 0; i < value->TestCount; i++) {
+        free(value->Test[i]);
+    }
+
+    free(value->Test);
+    free(value);
+}
+
+ContainerConfig* AllocContainerConfig() {
+    ContainerConfig* value = malloc(sizeof(ContainerConfig));
+    value->Labels = NULL;
+    value->Healthcheck = NULL;
+    value->LabelsCount = 0;
+
+    return value;
+}
+
+void FreeContainerConfig(ContainerConfig* value) {
+    if (value == NULL) {
+        return;
+    }
+
+    for (uint64_t i = 0; i < value->LabelsCount; i++) {
+        FreeStringPair(value->Labels[i]);
+    }
+
+    free(value->Labels);
+    FreeContainerHealthcheckConfig(value->Healthcheck);
+    free(value);
+}
+
+ContainerHealthLogEntry* AllocContainerHealthLogEntry() {
+    ContainerHealthLogEntry* value = malloc(sizeof(ContainerHealthLogEntry));
+    value->Output = NULL;
+
+    return value;
+}
+
+void FreeContainerHealthLogEntry(ContainerHealthLogEntry* value) {
+    if (value == NULL) {
+        return;
+    }
+
+    free(value->Output);
+    free(value);
+}
+
+ContainerHealthState* AllocContainerHealthState() {
+    ContainerHealthState* value = malloc(sizeof(ContainerHealthState));
+    value->Status = NULL;
+    value->Log = NULL;
+    value->LogCount = 0;
+
+    return value;
+}
+
+void FreeContainerHealthState(ContainerHealthState* value) {
+    if (value == NULL) {
+        return;
+    }
+
+    free(value->Status);
+    for (uint64_t i = 0; i < value->LogCount; i++) {
+        FreeContainerHealthLogEntry(value->Log[i]);
+    }
+
+    free(value->Log);
+    free(value);
+}
+
+ContainerState* AllocContainerState() {
+    ContainerState* value = malloc(sizeof(ContainerState));
+    value->Health = NULL;
+
+    return value;
+}
+
+void FreeContainerState(ContainerState* value) {
+    if (value == NULL) {
+        return;
+    }
+
+    FreeContainerHealthState(value->Health);
+    free(value);
+}
+
+ContainerLogConfig* AllocContainerLogConfig() {
+    ContainerLogConfig* value = malloc(sizeof(ContainerLogConfig));
+    value->Type = NULL;
+    value->Config = NULL;
+    value->ConfigCount = 0;
+
+    return value;
+}
+
+void FreeContainerLogConfig(ContainerLogConfig* value) {
+    if (value == NULL) {
+        return;
+    }
+
+    free(value->Type);
+    for (uint64_t i = 0; i < value->ConfigCount; i++) {
+        FreeStringPair(value->Config[i]);
+    }
+
+    free(value->Config);
+    free(value);
+}
+
+ContainerHostConfig* AllocContainerHostConfig() {
+    ContainerHostConfig* value = malloc(sizeof(ContainerHostConfig));
+    value->LogConfig = NULL;
+
+    return value;
+}
+
+void FreeContainerHostConfig(ContainerHostConfig* value) {
+    if (value == NULL) {
+        return;
+    }
+
+    FreeContainerLogConfig(value->LogConfig);
+    free(value);
+}
+
+ContainerInspectionResult* AllocContainerInspectionResult() {
+    ContainerInspectionResult* value = malloc(sizeof(ContainerInspectionResult));
+    value->ID = NULL;
+    value->Name = NULL;
+    value->HostConfig = NULL;
+    value->State = NULL;
+    value->Config = NULL;
+
+    return value;
+}
+
+void FreeContainerInspectionResult(ContainerInspectionResult* value) {
+    if (value == NULL) {
+        return;
+    }
+
+    free(value->ID);
+    free(value->Name);
+    FreeContainerHostConfig(value->HostConfig);
+    FreeContainerState(value->State);
+    FreeContainerConfig(value->Config);
+    free(value);
+}
+
+InspectContainerReturn* AllocInspectContainerReturn() {
+    InspectContainerReturn* value = malloc(sizeof(InspectContainerReturn));
+    value->Response = NULL;
+    value->Error = NULL;
+
+    return value;
+}
+
+void FreeInspectContainerReturn(InspectContainerReturn* value) {
+    if (value == NULL) {
+        return;
+    }
+
+    FreeContainerInspectionResult(value->Response);
+    FreeError(value->Error);
+    free(value);
 }
 
 VolumeReference** CreateVolumeReferenceArray(uint64_t size) {
@@ -848,5 +1039,17 @@ void SetExposedPortArrayElement(ExposedPort** array, uint64_t index, ExposedPort
 }
 
 ExposedPort* GetExposedPortArrayElement(ExposedPort** array, uint64_t index) {
+    return array[index];
+}
+
+ContainerHealthLogEntry** CreateContainerHealthLogEntryArray(uint64_t size) {
+    return malloc(size * sizeof(ContainerHealthLogEntry*));
+}
+
+void SetContainerHealthLogEntryArrayElement(ContainerHealthLogEntry** array, uint64_t index, ContainerHealthLogEntry* value) {
+    array[index] = value;
+}
+
+ContainerHealthLogEntry* GetContainerHealthLogEntryArrayElement(ContainerHealthLogEntry** array, uint64_t index) {
     return array[index];
 }

@@ -25,6 +25,7 @@
 * Refactor / rework code generation - it's a mess and needs tests
   * Use https://github.com/square/kotlinpoet/ to generate Kotlin code rather than current string concatenation approach?
 * Remove use of panics in Golang code
+* Restore AssertionMode to Error once https://kotlinlang.slack.com/archives/CT0G9SD7Z/p1653346298893609 is resolved
 
 # APIs
 
@@ -55,11 +56,9 @@
     * Test that we can run a built image
 * Containers
   * Create
-    * Name
     * Health check configuration
+      * Overridden at creation time
     * STDIN attached
-    * Log driver
-    * Log configuration
     * Labels
     * Scenarios to test:
       * Windows containers
@@ -73,7 +72,6 @@
     * Handle case where only one stream is provided (eg. only stdout, no stderr)
     * Handle case where container hasn't been started or has already finished
   * Stream events (for waiting for health check)
-  * Inspect (for getting last health check result)
 * Exec
   * Create
   * Run

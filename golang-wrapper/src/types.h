@@ -236,6 +236,7 @@ typedef struct {
 
 typedef struct {
     char* ImageReference;
+    char* Name;
     uint64_t CommandCount;
     char** Command;
     uint64_t EntrypointCount;
@@ -266,6 +267,9 @@ typedef struct {
     char* NetworkReference;
     uint64_t NetworkAliasesCount;
     char** NetworkAliases;
+    char* LogDriver;
+    uint64_t LoggingOptionsCount;
+    StringPair** LoggingOptions;
 } CreateContainerRequest;
 
 typedef struct {
@@ -279,6 +283,61 @@ typedef struct {
 } WaitForContainerToExitReturn;
 
 typedef bool (*ReadyCallback) (void*);
+
+typedef struct {
+    uint64_t TestCount;
+    char** Test;
+    int64_t Interval;
+    int64_t Timeout;
+    int64_t StartPeriod;
+    int64_t Retries;
+} ContainerHealthcheckConfig;
+
+typedef struct {
+    uint64_t LabelsCount;
+    StringPair** Labels;
+    ContainerHealthcheckConfig* Healthcheck;
+} ContainerConfig;
+
+typedef struct {
+    int64_t Start;
+    int64_t End;
+    int64_t ExitCode;
+    char* Output;
+} ContainerHealthLogEntry;
+
+typedef struct {
+    char* Status;
+    uint64_t LogCount;
+    ContainerHealthLogEntry** Log;
+} ContainerHealthState;
+
+typedef struct {
+    ContainerHealthState* Health;
+} ContainerState;
+
+typedef struct {
+    char* Type;
+    uint64_t ConfigCount;
+    StringPair** Config;
+} ContainerLogConfig;
+
+typedef struct {
+    ContainerLogConfig* LogConfig;
+} ContainerHostConfig;
+
+typedef struct {
+    char* ID;
+    char* Name;
+    ContainerHostConfig* HostConfig;
+    ContainerState* State;
+    ContainerConfig* Config;
+} ContainerInspectionResult;
+
+typedef struct {
+    ContainerInspectionResult* Response;
+    Error* Error;
+} InspectContainerReturn;
 
 EXPORTED_FUNCTION Error* AllocError();
 EXPORTED_FUNCTION void FreeError(Error* value);
@@ -357,6 +416,24 @@ EXPORTED_FUNCTION void FreeCreateContainerReturn(CreateContainerReturn* value);
 EXPORTED_FUNCTION WaitForContainerToExitReturn* AllocWaitForContainerToExitReturn();
 EXPORTED_FUNCTION void FreeWaitForContainerToExitReturn(WaitForContainerToExitReturn* value);
 EXPORTED_FUNCTION bool InvokeReadyCallback(ReadyCallback method, void* userData);
+EXPORTED_FUNCTION ContainerHealthcheckConfig* AllocContainerHealthcheckConfig();
+EXPORTED_FUNCTION void FreeContainerHealthcheckConfig(ContainerHealthcheckConfig* value);
+EXPORTED_FUNCTION ContainerConfig* AllocContainerConfig();
+EXPORTED_FUNCTION void FreeContainerConfig(ContainerConfig* value);
+EXPORTED_FUNCTION ContainerHealthLogEntry* AllocContainerHealthLogEntry();
+EXPORTED_FUNCTION void FreeContainerHealthLogEntry(ContainerHealthLogEntry* value);
+EXPORTED_FUNCTION ContainerHealthState* AllocContainerHealthState();
+EXPORTED_FUNCTION void FreeContainerHealthState(ContainerHealthState* value);
+EXPORTED_FUNCTION ContainerState* AllocContainerState();
+EXPORTED_FUNCTION void FreeContainerState(ContainerState* value);
+EXPORTED_FUNCTION ContainerLogConfig* AllocContainerLogConfig();
+EXPORTED_FUNCTION void FreeContainerLogConfig(ContainerLogConfig* value);
+EXPORTED_FUNCTION ContainerHostConfig* AllocContainerHostConfig();
+EXPORTED_FUNCTION void FreeContainerHostConfig(ContainerHostConfig* value);
+EXPORTED_FUNCTION ContainerInspectionResult* AllocContainerInspectionResult();
+EXPORTED_FUNCTION void FreeContainerInspectionResult(ContainerInspectionResult* value);
+EXPORTED_FUNCTION InspectContainerReturn* AllocInspectContainerReturn();
+EXPORTED_FUNCTION void FreeInspectContainerReturn(InspectContainerReturn* value);
 EXPORTED_FUNCTION VolumeReference** CreateVolumeReferenceArray(uint64_t size);
 EXPORTED_FUNCTION void SetVolumeReferenceArrayElement(VolumeReference** array, uint64_t index, VolumeReference* value);
 EXPORTED_FUNCTION VolumeReference* GetVolumeReferenceArrayElement(VolumeReference** array, uint64_t index);
@@ -372,4 +449,7 @@ EXPORTED_FUNCTION DeviceMount* GetDeviceMountArrayElement(DeviceMount** array, u
 EXPORTED_FUNCTION ExposedPort** CreateExposedPortArray(uint64_t size);
 EXPORTED_FUNCTION void SetExposedPortArrayElement(ExposedPort** array, uint64_t index, ExposedPort* value);
 EXPORTED_FUNCTION ExposedPort* GetExposedPortArrayElement(ExposedPort** array, uint64_t index);
+EXPORTED_FUNCTION ContainerHealthLogEntry** CreateContainerHealthLogEntryArray(uint64_t size);
+EXPORTED_FUNCTION void SetContainerHealthLogEntryArrayElement(ContainerHealthLogEntry** array, uint64_t index, ContainerHealthLogEntry* value);
+EXPORTED_FUNCTION ContainerHealthLogEntry* GetContainerHealthLogEntryArrayElement(ContainerHealthLogEntry** array, uint64_t index);
 #endif

@@ -57,18 +57,22 @@ func CreateContainer(clientHandle DockerClientHandle, request *C.CreateContainer
 	useInitProcess := bool(request.UseInitProcess)
 
 	hostConfig := container.HostConfig{
-		ExtraHosts: fromStringArray(request.ExtraHosts, request.ExtraHostsCount),
-		Binds:      fromStringArray(request.BindMounts, request.BindMountsCount),
-		Tmpfs:      fromStringPairs(request.TmpfsMounts, request.TmpfsMountsCount),
-		Resources: container.Resources{
-			Devices: devicesForContainer(request),
-		},
+		ExtraHosts:   fromStringArray(request.ExtraHosts, request.ExtraHostsCount),
+		Binds:        fromStringArray(request.BindMounts, request.BindMountsCount),
+		Tmpfs:        fromStringPairs(request.TmpfsMounts, request.TmpfsMountsCount),
 		PortBindings: portBindingsForContainer(request),
 		Init:         &useInitProcess,
 		ShmSize:      int64(request.ShmSizeInBytes),
 		Privileged:   bool(request.Privileged),
 		CapAdd:       fromStringArray(request.CapabilitiesToAdd, request.CapabilitiesToAddCount),
 		CapDrop:      fromStringArray(request.CapabilitiesToDrop, request.CapabilitiesToDropCount),
+		Resources: container.Resources{
+			Devices: devicesForContainer(request),
+		},
+		LogConfig: container.LogConfig{
+			Type:   C.GoString(request.LogDriver),
+			Config: fromStringPairs(request.LoggingOptions, request.LoggingOptionsCount),
+		},
 	}
 
 	networkingConfig := network.NetworkingConfig{}
@@ -84,7 +88,7 @@ func CreateContainer(clientHandle DockerClientHandle, request *C.CreateContainer
 		}
 	}
 
-	containerName := "" // TODO
+	containerName := C.GoString(request.Name)
 
 	createdContainer, err := docker.ContainerCreate(context.Background(), &config, &hostConfig, &networkingConfig, nil, containerName)
 
@@ -207,6 +211,48 @@ func WaitForContainerToExit(clientHandle DockerClientHandle, contextHandle Conte
 	}
 }
 
+//export InspectContainer
+func InspectContainer(clientHandle DockerClientHandle, contextHandle ContextHandle, idOrName *C.char) InspectContainerReturn {
+	docker := clientHandle.DockerAPIClient()
+	ctx := contextHandle.Context()
+
+	resp, err := docker.ContainerInspect(ctx, C.GoString(idOrName))
+
+	if err != nil {
+		return newInspectContainerReturn(nil, toError(err))
+	}
+
+	logConfig := newContainerLogConfig(resp.HostConfig.LogConfig.Type, toStringPairs(resp.HostConfig.LogConfig.Config))
+	hostConfig := newContainerHostConfig(logConfig)
+
+	var health ContainerHealthState
+
+	if resp.State.Health == nil {
+		health = newContainerHealthState("", []ContainerHealthLogEntry{})
+	} else {
+		health = newContainerHealthState(resp.State.Health.Status, toContainerHealthLogEntries(resp.State.Health.Log))
+	}
+
+	state := newContainerState(health)
+
+	var healthcheckConfig ContainerHealthcheckConfig
+
+	if resp.Config.Healthcheck != nil {
+		healthcheckConfig = newContainerHealthcheckConfig(
+			resp.Config.Healthcheck.Test,
+			resp.Config.Healthcheck.Interval.Nanoseconds(),
+			resp.Config.Healthcheck.Timeout.Nanoseconds(),
+			resp.Config.Healthcheck.StartPeriod.Nanoseconds(),
+			int64(resp.Config.Healthcheck.Retries),
+		)
+	}
+
+	config := newContainerConfig([]StringPair{}, healthcheckConfig)
+	result := newContainerInspectionResult(resp.ID, resp.Name, hostConfig, state, config)
+
+	return newInspectContainerReturn(result, nil)
+}
+
 func fromStringPairs(pairs **C.StringPair, count C.uint64_t) map[string]string {
 	m := make(map[string]string, count)
 
@@ -219,6 +265,17 @@ func fromStringPairs(pairs **C.StringPair, count C.uint64_t) map[string]string {
 	}
 
 	return m
+}
+
+func toStringPairs(m map[string]string) []StringPair {
+	l := make([]StringPair, 0, len(m))
+
+	for k, v := range m {
+		pair := newStringPair(k, v)
+		l = append(l, pair)
+	}
+
+	return l
 }
 
 func devicesForContainer(request *C.CreateContainerRequest) []container.DeviceMapping {
@@ -271,4 +328,21 @@ func exposedPortsForContainer(request *C.CreateContainerRequest) nat.PortSet {
 	}
 
 	return portSet
+}
+
+func toContainerHealthLogEntries(results []*types.HealthcheckResult) []ContainerHealthLogEntry {
+	l := make([]ContainerHealthLogEntry, 0, len(results))
+
+	for _, result := range results {
+		healthLogEntry := newContainerHealthLogEntry(
+			result.Start.UnixMilli(),
+			result.End.UnixMilli(),
+			int64(result.ExitCode),
+			result.Output,
+		)
+
+		l = append(l, healthLogEntry)
+	}
+
+	return l
 }

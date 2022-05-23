@@ -353,6 +353,8 @@
   fields:
     - name: ImageReference
       type: string
+    - name: Name
+      type: string
     - name: Command
       type: string[]
     - name: Entrypoint
@@ -391,6 +393,10 @@
       type: string
     - name: NetworkAliases
       type: string[]
+    - name: LogDriver
+      type: string
+    - name: LoggingOptions
+      type: StringPair[]
 
 - name: CreateContainerReturn
   type: struct
@@ -410,3 +416,87 @@
 
 - name: ReadyCallback
   type: callback
+
+- name: ContainerHealthcheckConfig
+  type: struct
+  fields:
+    - name: Test
+      type: string[]
+    - name: Interval
+      type: int64
+    - name: Timeout
+      type: int64
+    - name: StartPeriod
+      type: int64
+    - name: Retries
+      type: int64
+
+- name: ContainerConfig
+  type: struct
+  fields:
+    - name: Labels
+      type: StringPair[]
+    - name: Healthcheck
+      type: ContainerHealthcheckConfig
+
+- name: ContainerHealthLogEntry
+  type: struct
+  fields:
+    - name: Start
+      type: int64
+    - name: End
+      type: int64
+    - name: ExitCode
+      type: int64
+    - name: Output
+      type: string
+
+- name: ContainerHealthState
+  type: struct
+  fields:
+    - name: Status
+      type: string
+    - name: Log
+      type: ContainerHealthLogEntry[]
+
+- name: ContainerState
+  type: struct
+  fields:
+    - name: Health
+      type: ContainerHealthState
+
+- name: ContainerLogConfig
+  type: struct
+  fields:
+    - name: Type
+      type: string
+    - name: Config
+      type: StringPair[]
+
+- name: ContainerHostConfig
+  type: struct
+  fields:
+    - name: LogConfig
+      type: ContainerLogConfig
+
+- name: ContainerInspectionResult
+  type: struct
+  fields:
+    - name: ID
+      type: string
+    - name: Name
+      type: string
+    - name: HostConfig
+      type: ContainerHostConfig
+    - name: State
+      type: ContainerState
+    - name: Config
+      type: ContainerConfig
+
+- name: InspectContainerReturn
+  type: struct
+  fields:
+    - name: Response
+      type: ContainerInspectionResult
+    - name: Error
+      type: Error

@@ -69,6 +69,15 @@ type CreateContainerRequest *C.CreateContainerRequest
 type CreateContainerReturn *C.CreateContainerReturn
 type WaitForContainerToExitReturn *C.WaitForContainerToExitReturn
 type ReadyCallback C.ReadyCallback
+type ContainerHealthcheckConfig *C.ContainerHealthcheckConfig
+type ContainerConfig *C.ContainerConfig
+type ContainerHealthLogEntry *C.ContainerHealthLogEntry
+type ContainerHealthState *C.ContainerHealthState
+type ContainerState *C.ContainerState
+type ContainerLogConfig *C.ContainerLogConfig
+type ContainerHostConfig *C.ContainerHostConfig
+type ContainerInspectionResult *C.ContainerInspectionResult
+type InspectContainerReturn *C.InspectContainerReturn
 
 func newError(
     Type string,
@@ -509,6 +518,7 @@ func newExposedPort(
 
 func newCreateContainerRequest(
     ImageReference string,
+    Name string,
     Command []string,
     Entrypoint []string,
     WorkingDirectory string,
@@ -528,9 +538,12 @@ func newCreateContainerRequest(
     CapabilitiesToDrop []string,
     NetworkReference string,
     NetworkAliases []string,
+    LogDriver string,
+    LoggingOptions []StringPair,
 ) CreateContainerRequest {
     value := C.AllocCreateContainerRequest()
     value.ImageReference = C.CString(ImageReference)
+    value.Name = C.CString(Name)
 
     value.CommandCount = C.uint64_t(len(Command))
     value.Command = C.CreatestringArray(value.CommandCount)
@@ -627,6 +640,15 @@ func newCreateContainerRequest(
         C.SetstringArrayElement(value.NetworkAliases, C.uint64_t(i), C.CString(v))
     }
 
+    value.LogDriver = C.CString(LogDriver)
+
+    value.LoggingOptionsCount = C.uint64_t(len(LoggingOptions))
+    value.LoggingOptions = C.CreateStringPairArray(value.LoggingOptionsCount)
+
+    for i, v := range LoggingOptions {
+        C.SetStringPairArrayElement(value.LoggingOptions, C.uint64_t(i), v)
+    }
+
 
     return value
 }
@@ -648,6 +670,145 @@ func newWaitForContainerToExitReturn(
 ) WaitForContainerToExitReturn {
     value := C.AllocWaitForContainerToExitReturn()
     value.ExitCode = C.int64_t(ExitCode)
+    value.Error = Error
+
+    return value
+}
+
+func newContainerHealthcheckConfig(
+    Test []string,
+    Interval int64,
+    Timeout int64,
+    StartPeriod int64,
+    Retries int64,
+) ContainerHealthcheckConfig {
+    value := C.AllocContainerHealthcheckConfig()
+
+    value.TestCount = C.uint64_t(len(Test))
+    value.Test = C.CreatestringArray(value.TestCount)
+
+    for i, v := range Test {
+        C.SetstringArrayElement(value.Test, C.uint64_t(i), C.CString(v))
+    }
+
+    value.Interval = C.int64_t(Interval)
+    value.Timeout = C.int64_t(Timeout)
+    value.StartPeriod = C.int64_t(StartPeriod)
+    value.Retries = C.int64_t(Retries)
+
+    return value
+}
+
+func newContainerConfig(
+    Labels []StringPair,
+    Healthcheck ContainerHealthcheckConfig,
+) ContainerConfig {
+    value := C.AllocContainerConfig()
+
+    value.LabelsCount = C.uint64_t(len(Labels))
+    value.Labels = C.CreateStringPairArray(value.LabelsCount)
+
+    for i, v := range Labels {
+        C.SetStringPairArrayElement(value.Labels, C.uint64_t(i), v)
+    }
+
+    value.Healthcheck = Healthcheck
+
+    return value
+}
+
+func newContainerHealthLogEntry(
+    Start int64,
+    End int64,
+    ExitCode int64,
+    Output string,
+) ContainerHealthLogEntry {
+    value := C.AllocContainerHealthLogEntry()
+    value.Start = C.int64_t(Start)
+    value.End = C.int64_t(End)
+    value.ExitCode = C.int64_t(ExitCode)
+    value.Output = C.CString(Output)
+
+    return value
+}
+
+func newContainerHealthState(
+    Status string,
+    Log []ContainerHealthLogEntry,
+) ContainerHealthState {
+    value := C.AllocContainerHealthState()
+    value.Status = C.CString(Status)
+
+    value.LogCount = C.uint64_t(len(Log))
+    value.Log = C.CreateContainerHealthLogEntryArray(value.LogCount)
+
+    for i, v := range Log {
+        C.SetContainerHealthLogEntryArrayElement(value.Log, C.uint64_t(i), v)
+    }
+
+
+    return value
+}
+
+func newContainerState(
+    Health ContainerHealthState,
+) ContainerState {
+    value := C.AllocContainerState()
+    value.Health = Health
+
+    return value
+}
+
+func newContainerLogConfig(
+    Type string,
+    Config []StringPair,
+) ContainerLogConfig {
+    value := C.AllocContainerLogConfig()
+    value.Type = C.CString(Type)
+
+    value.ConfigCount = C.uint64_t(len(Config))
+    value.Config = C.CreateStringPairArray(value.ConfigCount)
+
+    for i, v := range Config {
+        C.SetStringPairArrayElement(value.Config, C.uint64_t(i), v)
+    }
+
+
+    return value
+}
+
+func newContainerHostConfig(
+    LogConfig ContainerLogConfig,
+) ContainerHostConfig {
+    value := C.AllocContainerHostConfig()
+    value.LogConfig = LogConfig
+
+    return value
+}
+
+func newContainerInspectionResult(
+    ID string,
+    Name string,
+    HostConfig ContainerHostConfig,
+    State ContainerState,
+    Config ContainerConfig,
+) ContainerInspectionResult {
+    value := C.AllocContainerInspectionResult()
+    value.ID = C.CString(ID)
+    value.Name = C.CString(Name)
+    value.HostConfig = HostConfig
+    value.State = State
+    value.Config = Config
+
+    return value
+}
+
+func newInspectContainerReturn(
+    Response ContainerInspectionResult,
+    Error Error,
+) InspectContainerReturn {
+    value := C.AllocInspectContainerReturn()
+    value.Response = Response
     value.Error = Error
 
     return value
