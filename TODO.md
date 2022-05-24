@@ -76,7 +76,6 @@
 * Containers
   * Create
     * STDIN attached
-    * Labels
     * Scenarios to test:
       * Windows containers
   * Upload files

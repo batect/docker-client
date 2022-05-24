@@ -119,9 +119,20 @@ internal var CreateContainerRequest.healthcheckCommand by WriteOnlyList<CreateCo
     ::stringToPointer
 )
 
+internal var CreateContainerRequest.labels by WriteOnlyList<CreateContainerRequest, StringPair>(
+    CreateContainerRequest::labelsCount,
+    CreateContainerRequest::labelsPointer
+)
+
 internal val ContainerLogConfig.config by ReadOnlyList(
     ContainerLogConfig::configCount,
     ContainerLogConfig::configPointer,
+    ::StringPair
+)
+
+internal val ContainerConfig.labels by ReadOnlyList(
+    ContainerConfig::labelsCount,
+    ContainerConfig::labelsPointer,
     ::StringPair
 )
 

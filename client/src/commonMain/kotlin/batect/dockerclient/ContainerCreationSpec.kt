@@ -47,7 +47,8 @@ public data class ContainerCreationSpec(
     val healthcheckInterval: Duration? = null,
     val healthcheckTimeout: Duration? = null,
     val healthcheckStartPeriod: Duration? = null,
-    val healthcheckRetries: Int? = null
+    val healthcheckRetries: Int? = null,
+    val labels: Map<String, String> = emptyMap()
 ) {
     internal fun ensureValid() {
         if (networkAliases.isNotEmpty() && network == null) {
@@ -257,6 +258,15 @@ public data class ContainerCreationSpec(
 
         public fun withHealthcheckRetries(retries: Int): Builder {
             spec = spec.copy(healthcheckRetries = retries)
+
+            return this
+        }
+
+        public fun withLabel(key: String, value: String): Builder = withLabels(mapOf(key to value))
+        public fun withLabels(vararg labels: Pair<String, String>): Builder = withLabels(mapOf(*labels))
+
+        public fun withLabels(labels: Map<String, String>): Builder {
+            spec = spec.copy(labels = spec.labels + labels)
 
             return this
         }

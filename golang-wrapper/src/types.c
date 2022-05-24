@@ -674,6 +674,7 @@ CreateContainerRequest* AllocCreateContainerRequest() {
     value->LogDriver = NULL;
     value->LoggingOptions = NULL;
     value->HealthcheckCommand = NULL;
+    value->Labels = NULL;
     value->CommandCount = 0;
     value->EntrypointCount = 0;
     value->ExtraHostsCount = 0;
@@ -687,6 +688,7 @@ CreateContainerRequest* AllocCreateContainerRequest() {
     value->NetworkAliasesCount = 0;
     value->LoggingOptionsCount = 0;
     value->HealthcheckCommandCount = 0;
+    value->LabelsCount = 0;
 
     return value;
 }
@@ -768,6 +770,11 @@ void FreeCreateContainerRequest(CreateContainerRequest* value) {
     }
 
     free(value->HealthcheckCommand);
+    for (uint64_t i = 0; i < value->LabelsCount; i++) {
+        FreeStringPair(value->Labels[i]);
+    }
+
+    free(value->Labels);
     free(value);
 }
 

@@ -367,6 +367,8 @@ internal actual class RealDockerClient actual constructor(configuration: DockerC
             HealthcheckTimeout = spec.healthcheckTimeout?.inWholeNanoseconds ?: 0
             HealthcheckStartPeriod = spec.healthcheckStartPeriod?.inWholeNanoseconds ?: 0
             HealthcheckRetries = spec.healthcheckRetries?.toLong() ?: 0
+            Labels = allocArrayOf(spec.labels.map { allocStringPair(it.key, it.value).ptr })
+            LabelsCount = spec.labels.size.toULong()
         }
     }
 
@@ -595,7 +597,7 @@ private fun ContainerHealthLogEntry(native: batect.dockerclient.native.Container
 
 private fun ContainerConfig(native: batect.dockerclient.native.ContainerConfig): ContainerConfig =
     ContainerConfig(
-        emptyMap(),
+        fromArray(native.Labels!!, native.LabelsCount) { it.Key!!.toKString() to it.Value!!.toKString() }.associate { it },
         if (native.Healthcheck == null) null else ContainerHealthcheckConfig(native.Healthcheck!!.pointed)
     )
 

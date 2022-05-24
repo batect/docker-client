@@ -407,6 +407,8 @@
       type: int64
     - name: HealthcheckRetries
       type: int64
+    - name: Labels
+      type: StringPair[]
 
 - name: CreateContainerReturn
   type: struct

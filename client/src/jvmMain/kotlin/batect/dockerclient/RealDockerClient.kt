@@ -47,6 +47,7 @@ import batect.dockerclient.native.exposedPorts
 import batect.dockerclient.native.extraHosts
 import batect.dockerclient.native.healthcheckCommand
 import batect.dockerclient.native.imageTags
+import batect.dockerclient.native.labels
 import batect.dockerclient.native.log
 import batect.dockerclient.native.loggingOptions
 import batect.dockerclient.native.nativeAPI
@@ -514,6 +515,7 @@ internal actual class RealDockerClient actual constructor(configuration: DockerC
         request.healthcheckTimeout.set(jvm.healthcheckTimeout?.inWholeNanoseconds ?: 0)
         request.healthcheckStartPeriod.set(jvm.healthcheckStartPeriod?.inWholeNanoseconds ?: 0)
         request.healthcheckRetries.set(jvm.healthcheckRetries ?: 0)
+        request.labels = jvm.labels.map { StringPair(it.key, it.value) }
 
         return request
     }
@@ -557,7 +559,7 @@ internal actual class RealDockerClient actual constructor(configuration: DockerC
 
     private fun ContainerConfig(native: batect.dockerclient.native.ContainerConfig): ContainerConfig =
         ContainerConfig(
-            emptyMap(),
+            native.labels.associate { it.key.get() to it.value.get() },
             if (native.healthcheck == null) null else ContainerHealthcheckConfig(native.healthcheck!!)
         )
 

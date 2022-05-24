@@ -44,6 +44,7 @@ func CreateContainer(clientHandle DockerClientHandle, request *C.CreateContainer
 		ExposedPorts: exposedPortsForContainer(request),
 		User:         C.GoString(request.User),
 		Tty:          bool(request.AttachTTY),
+		Labels:       fromStringPairs(request.Labels, request.LabelsCount),
 		Healthcheck: &container.HealthConfig{
 			Interval:    time.Duration(int64(request.HealthcheckInterval)) * time.Nanosecond,
 			Timeout:     time.Duration(int64(request.HealthcheckTimeout)) * time.Nanosecond,
@@ -257,7 +258,8 @@ func InspectContainer(clientHandle DockerClientHandle, contextHandle ContextHand
 		)
 	}
 
-	config := newContainerConfig([]StringPair{}, healthcheckConfig)
+	labels := toStringPairs(resp.Config.Labels)
+	config := newContainerConfig(labels, healthcheckConfig)
 	result := newContainerInspectionResult(resp.ID, resp.Name, hostConfig, state, config)
 
 	return newInspectContainerReturn(result, nil)

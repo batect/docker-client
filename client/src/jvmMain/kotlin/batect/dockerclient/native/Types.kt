@@ -584,6 +584,8 @@ internal class CreateContainerRequest(runtime: Runtime) : Struct(runtime), AutoC
     val healthcheckTimeout = int64_t()
     val healthcheckStartPeriod = int64_t()
     val healthcheckRetries = int64_t()
+    val labelsCount = u_int64_t()
+    val labelsPointer = Pointer()
 
     override fun close() {
         nativeAPI.FreeCreateContainerRequest(this)

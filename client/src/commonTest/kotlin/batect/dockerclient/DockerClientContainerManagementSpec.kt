@@ -533,6 +533,25 @@ class DockerClientContainerManagementSpec : ShouldSpec({
                     client.removeContainer(container, force = true)
                 }
             }
+
+            should("be able to add labels to containers") {
+                val spec = ContainerCreationSpec.Builder(image)
+                    .withLabels("first-key" to "first-value", "second-key" to "second-value")
+                    .build()
+
+                val container = client.createContainer(spec)
+
+                try {
+                    val inspectionResult = client.inspectContainer(container)
+
+                    inspectionResult.config.labels shouldBe mapOf(
+                        "first-key" to "first-value",
+                        "second-key" to "second-value"
+                    )
+                } finally {
+                    client.removeContainer(container, force = true)
+                }
+            }
         }
 
         context("using the run() helper method") {

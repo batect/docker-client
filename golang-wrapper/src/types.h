@@ -276,6 +276,8 @@ typedef struct {
     int64_t HealthcheckTimeout;
     int64_t HealthcheckStartPeriod;
     int64_t HealthcheckRetries;
+    uint64_t LabelsCount;
+    StringPair** Labels;
 } CreateContainerRequest;
 
 typedef struct {

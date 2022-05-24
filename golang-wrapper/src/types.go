@@ -545,6 +545,7 @@ func newCreateContainerRequest(
     HealthcheckTimeout int64,
     HealthcheckStartPeriod int64,
     HealthcheckRetries int64,
+    Labels []StringPair,
 ) CreateContainerRequest {
     value := C.AllocCreateContainerRequest()
     value.ImageReference = C.CString(ImageReference)
@@ -666,6 +667,14 @@ func newCreateContainerRequest(
     value.HealthcheckTimeout = C.int64_t(HealthcheckTimeout)
     value.HealthcheckStartPeriod = C.int64_t(HealthcheckStartPeriod)
     value.HealthcheckRetries = C.int64_t(HealthcheckRetries)
+
+    value.LabelsCount = C.uint64_t(len(Labels))
+    value.Labels = C.CreateStringPairArray(value.LabelsCount)
+
+    for i, v := range Labels {
+        C.SetStringPairArrayElement(value.Labels, C.uint64_t(i), v)
+    }
+
 
     return value
 }
