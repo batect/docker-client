@@ -240,7 +240,7 @@ jobs:
       - name: Run linting, tests and other checks
         uses: burrunan/gradle-cache-action@v1.10
         with:
-          arguments: ./gradlew :build-logic:check
+          arguments: :build-logic:check
 
   publish:
     if: github.repository == 'batect/docker-client' && (github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/')) && github.event_name == 'push'
