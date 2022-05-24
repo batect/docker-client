@@ -25,6 +25,7 @@
 * Refactor / rework code generation - it's a mess and needs tests
   * Use https://github.com/square/kotlinpoet/ to generate Kotlin code rather than current string concatenation approach?
 * Remove use of panics in Golang code
+* Some kind of cache for CI builds?
 * Restore AssertionMode to Error once https://kotlinlang.slack.com/archives/CT0G9SD7Z/p1653346298893609 is resolved
 
 # APIs
@@ -40,6 +41,24 @@
 * Timeouts and cancellation for calls
   * Add tests to verify this is working as expected
   * Go through all methods and check for any use of context.Background()
+  * Methods left to do:
+    * `ping`
+    * `getDaemonVersionInformation`
+    * `listAllVolumes`
+    * `createVolume`
+    * `deleteVolume`
+    * `createNetwork`
+    * `deleteNetwork`
+    * `getNetworkByNameOrID`
+    * `pullImage`
+    * `deleteImage`
+    * `getImage`
+    * `buildImage`
+    * `pruneImageBuildCache`
+    * `createContainer`
+    * `startContainer`
+    * `stopContainer`
+    * `removeContainer`
 
 * Check that Golang code can return an empty list (eg. listing all volumes returns no volumes)
 
