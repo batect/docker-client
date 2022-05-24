@@ -35,9 +35,6 @@ jobs:
           java-version: 17.0.2+8
           distribution: temurin
 
-      - name: Setup Gradle
-        uses: gradle/gradle-build-action@v2.1.6
-
       - name: Cache Golang packages
         id: cache-golang-packages
         uses: actions/cache@v3.0.2
@@ -60,7 +57,9 @@ jobs:
           key: tools-${{ runner.os }}-${{ hashFiles('**/*.gradle.kts', 'buildSrc/src/**/*.kt') }}
 
       - name: Build and test
-        run: ./gradlew golang-wrapper:buildSharedLibs --scan
+        uses: burrunan/gradle-cache-action@v1.10
+        with:
+          arguments: golang-wrapper:buildSharedLibs
 
       - name: Upload Golang wrapper libraries
         uses: actions/upload-artifact@v3.1.0
@@ -117,9 +116,6 @@ jobs:
           java-version: 17.0.2+8
           distribution: temurin
 
-      - name: Setup Gradle
-        uses: gradle/gradle-build-action@v2.1.6
-
       - name: Cache Golang packages
         id: cache-golang-packages
         uses: actions/cache@v3.0.2
@@ -167,7 +163,9 @@ jobs:
 
       # linkDebugTestMingwX64 and mingwX64Test are disabled until https://youtrack.jetbrains.com/issue/KTOR-4307 is resolved.
       - name: Build, test and package
-        run: ./gradlew client:check client:jvmJar --scan --exclude-task linkDebugTestMingwX64 --exclude-task mingwX64Test
+        uses: burrunan/gradle-cache-action@v1.10
+        with:
+          arguments: client:check client:jvmJar --exclude-task linkDebugTestMingwX64 --exclude-task mingwX64Test
         env:
           DISABLE_DOCKER_DAEMON_TESTS: ${{ matrix.disableDockerDaemonTests }}
           DOCKER_CONTAINER_OPERATING_SYSTEM: ${{ matrix.containerOperatingSystem }}
@@ -175,7 +173,9 @@ jobs:
           RUN_TARGETS_FOR_OTHER_HOSTS: false
 
       - name: Check JAR contains native libraries for all operating systems
-        run: ./gradlew client:checkJarContents --scan
+        uses: burrunan/gradle-cache-action@v1.10
+        with:
+          arguments: client:checkJarContents
 
       - name: Check for outdated generated code
         run: if [ ! -z "$(git status --porcelain)" ]; then echo "Generated code changed. Do you need to run './gradlew generate'?">/dev/stderr; echo; git status --porcelain; echo; git diff; exit 1; fi
@@ -194,9 +194,6 @@ jobs:
         with:
           java-version: 17.0.2+8
           distribution: temurin
-
-      - name: Setup Gradle
-        uses: gradle/gradle-build-action@v2.1.6
 
       - name: Cache Golang packages
         id: cache-golang-packages
@@ -221,7 +218,9 @@ jobs:
 
       - name: Run linting
         # :golang-wrapper:lint: disabled until https://github.com/golangci/golangci-lint/issues/2649 is resolved
-        run: ./gradlew golang-wrapper:check --exclude-task :golang-wrapper:lint --scan
+        uses: burrunan/gradle-cache-action@v1.10
+        with:
+          arguments: golang-wrapper:check --exclude-task :golang-wrapper:lint
 
   check-build-logic:
     name: "Lint, test and check build logic"
@@ -238,11 +237,10 @@ jobs:
           java-version: 17.0.2+8
           distribution: temurin
 
-      - name: Setup Gradle
-        uses: gradle/gradle-build-action@v2.1.6
-
       - name: Run linting, tests and other checks
-        run: ./gradlew :build-logic:check
+        uses: burrunan/gradle-cache-action@v1.10
+        with:
+          arguments: ./gradlew :build-logic:check
 
   publish:
     if: github.repository == 'batect/docker-client' && (github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/')) && github.event_name == 'push'
@@ -268,9 +266,6 @@ jobs:
         with:
           java-version: 17.0.2+8
           distribution: temurin
-
-      - name: Setup Gradle
-        uses: gradle/gradle-build-action@v2.1.6
 
       - name: Cache Golang packages
         id: cache-golang-packages
@@ -303,10 +298,14 @@ jobs:
           path: golang-wrapper/build/libs
 
       - name: Check JAR contains native libraries for all operating systems
-        run: ./gradlew client:checkJarContents
+        uses: burrunan/gradle-cache-action@v1.10
+        with:
+          arguments: client:checkJarContents
 
       - name: Publish snapshot
-        run: ./gradlew publishSnapshot
+        uses: burrunan/gradle-cache-action@v1.10
+        with:
+          arguments: publishSnapshot
         env:
           ORG_GRADLE_PROJECT_sonatypeUsername: ${{ env.SONATYPE_USERNAME }}
           ORG_GRADLE_PROJECT_sonatypePassword: ${{ secrets.SONATYPE_PASSWORD }}
@@ -315,7 +314,9 @@ jobs:
         if: github.repository == 'batect/docker-client' && github.ref == 'refs/heads/main' && github.event_name == 'push'
 
       - name: Publish release
-        run: ./gradlew publishRelease
+        uses: burrunan/gradle-cache-action@v1.10
+        with:
+          arguments: publishRelease
         env:
           ORG_GRADLE_PROJECT_sonatypeUsername: ${{ env.SONATYPE_USERNAME }}
           ORG_GRADLE_PROJECT_sonatypePassword: ${{ secrets.SONATYPE_PASSWORD }}
