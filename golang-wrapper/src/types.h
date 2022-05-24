@@ -270,6 +270,12 @@ typedef struct {
     char* LogDriver;
     uint64_t LoggingOptionsCount;
     StringPair** LoggingOptions;
+    uint64_t HealthcheckCommandCount;
+    char** HealthcheckCommand;
+    int64_t HealthcheckInterval;
+    int64_t HealthcheckTimeout;
+    int64_t HealthcheckStartPeriod;
+    int64_t HealthcheckRetries;
 } CreateContainerRequest;
 
 typedef struct {

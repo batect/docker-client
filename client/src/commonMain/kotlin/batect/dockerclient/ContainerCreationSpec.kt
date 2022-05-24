@@ -17,6 +17,7 @@
 package batect.dockerclient
 
 import okio.Path
+import kotlin.time.Duration
 
 public data class ContainerCreationSpec(
     val image: ImageReference,
@@ -41,7 +42,12 @@ public data class ContainerCreationSpec(
     val network: NetworkReference? = null,
     val networkAliases: Set<String> = emptySet(),
     val logDriver: String? = null,
-    val loggingOptions: Map<String, String> = emptyMap()
+    val loggingOptions: Map<String, String> = emptyMap(),
+    val healthcheckCommand: List<String> = emptyList(),
+    val healthcheckInterval: Duration? = null,
+    val healthcheckTimeout: Duration? = null,
+    val healthcheckStartPeriod: Duration? = null,
+    val healthcheckRetries: Int? = null
 ) {
     internal fun ensureValid() {
         if (networkAliases.isNotEmpty() && network == null) {
@@ -219,6 +225,38 @@ public data class ContainerCreationSpec(
 
         public fun withLoggingOptions(options: Map<String, String>): Builder {
             spec = spec.copy(loggingOptions = spec.loggingOptions + options)
+
+            return this
+        }
+
+        public fun withHealthcheckCommand(vararg command: String): Builder = withHealthcheckCommand(command.toList())
+
+        public fun withHealthcheckCommand(command: List<String>): Builder {
+            spec = spec.copy(healthcheckCommand = command)
+
+            return this
+        }
+
+        public fun withHealthcheckInterval(interval: Duration): Builder {
+            spec = spec.copy(healthcheckInterval = interval)
+
+            return this
+        }
+
+        public fun withHealthcheckTimeout(timeout: Duration): Builder {
+            spec = spec.copy(healthcheckTimeout = timeout)
+
+            return this
+        }
+
+        public fun withHealthcheckStartPeriod(startPeriod: Duration): Builder {
+            spec = spec.copy(healthcheckStartPeriod = startPeriod)
+
+            return this
+        }
+
+        public fun withHealthcheckRetries(retries: Int): Builder {
+            spec = spec.copy(healthcheckRetries = retries)
 
             return this
         }

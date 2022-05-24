@@ -397,6 +397,16 @@
       type: string
     - name: LoggingOptions
       type: StringPair[]
+    - name: HealthcheckCommand
+      type: string[]
+    - name: HealthcheckInterval
+      type: int64
+    - name: HealthcheckTimeout
+      type: int64
+    - name: HealthcheckStartPeriod
+      type: int64
+    - name: HealthcheckRetries
+      type: int64
 
 - name: CreateContainerReturn
   type: struct

@@ -75,8 +75,6 @@
     * Test that we can run a built image
 * Containers
   * Create
-    * Health check configuration
-      * Overridden at creation time
     * STDIN attached
     * Labels
     * Scenarios to test:

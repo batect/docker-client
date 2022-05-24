@@ -113,6 +113,12 @@ internal var CreateContainerRequest.loggingOptions by WriteOnlyList<CreateContai
     CreateContainerRequest::loggingOptionsPointer
 )
 
+internal var CreateContainerRequest.healthcheckCommand by WriteOnlyList<CreateContainerRequest, String>(
+    CreateContainerRequest::healthcheckCommandCount,
+    CreateContainerRequest::healthcheckCommandPointer,
+    ::stringToPointer
+)
+
 internal val ContainerLogConfig.config by ReadOnlyList(
     ContainerLogConfig::configCount,
     ContainerLogConfig::configPointer,

@@ -361,6 +361,12 @@ internal actual class RealDockerClient actual constructor(configuration: DockerC
             LogDriver = spec.logDriver?.cstr?.ptr
             LoggingOptions = allocArrayOf(spec.loggingOptions.map { allocStringPair(it).ptr })
             LoggingOptionsCount = spec.loggingOptions.size.toULong()
+            HealthcheckCommand = allocArrayOf(spec.healthcheckCommand.map { it.cstr.ptr })
+            HealthcheckCommandCount = spec.healthcheckCommand.size.toULong()
+            HealthcheckInterval = spec.healthcheckInterval?.inWholeNanoseconds ?: 0
+            HealthcheckTimeout = spec.healthcheckTimeout?.inWholeNanoseconds ?: 0
+            HealthcheckStartPeriod = spec.healthcheckStartPeriod?.inWholeNanoseconds ?: 0
+            HealthcheckRetries = spec.healthcheckRetries?.toLong() ?: 0
         }
     }
 

@@ -45,6 +45,7 @@ import batect.dockerclient.native.entrypoint
 import batect.dockerclient.native.environmentVariables
 import batect.dockerclient.native.exposedPorts
 import batect.dockerclient.native.extraHosts
+import batect.dockerclient.native.healthcheckCommand
 import batect.dockerclient.native.imageTags
 import batect.dockerclient.native.log
 import batect.dockerclient.native.loggingOptions
@@ -508,6 +509,11 @@ internal actual class RealDockerClient actual constructor(configuration: DockerC
         request.networkAliases = jvm.networkAliases
         request.logDriver.set(jvm.logDriver)
         request.loggingOptions = jvm.loggingOptions.map { StringPair(it.key, it.value) }
+        request.healthcheckCommand = jvm.healthcheckCommand
+        request.healthcheckInterval.set(jvm.healthcheckInterval?.inWholeNanoseconds ?: 0)
+        request.healthcheckTimeout.set(jvm.healthcheckTimeout?.inWholeNanoseconds ?: 0)
+        request.healthcheckStartPeriod.set(jvm.healthcheckStartPeriod?.inWholeNanoseconds ?: 0)
+        request.healthcheckRetries.set(jvm.healthcheckRetries ?: 0)
 
         return request
     }

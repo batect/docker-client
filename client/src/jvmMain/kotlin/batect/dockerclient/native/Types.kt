@@ -578,6 +578,12 @@ internal class CreateContainerRequest(runtime: Runtime) : Struct(runtime), AutoC
     val logDriver = UTF8StringRef()
     val loggingOptionsCount = u_int64_t()
     val loggingOptionsPointer = Pointer()
+    val healthcheckCommandCount = u_int64_t()
+    val healthcheckCommandPointer = Pointer()
+    val healthcheckInterval = int64_t()
+    val healthcheckTimeout = int64_t()
+    val healthcheckStartPeriod = int64_t()
+    val healthcheckRetries = int64_t()
 
     override fun close() {
         nativeAPI.FreeCreateContainerRequest(this)

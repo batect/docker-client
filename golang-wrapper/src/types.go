@@ -540,6 +540,11 @@ func newCreateContainerRequest(
     NetworkAliases []string,
     LogDriver string,
     LoggingOptions []StringPair,
+    HealthcheckCommand []string,
+    HealthcheckInterval int64,
+    HealthcheckTimeout int64,
+    HealthcheckStartPeriod int64,
+    HealthcheckRetries int64,
 ) CreateContainerRequest {
     value := C.AllocCreateContainerRequest()
     value.ImageReference = C.CString(ImageReference)
@@ -649,6 +654,18 @@ func newCreateContainerRequest(
         C.SetStringPairArrayElement(value.LoggingOptions, C.uint64_t(i), v)
     }
 
+
+    value.HealthcheckCommandCount = C.uint64_t(len(HealthcheckCommand))
+    value.HealthcheckCommand = C.CreatestringArray(value.HealthcheckCommandCount)
+
+    for i, v := range HealthcheckCommand {
+        C.SetstringArrayElement(value.HealthcheckCommand, C.uint64_t(i), C.CString(v))
+    }
+
+    value.HealthcheckInterval = C.int64_t(HealthcheckInterval)
+    value.HealthcheckTimeout = C.int64_t(HealthcheckTimeout)
+    value.HealthcheckStartPeriod = C.int64_t(HealthcheckStartPeriod)
+    value.HealthcheckRetries = C.int64_t(HealthcheckRetries)
 
     return value
 }

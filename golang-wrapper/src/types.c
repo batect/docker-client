@@ -673,6 +673,7 @@ CreateContainerRequest* AllocCreateContainerRequest() {
     value->NetworkAliases = NULL;
     value->LogDriver = NULL;
     value->LoggingOptions = NULL;
+    value->HealthcheckCommand = NULL;
     value->CommandCount = 0;
     value->EntrypointCount = 0;
     value->ExtraHostsCount = 0;
@@ -685,6 +686,7 @@ CreateContainerRequest* AllocCreateContainerRequest() {
     value->CapabilitiesToDropCount = 0;
     value->NetworkAliasesCount = 0;
     value->LoggingOptionsCount = 0;
+    value->HealthcheckCommandCount = 0;
 
     return value;
 }
@@ -761,6 +763,11 @@ void FreeCreateContainerRequest(CreateContainerRequest* value) {
     }
 
     free(value->LoggingOptions);
+    for (uint64_t i = 0; i < value->HealthcheckCommandCount; i++) {
+        free(value->HealthcheckCommand[i]);
+    }
+
+    free(value->HealthcheckCommand);
     free(value);
 }
 

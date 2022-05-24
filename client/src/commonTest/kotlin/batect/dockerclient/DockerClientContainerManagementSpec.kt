@@ -439,6 +439,35 @@ class DockerClientContainerManagementSpec : ShouldSpec({
                 }
             }
 
+            should("be able to create a container that overrides the healthcheck configuration embedded in its image") {
+                val healthcheckImage = buildTestImage("healthcheck")
+
+                val spec = ContainerCreationSpec.Builder(healthcheckImage)
+                    .withHealthcheckCommand("/alternative-healthcheck.sh")
+                    .withHealthcheckInterval(250.milliseconds)
+                    .withHealthcheckTimeout(1500.milliseconds)
+                    .withHealthcheckStartPeriod(550.milliseconds)
+                    .withHealthcheckRetries(3)
+                    .build()
+
+                val container = client.createContainer(spec)
+
+                try {
+                    val inspectionResult = client.inspectContainer(container)
+
+                    inspectionResult.config.healthcheck.shouldNotBeNull()
+                    inspectionResult.config.healthcheck!!.asClue {
+                        it.test shouldBe listOf("CMD-SHELL", "/alternative-healthcheck.sh")
+                        it.interval shouldBe 250.milliseconds
+                        it.timeout shouldBe 1500.milliseconds
+                        it.startPeriod shouldBe 550.milliseconds
+                        it.retries shouldBe 3
+                    }
+                } finally {
+                    client.removeContainer(container, force = true)
+                }
+            }
+
             should("be able to inspect a container's healthcheck results") {
                 val healthcheckImage = buildTestImage("healthcheck")
 

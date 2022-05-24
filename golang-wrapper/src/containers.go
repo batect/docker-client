@@ -44,6 +44,12 @@ func CreateContainer(clientHandle DockerClientHandle, request *C.CreateContainer
 		ExposedPorts: exposedPortsForContainer(request),
 		User:         C.GoString(request.User),
 		Tty:          bool(request.AttachTTY),
+		Healthcheck: &container.HealthConfig{
+			Interval:    time.Duration(int64(request.HealthcheckInterval)) * time.Nanosecond,
+			Timeout:     time.Duration(int64(request.HealthcheckTimeout)) * time.Nanosecond,
+			StartPeriod: time.Duration(int64(request.HealthcheckStartPeriod)) * time.Nanosecond,
+			Retries:     int(request.HealthcheckRetries),
+		},
 	}
 
 	if request.CommandCount > 0 {
@@ -52,6 +58,10 @@ func CreateContainer(clientHandle DockerClientHandle, request *C.CreateContainer
 
 	if request.EntrypointCount > 0 {
 		config.Entrypoint = fromStringArray(request.Entrypoint, request.EntrypointCount)
+	}
+
+	if request.HealthcheckCommandCount > 0 {
+		config.Healthcheck.Test = append([]string{"CMD-SHELL"}, fromStringArray(request.HealthcheckCommand, request.HealthcheckCommandCount)...)
 	}
 
 	useInitProcess := bool(request.UseInitProcess)
