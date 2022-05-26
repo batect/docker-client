@@ -44,6 +44,7 @@ abstract class GolangLint @Inject constructor(private val execActionFactory: Exe
     abstract val executablePath: RegularFileProperty
 
     @get:InputDirectory
+    @get:PathSensitive(PathSensitivity.NAME_ONLY) // This will only be correct as long as the directory is named something like 'golang-1.23.4'
     abstract val goRootDirectory: DirectoryProperty
 
     @get:Input
