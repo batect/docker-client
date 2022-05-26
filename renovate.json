@@ -45,7 +45,7 @@
                 ".gradle.kts$"
             ],
             "matchStrings": [
-                "golangVersion\\.set\\(\"(?<currentValue>[\\d.]+([a-z0-9]+)?)\"\\)"
+                "golangVersion\\.set\\(\"(?<currentValue>[\\d.]+([a-z0-9.]+)?)\"\\)"
             ],
             "datasourceTemplate": "github-tags",
             "depNameTemplate": "golang/go",
