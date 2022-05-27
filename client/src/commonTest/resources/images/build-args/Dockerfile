@@ -1,4 +1,4 @@
-FROM alpine:3.15.4
+FROM alpine:3.16.0
 
 ARG FIRST_ARG
 ARG SECOND_ARG
