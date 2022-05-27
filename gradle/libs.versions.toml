@@ -15,6 +15,7 @@ jnr-posix = { group = "com.github.jnr", name = "jnr-posix", version = "3.1.15" }
 okio = { group = "com.squareup.okio", name = "okio", version = "3.1.0" }
 kaml = { group = "com.charleskorn.kaml", name = "kaml", version = "0.44.0" }
 kotest-assertions-core = { group = "io.kotest", name = "kotest-assertions-core", version.ref = "kotest" }
+kotest-assertions-json = { group = "io.kotest", name = "kotest-assertions-json", version.ref = "kotest" }
 kotest-framework-api = { group = "io.kotest", name = "kotest-framework-api", version.ref = "kotest" }
 kotest-framework-engine = { group = "io.kotest", name = "kotest-framework-engine", version.ref = "kotest" }
 kotest-runner-junit5 = { group = "io.kotest", name = "kotest-runner-junit5", version.ref = "kotest" }
