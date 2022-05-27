@@ -113,6 +113,20 @@
                 "^com\\.diffplug\\.spotless$",
                 "^com\\.diffplug\\.spotless:"
             ]
+        },
+        {
+            "groupName": "kotlinx-coroutines",
+            "matchManagers": ["gradle-lite"],
+            "matchPackagePatterns": [
+                "^org\\.jetbrains\\.kotlinx:kotlinx-coroutines"
+            ]
+        },
+        {
+            "groupName": "kotlinx-datetime",
+            "matchManagers": ["gradle-lite"],
+            "matchPackagePatterns": [
+                "^org\\.jetbrains\\.kotlinx:kotlinx-datetime"
+            ]
         }
     ]
 }
