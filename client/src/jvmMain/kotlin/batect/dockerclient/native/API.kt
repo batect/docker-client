@@ -38,8 +38,8 @@ internal interface API {
     fun CreateContext(): ContextHandle
     fun CancelContext(@In contextHandle: ContextHandle)
     fun DestroyContext(@In contextHandle: ContextHandle): Error?
-    fun Ping(@In clientHandle: DockerClientHandle): PingReturn?
-    fun GetDaemonVersionInformation(@In clientHandle: DockerClientHandle): GetDaemonVersionInformationReturn?
+    fun Ping(@In clientHandle: DockerClientHandle, @In contextHandle: ContextHandle): PingReturn?
+    fun GetDaemonVersionInformation(@In clientHandle: DockerClientHandle, @In contextHandle: ContextHandle): GetDaemonVersionInformationReturn?
     fun DeleteImage(@In clientHandle: DockerClientHandle, @In ref: kotlin.String, @In force: Boolean): Error?
     fun GetImage(@In clientHandle: DockerClientHandle, @In ref: kotlin.String): GetImageReturn?
     fun ValidateImageTag(@In tag: kotlin.String): Error?

@@ -115,40 +115,44 @@ internal actual class RealDockerClient actual constructor(configuration: DockerC
         }
     }
 
-    public override fun ping(): PingResponse {
-        Ping(clientHandle)!!.use { ret ->
-            if (ret.pointed.Error != null) {
-                throw PingFailedException(ret.pointed.Error!!.pointed)
+    public override suspend fun ping(): PingResponse {
+        return launchWithGolangContext { context ->
+            Ping(clientHandle, context.handle)!!.use { ret ->
+                if (ret.pointed.Error != null) {
+                    throw PingFailedException(ret.pointed.Error!!.pointed)
+                }
+
+                val response = ret.pointed.Response!!.pointed
+
+                PingResponse(
+                    response.APIVersion!!.toKString(),
+                    response.OSType!!.toKString(),
+                    response.Experimental,
+                    BuilderVersion.fromAPI(response.BuilderVersion!!.toKString())
+                )
             }
-
-            val response = ret.pointed.Response!!.pointed
-
-            return PingResponse(
-                response.APIVersion!!.toKString(),
-                response.OSType!!.toKString(),
-                response.Experimental,
-                BuilderVersion.fromAPI(response.BuilderVersion!!.toKString())
-            )
         }
     }
 
-    public override fun getDaemonVersionInformation(): DaemonVersionInformation {
-        GetDaemonVersionInformation(clientHandle)!!.use { ret ->
-            if (ret.pointed.Error != null) {
-                throw GetDaemonVersionInformationFailedException(ret.pointed.Error!!.pointed)
+    public override suspend fun getDaemonVersionInformation(): DaemonVersionInformation {
+        return launchWithGolangContext { context ->
+            GetDaemonVersionInformation(clientHandle, context.handle)!!.use { ret ->
+                if (ret.pointed.Error != null) {
+                    throw GetDaemonVersionInformationFailedException(ret.pointed.Error!!.pointed)
+                }
+
+                val response = ret.pointed.Response!!.pointed
+
+                DaemonVersionInformation(
+                    response.Version!!.toKString(),
+                    response.APIVersion!!.toKString(),
+                    response.MinAPIVersion!!.toKString(),
+                    response.GitCommit!!.toKString(),
+                    response.OperatingSystem!!.toKString(),
+                    response.Architecture!!.toKString(),
+                    response.Experimental
+                )
             }
-
-            val response = ret.pointed.Response!!.pointed
-
-            return DaemonVersionInformation(
-                response.Version!!.toKString(),
-                response.APIVersion!!.toKString(),
-                response.MinAPIVersion!!.toKString(),
-                response.GitCommit!!.toKString(),
-                response.OperatingSystem!!.toKString(),
-                response.Architecture!!.toKString(),
-                response.Experimental
-            )
         }
     }
 

@@ -24,8 +24,8 @@ import okio.Path
 import kotlin.time.Duration
 
 public interface DockerClient : AutoCloseable {
-    public fun ping(): PingResponse
-    public fun getDaemonVersionInformation(): DaemonVersionInformation
+    public suspend fun ping(): PingResponse
+    public suspend fun getDaemonVersionInformation(): DaemonVersionInformation
 
     public fun listAllVolumes(): Set<VolumeReference>
     public fun createVolume(name: String): VolumeReference

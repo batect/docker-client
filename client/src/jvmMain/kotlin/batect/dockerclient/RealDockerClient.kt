@@ -81,40 +81,44 @@ internal actual class RealDockerClient actual constructor(configuration: DockerC
         }
     }
 
-    public override fun ping(): PingResponse {
-        nativeAPI.Ping(clientHandle)!!.use { ret ->
-            if (ret.error != null) {
-                throw PingFailedException(ret.error!!)
+    public override suspend fun ping(): PingResponse {
+        return launchWithGolangContext { context ->
+            nativeAPI.Ping(clientHandle, context.handle)!!.use { ret ->
+                if (ret.error != null) {
+                    throw PingFailedException(ret.error!!)
+                }
+
+                val response = ret.response!!
+
+                PingResponse(
+                    response.apiVersion.get(),
+                    response.osType.get(),
+                    response.experimental.get(),
+                    BuilderVersion.fromAPI(response.builderVersion.get())
+                )
             }
-
-            val response = ret.response!!
-
-            return PingResponse(
-                response.apiVersion.get(),
-                response.osType.get(),
-                response.experimental.get(),
-                BuilderVersion.fromAPI(response.builderVersion.get())
-            )
         }
     }
 
-    public override fun getDaemonVersionInformation(): DaemonVersionInformation {
-        nativeAPI.GetDaemonVersionInformation(clientHandle)!!.use { ret ->
-            if (ret.error != null) {
-                throw GetDaemonVersionInformationFailedException(ret.error!!)
+    public override suspend fun getDaemonVersionInformation(): DaemonVersionInformation {
+        return launchWithGolangContext { context ->
+            nativeAPI.GetDaemonVersionInformation(clientHandle, context.handle)!!.use { ret ->
+                if (ret.error != null) {
+                    throw GetDaemonVersionInformationFailedException(ret.error!!)
+                }
+
+                val response = ret.response!!
+
+                DaemonVersionInformation(
+                    response.version.get(),
+                    response.apiVersion.get(),
+                    response.minAPIVersion.get(),
+                    response.gitCommit.get(),
+                    response.operatingSystem.get(),
+                    response.architecture.get(),
+                    response.experimental.get()
+                )
             }
-
-            val response = ret.response!!
-
-            return DaemonVersionInformation(
-                response.version.get(),
-                response.apiVersion.get(),
-                response.minAPIVersion.get(),
-                response.gitCommit.get(),
-                response.operatingSystem.get(),
-                response.architecture.get(),
-                response.experimental.get()
-            )
         }
     }
 
