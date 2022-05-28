@@ -34,10 +34,9 @@
   * Add tests to verify that client configuration is actually applied - see TODO in DockerClientBuilderSpec
   * Throw exceptions early (eg. if files provided don't exist)
   * Support for Docker CLI config contexts
-    * Rework configuration API: allow consumer to choose between:
-      * use default CLI context (which falls back to environment variables, then hard-coded defaults)
-      * use specific CLI context
-      * provide all configuration
+    * Rework configuration API:
+      * add method to get CLI context by name
+      * allow consumer to either: pass returned context settings, modify and pass context settings, provide their own settings or use defaults
 * Timeouts and cancellation for calls
   * Add tests to verify this is working as expected
   * Go through all methods and check for any use of context.Background()
