@@ -27,13 +27,13 @@ public interface DockerClient : AutoCloseable {
     public suspend fun ping(): PingResponse
     public suspend fun getDaemonVersionInformation(): DaemonVersionInformation
 
-    public fun listAllVolumes(): Set<VolumeReference>
-    public fun createVolume(name: String): VolumeReference
-    public fun deleteVolume(volume: VolumeReference)
+    public suspend fun listAllVolumes(): Set<VolumeReference>
+    public suspend fun createVolume(name: String): VolumeReference
+    public suspend fun deleteVolume(volume: VolumeReference)
 
-    public fun createNetwork(name: String, driver: String): NetworkReference
-    public fun deleteNetwork(network: NetworkReference)
-    public fun getNetworkByNameOrID(searchFor: String): NetworkReference?
+    public suspend fun createNetwork(name: String, driver: String): NetworkReference
+    public suspend fun deleteNetwork(network: NetworkReference)
+    public suspend fun getNetworkByNameOrID(searchFor: String): NetworkReference?
 
     public fun pullImage(name: String, onProgressUpdate: ImagePullProgressReceiver = {}): ImageReference
     public fun deleteImage(image: ImageReference, force: Boolean = false)

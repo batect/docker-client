@@ -19,22 +19,22 @@ import (
 		#include "types.h"
 	*/
 	"C"
-	"context"
 
 	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/client"
 )
 
 //export CreateNetwork
-func CreateNetwork(clientHandle DockerClientHandle, name *C.char, driver *C.char) CreateNetworkReturn {
+func CreateNetwork(clientHandle DockerClientHandle, contextHandle ContextHandle, name *C.char, driver *C.char) CreateNetworkReturn {
 	docker := clientHandle.DockerAPIClient()
+	ctx := contextHandle.Context()
 
 	opts := types.NetworkCreate{
 		CheckDuplicate: true,
 		Driver:         C.GoString(driver),
 	}
 
-	dockerResponse, err := docker.NetworkCreate(context.Background(), C.GoString(name), opts)
+	dockerResponse, err := docker.NetworkCreate(ctx, C.GoString(name), opts)
 
 	if err != nil {
 		return newCreateNetworkReturn(nil, toError(err))
@@ -46,19 +46,21 @@ func CreateNetwork(clientHandle DockerClientHandle, name *C.char, driver *C.char
 }
 
 //export DeleteNetwork
-func DeleteNetwork(clientHandle DockerClientHandle, id *C.char) Error {
+func DeleteNetwork(clientHandle DockerClientHandle, contextHandle ContextHandle, id *C.char) Error {
 	docker := clientHandle.DockerAPIClient()
+	ctx := contextHandle.Context()
 
-	err := docker.NetworkRemove(context.Background(), C.GoString(id))
+	err := docker.NetworkRemove(ctx, C.GoString(id))
 
 	return toError(err)
 }
 
 //export GetNetworkByNameOrID
-func GetNetworkByNameOrID(clientHandle DockerClientHandle, searchFor *C.char) GetNetworkByNameOrIDReturn {
+func GetNetworkByNameOrID(clientHandle DockerClientHandle, contextHandle ContextHandle, searchFor *C.char) GetNetworkByNameOrIDReturn {
 	docker := clientHandle.DockerAPIClient()
+	ctx := contextHandle.Context()
 
-	dockerResponse, err := docker.NetworkInspect(context.Background(), C.GoString(searchFor), types.NetworkInspectOptions{})
+	dockerResponse, err := docker.NetworkInspect(ctx, C.GoString(searchFor), types.NetworkInspectOptions{})
 
 	if err != nil {
 		if client.IsErrNotFound(err) {

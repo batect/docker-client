@@ -156,59 +156,71 @@ internal actual class RealDockerClient actual constructor(configuration: DockerC
         }
     }
 
-    public override fun listAllVolumes(): Set<VolumeReference> {
-        ListAllVolumes(clientHandle)!!.use { ret ->
-            if (ret.pointed.Error != null) {
-                throw ListAllVolumesFailedException(ret.pointed.Error!!.pointed)
-            }
+    public override suspend fun listAllVolumes(): Set<VolumeReference> {
+        return launchWithGolangContext { context ->
+            ListAllVolumes(clientHandle, context.handle)!!.use { ret ->
+                if (ret.pointed.Error != null) {
+                    throw ListAllVolumesFailedException(ret.pointed.Error!!.pointed)
+                }
 
-            return fromArray(ret.pointed.Volumes!!, ret.pointed.VolumesCount) { VolumeReference(it) }.toSet()
+                fromArray(ret.pointed.Volumes!!, ret.pointed.VolumesCount) { VolumeReference(it) }.toSet()
+            }
         }
     }
 
-    public override fun createVolume(name: String): VolumeReference {
-        CreateVolume(clientHandle, name.cstr)!!.use { ret ->
-            if (ret.pointed.Error != null) {
-                throw VolumeCreationFailedException(ret.pointed.Error!!.pointed)
-            }
+    public override suspend fun createVolume(name: String): VolumeReference {
+        return launchWithGolangContext { context ->
+            CreateVolume(clientHandle, context.handle, name.cstr)!!.use { ret ->
+                if (ret.pointed.Error != null) {
+                    throw VolumeCreationFailedException(ret.pointed.Error!!.pointed)
+                }
 
-            return VolumeReference(ret.pointed.Response!!.pointed)
+                VolumeReference(ret.pointed.Response!!.pointed)
+            }
         }
     }
 
-    public override fun deleteVolume(volume: VolumeReference) {
-        DeleteVolume(clientHandle, volume.name.cstr).ifFailed { error ->
-            throw VolumeDeletionFailedException(error.pointed)
+    public override suspend fun deleteVolume(volume: VolumeReference) {
+        return launchWithGolangContext { context ->
+            DeleteVolume(clientHandle, context.handle, volume.name.cstr).ifFailed { error ->
+                throw VolumeDeletionFailedException(error.pointed)
+            }
         }
     }
 
-    public override fun createNetwork(name: String, driver: String): NetworkReference {
-        CreateNetwork(clientHandle, name.cstr, driver.cstr)!!.use { ret ->
-            if (ret.pointed.Error != null) {
-                throw NetworkCreationFailedException(ret.pointed.Error!!.pointed)
-            }
+    public override suspend fun createNetwork(name: String, driver: String): NetworkReference {
+        return launchWithGolangContext { context ->
+            CreateNetwork(clientHandle, context.handle, name.cstr, driver.cstr)!!.use { ret ->
+                if (ret.pointed.Error != null) {
+                    throw NetworkCreationFailedException(ret.pointed.Error!!.pointed)
+                }
 
-            return NetworkReference(ret.pointed.Response!!.pointed)
+                NetworkReference(ret.pointed.Response!!.pointed)
+            }
         }
     }
 
-    public override fun deleteNetwork(network: NetworkReference) {
-        DeleteNetwork(clientHandle, network.id.cstr).ifFailed { error ->
-            throw NetworkDeletionFailedException(error.pointed)
+    public override suspend fun deleteNetwork(network: NetworkReference) {
+        return launchWithGolangContext { context ->
+            DeleteNetwork(clientHandle, context.handle, network.id.cstr).ifFailed { error ->
+                throw NetworkDeletionFailedException(error.pointed)
+            }
         }
     }
 
-    public override fun getNetworkByNameOrID(searchFor: String): NetworkReference? {
-        GetNetworkByNameOrID(clientHandle, searchFor.cstr)!!.use { ret ->
-            if (ret.pointed.Error != null) {
-                throw NetworkRetrievalFailedException(ret.pointed.Error!!.pointed)
-            }
+    public override suspend fun getNetworkByNameOrID(searchFor: String): NetworkReference? {
+        return launchWithGolangContext { context ->
+            GetNetworkByNameOrID(clientHandle, context.handle, searchFor.cstr)!!.use { ret ->
+                if (ret.pointed.Error != null) {
+                    throw NetworkRetrievalFailedException(ret.pointed.Error!!.pointed)
+                }
 
-            if (ret.pointed.Response == null) {
-                return null
+                if (ret.pointed.Response == null) {
+                    null
+                } else {
+                    NetworkReference(ret.pointed.Response!!.pointed)
+                }
             }
-
-            return NetworkReference(ret.pointed.Response!!.pointed)
         }
     }
 

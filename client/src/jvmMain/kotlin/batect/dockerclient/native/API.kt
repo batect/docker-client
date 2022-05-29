@@ -48,12 +48,12 @@ internal interface API {
     fun PullImage(@In clientHandle: DockerClientHandle, @In ref: kotlin.String, @In onProgressUpdate: PullImageProgressCallback, @In callbackUserData: Pointer?): PullImageReturn?
     fun CreateOutputPipe(): CreateOutputPipeReturn?
     fun DisposeOutputPipe(@In handle: OutputStreamHandle): Error?
-    fun CreateNetwork(@In clientHandle: DockerClientHandle, @In name: kotlin.String, @In driver: kotlin.String): CreateNetworkReturn?
-    fun DeleteNetwork(@In clientHandle: DockerClientHandle, @In id: kotlin.String): Error?
-    fun GetNetworkByNameOrID(@In clientHandle: DockerClientHandle, @In searchFor: kotlin.String): GetNetworkByNameOrIDReturn?
-    fun CreateVolume(@In clientHandle: DockerClientHandle, @In name: kotlin.String): CreateVolumeReturn?
-    fun DeleteVolume(@In clientHandle: DockerClientHandle, @In name: kotlin.String): Error?
-    fun ListAllVolumes(@In clientHandle: DockerClientHandle): ListAllVolumesReturn?
+    fun CreateNetwork(@In clientHandle: DockerClientHandle, @In contextHandle: ContextHandle, @In name: kotlin.String, @In driver: kotlin.String): CreateNetworkReturn?
+    fun DeleteNetwork(@In clientHandle: DockerClientHandle, @In contextHandle: ContextHandle, @In id: kotlin.String): Error?
+    fun GetNetworkByNameOrID(@In clientHandle: DockerClientHandle, @In contextHandle: ContextHandle, @In searchFor: kotlin.String): GetNetworkByNameOrIDReturn?
+    fun CreateVolume(@In clientHandle: DockerClientHandle, @In contextHandle: ContextHandle, @In name: kotlin.String): CreateVolumeReturn?
+    fun DeleteVolume(@In clientHandle: DockerClientHandle, @In contextHandle: ContextHandle, @In name: kotlin.String): Error?
+    fun ListAllVolumes(@In clientHandle: DockerClientHandle, @In contextHandle: ContextHandle): ListAllVolumesReturn?
     fun FreeError(@In value: Error)
     fun AllocError(): Error?
     fun FreeTLSConfiguration(@In value: TLSConfiguration)
