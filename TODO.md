@@ -37,10 +37,7 @@
       * add method to get CLI context by name
       * allow consumer to either: pass returned context settings, modify and pass context settings, provide their own settings or use defaults
 * Timeouts and cancellation for calls
-  * Add tests to verify this is working as expected
   * Go through all methods and check for any use of context.Background()
-  * Methods left to do:
-    * `buildImage`
 
 * Check that Golang code can return an empty list (eg. listing all volumes returns no volumes)
 

@@ -51,12 +51,13 @@ var errDockerAuthProviderDoesNotSupportLogging = errors.New("DockerAuthProvider 
 
 func buildImageWithBuildKitBuilder(
 	clientHandle DockerClientHandle,
+	ctx context.Context,
 	request *imageBuildRequest,
 	outputStreamHandle OutputStreamHandle,
 	onProgressUpdate BuildImageProgressCallback,
 	callbackUserData unsafe.Pointer,
 ) BuildImageReturn {
-	if supported, err := supportsBuildKit(clientHandle); err != nil {
+	if supported, err := supportsBuildKit(ctx, clientHandle); err != nil {
 		return newBuildImageReturn(nil, toError(err))
 	} else if !supported {
 		return newBuildImageReturn(nil, toError(ErrBuildKitNotSupported))
@@ -64,9 +65,9 @@ func buildImageWithBuildKitBuilder(
 
 	docker := clientHandle.DockerAPIClient()
 	configFile := clientHandle.ClientConfigFile()
-	eg, ctx := errgroup.WithContext(context.TODO())
+	eg, ctx := errgroup.WithContext(ctx)
 	tracer := newBuildKitBuildTracer(outputStreamHandle, eg, onProgressUpdate, callbackUserData)
-	sess, err := createSession(request, tracer)
+	sess, err := createSession(ctx, request, tracer)
 
 	if err != nil {
 		return newBuildImageReturn(nil, toError(err))
@@ -97,14 +98,14 @@ func buildImageWithBuildKitBuilder(
 }
 
 // This is based on isSessionSupported from github.com/docker/cli/cli/command/image/build_session.go
-func supportsBuildKit(clientHandle DockerClientHandle) (bool, error) {
+func supportsBuildKit(ctx context.Context, clientHandle DockerClientHandle) (bool, error) {
 	docker := clientHandle.DockerAPIClient()
 
 	if versions.GreaterThanOrEqualTo(docker.ClientVersion(), "1.39") {
 		return true, nil
 	}
 
-	serverInfo, err := clientHandle.ServerInfo()
+	serverInfo, err := clientHandle.ServerInfo(ctx)
 
 	if err != nil {
 		return false, err
@@ -118,10 +119,10 @@ type loggingAttachable interface {
 }
 
 // This function is based on trySession() from github.com/docker/cli/command/image/build_session.go
-func createSession(request *imageBuildRequest, tracer *buildKitBuildTracer) (*session.Session, error) {
+func createSession(ctx context.Context, request *imageBuildRequest, tracer *buildKitBuildTracer) (*session.Session, error) {
 	sharedKey := buildkit.GetBuildSharedKey(request.ContextDirectory)
 
-	sess, err := session.NewSession(context.Background(), filepath.Base(request.ContextDirectory), sharedKey)
+	sess, err := session.NewSession(ctx, filepath.Base(request.ContextDirectory), sharedKey)
 
 	if err != nil {
 		return nil, fmt.Errorf("failed to create session: %w", err)

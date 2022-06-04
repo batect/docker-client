@@ -16,6 +16,7 @@
 
 package batect.dockerclient
 
+import batect.dockerclient.io.PreparedOutputStream
 import batect.dockerclient.io.TextOutput
 import batect.dockerclient.native.AttachToContainerOutput
 import batect.dockerclient.native.BuildImage
@@ -73,7 +74,6 @@ import kotlinx.cinterop.ptr
 import kotlinx.cinterop.staticCFunction
 import kotlinx.cinterop.toKString
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withContext
 import kotlinx.datetime.Instant
 import kotlin.time.Duration
@@ -272,40 +272,44 @@ internal actual class RealDockerClient actual constructor(configuration: DockerC
         }
     }
 
-    public override fun buildImage(spec: ImageBuildSpec, output: TextOutput, onProgressUpdate: ImageBuildProgressReceiver): ImageReference {
-        memScoped {
-            output.prepareStream().use { stream ->
-                val callbackState = CallbackState<BuildImageProgressUpdate> { progress ->
-                    onProgressUpdate.invoke(ImageBuildProgressUpdate(progress!!.pointed))
+    public override suspend fun buildImage(spec: ImageBuildSpec, output: TextOutput, onProgressUpdate: ImageBuildProgressReceiver): ImageReference {
+        output.prepareStream().use { stream ->
+            val callbackState = CallbackState<BuildImageProgressUpdate> { progress ->
+                onProgressUpdate.invoke(ImageBuildProgressUpdate(progress!!.pointed))
+            }
+
+            return withContext(IODispatcher) {
+                launch { stream.run() }
+
+                launchWithGolangContext { context ->
+                    buildImage(spec, stream, callbackState, context, onProgressUpdate)
                 }
+            }
+        }
+    }
 
-                return runBlocking(IODispatcher) {
-                    launch { stream.run() }
+    private fun buildImage(spec: ImageBuildSpec, stream: PreparedOutputStream, callbackState: CallbackState<BuildImageProgressUpdate>, context: GolangContext, onProgressUpdate: ImageBuildProgressReceiver): ImageReference {
+        return memScoped {
+            callbackState.use { callback, callbackUserData ->
+                BuildImage(clientHandle, context.handle, allocBuildImageRequest(spec).ptr, stream.outputStreamHandle, callback, callbackUserData)!!.use { ret ->
+                    if (ret.pointed.Error != null) {
+                        val errorType = ret.pointed.Error!!.pointed.Type!!.toKString()
 
-                    callbackState.use { callback, callbackUserData ->
-                        BuildImage(
-                            clientHandle,
-                            allocBuildImageRequest(spec).ptr,
-                            stream.outputStreamHandle,
-                            callback,
-                            callbackUserData
-                        )!!.use { ret ->
-                            if (ret.pointed.Error != null) {
-                                val errorType = ret.pointed.Error!!.pointed.Type!!.toKString()
-
-                                if (errorType == "main.ProgressCallbackFailedError") {
-                                    throw ImageBuildFailedException("Image build progress receiver threw an exception: ${callbackState.exceptionThrown}", callbackState.exceptionThrown, errorType)
-                                }
-
-                                throw ImageBuildFailedException(ret.pointed.Error!!.pointed)
-                            }
-
-                            val imageReference = ImageReference(ret.pointed.Response!!.pointed)
-                            onProgressUpdate(BuildComplete(imageReference))
-
-                            imageReference
+                        if (errorType == "main.ProgressCallbackFailedError") {
+                            throw ImageBuildFailedException(
+                                "Image build progress receiver threw an exception: ${callbackState.exceptionThrown}",
+                                callbackState.exceptionThrown,
+                                errorType
+                            )
                         }
+
+                        throw ImageBuildFailedException(ret.pointed.Error!!.pointed)
                     }
+
+                    val imageReference = ImageReference(ret.pointed.Response!!.pointed)
+                    onProgressUpdate(BuildComplete(imageReference))
+
+                    imageReference
                 }
             }
         }

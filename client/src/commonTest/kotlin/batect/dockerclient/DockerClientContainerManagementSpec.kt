@@ -59,7 +59,7 @@ class DockerClientContainerManagementSpec : ShouldSpec({
         val client = closeAfterTest(DockerClient.Builder().build())
         val image = client.pullImage("alpine:3.15.0")
 
-        fun buildTestImage(name: String): ImageReference {
+        suspend fun buildTestImage(name: String): ImageReference {
             val path = systemFileSystem.canonicalize("./src/commonTest/resources/images/$name".toPath())
             val spec = ImageBuildSpec.Builder(path).build()
 

@@ -60,7 +60,6 @@ import jnr.ffi.Runtime
 import jnr.ffi.Struct
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withContext
 import kotlinx.datetime.Instant
 import kotlin.time.Duration
@@ -253,7 +252,7 @@ internal actual class RealDockerClient actual constructor(configuration: DockerC
         }
     }
 
-    override fun buildImage(spec: ImageBuildSpec, output: TextOutput, onProgressUpdate: ImageBuildProgressReceiver): ImageReference {
+    override suspend fun buildImage(spec: ImageBuildSpec, output: TextOutput, onProgressUpdate: ImageBuildProgressReceiver): ImageReference {
         var exceptionThrownInCallback: Throwable? = null
 
         val callback = object : BuildImageProgressCallback {
@@ -272,25 +271,27 @@ internal actual class RealDockerClient actual constructor(configuration: DockerC
         }
 
         output.prepareStream().use { stream ->
-            return runBlocking(Dispatchers.IO) {
+            return withContext(Dispatchers.IO) {
                 launch { stream.run() }
 
-                nativeAPI.BuildImage(clientHandle, BuildImageRequest(spec), stream.outputStreamHandle.toLong(), callback, null)!!.use { ret ->
-                    if (ret.error != null) {
-                        if (ret.error!!.type.get() == "main.ProgressCallbackFailedError") {
-                            throw ImageBuildFailedException(
-                                "Image build progress receiver threw an exception: $exceptionThrownInCallback",
-                                exceptionThrownInCallback
-                            )
+                launchWithGolangContext { context ->
+                    nativeAPI.BuildImage(clientHandle, context.handle, BuildImageRequest(spec), stream.outputStreamHandle.toLong(), callback, null)!!.use { ret ->
+                        if (ret.error != null) {
+                            if (ret.error!!.type.get() == "main.ProgressCallbackFailedError") {
+                                throw ImageBuildFailedException(
+                                    "Image build progress receiver threw an exception: $exceptionThrownInCallback",
+                                    exceptionThrownInCallback
+                                )
+                            }
+
+                            throw ImageBuildFailedException(ret.error!!)
                         }
 
-                        throw ImageBuildFailedException(ret.error!!)
+                        val imageReference = ImageReference(ret.response!!)
+                        onProgressUpdate(BuildComplete(imageReference))
+
+                        imageReference
                     }
-
-                    val imageReference = ImageReference(ret.response!!)
-                    onProgressUpdate(BuildComplete(imageReference))
-
-                    imageReference
                 }
             }
         }

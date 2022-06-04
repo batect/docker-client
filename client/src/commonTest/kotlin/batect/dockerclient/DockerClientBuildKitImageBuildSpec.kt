@@ -27,18 +27,25 @@ import io.kotest.matchers.collections.shouldContain
 import io.kotest.matchers.collections.shouldContainAnyOf
 import io.kotest.matchers.collections.shouldContainInOrder
 import io.kotest.matchers.collections.shouldEndWith
+import io.kotest.matchers.comparables.shouldBeLessThan
 import io.kotest.matchers.longs.shouldBeGreaterThan
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
 import io.kotest.matchers.string.shouldContain
 import io.kotest.matchers.string.shouldMatch
 import io.kotest.matchers.types.shouldBeTypeOf
+import kotlinx.coroutines.TimeoutCancellationException
+import kotlinx.coroutines.withTimeout
 import okio.Buffer
 import okio.FileSystem
 import okio.Path
 import okio.Path.Companion.toPath
 import kotlin.random.Random
+import kotlin.time.Duration.Companion.milliseconds
+import kotlin.time.ExperimentalTime
+import kotlin.time.measureTime
 
+@ExperimentalTime
 @OptIn(ExperimentalKotest::class)
 class DockerClientBuildKitImageBuildSpec : ShouldSpec({
     val rootTestImagesDirectory: Path = FileSystem.SYSTEM.canonicalize("./src/commonTest/resources/images".toPath())
@@ -683,6 +690,25 @@ class DockerClientBuildKitImageBuildSpec : ShouldSpec({
             outputText shouldContain "Value of http_proxy is https://http-proxy"
             outputText shouldContain "Value of NO_PROXY is https://no-proxy"
             outputText shouldContain "Value of no_proxy is https://no-proxy"
+        }
+
+        should("be able to use Kotlin timeouts to abort a build") {
+            val spec = ImageBuildSpec.Builder(rootTestImagesDirectory.resolve("slow-build"))
+                .withBuildKitBuilder()
+                .withNoBuildCache()
+                .build()
+
+            val output = Buffer()
+
+            val duration = measureTime {
+                shouldThrow<TimeoutCancellationException> {
+                    withTimeout(500.milliseconds) {
+                        client.buildImage(spec, SinkTextOutput(output))
+                    }
+                }
+            }
+
+            duration shouldBeLessThan 700.milliseconds
         }
     }
 })

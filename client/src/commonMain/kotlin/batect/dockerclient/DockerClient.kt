@@ -39,7 +39,7 @@ public interface DockerClient : AutoCloseable {
     public suspend fun deleteImage(image: ImageReference, force: Boolean = false)
     public suspend fun getImage(name: String): ImageReference?
 
-    public fun buildImage(spec: ImageBuildSpec, output: TextOutput, onProgressUpdate: ImageBuildProgressReceiver = {}): ImageReference
+    public suspend fun buildImage(spec: ImageBuildSpec, output: TextOutput, onProgressUpdate: ImageBuildProgressReceiver = {}): ImageReference
     public suspend fun pruneImageBuildCache()
 
     public suspend fun createContainer(spec: ContainerCreationSpec): ContainerReference
