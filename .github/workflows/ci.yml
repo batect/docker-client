@@ -153,10 +153,9 @@ jobs:
           key: tools-${{ runner.os }}-${{ hashFiles('**/*.gradle.kts', 'buildSrc/src/**/*.kt') }}
 
       - name: Run linting
-        # :golang-wrapper:lint: disabled until https://github.com/golangci/golangci-lint/issues/2649 is resolved
         uses: burrunan/gradle-cache-action@v1.10
         with:
-          arguments: golang-wrapper:check --exclude-task :golang-wrapper:lint --scan
+          arguments: golang-wrapper:check --scan
 
   check-build-logic:
     name: "Lint, test and check build logic"

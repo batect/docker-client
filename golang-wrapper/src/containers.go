@@ -37,6 +37,33 @@ func CreateContainer(clientHandle DockerClientHandle, contextHandle ContextHandl
 	docker := clientHandle.DockerAPIClient()
 	ctx := contextHandle.Context()
 
+	config := configForContainer(request)
+	hostConfig := hostConfigForContainer(request)
+	networkingConfig := network.NetworkingConfig{}
+	networkName := C.GoString(request.NetworkReference)
+
+	if networkName != "" {
+		hostConfig.NetworkMode = container.NetworkMode(networkName)
+
+		networkingConfig.EndpointsConfig = map[string]*network.EndpointSettings{
+			networkName: {
+				Aliases: fromStringArray(request.NetworkAliases, request.NetworkAliasesCount),
+			},
+		}
+	}
+
+	containerName := C.GoString(request.Name)
+
+	createdContainer, err := docker.ContainerCreate(ctx, &config, &hostConfig, &networkingConfig, nil, containerName)
+
+	if err != nil {
+		return newCreateContainerReturn(nil, toError(err))
+	}
+
+	return newCreateContainerReturn(newContainerReference(createdContainer.ID), nil)
+}
+
+func configForContainer(request *C.CreateContainerRequest) container.Config {
 	config := container.Config{
 		Image:        C.GoString(request.ImageReference),
 		WorkingDir:   C.GoString(request.WorkingDirectory),
@@ -66,6 +93,10 @@ func CreateContainer(clientHandle DockerClientHandle, contextHandle ContextHandl
 		config.Healthcheck.Test = append([]string{"CMD-SHELL"}, fromStringArray(request.HealthcheckCommand, request.HealthcheckCommandCount)...)
 	}
 
+	return config
+}
+
+func hostConfigForContainer(request *C.CreateContainerRequest) container.HostConfig {
 	useInitProcess := bool(request.UseInitProcess)
 
 	hostConfig := container.HostConfig{
@@ -87,28 +118,7 @@ func CreateContainer(clientHandle DockerClientHandle, contextHandle ContextHandl
 		},
 	}
 
-	networkingConfig := network.NetworkingConfig{}
-	networkName := C.GoString(request.NetworkReference)
-
-	if networkName != "" {
-		hostConfig.NetworkMode = container.NetworkMode(networkName)
-
-		networkingConfig.EndpointsConfig = map[string]*network.EndpointSettings{
-			networkName: {
-				Aliases: fromStringArray(request.NetworkAliases, request.NetworkAliasesCount),
-			},
-		}
-	}
-
-	containerName := C.GoString(request.Name)
-
-	createdContainer, err := docker.ContainerCreate(ctx, &config, &hostConfig, &networkingConfig, nil, containerName)
-
-	if err != nil {
-		return newCreateContainerReturn(nil, toError(err))
-	}
-
-	return newCreateContainerReturn(newContainerReference(createdContainer.ID), nil)
+	return hostConfig
 }
 
 //export StartContainer

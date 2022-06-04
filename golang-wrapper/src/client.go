@@ -55,28 +55,7 @@ type activeClient struct {
 
 //export CreateClient
 func CreateClient(cfg *C.ClientConfiguration) CreateClientReturn {
-	opts := []client.Opt{
-		client.WithAPIVersionNegotiation(),
-	}
-
-	if cfg.UseConfigurationFromEnvironment {
-		opts = append(opts, client.FromEnv)
-	}
-
-	if cfg.Host != nil {
-		opts = append(opts, client.WithHost(C.GoString(cfg.Host)))
-	}
-
-	if cfg.TLS != nil {
-		opts = append(opts, withTLSClientConfig(
-			C.GoString(cfg.TLS.CAFilePath),
-			C.GoString(cfg.TLS.CertFilePath),
-			C.GoString(cfg.TLS.KeyFilePath),
-			bool(cfg.TLS.InsecureSkipVerify),
-		))
-	}
-
-	c, err := client.NewClientWithOpts(opts...)
+	c, err := client.NewClientWithOpts(optsForClient(cfg)...)
 
 	if err != nil {
 		return newCreateClientReturn(0, toError(err))
@@ -120,6 +99,31 @@ func CreateClient(cfg *C.ClientConfiguration) CreateClientReturn {
 	nextClientHandle++
 
 	return newCreateClientReturn(clientIndex, nil)
+}
+
+func optsForClient(cfg *C.ClientConfiguration) []client.Opt {
+	opts := []client.Opt{
+		client.WithAPIVersionNegotiation(),
+	}
+
+	if cfg.UseConfigurationFromEnvironment {
+		opts = append(opts, client.FromEnv)
+	}
+
+	if cfg.Host != nil {
+		opts = append(opts, client.WithHost(C.GoString(cfg.Host)))
+	}
+
+	if cfg.TLS != nil {
+		opts = append(opts, withTLSClientConfig(
+			C.GoString(cfg.TLS.CAFilePath),
+			C.GoString(cfg.TLS.CertFilePath),
+			C.GoString(cfg.TLS.KeyFilePath),
+			bool(cfg.TLS.InsecureSkipVerify),
+		))
+	}
+
+	return opts
 }
 
 // The Docker client library does not expose a version of WithTLSClientConfig that allows us to set
