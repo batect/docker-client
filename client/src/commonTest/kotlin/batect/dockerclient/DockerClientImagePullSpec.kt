@@ -228,7 +228,7 @@ class DockerClientImagePullSpec : ShouldSpec({
     }
 })
 
-internal fun DockerClient.deleteImageIfPresent(name: String) {
+internal suspend fun DockerClient.deleteImageIfPresent(name: String) {
     val image = getImage(name)
 
     if (image != null) {

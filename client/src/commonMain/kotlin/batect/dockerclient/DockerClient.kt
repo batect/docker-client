@@ -36,14 +36,14 @@ public interface DockerClient : AutoCloseable {
     public suspend fun getNetworkByNameOrID(searchFor: String): NetworkReference?
 
     public fun pullImage(name: String, onProgressUpdate: ImagePullProgressReceiver = {}): ImageReference
-    public fun deleteImage(image: ImageReference, force: Boolean = false)
-    public fun getImage(name: String): ImageReference?
+    public suspend fun deleteImage(image: ImageReference, force: Boolean = false)
+    public suspend fun getImage(name: String): ImageReference?
 
     public fun buildImage(spec: ImageBuildSpec, output: TextOutput, onProgressUpdate: ImageBuildProgressReceiver = {}): ImageReference
-    public fun pruneImageBuildCache()
+    public suspend fun pruneImageBuildCache()
 
-    public fun createContainer(spec: ContainerCreationSpec): ContainerReference
-    public fun startContainer(container: ContainerReference)
+    public suspend fun createContainer(spec: ContainerCreationSpec): ContainerReference
+    public suspend fun startContainer(container: ContainerReference)
     public fun stopContainer(container: ContainerReference, timeout: Duration)
     public fun removeContainer(container: ContainerReference, force: Boolean = false, removeVolumes: Boolean = false)
     public suspend fun attachToContainerOutput(container: ContainerReference, stdout: TextOutput, stderr: TextOutput, attachedNotification: ReadyNotification? = null)

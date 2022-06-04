@@ -246,23 +246,27 @@ internal actual class RealDockerClient actual constructor(configuration: DockerC
         }
     }
 
-    public override fun deleteImage(image: ImageReference, force: Boolean) {
-        DeleteImage(clientHandle, image.id.cstr, force).ifFailed { error ->
-            throw ImageDeletionFailedException(error.pointed)
+    public override suspend fun deleteImage(image: ImageReference, force: Boolean) {
+        launchWithGolangContext { context ->
+            DeleteImage(clientHandle, context.handle, image.id.cstr, force).ifFailed { error ->
+                throw ImageDeletionFailedException(error.pointed)
+            }
         }
     }
 
-    public override fun getImage(name: String): ImageReference? {
-        GetImage(clientHandle, name.cstr)!!.use { ret ->
-            if (ret.pointed.Error != null) {
-                throw ImageRetrievalFailedException(ret.pointed.Error!!.pointed)
-            }
+    public override suspend fun getImage(name: String): ImageReference? {
+        return launchWithGolangContext { context ->
+            GetImage(clientHandle, context.handle, name.cstr)!!.use { ret ->
+                if (ret.pointed.Error != null) {
+                    throw ImageRetrievalFailedException(ret.pointed.Error!!.pointed)
+                }
 
-            if (ret.pointed.Response == null) {
-                return null
+                if (ret.pointed.Response == null) {
+                    null
+                } else {
+                    ImageReference(ret.pointed.Response!!.pointed)
+                }
             }
-
-            return ImageReference(ret.pointed.Response!!.pointed)
         }
     }
 
@@ -320,22 +324,26 @@ internal actual class RealDockerClient actual constructor(configuration: DockerC
         }
     }
 
-    public override fun pruneImageBuildCache() {
-        PruneImageBuildCache(clientHandle).ifFailed { error ->
-            throw ImageBuildCachePruneFailedException(error.pointed)
+    public override suspend fun pruneImageBuildCache() {
+        launchWithGolangContext { context ->
+            PruneImageBuildCache(clientHandle, context.handle).ifFailed { error ->
+                throw ImageBuildCachePruneFailedException(error.pointed)
+            }
         }
     }
 
-    override fun createContainer(spec: ContainerCreationSpec): ContainerReference {
+    public override suspend fun createContainer(spec: ContainerCreationSpec): ContainerReference {
         spec.ensureValid()
 
-        memScoped {
-            CreateContainer(clientHandle, allocCreateContainerRequest(spec).ptr)!!.use { ret ->
-                if (ret.pointed.Error != null) {
-                    throw ContainerCreationFailedException(ret.pointed.Error!!.pointed)
-                }
+        return launchWithGolangContext { context ->
+            memScoped {
+                CreateContainer(clientHandle, context.handle, allocCreateContainerRequest(spec).ptr)!!.use { ret ->
+                    if (ret.pointed.Error != null) {
+                        throw ContainerCreationFailedException(ret.pointed.Error!!.pointed)
+                    }
 
-                return ContainerReference(ret.pointed.Response!!.pointed.ID!!.toKString())
+                    ContainerReference(ret.pointed.Response!!.pointed.ID!!.toKString())
+                }
             }
         }
     }
@@ -414,13 +422,15 @@ internal actual class RealDockerClient actual constructor(configuration: DockerC
         }
     }
 
-    override fun startContainer(container: ContainerReference) {
-        StartContainer(clientHandle, container.id.cstr).ifFailed { error ->
-            throw ContainerStartFailedException(error.pointed)
+    public override suspend fun startContainer(container: ContainerReference) {
+        launchWithGolangContext { context ->
+            StartContainer(clientHandle, context.handle, container.id.cstr).ifFailed { error ->
+                throw ContainerStartFailedException(error.pointed)
+            }
         }
     }
 
-    override fun stopContainer(container: ContainerReference, timeout: Duration) {
+    public override fun stopContainer(container: ContainerReference, timeout: Duration) {
         StopContainer(clientHandle, container.id.cstr, timeout.inWholeSeconds).ifFailed { error ->
             throw ContainerStopFailedException(error.pointed)
         }

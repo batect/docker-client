@@ -563,7 +563,7 @@ class DockerClientLegacyImageBuildSpec : ShouldSpec({
     }
 })
 
-internal fun DockerClient.removeBaseImagesIfPresent(dockerfile: Path) {
+internal suspend fun DockerClient.removeBaseImagesIfPresent(dockerfile: Path) {
     val dockerfileContent = readFileContents(dockerfile)
     val fromRegex = """^FROM ([a-zA-Z0-9./_-]+(:[a-zA-Z0-9./_-]+)?(@sha256:[0-9a-f]{64})?)$""".toRegex(RegexOption.MULTILINE)
 

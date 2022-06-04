@@ -19,7 +19,6 @@ import (
 		#include "types.h"
 	*/
 	"C"
-	"context"
 	"encoding/json"
 	"errors"
 	"io"
@@ -247,8 +246,9 @@ func (p *imageBuildProgressCallback) onContextUploadProgress(currentStep int64, 
 }
 
 //export PruneImageBuildCache
-func PruneImageBuildCache(clientHandle DockerClientHandle) Error {
+func PruneImageBuildCache(clientHandle DockerClientHandle, contextHandle ContextHandle) Error {
 	docker := clientHandle.DockerAPIClient()
+	ctx := contextHandle.Context()
 
 	opts := types.BuildCachePruneOptions{
 		All:         false,
@@ -256,7 +256,7 @@ func PruneImageBuildCache(clientHandle DockerClientHandle) Error {
 		Filters:     filters.Args{},
 	}
 
-	_, err := docker.BuildCachePrune(context.Background(), opts)
+	_, err := docker.BuildCachePrune(ctx, opts)
 
 	return toError(err)
 }

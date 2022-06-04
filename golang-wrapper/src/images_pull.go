@@ -147,7 +147,7 @@ func processPullResponse(docker *client.Client, responseBody io.ReadCloser, orig
 		}
 	}
 
-	ref, err := getImageReference(docker, lookupReference.String())
+	ref, err := getImageReference(context.Background(), docker, lookupReference.String())
 
 	if err != nil {
 		return newPullImageReturn(nil, toError(fmt.Errorf("could not get image reference after pulling image: %w", err)))

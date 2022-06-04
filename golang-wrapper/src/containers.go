@@ -33,8 +33,9 @@ import (
 )
 
 //export CreateContainer
-func CreateContainer(clientHandle DockerClientHandle, request *C.CreateContainerRequest) CreateContainerReturn {
+func CreateContainer(clientHandle DockerClientHandle, contextHandle ContextHandle, request *C.CreateContainerRequest) CreateContainerReturn {
 	docker := clientHandle.DockerAPIClient()
+	ctx := contextHandle.Context()
 
 	config := container.Config{
 		Image:        C.GoString(request.ImageReference),
@@ -101,7 +102,7 @@ func CreateContainer(clientHandle DockerClientHandle, request *C.CreateContainer
 
 	containerName := C.GoString(request.Name)
 
-	createdContainer, err := docker.ContainerCreate(context.Background(), &config, &hostConfig, &networkingConfig, nil, containerName)
+	createdContainer, err := docker.ContainerCreate(ctx, &config, &hostConfig, &networkingConfig, nil, containerName)
 
 	if err != nil {
 		return newCreateContainerReturn(nil, toError(err))
@@ -111,11 +112,12 @@ func CreateContainer(clientHandle DockerClientHandle, request *C.CreateContainer
 }
 
 //export StartContainer
-func StartContainer(clientHandle DockerClientHandle, id *C.char) Error {
+func StartContainer(clientHandle DockerClientHandle, contextHandle ContextHandle, id *C.char) Error {
 	docker := clientHandle.DockerAPIClient()
+	ctx := contextHandle.Context()
 	opts := types.ContainerStartOptions{}
 
-	if err := docker.ContainerStart(context.Background(), C.GoString(id), opts); err != nil {
+	if err := docker.ContainerStart(ctx, C.GoString(id), opts); err != nil {
 		return toError(err)
 	}
 

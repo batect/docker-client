@@ -225,25 +225,29 @@ internal actual class RealDockerClient actual constructor(configuration: DockerC
         }
     }
 
-    public override fun deleteImage(image: ImageReference, force: Boolean) {
-        nativeAPI.DeleteImage(clientHandle, image.id, force).use { error ->
-            if (error != null) {
-                throw ImageDeletionFailedException(error)
+    public override suspend fun deleteImage(image: ImageReference, force: Boolean) {
+        launchWithGolangContext { context ->
+            nativeAPI.DeleteImage(clientHandle, context.handle, image.id, force).use { error ->
+                if (error != null) {
+                    throw ImageDeletionFailedException(error)
+                }
             }
         }
     }
 
-    public override fun getImage(name: String): ImageReference? {
-        nativeAPI.GetImage(clientHandle, name)!!.use { ret ->
-            if (ret.error != null) {
-                throw ImageRetrievalFailedException(ret.error!!)
-            }
+    public override suspend fun getImage(name: String): ImageReference? {
+        return launchWithGolangContext { context ->
+            nativeAPI.GetImage(clientHandle, context.handle, name)!!.use { ret ->
+                if (ret.error != null) {
+                    throw ImageRetrievalFailedException(ret.error!!)
+                }
 
-            if (ret.response == null) {
-                return null
+                if (ret.response == null) {
+                    null
+                } else {
+                    ImageReference(ret.response!!)
+                }
             }
-
-            return ImageReference(ret.response!!)
         }
     }
 
@@ -290,30 +294,36 @@ internal actual class RealDockerClient actual constructor(configuration: DockerC
         }
     }
 
-    override fun pruneImageBuildCache() {
-        nativeAPI.PruneImageBuildCache(clientHandle).use { error ->
-            if (error != null) {
-                throw ImageBuildCachePruneFailedException(error)
+    override suspend fun pruneImageBuildCache() {
+        launchWithGolangContext { context ->
+            nativeAPI.PruneImageBuildCache(clientHandle, context.handle).use { error ->
+                if (error != null) {
+                    throw ImageBuildCachePruneFailedException(error)
+                }
             }
         }
     }
 
-    override fun createContainer(spec: ContainerCreationSpec): ContainerReference {
+    override suspend fun createContainer(spec: ContainerCreationSpec): ContainerReference {
         spec.ensureValid()
 
-        nativeAPI.CreateContainer(clientHandle, CreateContainerRequest(spec))!!.use { ret ->
-            if (ret.error != null) {
-                throw ContainerCreationFailedException(ret.error!!)
-            }
+        return launchWithGolangContext { context ->
+            nativeAPI.CreateContainer(clientHandle, context.handle, CreateContainerRequest(spec))!!.use { ret ->
+                if (ret.error != null) {
+                    throw ContainerCreationFailedException(ret.error!!)
+                }
 
-            return ContainerReference(ret.response!!.id.get())
+                ContainerReference(ret.response!!.id.get())
+            }
         }
     }
 
-    override fun startContainer(container: ContainerReference) {
-        nativeAPI.StartContainer(clientHandle, container.id).use { error ->
-            if (error != null) {
-                throw ContainerStartFailedException(error)
+    override suspend fun startContainer(container: ContainerReference) {
+        launchWithGolangContext { context ->
+            nativeAPI.StartContainer(clientHandle, context.handle, container.id).use { error ->
+                if (error != null) {
+                    throw ContainerStartFailedException(error)
+                }
             }
         }
     }

@@ -41,12 +41,7 @@
   * Go through all methods and check for any use of context.Background()
   * Methods left to do:
     * `pullImage`
-    * `deleteImage`
-    * `getImage`
     * `buildImage`
-    * `pruneImageBuildCache`
-    * `createContainer`
-    * `startContainer`
     * `stopContainer`
     * `removeContainer`
 
