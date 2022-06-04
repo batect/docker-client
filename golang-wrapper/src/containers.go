@@ -19,7 +19,6 @@ import (
 		#include "types.h"
 	*/
 	"C"
-	"context"
 	"fmt"
 	"strconv"
 	"time"
@@ -148,14 +147,16 @@ func StopContainer(clientHandle DockerClientHandle, contextHandle ContextHandle,
 }
 
 //export RemoveContainer
-func RemoveContainer(clientHandle DockerClientHandle, id *C.char, force C.bool, removeVolumes C.bool) Error {
+func RemoveContainer(clientHandle DockerClientHandle, contextHandle ContextHandle, id *C.char, force C.bool, removeVolumes C.bool) Error {
 	docker := clientHandle.DockerAPIClient()
+	ctx := contextHandle.Context()
+
 	opts := types.ContainerRemoveOptions{
 		Force:         bool(force),
 		RemoveVolumes: bool(removeVolumes),
 	}
 
-	if err := docker.ContainerRemove(context.Background(), C.GoString(id), opts); err != nil {
+	if err := docker.ContainerRemove(ctx, C.GoString(id), opts); err != nil {
 		return toError(err)
 	}
 

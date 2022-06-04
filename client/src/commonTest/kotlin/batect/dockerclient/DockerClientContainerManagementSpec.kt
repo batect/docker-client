@@ -304,7 +304,7 @@ class DockerClientContainerManagementSpec : ShouldSpec({
 
             should("be able to use Kotlin timeouts to abort stopping a container") {
                 val spec = ContainerCreationSpec.Builder(image)
-                    .withCommand("sh", "-c", "sleep 5")
+                    .withCommand("sh", "-c", "sleep 5") // `sleep` does not respond to signals, so this will wait for five seconds then exit
                     .build()
 
                 val container = client.createContainer(spec)

@@ -338,10 +338,12 @@ internal actual class RealDockerClient actual constructor(configuration: DockerC
         }
     }
 
-    override fun removeContainer(container: ContainerReference, force: Boolean, removeVolumes: Boolean) {
-        nativeAPI.RemoveContainer(clientHandle, container.id, force, removeVolumes).use { error ->
-            if (error != null) {
-                throw ContainerRemovalFailedException(error)
+    override suspend fun removeContainer(container: ContainerReference, force: Boolean, removeVolumes: Boolean) {
+        launchWithGolangContext { context ->
+            nativeAPI.RemoveContainer(clientHandle, context.handle, container.id, force, removeVolumes).use { error ->
+                if (error != null) {
+                    throw ContainerRemovalFailedException(error)
+                }
             }
         }
     }
