@@ -42,7 +42,6 @@
   * Methods left to do:
     * `pullImage`
     * `buildImage`
-    * `stopContainer`
     * `removeContainer`
 
 * Check that Golang code can return an empty list (eg. listing all volumes returns no volumes)

@@ -430,9 +430,11 @@ internal actual class RealDockerClient actual constructor(configuration: DockerC
         }
     }
 
-    public override fun stopContainer(container: ContainerReference, timeout: Duration) {
-        StopContainer(clientHandle, container.id.cstr, timeout.inWholeSeconds).ifFailed { error ->
-            throw ContainerStopFailedException(error.pointed)
+    public override suspend fun stopContainer(container: ContainerReference, timeout: Duration) {
+        launchWithGolangContext { context ->
+            StopContainer(clientHandle, context.handle, container.id.cstr, timeout.inWholeSeconds).ifFailed { error ->
+                throw ContainerStopFailedException(error.pointed)
+            }
         }
     }
 

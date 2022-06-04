@@ -302,6 +302,30 @@ class DockerClientContainerManagementSpec : ShouldSpec({
                 }
             }
 
+            should("be able to use Kotlin timeouts to abort stopping a container") {
+                val spec = ContainerCreationSpec.Builder(image)
+                    .withCommand("sh", "-c", "sleep 5")
+                    .build()
+
+                val container = client.createContainer(spec)
+
+                try {
+                    client.startContainer(container)
+
+                    val duration = measureTime {
+                        shouldThrow<TimeoutCancellationException> {
+                            withTimeout(500.milliseconds) {
+                                client.stopContainer(container, 1.seconds)
+                            }
+                        }
+                    }
+
+                    duration shouldBeLessThan 1.seconds
+                } finally {
+                    client.removeContainer(container, force = true)
+                }
+            }
+
             should("be able to connect to a published port from a container with a corresponding EXPOSE instruction in the image") {
                 val httpServerImage = client.pullImage("nginx:1.21.6")
 

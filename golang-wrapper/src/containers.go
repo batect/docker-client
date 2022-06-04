@@ -135,11 +135,12 @@ func StartContainer(clientHandle DockerClientHandle, contextHandle ContextHandle
 }
 
 //export StopContainer
-func StopContainer(clientHandle DockerClientHandle, id *C.char, timeoutSeconds C.int64_t) Error {
+func StopContainer(clientHandle DockerClientHandle, contextHandle ContextHandle, id *C.char, timeoutSeconds C.int64_t) Error {
 	docker := clientHandle.DockerAPIClient()
+	ctx := contextHandle.Context()
 	timeout := time.Second * time.Duration(timeoutSeconds)
 
-	if err := docker.ContainerStop(context.Background(), C.GoString(id), &timeout); err != nil {
+	if err := docker.ContainerStop(ctx, C.GoString(id), &timeout); err != nil {
 		return toError(err)
 	}
 
