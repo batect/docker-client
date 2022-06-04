@@ -25,8 +25,7 @@
 * Refactor / rework code generation - it's a mess and needs tests
   * Use https://github.com/square/kotlinpoet/ to generate Kotlin code rather than current string concatenation approach?
 * Remove use of panics in Golang code
-* Some kind of cache for CI builds?
-* Restore AssertionMode to Error once https://kotlinlang.slack.com/archives/CT0G9SD7Z/p1653346298893609 is resolved
+* Restore AssertionMode to Error once https://github.com/kotest/kotest/issues/3022 is resolved
 
 # APIs
 
