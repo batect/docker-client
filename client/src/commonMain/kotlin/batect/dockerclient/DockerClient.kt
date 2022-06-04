@@ -20,7 +20,6 @@ import batect.dockerclient.io.TextOutput
 import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 import okio.Path
 import kotlin.time.Duration
 
