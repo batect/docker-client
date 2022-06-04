@@ -35,7 +35,7 @@ public interface DockerClient : AutoCloseable {
     public suspend fun deleteNetwork(network: NetworkReference)
     public suspend fun getNetworkByNameOrID(searchFor: String): NetworkReference?
 
-    public fun pullImage(name: String, onProgressUpdate: ImagePullProgressReceiver = {}): ImageReference
+    public suspend fun pullImage(name: String, onProgressUpdate: ImagePullProgressReceiver = {}): ImageReference
     public suspend fun deleteImage(image: ImageReference, force: Boolean = false)
     public suspend fun getImage(name: String): ImageReference?
 

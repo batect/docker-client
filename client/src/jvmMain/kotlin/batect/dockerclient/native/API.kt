@@ -45,7 +45,7 @@ internal interface API {
     fun ValidateImageTag(@In tag: kotlin.String): Error?
     fun BuildImage(@In clientHandle: DockerClientHandle, @In request: BuildImageRequest, @In outputStreamHandle: OutputStreamHandle, @In onProgressUpdate: BuildImageProgressCallback, @In callbackUserData: Pointer?): BuildImageReturn?
     fun PruneImageBuildCache(@In clientHandle: DockerClientHandle, @In contextHandle: ContextHandle): Error?
-    fun PullImage(@In clientHandle: DockerClientHandle, @In ref: kotlin.String, @In onProgressUpdate: PullImageProgressCallback, @In callbackUserData: Pointer?): PullImageReturn?
+    fun PullImage(@In clientHandle: DockerClientHandle, @In contextHandle: ContextHandle, @In ref: kotlin.String, @In onProgressUpdate: PullImageProgressCallback, @In callbackUserData: Pointer?): PullImageReturn?
     fun CreateOutputPipe(): CreateOutputPipeReturn?
     fun DisposeOutputPipe(@In handle: OutputStreamHandle): Error?
     fun CreateNetwork(@In clientHandle: DockerClientHandle, @In contextHandle: ContextHandle, @In name: kotlin.String, @In driver: kotlin.String): CreateNetworkReturn?

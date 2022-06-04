@@ -224,24 +224,26 @@ internal actual class RealDockerClient actual constructor(configuration: DockerC
         }
     }
 
-    public override fun pullImage(name: String, onProgressUpdate: ImagePullProgressReceiver): ImageReference {
-        val callbackState = CallbackState<PullImageProgressUpdate> { progress ->
-            onProgressUpdate.invoke(ImagePullProgressUpdate(progress!!.pointed))
-        }
+    public override suspend fun pullImage(name: String, onProgressUpdate: ImagePullProgressReceiver): ImageReference {
+        return launchWithGolangContext { context ->
+            val callbackState = CallbackState<PullImageProgressUpdate> { progress ->
+                onProgressUpdate.invoke(ImagePullProgressUpdate(progress!!.pointed))
+            }
 
-        return callbackState.use { callback, callbackUserData ->
-            PullImage(clientHandle, name.cstr, callback, callbackUserData)!!.use { ret ->
-                if (ret.pointed.Error != null) {
-                    val errorType = ret.pointed.Error!!.pointed.Type!!.toKString()
+            callbackState.use { callback, callbackUserData ->
+                PullImage(clientHandle, context.handle, name.cstr, callback, callbackUserData)!!.use { ret ->
+                    if (ret.pointed.Error != null) {
+                        val errorType = ret.pointed.Error!!.pointed.Type!!.toKString()
 
-                    if (errorType == "main.ProgressCallbackFailedError") {
-                        throw ImagePullFailedException("Image pull progress receiver threw an exception: ${callbackState.exceptionThrown}", callbackState.exceptionThrown, errorType)
+                        if (errorType == "main.ProgressCallbackFailedError") {
+                            throw ImagePullFailedException("Image pull progress receiver threw an exception: ${callbackState.exceptionThrown}", callbackState.exceptionThrown, errorType)
+                        }
+
+                        throw ImagePullFailedException(ret.pointed.Error!!.pointed)
                     }
 
-                    throw ImagePullFailedException(ret.pointed.Error!!.pointed)
+                    ImageReference(ret.pointed.Response!!.pointed)
                 }
-
-                ImageReference(ret.pointed.Response!!.pointed)
             }
         }
     }

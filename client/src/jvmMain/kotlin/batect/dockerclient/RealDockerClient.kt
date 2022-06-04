@@ -194,7 +194,7 @@ internal actual class RealDockerClient actual constructor(configuration: DockerC
         }
     }
 
-    public override fun pullImage(name: String, onProgressUpdate: ImagePullProgressReceiver): ImageReference {
+    public override suspend fun pullImage(name: String, onProgressUpdate: ImagePullProgressReceiver): ImageReference {
         var exceptionThrownInCallback: Throwable? = null
 
         val callback = object : PullImageProgressCallback {
@@ -212,16 +212,18 @@ internal actual class RealDockerClient actual constructor(configuration: DockerC
             }
         }
 
-        nativeAPI.PullImage(clientHandle, name, callback, null)!!.use { ret ->
-            if (ret.error != null) {
-                if (ret.error!!.type.get() == "main.ProgressCallbackFailedError") {
-                    throw ImagePullFailedException("Image pull progress receiver threw an exception: $exceptionThrownInCallback", exceptionThrownInCallback)
+        return launchWithGolangContext { context ->
+            nativeAPI.PullImage(clientHandle, context.handle, name, callback, null)!!.use { ret ->
+                if (ret.error != null) {
+                    if (ret.error!!.type.get() == "main.ProgressCallbackFailedError") {
+                        throw ImagePullFailedException("Image pull progress receiver threw an exception: $exceptionThrownInCallback", exceptionThrownInCallback)
+                    }
+
+                    throw ImagePullFailedException(ret.error!!)
                 }
 
-                throw ImagePullFailedException(ret.error!!)
+                ImageReference(ret.response!!)
             }
-
-            return ImageReference(ret.response!!)
         }
     }
 

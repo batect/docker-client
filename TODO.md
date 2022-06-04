@@ -40,7 +40,6 @@
   * Add tests to verify this is working as expected
   * Go through all methods and check for any use of context.Background()
   * Methods left to do:
-    * `pullImage`
     * `buildImage`
 
 * Check that Golang code can return an empty list (eg. listing all volumes returns no volumes)
