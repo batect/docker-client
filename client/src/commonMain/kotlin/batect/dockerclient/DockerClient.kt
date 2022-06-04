@@ -18,6 +18,7 @@ package batect.dockerclient
 
 import batect.dockerclient.io.TextOutput
 import kotlinx.coroutines.async
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import okio.Path
@@ -172,7 +173,7 @@ internal typealias DockerClientFactory = (DockerClientConfiguration) -> DockerCl
  * @return the exit code from the container
  */
 public suspend fun DockerClient.run(container: ContainerReference, stdout: TextOutput, stderr: TextOutput): Long {
-    return withContext(IODispatcher) {
+    return coroutineScope {
         val listeningToOutput = ReadyNotification()
         val waitingForExitCode = ReadyNotification()
 

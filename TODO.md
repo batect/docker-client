@@ -36,8 +36,6 @@
     * Rework configuration API:
       * add method to get CLI context by name
       * allow consumer to either: pass returned context settings, modify and pass context settings, provide their own settings or use defaults
-* Timeouts and cancellation for calls
-  * Go through all methods and check for any use of context.Background()
 
 * Check that Golang code can return an empty list (eg. listing all volumes returns no volumes)
 

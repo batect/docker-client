@@ -73,6 +73,7 @@ import kotlinx.cinterop.pointed
 import kotlinx.cinterop.ptr
 import kotlinx.cinterop.staticCFunction
 import kotlinx.cinterop.toKString
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import kotlinx.datetime.Instant
@@ -278,8 +279,8 @@ internal actual class RealDockerClient actual constructor(configuration: DockerC
                 onProgressUpdate.invoke(ImageBuildProgressUpdate(progress!!.pointed))
             }
 
-            return withContext(IODispatcher) {
-                launch { stream.run() }
+            return coroutineScope {
+                launch(IODispatcher) { stream.run() }
 
                 launchWithGolangContext { context ->
                     buildImage(spec, stream, callbackState, context, onProgressUpdate)
@@ -447,9 +448,9 @@ internal actual class RealDockerClient actual constructor(configuration: DockerC
     override suspend fun attachToContainerOutput(container: ContainerReference, stdout: TextOutput, stderr: TextOutput, attachedNotification: ReadyNotification?) {
         stdout.prepareStream().use { stdoutStream ->
             stderr.prepareStream().use { stderrStream ->
-                withContext(IODispatcher) {
-                    launch { stdoutStream.run() }
-                    launch { stderrStream.run() }
+                coroutineScope {
+                    launch(IODispatcher) { stdoutStream.run() }
+                    launch(IODispatcher) { stderrStream.run() }
 
                     launchWithGolangContext { context ->
                         val callbackState = ReadyNotificationCallbackState(attachedNotification)
@@ -486,37 +487,33 @@ internal actual class RealDockerClient actual constructor(configuration: DockerC
     }
 
     override suspend fun waitForContainerToExit(container: ContainerReference, waitingNotification: ReadyNotification?): Long {
-        return withContext(IODispatcher) {
-            launchWithGolangContext { context ->
-                val callbackState = ReadyNotificationCallbackState(waitingNotification)
+        return launchWithGolangContext { context ->
+            val callbackState = ReadyNotificationCallbackState(waitingNotification)
 
-                callbackState.use { callback, callbackUserData ->
-                    WaitForContainerToExit(clientHandle, context.handle, container.id.cstr, callback, callbackUserData)!!.use { ret ->
-                        if (ret.pointed.Error != null) {
-                            if (ret.pointed.Error!!.pointed.Type!!.toKString() == "main.ReadyCallbackFailedError") {
-                                throw callbackState.exceptionThrown!!
-                            }
-
-                            throw ContainerWaitFailedException(ret.pointed.Error!!.pointed)
+            callbackState.use { callback, callbackUserData ->
+                WaitForContainerToExit(clientHandle, context.handle, container.id.cstr, callback, callbackUserData)!!.use { ret ->
+                    if (ret.pointed.Error != null) {
+                        if (ret.pointed.Error!!.pointed.Type!!.toKString() == "main.ReadyCallbackFailedError") {
+                            throw callbackState.exceptionThrown!!
                         }
 
-                        ret.pointed.ExitCode
+                        throw ContainerWaitFailedException(ret.pointed.Error!!.pointed)
                     }
+
+                    ret.pointed.ExitCode
                 }
             }
         }
     }
 
     override suspend fun inspectContainer(idOrName: String): ContainerInspectionResult {
-        return withContext(IODispatcher) {
-            launchWithGolangContext { context ->
-                InspectContainer(clientHandle, context.handle, idOrName.cstr)!!.use { ret ->
-                    if (ret.pointed.Error != null) {
-                        throw ContainerInspectionFailedException(ret.pointed.Error!!.pointed)
-                    }
-
-                    ContainerInspectionResult(ret.pointed.Response!!.pointed)
+        return launchWithGolangContext { context ->
+            InspectContainer(clientHandle, context.handle, idOrName.cstr)!!.use { ret ->
+                if (ret.pointed.Error != null) {
+                    throw ContainerInspectionFailedException(ret.pointed.Error!!.pointed)
                 }
+
+                ContainerInspectionResult(ret.pointed.Response!!.pointed)
             }
         }
     }

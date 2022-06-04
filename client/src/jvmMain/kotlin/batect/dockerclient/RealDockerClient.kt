@@ -59,6 +59,7 @@ import jnr.ffi.Pointer
 import jnr.ffi.Runtime
 import jnr.ffi.Struct
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import kotlinx.datetime.Instant
@@ -361,9 +362,9 @@ internal actual class RealDockerClient actual constructor(configuration: DockerC
 
         stdout.prepareStream().use { stdoutStream ->
             stderr.prepareStream().use { stderrStream ->
-                withContext(IODispatcher) {
-                    launch { stdoutStream.run() }
-                    launch { stderrStream.run() }
+                coroutineScope {
+                    launch(IODispatcher) { stdoutStream.run() }
+                    launch(IODispatcher) { stderrStream.run() }
 
                     launchWithGolangContext { context ->
                         nativeAPI.AttachToContainerOutput(
@@ -390,35 +391,31 @@ internal actual class RealDockerClient actual constructor(configuration: DockerC
     }
 
     override suspend fun waitForContainerToExit(container: ContainerReference, waitingNotification: ReadyNotification?): Long {
-        return withContext(IODispatcher) {
-            launchWithGolangContext { context ->
-                val callback = ReadyCallback(waitingNotification)
+        return launchWithGolangContext { context ->
+            val callback = ReadyCallback(waitingNotification)
 
-                nativeAPI.WaitForContainerToExit(clientHandle, context.handle, container.id, callback, null)!!.use { ret ->
-                    if (ret.error != null) {
-                        if (ret.error!!.type.get() == "main.ReadyCallbackFailedError") {
-                            throw callback.exceptionThrownInCallback!!
-                        }
-
-                        throw ContainerWaitFailedException(ret.error!!)
+            nativeAPI.WaitForContainerToExit(clientHandle, context.handle, container.id, callback, null)!!.use { ret ->
+                if (ret.error != null) {
+                    if (ret.error!!.type.get() == "main.ReadyCallbackFailedError") {
+                        throw callback.exceptionThrownInCallback!!
                     }
 
-                    ret.exitCode.longValue()
+                    throw ContainerWaitFailedException(ret.error!!)
                 }
+
+                ret.exitCode.longValue()
             }
         }
     }
 
     override suspend fun inspectContainer(idOrName: String): ContainerInspectionResult {
-        return withContext(IODispatcher) {
-            launchWithGolangContext { context ->
-                nativeAPI.InspectContainer(clientHandle, context.handle, idOrName)!!.use { ret ->
-                    if (ret.error != null) {
-                        throw ContainerInspectionFailedException(ret.error!!)
-                    }
-
-                    ContainerInspectionResult(ret.response!!)
+        return launchWithGolangContext { context ->
+            nativeAPI.InspectContainer(clientHandle, context.handle, idOrName)!!.use { ret ->
+                if (ret.error != null) {
+                    throw ContainerInspectionFailedException(ret.error!!)
                 }
+
+                ContainerInspectionResult(ret.response!!)
             }
         }
     }

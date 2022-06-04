@@ -39,6 +39,7 @@ import io.ktor.http.HttpStatusCode
 import io.ktor.utils.io.core.use
 import kotlinx.coroutines.TimeoutCancellationException
 import kotlinx.coroutines.async
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import kotlinx.coroutines.withTimeout
@@ -75,19 +76,15 @@ class DockerClientContainerManagementSpec : ShouldSpec({
                 val container = client.createContainer(spec)
 
                 try {
-                    val exitCode = withContext(IODispatcher) {
-                        val waitingForContainerToExit = ReadyNotification()
-                        val exitCodeSource = async { client.waitForContainerToExit(container, waitingForContainerToExit) }
+                    val waitingForContainerToExit = ReadyNotification()
+                    val exitCodeSource = async { client.waitForContainerToExit(container, waitingForContainerToExit) }
 
-                        launch {
-                            waitingForContainerToExit.waitForReady()
-                            client.startContainer(container)
-                        }
-
-                        exitCodeSource.await()
+                    launch {
+                        waitingForContainerToExit.waitForReady()
+                        client.startContainer(container)
                     }
 
-                    exitCode shouldBe 123
+                    exitCodeSource.await() shouldBe 123
                 } finally {
                     client.removeContainer(container, force = true)
                 }
@@ -121,7 +118,7 @@ class DockerClientContainerManagementSpec : ShouldSpec({
                     val stdout = Buffer()
                     val stderr = Buffer()
 
-                    withContext(IODispatcher) {
+                    coroutineScope {
                         val listeningToOutput = ReadyNotification()
 
                         launch {
@@ -239,16 +236,14 @@ class DockerClientContainerManagementSpec : ShouldSpec({
                 try {
                     val duration = measureTime {
                         shouldThrow<TimeoutCancellationException> {
-                            withContext(IODispatcher) {
-                                withTimeout(2.seconds) {
-                                    val waitingForContainerToExit = ReadyNotification()
+                            withTimeout(2.seconds) {
+                                val waitingForContainerToExit = ReadyNotification()
 
-                                    launch { client.waitForContainerToExit(container, waitingForContainerToExit) }
+                                launch { client.waitForContainerToExit(container, waitingForContainerToExit) }
 
-                                    launch {
-                                        waitingForContainerToExit.waitForReady()
-                                        client.startContainer(container)
-                                    }
+                                launch {
+                                    waitingForContainerToExit.waitForReady()
+                                    client.startContainer(container)
                                 }
                             }
                         }
@@ -273,18 +268,16 @@ class DockerClientContainerManagementSpec : ShouldSpec({
 
                     val duration = measureTime {
                         shouldThrow<TimeoutCancellationException> {
-                            withContext(IODispatcher) {
-                                withTimeout(2.seconds) {
-                                    val listeningToOutput = ReadyNotification()
+                            withTimeout(2.seconds) {
+                                val listeningToOutput = ReadyNotification()
 
-                                    launch {
-                                        client.attachToContainerOutput(container, SinkTextOutput(stdout), SinkTextOutput(stderr), listeningToOutput)
-                                    }
+                                launch {
+                                    client.attachToContainerOutput(container, SinkTextOutput(stdout), SinkTextOutput(stderr), listeningToOutput)
+                                }
 
-                                    launch {
-                                        listeningToOutput.waitForReady()
-                                        client.startContainer(container)
-                                    }
+                                launch {
+                                    listeningToOutput.waitForReady()
+                                    client.startContainer(container)
                                 }
                             }
                         }
@@ -502,57 +495,55 @@ class DockerClientContainerManagementSpec : ShouldSpec({
                 val container = client.createContainer(spec)
 
                 try {
-                    withContext(IODispatcher) {
-                        val stdout = Buffer()
-                        val stderr = Buffer()
-                        val startedAt = Clock.System.now()
+                    val stdout = Buffer()
+                    val stderr = Buffer()
+                    val startedAt = Clock.System.now()
 
-                        val listeningToOutput = ReadyNotification()
-                        val waitingForExitCode = ReadyNotification()
+                    val listeningToOutput = ReadyNotification()
+                    val waitingForExitCode = ReadyNotification()
 
-                        launch {
-                            client.attachToContainerOutput(container, SinkTextOutput(stdout), SinkTextOutput(stderr), listeningToOutput)
-                        }
+                    launch {
+                        client.attachToContainerOutput(container, SinkTextOutput(stdout), SinkTextOutput(stderr), listeningToOutput)
+                    }
 
-                        val exitCodeSource = async {
-                            client.waitForContainerToExit(container, waitingForExitCode)
-                        }
+                    val exitCodeSource = async {
+                        client.waitForContainerToExit(container, waitingForExitCode)
+                    }
 
-                        listeningToOutput.waitForReady()
-                        waitingForExitCode.waitForReady()
-                        client.startContainer(container)
+                    listeningToOutput.waitForReady()
+                    waitingForExitCode.waitForReady()
+                    client.startContainer(container)
 
-                        eventually(1.seconds, poll = 100.milliseconds) {
-                            // We must inspect the container while it is running - otherwise Docker will always consider the container unhealthy if it is stopped.
-                            val inspectionResult = client.inspectContainer(container)
+                    eventually(1.seconds, poll = 100.milliseconds) {
+                        // We must inspect the container while it is running - otherwise Docker will always consider the container unhealthy if it is stopped.
+                        val inspectionResult = client.inspectContainer(container)
 
-                            inspectionResult.state.health.shouldNotBeNull()
-                            inspectionResult.state.health!!.asClue {
-                                it.status shouldBe "healthy"
-                                it.log shouldHaveAtLeastSize 1
+                        inspectionResult.state.health.shouldNotBeNull()
+                        inspectionResult.state.health!!.asClue {
+                            it.status shouldBe "healthy"
+                            it.log shouldHaveAtLeastSize 1
 
-                                // On Windows and macOS machines where Docker is running in a VM, it's possible that the daemon's clock is out of sync with the machine's clock.
-                                val clockSkewFudgeFactor = 60.seconds
+                            // On Windows and macOS machines where Docker is running in a VM, it's possible that the daemon's clock is out of sync with the machine's clock.
+                            val clockSkewFudgeFactor = 60.seconds
 
-                                it.log.forAll { log ->
-                                    log.start shouldBeLessThan log.end
-                                    log.start shouldBeGreaterThan startedAt.minus(clockSkewFudgeFactor)
-                                    log.end shouldBeLessThan Clock.System.now()
-                                    log.exitCode shouldBe 0
-                                    log.output shouldBe "Healthy!\n"
-                                }
+                            it.log.forAll { log ->
+                                log.start shouldBeLessThan log.end
+                                log.start shouldBeGreaterThan startedAt.minus(clockSkewFudgeFactor)
+                                log.end shouldBeLessThan Clock.System.now()
+                                log.exitCode shouldBe 0
+                                log.output shouldBe "Healthy!\n"
                             }
                         }
-
-                        val exitCode = exitCodeSource.await()
-                        val stdoutText = stdout.readUtf8()
-                        val stderrText = stderr.readUtf8()
-
-                        stdoutText.lines() shouldHaveAtLeastSize 4
-                        stdoutText.lines() shouldHaveAtMostSize 6
-                        stderrText shouldBe ""
-                        exitCode shouldBe 0
                     }
+
+                    val exitCode = exitCodeSource.await()
+                    val stdoutText = stdout.readUtf8()
+                    val stderrText = stderr.readUtf8()
+
+                    stdoutText.lines() shouldHaveAtLeastSize 4
+                    stdoutText.lines() shouldHaveAtMostSize 6
+                    stderrText shouldBe ""
+                    exitCode shouldBe 0
                 } finally {
                     client.removeContainer(container, force = true)
                 }
