@@ -98,11 +98,6 @@ gradlePlugin {
             implementationClass = "batect.dockerclient.buildtools.formatting.FormattingConventionPlugin"
         }
 
-        create("docker-client-golang") {
-            id = "batect.dockerclient.buildtools.golang"
-            implementationClass = "batect.dockerclient.buildtools.golang.GolangPlugin"
-        }
-
         create("docker-client-zig") {
             id = "batect.dockerclient.buildtools.zig"
             implementationClass = "batect.dockerclient.buildtools.zig.ZigPlugin"

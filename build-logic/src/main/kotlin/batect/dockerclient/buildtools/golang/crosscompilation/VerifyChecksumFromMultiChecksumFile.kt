@@ -14,7 +14,7 @@
     limitations under the License.
 */
 
-package batect.dockerclient.buildtools.golang
+package batect.dockerclient.buildtools.golang.crosscompilation
 
 import batect.dockerclient.buildtools.ChecksumVerificationFailedException
 import batect.dockerclient.buildtools.VerifyChecksum

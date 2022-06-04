@@ -1,4 +1,4 @@
-import batect.dockerclient.buildtools.golang.VerifyChecksumFromSingleChecksumFile
+import batect.dockerclient.buildtools.golang.crosscompilation.VerifyChecksumFromSingleChecksumFile
 
 plugins {
     id("batect.dockerclient.buildtools.golang")
