@@ -339,6 +339,10 @@ tasks.withType<KotlinNativeHostTest>().configureEach {
 }
 
 tasks.withType<AbstractTestTask>().configureEach {
+    // This is used to ensure correct caching behaviour for test tasks on CI, where the same inputs (source / tests)
+    // are executed in different environments that Gradle isn't aware of.
+    inputs.property("test_environment_description", System.getenv("TEST_ENVIRONMENT_DESCRIPTION") ?: "")
+
     testLogging {
         showExceptions = true
         showStandardStreams = true

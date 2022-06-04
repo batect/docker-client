@@ -111,6 +111,7 @@ jobs:
           DOCKER_CONTAINER_OPERATING_SYSTEM: ${{ matrix.containerOperatingSystem }}
           DOCKER_CONNECTION_OVER_TCP: ${{ matrix.useTLS }}
           RUN_TARGETS_FOR_OTHER_HOSTS: false
+          TEST_ENVIRONMENT_DESCRIPTION: ${{ matrix.name }}
 
       - name: Check for outdated generated code
         run: if [ ! -z "$(git status --porcelain)" ]; then echo "Generated code changed. Do you need to run './gradlew generate'?">/dev/stderr; echo; git status --porcelain; echo; git diff; exit 1; fi
