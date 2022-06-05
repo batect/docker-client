@@ -184,7 +184,7 @@ class DockerClientImagePullSpec : ShouldSpec({
     should("gracefully handle a Kotlin timeout when pulling a Linux image").onlyIfDockerDaemonSupportsLinuxContainers {
         val duration = measureTime {
             shouldThrow<TimeoutCancellationException> {
-                withTimeout(100.milliseconds) {
+                withTimeout(20.milliseconds) {
                     client.pullImage(defaultLinuxTestImage)
                 }
             }
