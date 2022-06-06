@@ -48,15 +48,15 @@
       * Support for secrets - fail if attempted with legacy builder
       * Add support for warnings (added in BuildKit 0.10.0)
       * Upgrade to most recent version of BuildKit library (currently blocked due to version hell)
-    * Test that we can run a built image
+    * Test that we can build a Windows container image
 * Containers
   * Create
     * STDIN attached
-    * Scenarios to test:
-      * Windows containers
   * Upload files
   * Attach
     * Stream input to stdin - from console or from buffer
+      * Test on macOS / Linux
+      * Test on Windows
     * Reuse output stream
     * Reuse input stream
     * Forward signals to container (test by sending Ctrl-C to self)

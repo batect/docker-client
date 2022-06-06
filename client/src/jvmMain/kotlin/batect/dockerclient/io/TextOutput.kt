@@ -18,13 +18,10 @@ package batect.dockerclient.io
 
 import batect.dockerclient.DockerClientException
 import batect.dockerclient.native.nativeAPI
-import jnr.posix.POSIXFactory
-import okio.Buffer
+import jnr.posix.util.Platform
 import okio.Sink
 import okio.Source
-import okio.Timeout
 import okio.buffer
-import java.io.IOException
 
 public actual sealed interface TextOutput {
     public actual fun prepareStream(): PreparedOutputStream
@@ -42,7 +39,7 @@ public actual class SinkTextOutput actual constructor(public val sink: Sink) : T
 
     private class Pipe(private val sink: Sink) : PreparedOutputStream {
         public override val outputStreamHandle: ULong
-        private val source: PipeSource
+        private val source: Source
 
         init {
             nativeAPI.CreateOutputPipe()!!.use { ret ->
@@ -52,7 +49,11 @@ public actual class SinkTextOutput actual constructor(public val sink: Sink) : T
 
                 outputStreamHandle = ret.outputStream.longValue().toULong()
                 val fd = ret.readFileDescriptor.intValue()
-                source = PipeSource(fd)
+
+                source = when {
+                    Platform.IS_WINDOWS -> WindowsPipeSource(fd)
+                    else -> POSIXPipeSource(fd)
+                }
             }
         }
 
@@ -68,36 +69,4 @@ public actual class SinkTextOutput actual constructor(public val sink: Sink) : T
             }
         }
     }
-
-    private class PipeSource(private val fd: Int) : Source {
-        override fun timeout(): Timeout = Timeout.NONE
-
-        override fun read(sink: Buffer, byteCount: Long): Long {
-            val bytesToRead = if (byteCount > Int.MAX_VALUE) Int.MAX_VALUE else byteCount.toInt()
-            val buffer = ByteArray(bytesToRead)
-
-            return when (val bytesRead = posix.read(fd, buffer, bytesToRead)) {
-                0 -> -1
-                -1 -> throw errnoToIOException(posix.errno())
-                else -> {
-                    sink.write(buffer, 0, bytesRead)
-
-                    bytesRead.toLong()
-                }
-            }
-        }
-
-        override fun close() {
-            // Nothing to do.
-        }
-    }
-}
-
-private val posix = POSIXFactory.getNativePOSIX()
-
-// This is based on okio's implementation.
-internal fun errnoToIOException(errno: Int): IOException {
-    val message = posix.strerror(errno) ?: "errno: $errno"
-
-    return IOException(message)
 }

@@ -55,8 +55,9 @@ import kotlin.time.measureTime
 @ExperimentalTime
 @OptIn(ExperimentalKotest::class)
 class DockerClientContainerManagementSpec : ShouldSpec({
+    val client = closeAfterTest(DockerClient.Builder().build())
+
     context("when working with Linux containers").onlyIfDockerDaemonSupportsLinuxContainers {
-        val client = closeAfterTest(DockerClient.Builder().build())
         val image = client.pullImage("alpine:3.15.0")
 
         suspend fun buildTestImage(name: String): ImageReference {
@@ -1141,6 +1142,34 @@ class DockerClientContainerManagementSpec : ShouldSpec({
                 } finally {
                     client.deleteNetwork(network)
                 }
+            }
+        }
+    }
+
+    context("when working with Windows containers").onlyIfDockerDaemonSupportsWindowsContainers {
+        should("be able to run a basic container") {
+            val imageTag = "mcr.microsoft.com/windows/nanoserver@sha256:4f06e1d8263b934d2e88dc1c6ff402f5b499c4d19ad6d0e2a5b9ee945f782928" // This is nanoserver:1809
+            val image = client.getImage(imageTag) ?: client.pullImage(imageTag)
+
+            val spec = ContainerCreationSpec.Builder(image)
+                .withCommand("cmd", "/c", "echo Hello stdout && echo Hello stderr 1>&2 && exit 123")
+                .build()
+
+            val container = client.createContainer(spec)
+
+            try {
+                val stdout = Buffer()
+                val stderr = Buffer()
+
+                val exitCode = client.run(container, SinkTextOutput(stdout), SinkTextOutput(stderr))
+                val stdoutText = stdout.readUtf8()
+                val stderrText = stderr.readUtf8()
+
+                exitCode shouldBe 123
+                stdoutText shouldBe "Hello stdout \r\n"
+                stderrText shouldBe "Hello stderr  \r\n"
+            } finally {
+                client.removeContainer(container, force = true)
             }
         }
     }
