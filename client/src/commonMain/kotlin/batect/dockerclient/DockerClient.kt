@@ -16,6 +16,7 @@
 
 package batect.dockerclient
 
+import batect.dockerclient.io.TextInput
 import batect.dockerclient.io.TextOutput
 import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
@@ -46,7 +47,7 @@ public interface DockerClient : AutoCloseable {
     public suspend fun startContainer(container: ContainerReference)
     public suspend fun stopContainer(container: ContainerReference, timeout: Duration)
     public suspend fun removeContainer(container: ContainerReference, force: Boolean = false, removeVolumes: Boolean = false)
-    public suspend fun attachToContainerOutput(container: ContainerReference, stdout: TextOutput, stderr: TextOutput, attachedNotification: ReadyNotification? = null)
+    public suspend fun attachToContainerIO(container: ContainerReference, stdout: TextOutput?, stderr: TextOutput?, stdin: TextInput?, attachedNotification: ReadyNotification? = null)
     public suspend fun inspectContainer(idOrName: String): ContainerInspectionResult
     public suspend fun inspectContainer(container: ContainerReference): ContainerInspectionResult = inspectContainer(container.id)
 
@@ -169,15 +170,16 @@ internal typealias DockerClientFactory = (DockerClientConfiguration) -> DockerCl
  * @param container the container to run
  * @param stdout the output stream to stream stdout to
  * @param stderr the output stream to stream stderr to, not used if the container is configured to use a TTY
+ * @param stdin the input stream to stream stdin from
  * @return the exit code from the container
  */
-public suspend fun DockerClient.run(container: ContainerReference, stdout: TextOutput, stderr: TextOutput): Long {
+public suspend fun DockerClient.run(container: ContainerReference, stdout: TextOutput?, stderr: TextOutput?, stdin: TextInput?): Long {
     return coroutineScope {
         val listeningToOutput = ReadyNotification()
         val waitingForExitCode = ReadyNotification()
 
         launch {
-            attachToContainerOutput(container, stdout, stderr, listeningToOutput)
+            attachToContainerIO(container, stdout, stderr, stdin, listeningToOutput)
         }
 
         val exitCodeSource = async {

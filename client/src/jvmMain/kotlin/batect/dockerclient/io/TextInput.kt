@@ -17,54 +17,55 @@
 package batect.dockerclient.io
 
 import batect.dockerclient.DockerClientException
-import batect.dockerclient.io.posix.POSIXPipeSource
-import batect.dockerclient.io.windows.WindowsPipeSource
+import batect.dockerclient.io.posix.POSIXPipeSink
+import batect.dockerclient.io.windows.WindowsPipeSink
 import batect.dockerclient.native.nativeAPI
 import jnr.posix.util.Platform
 import okio.Sink
 import okio.Source
 import okio.buffer
 
-public actual sealed interface TextOutput {
-    public actual fun prepareStream(): PreparedOutputStream
+public actual sealed interface TextInput {
+    public actual fun prepareStream(): PreparedInputStream
 
     public actual companion object {
-        public actual val StandardOutput: TextOutput = StandardTextOutput(1u)
-        public actual val StandardError: TextOutput = StandardTextOutput(2u)
+        public actual val StandardInput: TextInput = StandardTextInput(1u)
     }
 }
 
-public actual class SinkTextOutput actual constructor(public val sink: Sink) : TextOutput {
-    override fun prepareStream(): PreparedOutputStream {
-        return Pipe(sink)
+public actual class SourceTextInput actual constructor(public val source: Source) : TextInput {
+    override fun prepareStream(): PreparedInputStream {
+        return Pipe(source)
     }
 
-    private class Pipe(private val sink: Sink) : PreparedOutputStream {
-        public override val outputStreamHandle: ULong
-        private val source: Source
+    private class Pipe(private val source: Source) : PreparedInputStream {
+        public override val inputStreamHandle: ULong
+        private val sink: Sink
 
         init {
-            nativeAPI.CreateOutputPipe()!!.use { ret ->
+            nativeAPI.CreateInputPipe()!!.use { ret ->
                 if (ret.error != null) {
                     throw DockerClientException(ret.error!!)
                 }
 
-                outputStreamHandle = ret.outputStream.longValue().toULong()
-                val fd = ret.readFileDescriptor.intValue()
+                inputStreamHandle = ret.inputStream.longValue().toULong()
+                val fd = ret.writeFileDescriptor.intValue()
 
-                source = when {
-                    Platform.IS_WINDOWS -> WindowsPipeSource(fd)
-                    else -> POSIXPipeSource(fd)
+                sink = when {
+                    Platform.IS_WINDOWS -> WindowsPipeSink(fd)
+                    else -> POSIXPipeSink(fd)
                 }
             }
         }
 
         override fun run() {
-            source.buffer().readAll(sink)
+            sink.buffer().use { buffer ->
+                buffer.writeAll(source)
+            }
         }
 
         override fun close() {
-            nativeAPI.DisposeOutputPipe(outputStreamHandle.toLong()).use { error ->
+            nativeAPI.DisposeInputPipe(inputStreamHandle.toLong()).use { error ->
                 if (error != null) {
                     throw DockerClientException(error)
                 }

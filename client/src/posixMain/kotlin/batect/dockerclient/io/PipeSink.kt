@@ -20,35 +20,39 @@ import batect.dockerclient.native.FileDescriptor
 import kotlinx.cinterop.addressOf
 import kotlinx.cinterop.usePinned
 import okio.Buffer
-import okio.Source
+import okio.Sink
 import okio.Timeout
 import platform.posix.errno
 
-internal actual class PipeSource actual constructor(private val fd: FileDescriptor) : Source {
+internal actual class PipeSink actual constructor(private val fd: FileDescriptor) : Sink {
     actual override fun timeout(): Timeout = Timeout.NONE
 
-    actual override fun read(sink: Buffer, byteCount: Long): Long {
-        val bytesToRead = if (byteCount > Int.MAX_VALUE) Int.MAX_VALUE else byteCount.toInt()
-        val buffer = ByteArray(bytesToRead)
+    actual override fun write(source: Buffer, byteCount: Long) {
+        source.readByteArray(byteCount).usePinned { buffer ->
+            var nextIndex = 0
 
-        val bytesRead = buffer.usePinned { pinned ->
-            platform.posix.read(fd.safeToInt(), pinned.addressOf(0), bytesToRead.toULong())
-        }
+            while (nextIndex < byteCount) {
+                val bytesRemaining = byteCount.toInt() - nextIndex
+                val bytesWritten = platform.posix.write(fd.safeToInt(), buffer.addressOf(nextIndex), bytesRemaining.toULong())
 
-        return when (bytesRead) {
-            0L -> -1
-            -1L -> throw errnoToIOException(errno)
-            else -> {
-                sink.write(buffer, 0, bytesRead.safeToInt())
+                if (bytesWritten == -1L) {
+                    throw errnoToIOException(errno)
+                }
 
-                bytesRead
+                nextIndex += bytesWritten.toInt()
             }
         }
     }
 
+    actual override fun flush() {
+        // TODO: do we need to flush here?
+    }
+
     actual override fun close() {
-        // Nothing to do.
+        flush()
+
+        if (platform.posix.close(fd.safeToInt()) == -1) {
+            throw errnoToIOException(errno)
+        }
     }
 }
-
-private fun Long.safeToInt() = if (this > Int.MAX_VALUE.toLong()) throw IllegalArgumentException("Value out of range") else this.toInt()

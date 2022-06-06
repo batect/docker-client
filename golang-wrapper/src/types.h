@@ -32,6 +32,8 @@ typedef uint64_t DockerClientHandle;
 
 typedef uint64_t OutputStreamHandle;
 
+typedef uint64_t InputStreamHandle;
+
 typedef uintptr_t FileDescriptor;
 
 typedef uint64_t ContextHandle;
@@ -65,6 +67,12 @@ typedef struct {
     FileDescriptor ReadFileDescriptor;
     Error* Error;
 } CreateOutputPipeReturn;
+
+typedef struct {
+    InputStreamHandle InputStream;
+    FileDescriptor WriteFileDescriptor;
+    Error* Error;
+} CreateInputPipeReturn;
 
 typedef struct {
     char* APIVersion;
@@ -278,6 +286,9 @@ typedef struct {
     int64_t HealthcheckRetries;
     uint64_t LabelsCount;
     StringPair** Labels;
+    bool AttachStdin;
+    bool StdinOnce;
+    bool OpenStdin;
 } CreateContainerRequest;
 
 typedef struct {
@@ -357,6 +368,8 @@ EXPORTED_FUNCTION CreateClientReturn* AllocCreateClientReturn();
 EXPORTED_FUNCTION void FreeCreateClientReturn(CreateClientReturn* value);
 EXPORTED_FUNCTION CreateOutputPipeReturn* AllocCreateOutputPipeReturn();
 EXPORTED_FUNCTION void FreeCreateOutputPipeReturn(CreateOutputPipeReturn* value);
+EXPORTED_FUNCTION CreateInputPipeReturn* AllocCreateInputPipeReturn();
+EXPORTED_FUNCTION void FreeCreateInputPipeReturn(CreateInputPipeReturn* value);
 EXPORTED_FUNCTION PingResponse* AllocPingResponse();
 EXPORTED_FUNCTION void FreePingResponse(PingResponse* value);
 EXPORTED_FUNCTION PingReturn* AllocPingReturn();

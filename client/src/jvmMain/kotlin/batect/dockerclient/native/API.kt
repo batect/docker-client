@@ -32,7 +32,7 @@ internal interface API {
     fun StartContainer(@In clientHandle: DockerClientHandle, @In contextHandle: ContextHandle, @In id: kotlin.String): Error?
     fun StopContainer(@In clientHandle: DockerClientHandle, @In contextHandle: ContextHandle, @In id: kotlin.String, @In timeoutSeconds: Long): Error?
     fun RemoveContainer(@In clientHandle: DockerClientHandle, @In contextHandle: ContextHandle, @In id: kotlin.String, @In force: Boolean, @In removeVolumes: Boolean): Error?
-    fun AttachToContainerOutput(@In clientHandle: DockerClientHandle, @In contextHandle: ContextHandle, @In id: kotlin.String, @In stdoutStreamHandle: OutputStreamHandle, @In stderrStreamHandle: OutputStreamHandle, @In onReady: ReadyCallback, @In callbackUserData: Pointer?): Error?
+    fun AttachToContainerOutput(@In clientHandle: DockerClientHandle, @In contextHandle: ContextHandle, @In id: kotlin.String, @In stdoutStreamHandle: OutputStreamHandle, @In stderrStreamHandle: OutputStreamHandle, @In stdinStreamHandle: InputStreamHandle, @In onReady: ReadyCallback, @In callbackUserData: Pointer?): Error?
     fun WaitForContainerToExit(@In clientHandle: DockerClientHandle, @In contextHandle: ContextHandle, @In id: kotlin.String, @In onReady: ReadyCallback, @In callbackUserData: Pointer?): WaitForContainerToExitReturn?
     fun InspectContainer(@In clientHandle: DockerClientHandle, @In contextHandle: ContextHandle, @In idOrName: kotlin.String): InspectContainerReturn?
     fun CreateContext(): ContextHandle
@@ -46,6 +46,8 @@ internal interface API {
     fun BuildImage(@In clientHandle: DockerClientHandle, @In contextHandle: ContextHandle, @In request: BuildImageRequest, @In outputStreamHandle: OutputStreamHandle, @In onProgressUpdate: BuildImageProgressCallback, @In callbackUserData: Pointer?): BuildImageReturn?
     fun PruneImageBuildCache(@In clientHandle: DockerClientHandle, @In contextHandle: ContextHandle): Error?
     fun PullImage(@In clientHandle: DockerClientHandle, @In contextHandle: ContextHandle, @In ref: kotlin.String, @In onProgressUpdate: PullImageProgressCallback, @In callbackUserData: Pointer?): PullImageReturn?
+    fun CreateInputPipe(): CreateInputPipeReturn?
+    fun DisposeInputPipe(@In handle: InputStreamHandle): Error?
     fun CreateOutputPipe(): CreateOutputPipeReturn?
     fun DisposeOutputPipe(@In handle: OutputStreamHandle): Error?
     fun CreateNetwork(@In clientHandle: DockerClientHandle, @In contextHandle: ContextHandle, @In name: kotlin.String, @In driver: kotlin.String): CreateNetworkReturn?
@@ -64,6 +66,8 @@ internal interface API {
     fun AllocCreateClientReturn(): CreateClientReturn?
     fun FreeCreateOutputPipeReturn(@In value: CreateOutputPipeReturn)
     fun AllocCreateOutputPipeReturn(): CreateOutputPipeReturn?
+    fun FreeCreateInputPipeReturn(@In value: CreateInputPipeReturn)
+    fun AllocCreateInputPipeReturn(): CreateInputPipeReturn?
     fun FreePingResponse(@In value: PingResponse)
     fun AllocPingResponse(): PingResponse?
     fun FreePingReturn(@In value: PingReturn)

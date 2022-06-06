@@ -27,6 +27,7 @@ import "unsafe"
 
 type DockerClientHandle C.DockerClientHandle
 type OutputStreamHandle C.OutputStreamHandle
+type InputStreamHandle C.InputStreamHandle
 type FileDescriptor C.FileDescriptor
 type ContextHandle C.ContextHandle
 type Error *C.Error
@@ -34,6 +35,7 @@ type TLSConfiguration *C.TLSConfiguration
 type ClientConfiguration *C.ClientConfiguration
 type CreateClientReturn *C.CreateClientReturn
 type CreateOutputPipeReturn *C.CreateOutputPipeReturn
+type CreateInputPipeReturn *C.CreateInputPipeReturn
 type PingResponse *C.PingResponse
 type PingReturn *C.PingReturn
 type DaemonVersionInformation *C.DaemonVersionInformation
@@ -139,6 +141,19 @@ func newCreateOutputPipeReturn(
     value := C.AllocCreateOutputPipeReturn()
     value.OutputStream = C.uint64_t(OutputStream)
     value.ReadFileDescriptor = C.uintptr_t(ReadFileDescriptor)
+    value.Error = Error
+
+    return value
+}
+
+func newCreateInputPipeReturn(
+    InputStream InputStreamHandle,
+    WriteFileDescriptor FileDescriptor,
+    Error Error,
+) CreateInputPipeReturn {
+    value := C.AllocCreateInputPipeReturn()
+    value.InputStream = C.uint64_t(InputStream)
+    value.WriteFileDescriptor = C.uintptr_t(WriteFileDescriptor)
     value.Error = Error
 
     return value
@@ -546,6 +561,9 @@ func newCreateContainerRequest(
     HealthcheckStartPeriod int64,
     HealthcheckRetries int64,
     Labels []StringPair,
+    AttachStdin bool,
+    StdinOnce bool,
+    OpenStdin bool,
 ) CreateContainerRequest {
     value := C.AllocCreateContainerRequest()
     value.ImageReference = C.CString(ImageReference)
@@ -675,6 +693,9 @@ func newCreateContainerRequest(
         C.SetStringPairArrayElement(value.Labels, C.uint64_t(i), v)
     }
 
+    value.AttachStdin = C.bool(AttachStdin)
+    value.StdinOnce = C.bool(StdinOnce)
+    value.OpenStdin = C.bool(OpenStdin)
 
     return value
 }

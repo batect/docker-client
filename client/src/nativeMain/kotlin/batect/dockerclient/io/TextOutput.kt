@@ -20,7 +20,7 @@ import batect.dockerclient.DockerClientException
 import batect.dockerclient.native.CreateOutputPipe
 import batect.dockerclient.native.DisposeOutputPipe
 import batect.dockerclient.native.FreeCreateOutputPipeReturn
-import batect.dockerclient.native.FreeError
+import batect.dockerclient.use
 import kotlinx.cinterop.ByteVarOf
 import kotlinx.cinterop.CPointer
 import kotlinx.cinterop.get
@@ -70,14 +70,10 @@ public actual class SinkTextOutput actual constructor(public val sink: Sink) : T
         }
 
         override fun close() {
-            val error = DisposeOutputPipe(outputStreamHandle)
-
-            try {
+            DisposeOutputPipe(outputStreamHandle).use { error ->
                 if (error != null) {
                     throw DockerClientException(error.pointed)
                 }
-            } finally {
-                FreeError(error)
             }
         }
     }

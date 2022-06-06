@@ -48,7 +48,10 @@ public data class ContainerCreationSpec(
     val healthcheckTimeout: Duration? = null,
     val healthcheckStartPeriod: Duration? = null,
     val healthcheckRetries: Int? = null,
-    val labels: Map<String, String> = emptyMap()
+    val labels: Map<String, String> = emptyMap(),
+    val attachStdin: Boolean = false,
+    val stdinOnce: Boolean = false,
+    val openStdin: Boolean = false
 ) {
     internal fun ensureValid() {
         if (networkAliases.isNotEmpty() && network == null) {
@@ -267,6 +270,12 @@ public data class ContainerCreationSpec(
 
         public fun withLabels(labels: Map<String, String>): Builder {
             spec = spec.copy(labels = spec.labels + labels)
+
+            return this
+        }
+
+        public fun withStdinAttached(): Builder {
+            spec = spec.copy(attachStdin = true, openStdin = true, stdinOnce = true)
 
             return this
         }

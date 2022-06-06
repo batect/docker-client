@@ -17,6 +17,7 @@
 package batect.dockerclient
 
 import batect.dockerclient.io.PreparedOutputStream
+import batect.dockerclient.io.TextInput
 import batect.dockerclient.io.TextOutput
 import batect.dockerclient.native.AttachToContainerOutput
 import batect.dockerclient.native.BuildImage
@@ -444,31 +445,41 @@ internal actual class RealDockerClient actual constructor(configuration: DockerC
         }
     }
 
-    override suspend fun attachToContainerOutput(container: ContainerReference, stdout: TextOutput, stderr: TextOutput, attachedNotification: ReadyNotification?) {
-        stdout.prepareStream().use { stdoutStream ->
-            stderr.prepareStream().use { stderrStream ->
-                coroutineScope {
-                    launch(IODispatcher) { stdoutStream.run() }
-                    launch(IODispatcher) { stderrStream.run() }
+    override suspend fun attachToContainerIO(
+        container: ContainerReference,
+        stdout: TextOutput?,
+        stderr: TextOutput?,
+        stdin: TextInput?,
+        attachedNotification: ReadyNotification?
+    ) {
+        stdout?.prepareStream().use { stdoutStream ->
+            stderr?.prepareStream().use { stderrStream ->
+                stdin?.prepareStream().use { stdinStream ->
+                    coroutineScope {
+                        launch(IODispatcher) { stdoutStream?.run() }
+                        launch(IODispatcher) { stderrStream?.run() }
+                        launch(IODispatcher) { stdinStream?.run() }
 
-                    launchWithGolangContext { context ->
-                        val callbackState = ReadyNotificationCallbackState(attachedNotification)
+                        launchWithGolangContext { context ->
+                            val callbackState = ReadyNotificationCallbackState(attachedNotification)
 
-                        callbackState.use { callback, callbackUserData ->
-                            AttachToContainerOutput(
-                                clientHandle,
-                                context.handle,
-                                container.id.cstr,
-                                stdoutStream.outputStreamHandle,
-                                stderrStream.outputStreamHandle,
-                                callback,
-                                callbackUserData
-                            ).ifFailed { error ->
-                                if (error.pointed.Type!!.toKString() == "main.ReadyCallbackFailedError") {
-                                    throw callbackState.exceptionThrown!!
+                            callbackState.use { callback, callbackUserData ->
+                                AttachToContainerOutput(
+                                    clientHandle,
+                                    context.handle,
+                                    container.id.cstr,
+                                    stdoutStream?.outputStreamHandle ?: 0.toULong(),
+                                    stderrStream?.outputStreamHandle ?: 0.toULong(),
+                                    stdinStream?.inputStreamHandle ?: 0.toULong(),
+                                    callback,
+                                    callbackUserData
+                                ).ifFailed { error ->
+                                    if (error.pointed.Type!!.toKString() == "main.ReadyCallbackFailedError") {
+                                        throw callbackState.exceptionThrown!!
+                                    }
+
+                                    throw AttachToContainerFailedException(error.pointed)
                                 }
-
-                                throw AttachToContainerFailedException(error.pointed)
                             }
                         }
                     }

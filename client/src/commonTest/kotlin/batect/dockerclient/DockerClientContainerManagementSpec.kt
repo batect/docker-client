@@ -122,7 +122,7 @@ class DockerClientContainerManagementSpec : ShouldSpec({
                         val listeningToOutput = ReadyNotification()
 
                         launch {
-                            client.attachToContainerOutput(container, SinkTextOutput(stdout), SinkTextOutput(stderr), listeningToOutput)
+                            client.attachToContainerIO(container, SinkTextOutput(stdout), SinkTextOutput(stderr), null, listeningToOutput)
                         }
 
                         launch {
@@ -272,7 +272,7 @@ class DockerClientContainerManagementSpec : ShouldSpec({
                                 val listeningToOutput = ReadyNotification()
 
                                 launch {
-                                    client.attachToContainerOutput(container, SinkTextOutput(stdout), SinkTextOutput(stderr), listeningToOutput)
+                                    client.attachToContainerIO(container, SinkTextOutput(stdout), SinkTextOutput(stderr), null, listeningToOutput)
                                 }
 
                                 launch {
@@ -503,7 +503,7 @@ class DockerClientContainerManagementSpec : ShouldSpec({
                     val waitingForExitCode = ReadyNotification()
 
                     launch {
-                        client.attachToContainerOutput(container, SinkTextOutput(stdout), SinkTextOutput(stderr), listeningToOutput)
+                        client.attachToContainerIO(container, SinkTextOutput(stdout), SinkTextOutput(stderr), null, listeningToOutput)
                     }
 
                     val exitCodeSource = async {
@@ -586,7 +586,7 @@ class DockerClientContainerManagementSpec : ShouldSpec({
                     val stdout = Buffer()
                     val stderr = Buffer()
 
-                    val exitCode = client.run(container, SinkTextOutput(stdout), SinkTextOutput(stderr))
+                    val exitCode = client.run(container, SinkTextOutput(stdout), SinkTextOutput(stderr), null)
                     val stdoutText = stdout.readUtf8()
                     val stderrText = stderr.readUtf8()
 
@@ -607,7 +607,7 @@ class DockerClientContainerManagementSpec : ShouldSpec({
                     val container = client.createContainer(spec)
 
                     try {
-                        val exitCode = client.run(container, stdout, stderr)
+                        val exitCode = client.run(container, stdout, stderr, null)
                         exitCode shouldBe 123
                     } finally {
                         client.removeContainer(container, force = true)
@@ -643,7 +643,7 @@ class DockerClientContainerManagementSpec : ShouldSpec({
                     val duration = measureTime {
                         shouldThrow<TimeoutCancellationException> {
                             withTimeout(2.seconds) {
-                                client.run(container, SinkTextOutput(stdout), SinkTextOutput(stderr))
+                                client.run(container, SinkTextOutput(stdout), SinkTextOutput(stderr), null)
                             }
                         }
                     }
@@ -942,7 +942,7 @@ class DockerClientContainerManagementSpec : ShouldSpec({
                         val stdout = Buffer()
                         val stderr = Buffer()
 
-                        val exitCode = client.run(container, SinkTextOutput(stdout), SinkTextOutput(stderr))
+                        val exitCode = client.run(container, SinkTextOutput(stdout), SinkTextOutput(stderr), null)
                         val stdoutText = stdout.readUtf8()
                         val stderrText = stderr.readUtf8()
 
@@ -973,7 +973,7 @@ class DockerClientContainerManagementSpec : ShouldSpec({
                     val stdout = Buffer()
                     val stderr = Buffer()
 
-                    val exitCode = client.run(container, SinkTextOutput(stdout), SinkTextOutput(stderr))
+                    val exitCode = client.run(container, SinkTextOutput(stdout), SinkTextOutput(stderr), null)
                     val stdoutText = stdout.readUtf8()
                     val stderrText = stderr.readUtf8()
 
@@ -998,7 +998,7 @@ class DockerClientContainerManagementSpec : ShouldSpec({
                     val stdout = Buffer()
                     val stderr = Buffer()
 
-                    val exitCode = client.run(container, SinkTextOutput(stdout), SinkTextOutput(stderr))
+                    val exitCode = client.run(container, SinkTextOutput(stdout), SinkTextOutput(stderr), null)
                     val stdoutText = stdout.readUtf8()
                     val stderrText = stderr.readUtf8()
 
@@ -1027,7 +1027,7 @@ class DockerClientContainerManagementSpec : ShouldSpec({
                         val stdout = Buffer()
                         val stderr = Buffer()
 
-                        val exitCode = client.run(container, SinkTextOutput(stdout), SinkTextOutput(stderr))
+                        val exitCode = client.run(container, SinkTextOutput(stdout), SinkTextOutput(stderr), null)
                         val stdoutText = stdout.readUtf8()
                         val stderrText = stderr.readUtf8()
 
@@ -1057,7 +1057,7 @@ class DockerClientContainerManagementSpec : ShouldSpec({
                         val stdout = Buffer()
                         val stderr = Buffer()
 
-                        val exitCode = client.run(container, SinkTextOutput(stdout), SinkTextOutput(stderr))
+                        val exitCode = client.run(container, SinkTextOutput(stdout), SinkTextOutput(stderr), null)
                         val stdoutText = stdout.readUtf8()
                         val stderrText = stderr.readUtf8()
 
@@ -1086,7 +1086,7 @@ class DockerClientContainerManagementSpec : ShouldSpec({
                     val stdout = Buffer()
                     val stderr = Buffer()
 
-                    val exitCode = client.run(container, SinkTextOutput(stdout), SinkTextOutput(stderr))
+                    val exitCode = client.run(container, SinkTextOutput(stdout), SinkTextOutput(stderr), null)
                     val stdoutText = stdout.readUtf8()
                     val stderrText = stderr.readUtf8()
 
@@ -1110,7 +1110,7 @@ class DockerClientContainerManagementSpec : ShouldSpec({
                     val stdout = Buffer()
                     val stderr = Buffer()
 
-                    val exitCode = client.run(container, SinkTextOutput(stdout), SinkTextOutput(stderr))
+                    val exitCode = client.run(container, SinkTextOutput(stdout), SinkTextOutput(stderr), null)
                     val stdoutText = stdout.readUtf8()
                     val stderrText = stderr.readUtf8()
 
@@ -1156,7 +1156,7 @@ class DockerClientContainerManagementSpec : ShouldSpec({
                         val stdout = Buffer()
                         val stderr = Buffer()
 
-                        val exitCode = client.run(container, SinkTextOutput(stdout), SinkTextOutput(stderr))
+                        val exitCode = client.run(container, SinkTextOutput(stdout), SinkTextOutput(stderr), null)
                         val stdoutText = stdout.readUtf8()
                         val stderrText = stderr.readUtf8()
 
@@ -1192,7 +1192,7 @@ class DockerClientContainerManagementSpec : ShouldSpec({
                 val stdout = Buffer()
                 val stderr = Buffer()
 
-                val exitCode = client.run(container, SinkTextOutput(stdout), SinkTextOutput(stderr))
+                val exitCode = client.run(container, SinkTextOutput(stdout), SinkTextOutput(stderr), null)
                 val stdoutText = stdout.readUtf8()
                 val stderrText = stderr.readUtf8()
 

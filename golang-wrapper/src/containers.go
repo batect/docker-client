@@ -71,6 +71,9 @@ func configForContainer(request *C.CreateContainerRequest) container.Config {
 		ExposedPorts: exposedPortsForContainer(request),
 		User:         C.GoString(request.User),
 		Tty:          bool(request.AttachTTY),
+		AttachStdin:  bool(request.AttachStdin),
+		StdinOnce:    bool(request.StdinOnce),
+		OpenStdin:    bool(request.OpenStdin),
 		Labels:       fromStringPairs(request.Labels, request.LabelsCount),
 		Healthcheck: &container.HealthConfig{
 			Interval:    time.Duration(int64(request.HealthcheckInterval)) * time.Nanosecond,
@@ -164,9 +167,10 @@ func RemoveContainer(clientHandle DockerClientHandle, contextHandle ContextHandl
 }
 
 //export AttachToContainerOutput
-func AttachToContainerOutput(clientHandle DockerClientHandle, contextHandle ContextHandle, id *C.char, stdoutStreamHandle OutputStreamHandle, stderrStreamHandle OutputStreamHandle, onReady ReadyCallback, callbackUserData unsafe.Pointer) Error {
+func AttachToContainerOutput(clientHandle DockerClientHandle, contextHandle ContextHandle, id *C.char, stdoutStreamHandle OutputStreamHandle, stderrStreamHandle OutputStreamHandle, stdinStreamHandle InputStreamHandle, onReady ReadyCallback, callbackUserData unsafe.Pointer) Error {
 	defer stdoutStreamHandle.Close()
 	defer stderrStreamHandle.Close()
+	// We don't need to close stdinStreamHandle - the Kotlin code should do that when there is no more input to stream.
 
 	docker := clientHandle.DockerAPIClient()
 	ctx := contextHandle.Context()
@@ -181,8 +185,25 @@ func AttachToContainerOutput(clientHandle DockerClientHandle, contextHandle Cont
 	opts := types.ContainerAttachOptions{
 		Logs:   true,
 		Stream: true,
-		Stdout: true,
-		Stderr: true,
+	}
+
+	streamer := replacements.HijackedIOStreamer{
+		Tty: config.Config.Tty,
+	}
+
+	if stdoutStreamHandle != 0 {
+		streamer.OutputStream = stdoutStreamHandle.OutputStream()
+		opts.Stdout = true
+	}
+
+	if stderrStreamHandle != 0 {
+		streamer.ErrorStream = stderrStreamHandle.OutputStream()
+		opts.Stderr = true
+	}
+
+	if stdinStreamHandle != 0 {
+		streamer.InputStream = stdinStreamHandle.InputStream()
+		opts.Stdin = true
 	}
 
 	resp, err := docker.ContainerAttach(ctx, containerID, opts)
@@ -193,16 +214,10 @@ func AttachToContainerOutput(clientHandle DockerClientHandle, contextHandle Cont
 
 	defer resp.Close()
 
+	streamer.Resp = resp
+
 	if !invokeReadyCallback(onReady, callbackUserData) {
 		return toError(ErrReadyCallbackFailed)
-	}
-
-	streamer := replacements.HijackedIOStreamer{
-		InputStream:  nil,
-		OutputStream: stdoutStreamHandle.OutputStream(),
-		ErrorStream:  stderrStreamHandle.OutputStream(),
-		Resp:         resp,
-		Tty:          config.Config.Tty,
 	}
 
 	if err := streamer.Stream(ctx); err != nil {

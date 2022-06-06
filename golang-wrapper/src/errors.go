@@ -21,6 +21,7 @@ var (
 	ErrProgressCallbackFailed    = ProgressCallbackFailedError{}
 	ErrReadyCallbackFailed       = ReadyCallbackFailedError{}
 	ErrInvalidOutputStreamHandle = InvalidOutputStreamHandleError{}
+	ErrInvalidInputStreamHandle  = InvalidInputStreamHandleError{}
 	ErrBuildKitNotSupported      = BuildKitNotSupportedError{}
 	ErrInvalidContextHandle      = InvalidContextHandleError{}
 )
@@ -47,6 +48,12 @@ type InvalidOutputStreamHandleError struct{}
 
 func (e InvalidOutputStreamHandleError) Error() string {
 	return "invalid output stream handle"
+}
+
+type InvalidInputStreamHandleError struct{}
+
+func (e InvalidInputStreamHandleError) Error() string {
+	return "invalid input stream handle"
 }
 
 type BuildKitNotSupportedError struct{}

@@ -2,6 +2,9 @@
 
 * Demo / sample project
   * Add snippets to readme
+  * Pulling an image
+  * Building an image
+  * Running a container (eg. run a Ubuntu image with a shell)
 * License checking
   * Gradle dependencies
   * Golang dependencies
@@ -56,10 +59,14 @@
   * Upload files
   * Attach
     * Stream input to stdin - from console or from buffer
+      * Stream from stdin
+      * Stream from arbitrary source
       * Test on macOS / Linux
       * Test on Windows
-    * Stream input to stdin - from console or from buffer
-    * Reuse input stream
+      * Fail if attempting to attach non-TTY stdin to container expecting TTY?
+      * Allow providing only a subset of streams
+      * Check if implementations of `Sink` need to flush data written to FD
+      * Test case where container exits before stdin closes - should abort read
     * Forward signals to container (test by sending Ctrl-C to self)
     * Set and update TTY size
     * Handle case where container hasn't been started or has already finished

@@ -14,7 +14,7 @@
     limitations under the License.
 */
 
-package batect.dockerclient.io
+package batect.dockerclient.io.windows
 
 import jnr.constants.platform.windows.LastError
 import jnr.ffi.LibraryLoader
@@ -30,69 +30,19 @@ import jnr.ffi.mapper.TypeMapper
 import jnr.posix.HANDLE
 import jnr.posix.POSIXFactory
 import jnr.posix.WindowsLibC
-import okio.Buffer
-import okio.Source
-import okio.Timeout
-import java.io.IOException
-
-internal class WindowsPipeSource(private val fd: Int) : Source {
-    override fun timeout(): Timeout = Timeout.NONE
-
-    override fun read(sink: Buffer, byteCount: Long): Long {
-        val bufferPointer = runtime.memoryManager.allocateDirect(byteCount, true)
-        val bytesRead = NativeLongByReference(0)
-        val succeeded = win32.ReadFile(HANDLE.valueOf(fd.toLong()), bufferPointer, bufferPointer.size(), bytesRead, null)
-
-        if (!succeeded) {
-            val lastError = posix.errno()
-
-            if (lastError == ERROR_BROKEN_PIPE) {
-                return -1
-            }
-
-            throw IOException(messageForError(lastError))
-        }
-
-        return when (bytesRead.toInt()) {
-            0 -> -1
-            -1 -> throw errnoToIOException(posix.errno())
-            else -> {
-                val buffer = ByteArray(bytesRead.toInt())
-                bufferPointer.get(0, buffer, 0, bytesRead.toInt())
-                sink.write(buffer, 0, bytesRead.toInt())
-
-                bytesRead.toLong()
-            }
-        }
-    }
-
-    override fun close() {
-        // Nothing to do.
-    }
-
-    private fun messageForError(errno: Int): String {
-        val error = LastError.values().singleOrNull { it.intValue() == errno }
-
-        if (error != null) {
-            return "${error.name}: $error"
-        }
-
-        return "0x${errno.toString(16)}: <unknown Win32 error>"
-    }
-
-    companion object {
-        private const val ERROR_BROKEN_PIPE: Int = 0x0000006D
-    }
-}
+import java.nio.ByteBuffer
 
 internal interface Win32 : WindowsLibC {
     @SaveError
     fun ReadFile(@In hFile: HANDLE, @Direct lpBuffer: Pointer, @In nNumberOfBytesToRead: Long, @Out lpNumberOfBytesRead: NativeLongByReference?, lpOverlapped: Pointer?): Boolean
+
+    @SaveError
+    fun WriteFile(@In hFile: HANDLE, @Direct lpBuffer: ByteBuffer, @In nNumberOfBytesToWrite: Long, @Out lpNumberOfBytesWritten: NativeLongByReference?, lpOverlapped: Pointer?): Boolean
 }
 
-private val posix = POSIXFactory.getNativePOSIX()
+internal val posix = POSIXFactory.getNativePOSIX()
 
-private val win32 = LibraryLoader.create(Win32::class.java)
+internal val win32 = LibraryLoader.create(Win32::class.java)
     .option(LibraryOption.LoadNow, true)
     .option(LibraryOption.IgnoreError, true)
     .option(LibraryOption.TypeMapper, createTypeMapper())
@@ -100,7 +50,7 @@ private val win32 = LibraryLoader.create(Win32::class.java)
     .failImmediately()
     .load()
 
-private val runtime = Runtime.getRuntime(win32)
+internal val runtime = Runtime.getRuntime(win32)
 
 // HACK: This is a hack to workaround the fact that POSIXTypeMapper isn't public, but we
 // need it to translate a number of different Win32 types to their JVM equivalents.
@@ -109,4 +59,14 @@ private fun createTypeMapper(): TypeMapper {
     constructor.isAccessible = true
 
     return constructor.newInstance() as TypeMapper
+}
+
+internal fun messageForError(errno: Int): String {
+    val error = LastError.values().singleOrNull { it.intValue() == errno }
+
+    if (error != null) {
+        return "${error.name}: $error"
+    }
+
+    return "0x${errno.toString(16)}: <unknown Win32 error>"
 }

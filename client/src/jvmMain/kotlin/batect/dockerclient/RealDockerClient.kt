@@ -16,6 +16,7 @@
 
 package batect.dockerclient
 
+import batect.dockerclient.io.TextInput
 import batect.dockerclient.io.TextOutput
 import batect.dockerclient.native.BuildImageProgressCallback
 import batect.dockerclient.native.BuildImageProgressUpdate
@@ -352,36 +353,41 @@ internal actual class RealDockerClient actual constructor(configuration: DockerC
         }
     }
 
-    override suspend fun attachToContainerOutput(
+    override suspend fun attachToContainerIO(
         container: ContainerReference,
-        stdout: TextOutput,
-        stderr: TextOutput,
+        stdout: TextOutput?,
+        stderr: TextOutput?,
+        stdin: TextInput?,
         attachedNotification: ReadyNotification?
     ) {
         val callback = ReadyCallback(attachedNotification)
 
-        stdout.prepareStream().use { stdoutStream ->
-            stderr.prepareStream().use { stderrStream ->
-                coroutineScope {
-                    launch(IODispatcher) { stdoutStream.run() }
-                    launch(IODispatcher) { stderrStream.run() }
+        stdout?.prepareStream().use { stdoutStream ->
+            stderr?.prepareStream().use { stderrStream ->
+                stdin?.prepareStream().use { stdinStream ->
+                    coroutineScope {
+                        launch(IODispatcher) { stdoutStream?.run() }
+                        launch(IODispatcher) { stderrStream?.run() }
+                        launch(IODispatcher) { stdinStream?.run() }
 
-                    launchWithGolangContext { context ->
-                        nativeAPI.AttachToContainerOutput(
-                            clientHandle,
-                            context.handle,
-                            container.id,
-                            stdoutStream.outputStreamHandle.toLong(),
-                            stderrStream.outputStreamHandle.toLong(),
-                            callback,
-                            null
-                        ).use { error ->
-                            if (error != null) {
-                                if (error.type.get() == "main.ReadyCallbackFailedError") {
-                                    throw callback.exceptionThrownInCallback!!
+                        launchWithGolangContext { context ->
+                            nativeAPI.AttachToContainerOutput(
+                                clientHandle,
+                                context.handle,
+                                container.id,
+                                stdoutStream?.outputStreamHandle?.toLong() ?: 0,
+                                stderrStream?.outputStreamHandle?.toLong() ?: 0,
+                                stdinStream?.inputStreamHandle?.toLong() ?: 0,
+                                callback,
+                                null
+                            ).use { error ->
+                                if (error != null) {
+                                    if (error.type.get() == "main.ReadyCallbackFailedError") {
+                                        throw callback.exceptionThrownInCallback!!
+                                    }
+
+                                    throw AttachToContainerFailedException(error)
                                 }
-
-                                throw AttachToContainerFailedException(error)
                             }
                         }
                     }

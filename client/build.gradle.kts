@@ -80,6 +80,10 @@ kotlin {
             dependsOn(commonMain)
         }
 
+        val posixMain by creating {
+            dependsOn(nativeMain)
+        }
+
         val jvmMain by getting {
             dependencies {
                 implementation(libs.jnr.ffi)
@@ -90,7 +94,7 @@ kotlin {
         }
 
         val linuxMain by creating {
-            dependsOn(nativeMain)
+            dependsOn(posixMain)
         }
 
         val linuxX64Main by getting {
@@ -98,7 +102,7 @@ kotlin {
         }
 
         val macosMain by creating {
-            dependsOn(nativeMain)
+            dependsOn(posixMain)
         }
 
         val macosX64Main by getting {

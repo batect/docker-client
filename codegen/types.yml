@@ -10,6 +10,12 @@
   jvmName: Long
   jnrType: u_int64_t
 
+- name: InputStreamHandle
+  type: alias
+  nativeType: uint64_t
+  jvmName: Long
+  jnrType: u_int64_t
+
 - name: FileDescriptor
   type: alias
   nativeType: uintptr_t
@@ -68,6 +74,16 @@
     - name: OutputStream
       type: OutputStreamHandle
     - name: ReadFileDescriptor
+      type: FileDescriptor
+    - name: Error
+      type: Error
+
+- name: CreateInputPipeReturn
+  type: struct
+  fields:
+    - name: InputStream
+      type: InputStreamHandle
+    - name: WriteFileDescriptor
       type: FileDescriptor
     - name: Error
       type: Error
@@ -409,6 +425,12 @@
       type: int64
     - name: Labels
       type: StringPair[]
+    - name: AttachStdin
+      type: boolean
+    - name: StdinOnce
+      type: boolean
+    - name: OpenStdin
+      type: boolean
 
 - name: CreateContainerReturn
   type: struct

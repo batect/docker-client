@@ -29,6 +29,8 @@ internal typealias DockerClientHandle = Long
 
 internal typealias OutputStreamHandle = Long
 
+internal typealias InputStreamHandle = Long
+
 internal typealias FileDescriptor = ULong
 
 internal typealias ContextHandle = Long
@@ -103,6 +105,21 @@ internal class CreateOutputPipeReturn(runtime: Runtime) : Struct(runtime), AutoC
 
     override fun close() {
         nativeAPI.FreeCreateOutputPipeReturn(this)
+    }
+}
+
+internal class CreateInputPipeReturn(runtime: Runtime) : Struct(runtime), AutoCloseable {
+    constructor(pointer: jnr.ffi.Pointer) : this(pointer.runtime) {
+        this.useMemory(pointer)
+    }
+
+    val inputStream = u_int64_t()
+    val writeFileDescriptor = uintptr_t()
+    val errorPointer = Pointer()
+    val error: Error? by lazy { if (errorPointer.intValue() == 0) null else Error(errorPointer.get()) }
+
+    override fun close() {
+        nativeAPI.FreeCreateInputPipeReturn(this)
     }
 }
 
@@ -586,6 +603,9 @@ internal class CreateContainerRequest(runtime: Runtime) : Struct(runtime), AutoC
     val healthcheckRetries = int64_t()
     val labelsCount = u_int64_t()
     val labelsPointer = Pointer()
+    val attachStdin = Boolean()
+    val stdinOnce = Boolean()
+    val openStdin = Boolean()
 
     override fun close() {
         nativeAPI.FreeCreateContainerRequest(this)
