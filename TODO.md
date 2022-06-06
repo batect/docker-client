@@ -58,7 +58,6 @@
     * Stream input to stdin - from console or from buffer
       * Test on macOS / Linux
       * Test on Windows
-    * Reuse output stream
     * Stream input to stdin - from console or from buffer
     * Reuse input stream
     * Forward signals to container (test by sending Ctrl-C to self)

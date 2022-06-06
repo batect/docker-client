@@ -598,6 +598,37 @@ class DockerClientContainerManagementSpec : ShouldSpec({
                 }
             }
 
+            should("be able to reuse output streams") {
+                suspend fun runContainer(stdout: SinkTextOutput, stderr: SinkTextOutput, name: String) {
+                    val spec = ContainerCreationSpec.Builder(image)
+                        .withCommand("sh", "-c", "echo 'Hello stdout from $name' >/dev/stdout && echo 'Hello stderr from $name' >/dev/stderr && exit 123")
+                        .build()
+
+                    val container = client.createContainer(spec)
+
+                    try {
+                        val exitCode = client.run(container, stdout, stderr)
+                        exitCode shouldBe 123
+                    } finally {
+                        client.removeContainer(container, force = true)
+                    }
+                }
+
+                val stdout = Buffer()
+                val stdoutOutput = SinkTextOutput(stdout)
+                val stderr = Buffer()
+                val stderrOutput = SinkTextOutput(stderr)
+
+                runContainer(stdoutOutput, stderrOutput, "first")
+                runContainer(stdoutOutput, stderrOutput, "second")
+
+                val stdoutText = stdout.readUtf8()
+                val stderrText = stderr.readUtf8()
+
+                stdoutText shouldBe "Hello stdout from first\nHello stdout from second\n"
+                stderrText shouldBe "Hello stderr from first\nHello stderr from second\n"
+            }
+
             should("be able to use Kotlin timeouts to abort running a container while still receiving any output from before the timeout") {
                 val spec = ContainerCreationSpec.Builder(image)
                     .withCommand("sh", "-c", "echo 'Hello stdout' >/dev/stdout && echo 'Hello stderr' >/dev/stderr && sleep 5 && echo 'Stdout should never receive this' >/dev/stdout && echo 'Stderr should never receive this' >/dev/stderr")
