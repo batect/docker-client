@@ -13,7 +13,7 @@
 * Remove "work in progress" tag from repo description
 * Contributor guide
 * KDoc comments for public API
-  * Enforce this somehow?
+  * Enforce this with Detekt (https://detekt.dev/docs/rules/comments#undocumentedpublicclass, https://detekt.dev/docs/rules/comments#undocumentedpublicfunction, https://detekt.dev/docs/rules/comments#undocumentedpublicproperty)
 * Go build: use Zig for compilation
   * Set ZIG_LOCAL_CACHE_DIR and ZIG_GLOBAL_CACHE_DIR to the same thing for all builds once https://github.com/ziglang/zig/issues/9711 is resolved
 * Run tests with memory leak detector - eg. valgrind
@@ -38,6 +38,8 @@
 
 * Check that Golang code can return an empty list (eg. listing all volumes returns no volumes)
 
+* Allow calling `ReadyNotification.waitForReady()` from multiple places (will currently only release one caller, not all)
+
 * Remove `with...` prefixes from ImageBuildSpec / ContainerCreationSpec?
 * Add `ifFailed` helper method to JVM `RealDockerClient`
 
@@ -57,10 +59,10 @@
       * Test on macOS / Linux
       * Test on Windows
     * Reuse output stream
+    * Stream input to stdin - from console or from buffer
     * Reuse input stream
     * Forward signals to container (test by sending Ctrl-C to self)
     * Set and update TTY size
-    * Handle case where only one stream is provided (eg. only stdout, no stderr)
     * Handle case where container hasn't been started or has already finished
   * Stream events (for waiting for health check)
 * Exec
