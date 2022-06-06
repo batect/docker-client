@@ -16,6 +16,7 @@
 
 package batect.dockerclient.io
 
+import batect.dockerclient.native.FileDescriptor
 import kotlinx.cinterop.addressOf
 import kotlinx.cinterop.usePinned
 import okio.Buffer
@@ -23,7 +24,7 @@ import okio.Source
 import okio.Timeout
 import platform.posix.errno
 
-internal actual class PipeSource actual constructor(private val fd: Int) : Source {
+internal actual class PipeSource actual constructor(private val fd: FileDescriptor) : Source {
     actual override fun timeout(): Timeout = Timeout.NONE
 
     actual override fun read(sink: Buffer, byteCount: Long): Long {
@@ -31,7 +32,7 @@ internal actual class PipeSource actual constructor(private val fd: Int) : Sourc
         val buffer = ByteArray(bytesToRead)
 
         val bytesRead = buffer.usePinned { pinned ->
-            platform.posix.read(fd, pinned.addressOf(0), bytesToRead.toUInt())
+            platform.posix.read(fd.toInt(), pinned.addressOf(0), bytesToRead.toUInt())
         }
 
         return when (bytesRead) {

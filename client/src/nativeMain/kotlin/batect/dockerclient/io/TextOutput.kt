@@ -58,7 +58,7 @@ public actual class SinkTextOutput actual constructor(public val sink: Sink) : T
                 }
 
                 outputStreamHandle = ret.pointed.OutputStream
-                val fd = ret.pointed.ReadFileDescriptor.safeToInt()
+                val fd = ret.pointed.ReadFileDescriptor
                 source = PipeSource(fd)
             } finally {
                 FreeCreateOutputPipeReturn(ret)
@@ -83,7 +83,7 @@ public actual class SinkTextOutput actual constructor(public val sink: Sink) : T
     }
 }
 
-private fun ULong.safeToInt() = if (this > Int.MAX_VALUE.toULong()) throw IllegalArgumentException("Value out of range") else this.toInt()
+internal fun ULong.safeToInt() = if (this > Int.MAX_VALUE.toULong()) throw IllegalArgumentException("Value out of range") else this.toInt()
 
 // These two functions are based on okio's implementations.
 internal fun errnoToIOException(errno: Int): IOException {
