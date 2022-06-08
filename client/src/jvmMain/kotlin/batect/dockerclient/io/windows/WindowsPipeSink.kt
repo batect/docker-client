@@ -49,12 +49,10 @@ internal class WindowsPipeSink(private val fd: Int) : Sink {
     }
 
     override fun flush() {
-        // TODO: do we need to flush here?
+        // Nothing to do - pipes don't need to be flushed, see https://stackoverflow.com/a/43188944/1668119.
     }
 
     override fun close() {
-        flush()
-
         val succeeded = win32.CloseHandle(handle)
 
         if (!succeeded) {
