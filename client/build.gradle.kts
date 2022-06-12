@@ -19,9 +19,10 @@ import batect.dockerclient.buildtools.codegen.GenerateGolangTypes
 import batect.dockerclient.buildtools.codegen.GenerateKotlinJVMMethods
 import batect.dockerclient.buildtools.codegen.GenerateKotlinJVMTypes
 import batect.dockerclient.buildtools.golang.crosscompilation.GolangBuild
+import batect.dockerclient.buildtools.kotlin.isSupportedOnThisMachine
+import batect.dockerclient.buildtools.kotlin.isSameOperatingSystemAsHost
 import org.gradle.api.tasks.testing.logging.TestExceptionFormat
 import org.gradle.api.tasks.testing.logging.TestLogEvent
-import org.gradle.internal.os.OperatingSystem
 import org.jetbrains.kotlin.gradle.dsl.ExplicitApiMode
 import org.jetbrains.kotlin.gradle.plugin.KotlinTarget
 import org.jetbrains.kotlin.gradle.plugin.mpp.KotlinNativeCompilation
@@ -258,22 +259,6 @@ val KonanTarget.golangOSName: String
         Family.OSX -> "darwin"
         Family.LINUX -> "linux"
         Family.MINGW -> "windows"
-        else -> throw UnsupportedOperationException("Unknown target family: $family")
-    }
-
-val KonanTarget.isSupportedOnThisMachine: Boolean
-    get() = when (this.family) {
-        Family.OSX -> OperatingSystem.current().isMacOsX
-        Family.LINUX -> true
-        Family.MINGW -> true
-        else -> throw UnsupportedOperationException("Unknown target family: $family")
-    }
-
-val KonanTarget.isSameOperatingSystemAsHost: Boolean
-    get() = when (this.family) {
-        Family.OSX -> OperatingSystem.current().isMacOsX
-        Family.LINUX -> OperatingSystem.current().isLinux
-        Family.MINGW -> OperatingSystem.current().isWindows
         else -> throw UnsupportedOperationException("Unknown target family: $family")
     }
 

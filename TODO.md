@@ -3,8 +3,8 @@
 * Demo / sample project
   * Add snippets to readme
   * Pulling an image
+    * Make output from sample app nicer / clearer
   * Building an image
-  * Running a container (eg. run a Ubuntu image with a shell)
 * License checking
   * Gradle dependencies
   * Golang dependencies
@@ -57,9 +57,8 @@
   * Upload files
   * Attach
     * Stream input to stdin - from console or from buffer
-      * Stream from stdin
       * Remove need to cast to and from `ULong` in JVM's `TextInput.kt`
-      * Test on Windows
+      * Test on Windows - check this is really passing (native tests are disabled on CI)
       * Fail if attempting to attach non-TTY stdin to container expecting TTY?
       * Check if implementations of `Sink` need to flush data written to FD
       * Stream from unclosed sink / test case where container exits before stdin closes - should abort read

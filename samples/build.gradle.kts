@@ -14,14 +14,17 @@
     limitations under the License.
 */
 
-rootProject.name = "docker-client"
-
 plugins {
-    id("com.gradle.enterprise") version("3.10")
+    id("batect.dockerclient.buildtools.formatting")
 }
 
-includeBuild("build-logic")
+repositories {
+    mavenCentral()
+}
 
-include("golang-wrapper")
-include("client")
-include("samples:interactive-container")
+tasks.named("check") {
+    subprojects.forEach { subproject ->
+        dependsOn(subproject.tasks.named("check"))
+        dependsOn(subproject.tasks.named("build"))
+    }
+}
