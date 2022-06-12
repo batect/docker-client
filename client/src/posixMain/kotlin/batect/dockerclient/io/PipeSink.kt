@@ -16,15 +16,20 @@
 
 package batect.dockerclient.io
 
+import batect.dockerclient.DockerClientException
+import batect.dockerclient.ifFailed
+import batect.dockerclient.native.CloseInputPipeWriteEnd
 import batect.dockerclient.native.FileDescriptor
+import batect.dockerclient.native.InputStreamHandle
 import kotlinx.cinterop.addressOf
+import kotlinx.cinterop.pointed
 import kotlinx.cinterop.usePinned
 import okio.Buffer
 import okio.Sink
 import okio.Timeout
 import platform.posix.errno
 
-internal actual class PipeSink actual constructor(private val fd: FileDescriptor) : Sink {
+internal actual class PipeSink actual constructor(private val fd: FileDescriptor, private val handle: InputStreamHandle) : Sink {
     actual override fun timeout(): Timeout = Timeout.NONE
 
     actual override fun write(source: Buffer, byteCount: Long) {
@@ -49,8 +54,8 @@ internal actual class PipeSink actual constructor(private val fd: FileDescriptor
     }
 
     actual override fun close() {
-        if (platform.posix.close(fd.safeToInt()) == -1) {
-            throw errnoToIOException(errno)
+        CloseInputPipeWriteEnd(handle).ifFailed { err ->
+            throw DockerClientException(err.pointed)
         }
     }
 }

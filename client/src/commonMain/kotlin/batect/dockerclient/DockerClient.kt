@@ -169,8 +169,8 @@ internal typealias DockerClientFactory = (DockerClientConfiguration) -> DockerCl
  *
  * @param container the container to run
  * @param stdout the output stream to stream stdout to
- * @param stderr the output stream to stream stderr to, not used if the container is configured to use a TTY
- * @param stdin the input stream to stream stdin from
+ * @param stderr the output stream to stream stderr to. Not used if the container is configured to use a TTY with [ContainerCreationSpec.Builder.withTTY].
+ * @param stdin the input stream to stream stdin from. Only used if the container is configured to have stdin attached with [ContainerCreationSpec.Builder.withStdinAttached].
  * @return the exit code from the container
  */
 public suspend fun DockerClient.run(container: ContainerReference, stdout: TextOutput?, stderr: TextOutput?, stdin: TextInput?): Long {

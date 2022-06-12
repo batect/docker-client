@@ -52,8 +52,8 @@ public actual class SourceTextInput actual constructor(public val source: Source
                 val fd = ret.writeFileDescriptor.intValue()
 
                 sink = when {
-                    Platform.IS_WINDOWS -> WindowsPipeSink(fd)
-                    else -> POSIXPipeSink(fd)
+                    Platform.IS_WINDOWS -> WindowsPipeSink(fd, inputStreamHandle.toLong())
+                    else -> POSIXPipeSink(fd, inputStreamHandle.toLong())
                 }
             }
         }

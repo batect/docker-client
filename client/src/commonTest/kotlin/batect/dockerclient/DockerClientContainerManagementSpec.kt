@@ -17,6 +17,7 @@
 package batect.dockerclient
 
 import batect.dockerclient.io.SinkTextOutput
+import batect.dockerclient.io.SourceTextInput
 import io.kotest.assertions.asClue
 import io.kotest.assertions.throwables.shouldNotThrowAny
 import io.kotest.assertions.throwables.shouldThrow
@@ -627,6 +628,33 @@ class DockerClientContainerManagementSpec : ShouldSpec({
 
                 stdoutText shouldBe "Hello stdout from first\nHello stdout from second\n"
                 stderrText shouldBe "Hello stderr from first\nHello stderr from second\n"
+            }
+
+            should("be able to stream input to a container") {
+                val spec = ContainerCreationSpec.Builder(image)
+                    .withCommand("sh", "-c", "cat >/input.txt && echo \"Size of file: $(stat -c %s input.txt)\" && cat input.txt && exit 123")
+                    .withStdinAttached()
+                    .build()
+
+                val container = client.createContainer(spec)
+
+                try {
+                    val stdout = Buffer()
+                    val stderr = Buffer()
+                    val stdin = Buffer()
+                    stdin.writeUtf8("Hello world!\nThis is some input.")
+                    stdin.close()
+
+                    val exitCode = client.run(container, SinkTextOutput(stdout), SinkTextOutput(stderr), SourceTextInput(stdin))
+                    val stdoutText = stdout.readUtf8()
+                    val stderrText = stderr.readUtf8()
+
+                    exitCode shouldBe 123
+                    stdoutText shouldBe "Size of file: 32\nHello world!\nThis is some input."
+                    stderrText shouldBe ""
+                } finally {
+                    client.removeContainer(container, force = true)
+                }
             }
 
             should("be able to use Kotlin timeouts to abort running a container while still receiving any output from before the timeout") {

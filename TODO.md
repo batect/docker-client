@@ -54,19 +54,15 @@
       * Add support for warnings (added in BuildKit 0.10.0)
       * Upgrade to most recent version of BuildKit library (currently blocked due to version hell)
 * Containers
-  * Create
-    * STDIN attached
   * Upload files
   * Attach
     * Stream input to stdin - from console or from buffer
       * Stream from stdin
-      * Stream from arbitrary source
-      * Test on macOS / Linux
+      * Remove need to cast to and from `ULong` in JVM's `TextInput.kt`
       * Test on Windows
       * Fail if attempting to attach non-TTY stdin to container expecting TTY?
-      * Allow providing only a subset of streams
       * Check if implementations of `Sink` need to flush data written to FD
-      * Test case where container exits before stdin closes - should abort read
+      * Stream from unclosed sink / test case where container exits before stdin closes - should abort read
     * Forward signals to container (test by sending Ctrl-C to self)
     * Set and update TTY size
     * Handle case where container hasn't been started or has already finished

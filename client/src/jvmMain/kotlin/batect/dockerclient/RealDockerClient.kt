@@ -552,6 +552,9 @@ internal actual class RealDockerClient actual constructor(configuration: DockerC
         request.healthcheckStartPeriod.set(jvm.healthcheckStartPeriod?.inWholeNanoseconds ?: 0)
         request.healthcheckRetries.set(jvm.healthcheckRetries ?: 0)
         request.labels = jvm.labels.map { StringPair(it.key, it.value) }
+        request.attachStdin.set(jvm.attachStdin)
+        request.stdinOnce.set(jvm.stdinOnce)
+        request.openStdin.set(jvm.openStdin)
 
         return request
     }

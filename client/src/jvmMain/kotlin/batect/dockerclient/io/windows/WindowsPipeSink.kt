@@ -16,6 +16,9 @@
 
 package batect.dockerclient.io.windows
 
+import batect.dockerclient.DockerClientException
+import batect.dockerclient.native.InputStreamHandle
+import batect.dockerclient.native.nativeAPI
 import jnr.ffi.byref.NativeLongByReference
 import jnr.posix.HANDLE
 import okio.Buffer
@@ -24,7 +27,7 @@ import okio.Timeout
 import java.io.IOException
 import java.nio.ByteBuffer
 
-internal class WindowsPipeSink(private val fd: Int) : Sink {
+internal class WindowsPipeSink(private val fd: Int, private val streamHandle: InputStreamHandle) : Sink {
     private val handle = HANDLE.valueOf(fd.toLong())
 
     override fun timeout(): Timeout = Timeout.NONE
@@ -53,12 +56,10 @@ internal class WindowsPipeSink(private val fd: Int) : Sink {
     }
 
     override fun close() {
-        val succeeded = win32.CloseHandle(handle)
+        val error = nativeAPI.CloseInputPipeWriteEnd(streamHandle)
 
-        if (!succeeded) {
-            val lastError = posix.errno()
-
-            throw IOException(messageForError(lastError))
+        if (error != null) {
+            throw DockerClientException(error)
         }
     }
 }

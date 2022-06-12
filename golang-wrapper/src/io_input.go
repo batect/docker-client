@@ -44,17 +44,17 @@ func (handle InputStreamHandle) InputStream() *streams.In {
 	return inputStreams[handle]
 }
 
-func (handle InputStreamHandle) Close() {
+func (handle InputStreamHandle) Close() error {
 	inputStreamsLock.RLock()
 	defer inputStreamsLock.RUnlock()
 
 	pipe, ok := inputPipes[handle]
 
 	if !ok {
-		return
+		return ErrInvalidInputStreamHandle
 	}
 
-	pipe.writeEnd.Close()
+	return pipe.writeEnd.Close()
 }
 
 //export CreateInputPipe
@@ -85,6 +85,11 @@ func CreateInputPipe() CreateInputPipeReturn {
 	nextInputStreamHandle++
 
 	return newCreateInputPipeReturn(streamHandle, FileDescriptor(writeEnd.Fd()), nil)
+}
+
+//export CloseInputPipeWriteEnd
+func CloseInputPipeWriteEnd(handle InputStreamHandle) Error {
+	return toError(handle.Close())
 }
 
 //export DisposeInputPipe

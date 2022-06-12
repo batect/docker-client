@@ -47,6 +47,7 @@ internal interface API {
     fun PruneImageBuildCache(@In clientHandle: DockerClientHandle, @In contextHandle: ContextHandle): Error?
     fun PullImage(@In clientHandle: DockerClientHandle, @In contextHandle: ContextHandle, @In ref: kotlin.String, @In onProgressUpdate: PullImageProgressCallback, @In callbackUserData: Pointer?): PullImageReturn?
     fun CreateInputPipe(): CreateInputPipeReturn?
+    fun CloseInputPipeWriteEnd(@In handle: InputStreamHandle): Error?
     fun DisposeInputPipe(@In handle: InputStreamHandle): Error?
     fun CreateOutputPipe(): CreateOutputPipeReturn?
     fun DisposeOutputPipe(@In handle: OutputStreamHandle): Error?

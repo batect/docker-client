@@ -400,6 +400,9 @@ internal actual class RealDockerClient actual constructor(configuration: DockerC
             HealthcheckRetries = spec.healthcheckRetries?.toLong() ?: 0
             Labels = allocArrayOf(spec.labels.map { allocStringPair(it.key, it.value).ptr })
             LabelsCount = spec.labels.size.toULong()
+            AttachStdin = spec.attachStdin
+            StdinOnce = spec.stdinOnce
+            OpenStdin = spec.openStdin
         }
     }
 

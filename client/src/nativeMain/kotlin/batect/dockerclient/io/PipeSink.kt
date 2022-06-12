@@ -17,11 +17,12 @@
 package batect.dockerclient.io
 
 import batect.dockerclient.native.FileDescriptor
+import batect.dockerclient.native.InputStreamHandle
 import okio.Buffer
 import okio.Sink
 import okio.Timeout
 
-internal expect class PipeSink(fd: FileDescriptor) : Sink {
+internal expect class PipeSink(fd: FileDescriptor, handle: InputStreamHandle) : Sink {
     override fun timeout(): Timeout
     override fun write(source: Buffer, byteCount: Long)
     override fun flush()

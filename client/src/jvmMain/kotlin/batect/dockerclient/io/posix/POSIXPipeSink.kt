@@ -16,12 +16,15 @@
 
 package batect.dockerclient.io.posix
 
+import batect.dockerclient.DockerClientException
+import batect.dockerclient.native.InputStreamHandle
+import batect.dockerclient.native.nativeAPI
 import okio.Buffer
 import okio.Sink
 import okio.Timeout
 import java.nio.ByteBuffer
 
-internal class POSIXPipeSink(private val fd: Int) : Sink {
+internal class POSIXPipeSink(private val fd: Int, private val handle: InputStreamHandle) : Sink {
     override fun timeout(): Timeout = Timeout.NONE
 
     override fun write(source: Buffer, byteCount: Long) {
@@ -45,8 +48,10 @@ internal class POSIXPipeSink(private val fd: Int) : Sink {
     }
 
     override fun close() {
-        if (posix.close(fd) == -1) {
-            throw errnoToIOException(posix.errno())
+        val error = nativeAPI.CloseInputPipeWriteEnd(handle)
+
+        if (error != null) {
+            throw DockerClientException(error)
         }
     }
 }

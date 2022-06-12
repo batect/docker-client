@@ -54,7 +54,7 @@ public actual class SourceTextInput actual constructor(private val source: Sourc
 
                 inputStreamHandle = ret.pointed.InputStream
                 val fd = ret.pointed.WriteFileDescriptor
-                sink = PipeSink(fd)
+                sink = PipeSink(fd, inputStreamHandle)
             } finally {
                 FreeCreateInputPipeReturn(ret)
             }
