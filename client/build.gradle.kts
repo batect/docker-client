@@ -19,8 +19,8 @@ import batect.dockerclient.buildtools.codegen.GenerateGolangTypes
 import batect.dockerclient.buildtools.codegen.GenerateKotlinJVMMethods
 import batect.dockerclient.buildtools.codegen.GenerateKotlinJVMTypes
 import batect.dockerclient.buildtools.golang.crosscompilation.GolangBuild
-import batect.dockerclient.buildtools.kotlin.isSupportedOnThisMachine
 import batect.dockerclient.buildtools.kotlin.isSameOperatingSystemAsHost
+import batect.dockerclient.buildtools.kotlin.isSupportedOnThisMachine
 import org.gradle.api.tasks.testing.logging.TestExceptionFormat
 import org.gradle.api.tasks.testing.logging.TestLogEvent
 import org.jetbrains.kotlin.gradle.dsl.ExplicitApiMode
