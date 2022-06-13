@@ -28,6 +28,8 @@
   * Use https://github.com/square/kotlinpoet/ to generate Kotlin code rather than current string concatenation approach?
 * Remove use of panics in Golang code
 * Restore AssertionMode to Error once https://github.com/kotest/kotest/issues/3022 is resolved
+* Fix issue linking sample apps and tests for non-Mac targets from Mac hosts (eg. running `./gradlew samples:interactive-container:linkReleaseExecutableLinuxX64` on a Mac host)
+  * Currently ignored through `isSameOperatingSystemAsHost` checks in `build.gradle.kts`
 
 # APIs
 
@@ -58,7 +60,7 @@
   * Attach
     * Stream input to stdin - from console or from buffer
       * Remove need to cast to and from `ULong` in JVM's `TextInput.kt`
-      * Test on Windows - check this is really passing (native tests are disabled on CI)
+      * Test on Windows - check this is really passing (native tests are disabled on CI, try moving broken tests into their own source set so we can re-enable tests)
       * Fail if attempting to attach non-TTY stdin to container expecting TTY?
       * Check if implementations of `Sink` need to flush data written to FD
       * Stream from unclosed sink / test case where container exits before stdin closes - should abort read
