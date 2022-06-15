@@ -55,28 +55,7 @@ type activeClient struct {
 
 //export CreateClient
 func CreateClient(cfg *C.ClientConfiguration) CreateClientReturn {
-	opts := []client.Opt{
-		client.WithAPIVersionNegotiation(),
-	}
-
-	if cfg.UseConfigurationFromEnvironment {
-		opts = append(opts, client.FromEnv)
-	}
-
-	if cfg.Host != nil {
-		opts = append(opts, client.WithHost(C.GoString(cfg.Host)))
-	}
-
-	if cfg.TLS != nil {
-		opts = append(opts, withTLSClientConfig(
-			C.GoString(cfg.TLS.CAFilePath),
-			C.GoString(cfg.TLS.CertFilePath),
-			C.GoString(cfg.TLS.KeyFilePath),
-			bool(cfg.TLS.InsecureSkipVerify),
-		))
-	}
-
-	c, err := client.NewClientWithOpts(opts...)
+	c, err := client.NewClientWithOpts(optsForClient(cfg)...)
 
 	if err != nil {
 		return newCreateClientReturn(0, toError(err))
@@ -120,6 +99,31 @@ func CreateClient(cfg *C.ClientConfiguration) CreateClientReturn {
 	nextClientHandle++
 
 	return newCreateClientReturn(clientIndex, nil)
+}
+
+func optsForClient(cfg *C.ClientConfiguration) []client.Opt {
+	opts := []client.Opt{
+		client.WithAPIVersionNegotiation(),
+	}
+
+	if cfg.UseConfigurationFromEnvironment {
+		opts = append(opts, client.FromEnv)
+	}
+
+	if cfg.Host != nil {
+		opts = append(opts, client.WithHost(C.GoString(cfg.Host)))
+	}
+
+	if cfg.TLS != nil {
+		opts = append(opts, withTLSClientConfig(
+			C.GoString(cfg.TLS.CAFilePath),
+			C.GoString(cfg.TLS.CertFilePath),
+			C.GoString(cfg.TLS.KeyFilePath),
+			bool(cfg.TLS.InsecureSkipVerify),
+		))
+	}
+
+	return opts
 }
 
 // The Docker client library does not expose a version of WithTLSClientConfig that allows us to set
@@ -194,18 +198,18 @@ func (h DockerClientHandle) ClientConfigFile() *configfile.ConfigFile {
 	return getClient(h).configFile
 }
 
-func (h DockerClientHandle) ServerInfo() (*command.ServerInfo, error) {
+func (h DockerClientHandle) ServerInfo(ctx context.Context) (*command.ServerInfo, error) {
 	c := getClient(h)
 
 	if info := c.getCachedServerInfo(); info != nil {
 		return info, nil
 	}
 
-	return c.updateCachedServerInfo()
+	return c.updateCachedServerInfo(ctx)
 }
 
 // This is based on BuildKitEnabled() from github.com/docker/cli/cli/command/cli.go.
-func (h DockerClientHandle) DefaultBuilderVersion() (types.BuilderVersion, error) {
+func (h DockerClientHandle) DefaultBuilderVersion(ctx context.Context) (types.BuilderVersion, error) {
 	if buildkitEnv := os.Getenv("DOCKER_BUILDKIT"); buildkitEnv != "" {
 		buildkitEnabled, err := strconv.ParseBool(buildkitEnv)
 
@@ -220,7 +224,7 @@ func (h DockerClientHandle) DefaultBuilderVersion() (types.BuilderVersion, error
 		}
 	}
 
-	info, err := h.ServerInfo()
+	info, err := h.ServerInfo(ctx)
 
 	if err != nil {
 		return "", err
@@ -240,11 +244,11 @@ func (c *activeClient) getCachedServerInfo() *command.ServerInfo {
 	return c.serverInfo
 }
 
-func (c *activeClient) updateCachedServerInfo() (*command.ServerInfo, error) {
+func (c *activeClient) updateCachedServerInfo(ctx context.Context) (*command.ServerInfo, error) {
 	c.serverInfoLock.Lock()
 	defer c.serverInfoLock.Unlock()
 
-	ping, err := c.dockerAPIClient.Ping(context.Background())
+	ping, err := c.dockerAPIClient.Ping(ctx)
 
 	if err != nil {
 		return nil, err

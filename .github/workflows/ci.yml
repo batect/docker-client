@@ -20,7 +20,7 @@ jobs:
       - name: Validate Gradle wrapper
         uses: gradle/wrapper-validation-action@v1.0.4
 
-  build-and-test:
+  build-and-test-library:
     strategy:
       fail-fast: false
       matrix:
@@ -67,21 +67,21 @@ jobs:
 
       - name: Cache Golang packages
         id: cache-golang-packages
-        uses: actions/cache@v3.0.2
+        uses: actions/cache@v3.0.4
         with:
           path: ~/go
           key: go-packages-${{ runner.os }}-${{ hashFiles('golang-wrapper/src/go.*') }}
 
       - name: Cache Kotlin/Native dependencies
         id: cache-kotlin-native
-        uses: actions/cache@v3.0.2
+        uses: actions/cache@v3.0.4
         with:
           path: ~/.konan
           key: kotlin-native-${{ runner.os }}-${{ hashFiles('gradle/libs.versions.toml') }}
 
       - name: Cache tools
         id: cache-tools
-        uses: actions/cache@v3.0.2
+        uses: actions/cache@v3.0.4
         with:
           path: golang-wrapper/build/tools
           key: tools-${{ runner.os }}-${{ hashFiles('**/*.gradle.kts', 'buildSrc/src/**/*.kt') }}
@@ -111,9 +111,51 @@ jobs:
           DOCKER_CONTAINER_OPERATING_SYSTEM: ${{ matrix.containerOperatingSystem }}
           DOCKER_CONNECTION_OVER_TCP: ${{ matrix.useTLS }}
           RUN_TARGETS_FOR_OTHER_HOSTS: false
+          TEST_ENVIRONMENT_DESCRIPTION: ${{ matrix.name }}
 
       - name: Check for outdated generated code
         run: if [ ! -z "$(git status --porcelain)" ]; then echo "Generated code changed. Do you need to run './gradlew generate'?">/dev/stderr; echo; git status --porcelain; echo; git diff; exit 1; fi
+
+  check-samples:
+    name: "Check sample applications"
+    runs-on: ubuntu-20.04
+    steps:
+      - name: Check out code
+        uses: actions/checkout@v3.0.2
+        with:
+          fetch-depth: 0
+
+      - name: Set up JDK
+        uses: actions/setup-java@v3.3.0
+        with:
+          java-version: 17.0.2+8
+          distribution: temurin
+
+      - name: Cache Golang packages
+        id: cache-golang-packages
+        uses: actions/cache@v3.0.4
+        with:
+          path: ~/go
+          key: go-packages-${{ runner.os }}-${{ hashFiles('golang-wrapper/src/go.*') }}
+
+      - name: Cache Kotlin/Native dependencies
+        id: cache-kotlin-native
+        uses: actions/cache@v3.0.4
+        with:
+          path: ~/.konan
+          key: kotlin-native-${{ runner.os }}-${{ hashFiles('gradle/libs.versions.toml') }}
+
+      - name: Cache tools
+        id: cache-tools
+        uses: actions/cache@v3.0.4
+        with:
+          path: golang-wrapper/build/tools
+          key: tools-${{ runner.os }}-${{ hashFiles('**/*.gradle.kts', 'buildSrc/src/**/*.kt') }}
+
+      - name: Build, test and package
+        uses: burrunan/gradle-cache-action@v1.10
+        with:
+          arguments: samples:check
 
   check-wrapper:
     name: "Lint wrapper library"
@@ -132,30 +174,29 @@ jobs:
 
       - name: Cache Golang packages
         id: cache-golang-packages
-        uses: actions/cache@v3.0.2
+        uses: actions/cache@v3.0.4
         with:
           path: ~/go
           key: go-lint-packages-${{ runner.os }}-${{ hashFiles('golang-wrapper/src/go.*') }}
 
       - name: Cache Kotlin/Native dependencies
         id: cache-kotlin-native
-        uses: actions/cache@v3.0.2
+        uses: actions/cache@v3.0.4
         with:
           path: ~/.konan
           key: kotlin-native-lint-${{ runner.os }}-${{ hashFiles('gradle/libs.versions.toml') }}
 
       - name: Cache tools
         id: cache-tools
-        uses: actions/cache@v3.0.2
+        uses: actions/cache@v3.0.4
         with:
           path: golang-wrapper/build/tools
           key: tools-${{ runner.os }}-${{ hashFiles('**/*.gradle.kts', 'buildSrc/src/**/*.kt') }}
 
       - name: Run linting
-        # :golang-wrapper:lint: disabled until https://github.com/golangci/golangci-lint/issues/2649 is resolved
         uses: burrunan/gradle-cache-action@v1.10
         with:
-          arguments: golang-wrapper:check --exclude-task :golang-wrapper:lint --scan
+          arguments: golang-wrapper:check --scan
 
   check-build-logic:
     name: "Lint, test and check build logic"
@@ -181,9 +222,10 @@ jobs:
     if: github.repository == 'batect/docker-client' && (github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/')) && github.event_name == 'push'
 
     needs:
-      - build-and-test
+      - build-and-test-library
       - check-wrapper
       - check-build-logic
+      - check-samples
 
     env:
       SONATYPE_USERNAME: batect-docker-client-github-actions
@@ -204,21 +246,21 @@ jobs:
 
       - name: Cache Golang packages
         id: cache-golang-packages
-        uses: actions/cache@v3.0.2
+        uses: actions/cache@v3.0.4
         with:
           path: ~/go
           key: go-packages-${{ runner.os }}-${{ hashFiles('golang-wrapper/src/go.*') }}
 
       - name: Cache Kotlin/Native dependencies
         id: cache-kotlin-native
-        uses: actions/cache@v3.0.2
+        uses: actions/cache@v3.0.4
         with:
           path: ~/.konan
           key: kotlin-native-${{ runner.os }}-${{ hashFiles('gradle/libs.versions.toml') }}
 
       - name: Cache tools
         id: cache-tools
-        uses: actions/cache@v3.0.2
+        uses: actions/cache@v3.0.4
         with:
           path: golang-wrapper/build/tools
           key: tools-${{ runner.os }}-${{ hashFiles('**/*.gradle.kts', 'buildSrc/src/**/*.kt') }}

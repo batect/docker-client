@@ -2,6 +2,9 @@
 
 * Demo / sample project
   * Add snippets to readme
+  * Pulling an image
+    * Make output from sample app nicer / clearer
+  * Building an image
 * License checking
   * Gradle dependencies
   * Golang dependencies
@@ -13,20 +16,20 @@
 * Remove "work in progress" tag from repo description
 * Contributor guide
 * KDoc comments for public API
-  * Enforce this somehow?
+  * Enforce this with Detekt (https://detekt.dev/docs/rules/comments#undocumentedpublicclass, https://detekt.dev/docs/rules/comments#undocumentedpublicfunction, https://detekt.dev/docs/rules/comments#undocumentedpublicproperty)
 * Go build: use Zig for compilation
   * Set ZIG_LOCAL_CACHE_DIR and ZIG_GLOBAL_CACHE_DIR to the same thing for all builds once https://github.com/ziglang/zig/issues/9711 is resolved
 * Run tests with memory leak detector - eg. valgrind
 * Linter to catch when memory is not freed (eg. Golang code allocates struct that is used as callback parameter)
-* Re-enable Golang linter on CI once it supports Go 1.18: https://github.com/golangci/golangci-lint/issues/2649
+* Switch Golang linter back to using Go 1.18 syntax in `.golangci.yml` once it supports Go 1.18: https://github.com/golangci/golangci-lint/issues/2649
 * Remove "be able to" prefixes from test descriptions
 * Remove `IODispatcher` / `Dispatchers.kt` once https://github.com/Kotlin/kotlinx.coroutines/issues/3205 is resolved
-* Merge Golang Gradle plugins, distinction doesn't make sense any more
 * Refactor / rework code generation - it's a mess and needs tests
   * Use https://github.com/square/kotlinpoet/ to generate Kotlin code rather than current string concatenation approach?
 * Remove use of panics in Golang code
-* Some kind of cache for CI builds?
-* Restore AssertionMode to Error once https://kotlinlang.slack.com/archives/CT0G9SD7Z/p1653346298893609 is resolved
+* Restore AssertionMode to Error once https://github.com/kotest/kotest/issues/3022 is resolved
+* Fix issue linking sample apps and tests for non-Mac targets from Mac hosts (eg. running `./gradlew samples:interactive-container:linkReleaseExecutableLinuxX64` on a Mac host)
+  * Currently ignored through `isSameOperatingSystemAsHost` checks in `build.gradle.kts`
 
 # APIs
 
@@ -34,33 +37,13 @@
   * Add tests to verify that client configuration is actually applied - see TODO in DockerClientBuilderSpec
   * Throw exceptions early (eg. if files provided don't exist)
   * Support for Docker CLI config contexts
-    * Rework configuration API: allow consumer to choose between:
-      * use default CLI context (which falls back to environment variables, then hard-coded defaults)
-      * use specific CLI context
-      * provide all configuration
-* Timeouts and cancellation for calls
-  * Add tests to verify this is working as expected
-  * Go through all methods and check for any use of context.Background()
-  * Methods left to do:
-    * `ping`
-    * `getDaemonVersionInformation`
-    * `listAllVolumes`
-    * `createVolume`
-    * `deleteVolume`
-    * `createNetwork`
-    * `deleteNetwork`
-    * `getNetworkByNameOrID`
-    * `pullImage`
-    * `deleteImage`
-    * `getImage`
-    * `buildImage`
-    * `pruneImageBuildCache`
-    * `createContainer`
-    * `startContainer`
-    * `stopContainer`
-    * `removeContainer`
+    * Rework configuration API:
+      * add method to get CLI context by name
+      * allow consumer to either: pass returned context settings, modify and pass context settings, provide their own settings or use defaults
 
 * Check that Golang code can return an empty list (eg. listing all volumes returns no volumes)
+
+* Allow calling `ReadyNotification.waitForReady()` from multiple places (will currently only release one caller, not all)
 
 * Remove `with...` prefixes from ImageBuildSpec / ContainerCreationSpec?
 * Add `ifFailed` helper method to JVM `RealDockerClient`
@@ -72,20 +55,17 @@
       * Support for secrets - fail if attempted with legacy builder
       * Add support for warnings (added in BuildKit 0.10.0)
       * Upgrade to most recent version of BuildKit library (currently blocked due to version hell)
-    * Test that we can run a built image
 * Containers
-  * Create
-    * STDIN attached
-    * Scenarios to test:
-      * Windows containers
   * Upload files
   * Attach
     * Stream input to stdin - from console or from buffer
-    * Reuse output stream
-    * Reuse input stream
+      * Remove need to cast to and from `ULong` in JVM's `TextInput.kt`
+      * Test on Windows - check this is really passing (native tests are disabled on CI, try moving broken tests into their own source set so we can re-enable tests)
+      * Fail if attempting to attach non-TTY stdin to container expecting TTY?
+      * Check if implementations of `Sink` need to flush data written to FD
+      * Stream from unclosed sink / test case where container exits before stdin closes - should abort read
     * Forward signals to container (test by sending Ctrl-C to self)
     * Set and update TTY size
-    * Handle case where only one stream is provided (eg. only stdout, no stderr)
     * Handle case where container hasn't been started or has already finished
   * Stream events (for waiting for health check)
 * Exec

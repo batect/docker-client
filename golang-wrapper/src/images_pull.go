@@ -39,8 +39,9 @@ import (
 )
 
 //export PullImage
-func PullImage(clientHandle DockerClientHandle, ref *C.char, onProgressUpdate PullImageProgressCallback, callbackUserData unsafe.Pointer) PullImageReturn {
+func PullImage(clientHandle DockerClientHandle, contextHandle ContextHandle, ref *C.char, onProgressUpdate PullImageProgressCallback, callbackUserData unsafe.Pointer) PullImageReturn {
 	docker := clientHandle.DockerAPIClient()
+	ctx := contextHandle.Context()
 
 	distributionRef, err := reference.ParseNormalizedNamed(C.GoString(ref))
 
@@ -49,7 +50,7 @@ func PullImage(clientHandle DockerClientHandle, ref *C.char, onProgressUpdate Pu
 	}
 
 	imgRefAndAuth, err := trust.GetImageReferencesAndAuth(
-		context.Background(),
+		ctx,
 		nil,
 		getAuthResolver(clientHandle),
 		distributionRef.String(),
@@ -71,7 +72,7 @@ func PullImage(clientHandle DockerClientHandle, ref *C.char, onProgressUpdate Pu
 	}
 
 	cleanedReference := reference.FamiliarString(imgRefAndAuth.Reference())
-	responseBody, err := docker.ImagePull(context.Background(), cleanedReference, options)
+	responseBody, err := docker.ImagePull(ctx, cleanedReference, options)
 
 	if err != nil {
 		return newPullImageReturn(nil, toError(err))
@@ -79,7 +80,7 @@ func PullImage(clientHandle DockerClientHandle, ref *C.char, onProgressUpdate Pu
 
 	defer responseBody.Close()
 
-	return processPullResponse(docker, responseBody, distributionRef, onProgressUpdate, callbackUserData)
+	return processPullResponse(ctx, docker, responseBody, distributionRef, onProgressUpdate, callbackUserData)
 }
 
 func getAuthResolver(clientHandle DockerClientHandle) func(ctx context.Context, index *registrytypes.IndexInfo) types.AuthConfig {
@@ -108,7 +109,7 @@ func electAuthServerForOfficialIndex(ctx context.Context, clientHandle DockerCli
 	return info.IndexServerAddress
 }
 
-func processPullResponse(docker *client.Client, responseBody io.ReadCloser, originalReference reference.Named, onProgressUpdate PullImageProgressCallback, callbackUserData unsafe.Pointer) PullImageReturn {
+func processPullResponse(ctx context.Context, docker *client.Client, responseBody io.ReadCloser, originalReference reference.Named, onProgressUpdate PullImageProgressCallback, callbackUserData unsafe.Pointer) PullImageReturn {
 	pulledDigest := ""
 
 	err := parsePullResponseBody(responseBody, func(message jsonmessage.JSONMessage) error {
@@ -147,7 +148,7 @@ func processPullResponse(docker *client.Client, responseBody io.ReadCloser, orig
 		}
 	}
 
-	ref, err := getImageReference(docker, lookupReference.String())
+	ref, err := getImageReference(ctx, docker, lookupReference.String())
 
 	if err != nil {
 		return newPullImageReturn(nil, toError(fmt.Errorf("could not get image reference after pulling image: %w", err)))

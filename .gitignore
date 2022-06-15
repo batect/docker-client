@@ -1,3 +1,4 @@
+.cache-proxy/
 .DS_Store
 .gradle/
 .idea/

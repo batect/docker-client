@@ -32,6 +32,7 @@ repositories {
 
 dependencies {
     implementation(platform("org.jetbrains.kotlin:kotlin-bom"))
+    implementation(libs.kotlin.native.utils)
     implementation(libs.kotlinx.serialization.core)
     implementation(libs.kotlinx.serialization.json)
     implementation(gradleApi())
@@ -96,11 +97,6 @@ gradlePlugin {
         create("docker-client-formatting-convention") {
             id = "batect.dockerclient.buildtools.formatting"
             implementationClass = "batect.dockerclient.buildtools.formatting.FormattingConventionPlugin"
-        }
-
-        create("docker-client-golang") {
-            id = "batect.dockerclient.buildtools.golang"
-            implementationClass = "batect.dockerclient.buildtools.golang.GolangPlugin"
         }
 
         create("docker-client-zig") {

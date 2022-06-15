@@ -16,37 +16,38 @@
 
 package batect.dockerclient
 
+import batect.dockerclient.io.TextInput
 import batect.dockerclient.io.TextOutput
 import kotlinx.coroutines.async
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 import okio.Path
 import kotlin.time.Duration
 
 public interface DockerClient : AutoCloseable {
-    public fun ping(): PingResponse
-    public fun getDaemonVersionInformation(): DaemonVersionInformation
+    public suspend fun ping(): PingResponse
+    public suspend fun getDaemonVersionInformation(): DaemonVersionInformation
 
-    public fun listAllVolumes(): Set<VolumeReference>
-    public fun createVolume(name: String): VolumeReference
-    public fun deleteVolume(volume: VolumeReference)
+    public suspend fun listAllVolumes(): Set<VolumeReference>
+    public suspend fun createVolume(name: String): VolumeReference
+    public suspend fun deleteVolume(volume: VolumeReference)
 
-    public fun createNetwork(name: String, driver: String): NetworkReference
-    public fun deleteNetwork(network: NetworkReference)
-    public fun getNetworkByNameOrID(searchFor: String): NetworkReference?
+    public suspend fun createNetwork(name: String, driver: String): NetworkReference
+    public suspend fun deleteNetwork(network: NetworkReference)
+    public suspend fun getNetworkByNameOrID(searchFor: String): NetworkReference?
 
-    public fun pullImage(name: String, onProgressUpdate: ImagePullProgressReceiver = {}): ImageReference
-    public fun deleteImage(image: ImageReference, force: Boolean = false)
-    public fun getImage(name: String): ImageReference?
+    public suspend fun pullImage(name: String, onProgressUpdate: ImagePullProgressReceiver = {}): ImageReference
+    public suspend fun deleteImage(image: ImageReference, force: Boolean = false)
+    public suspend fun getImage(name: String): ImageReference?
 
-    public fun buildImage(spec: ImageBuildSpec, output: TextOutput, onProgressUpdate: ImageBuildProgressReceiver = {}): ImageReference
-    public fun pruneImageBuildCache()
+    public suspend fun buildImage(spec: ImageBuildSpec, output: TextOutput, onProgressUpdate: ImageBuildProgressReceiver = {}): ImageReference
+    public suspend fun pruneImageBuildCache()
 
-    public fun createContainer(spec: ContainerCreationSpec): ContainerReference
-    public fun startContainer(container: ContainerReference)
-    public fun stopContainer(container: ContainerReference, timeout: Duration)
-    public fun removeContainer(container: ContainerReference, force: Boolean = false, removeVolumes: Boolean = false)
-    public suspend fun attachToContainerOutput(container: ContainerReference, stdout: TextOutput, stderr: TextOutput, attachedNotification: ReadyNotification? = null)
+    public suspend fun createContainer(spec: ContainerCreationSpec): ContainerReference
+    public suspend fun startContainer(container: ContainerReference)
+    public suspend fun stopContainer(container: ContainerReference, timeout: Duration)
+    public suspend fun removeContainer(container: ContainerReference, force: Boolean = false, removeVolumes: Boolean = false)
+    public suspend fun attachToContainerIO(container: ContainerReference, stdout: TextOutput?, stderr: TextOutput?, stdin: TextInput?, attachedNotification: ReadyNotification? = null)
     public suspend fun inspectContainer(idOrName: String): ContainerInspectionResult
     public suspend fun inspectContainer(container: ContainerReference): ContainerInspectionResult = inspectContainer(container.id)
 
@@ -168,16 +169,17 @@ internal typealias DockerClientFactory = (DockerClientConfiguration) -> DockerCl
  *
  * @param container the container to run
  * @param stdout the output stream to stream stdout to
- * @param stderr the output stream to stream stderr to, not used if the container is configured to use a TTY
+ * @param stderr the output stream to stream stderr to. Not used if the container is configured to use a TTY with [ContainerCreationSpec.Builder.withTTY].
+ * @param stdin the input stream to stream stdin from. Only used if the container is configured to have stdin attached with [ContainerCreationSpec.Builder.withStdinAttached].
  * @return the exit code from the container
  */
-public suspend fun DockerClient.run(container: ContainerReference, stdout: TextOutput, stderr: TextOutput): Long {
-    return withContext(IODispatcher) {
+public suspend fun DockerClient.run(container: ContainerReference, stdout: TextOutput?, stderr: TextOutput?, stdin: TextInput?): Long {
+    return coroutineScope {
         val listeningToOutput = ReadyNotification()
         val waitingForExitCode = ReadyNotification()
 
         launch {
-            attachToContainerOutput(container, stdout, stderr, listeningToOutput)
+            attachToContainerIO(container, stdout, stderr, stdin, listeningToOutput)
         }
 
         val exitCodeSource = async {

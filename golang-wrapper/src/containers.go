@@ -19,7 +19,6 @@ import (
 		#include "types.h"
 	*/
 	"C"
-	"context"
 	"fmt"
 	"strconv"
 	"time"
@@ -33,9 +32,37 @@ import (
 )
 
 //export CreateContainer
-func CreateContainer(clientHandle DockerClientHandle, request *C.CreateContainerRequest) CreateContainerReturn {
+func CreateContainer(clientHandle DockerClientHandle, contextHandle ContextHandle, request *C.CreateContainerRequest) CreateContainerReturn {
 	docker := clientHandle.DockerAPIClient()
+	ctx := contextHandle.Context()
 
+	config := configForContainer(request)
+	hostConfig := hostConfigForContainer(request)
+	networkingConfig := network.NetworkingConfig{}
+	networkName := C.GoString(request.NetworkReference)
+
+	if networkName != "" {
+		hostConfig.NetworkMode = container.NetworkMode(networkName)
+
+		networkingConfig.EndpointsConfig = map[string]*network.EndpointSettings{
+			networkName: {
+				Aliases: fromStringArray(request.NetworkAliases, request.NetworkAliasesCount),
+			},
+		}
+	}
+
+	containerName := C.GoString(request.Name)
+
+	createdContainer, err := docker.ContainerCreate(ctx, &config, &hostConfig, &networkingConfig, nil, containerName)
+
+	if err != nil {
+		return newCreateContainerReturn(nil, toError(err))
+	}
+
+	return newCreateContainerReturn(newContainerReference(createdContainer.ID), nil)
+}
+
+func configForContainer(request *C.CreateContainerRequest) container.Config {
 	config := container.Config{
 		Image:        C.GoString(request.ImageReference),
 		WorkingDir:   C.GoString(request.WorkingDirectory),
@@ -44,6 +71,9 @@ func CreateContainer(clientHandle DockerClientHandle, request *C.CreateContainer
 		ExposedPorts: exposedPortsForContainer(request),
 		User:         C.GoString(request.User),
 		Tty:          bool(request.AttachTTY),
+		AttachStdin:  bool(request.AttachStdin),
+		StdinOnce:    bool(request.StdinOnce),
+		OpenStdin:    bool(request.OpenStdin),
 		Labels:       fromStringPairs(request.Labels, request.LabelsCount),
 		Healthcheck: &container.HealthConfig{
 			Interval:    time.Duration(int64(request.HealthcheckInterval)) * time.Nanosecond,
@@ -65,6 +95,10 @@ func CreateContainer(clientHandle DockerClientHandle, request *C.CreateContainer
 		config.Healthcheck.Test = append([]string{"CMD-SHELL"}, fromStringArray(request.HealthcheckCommand, request.HealthcheckCommandCount)...)
 	}
 
+	return config
+}
+
+func hostConfigForContainer(request *C.CreateContainerRequest) container.HostConfig {
 	useInitProcess := bool(request.UseInitProcess)
 
 	hostConfig := container.HostConfig{
@@ -86,36 +120,16 @@ func CreateContainer(clientHandle DockerClientHandle, request *C.CreateContainer
 		},
 	}
 
-	networkingConfig := network.NetworkingConfig{}
-	networkName := C.GoString(request.NetworkReference)
-
-	if networkName != "" {
-		hostConfig.NetworkMode = container.NetworkMode(networkName)
-
-		networkingConfig.EndpointsConfig = map[string]*network.EndpointSettings{
-			networkName: {
-				Aliases: fromStringArray(request.NetworkAliases, request.NetworkAliasesCount),
-			},
-		}
-	}
-
-	containerName := C.GoString(request.Name)
-
-	createdContainer, err := docker.ContainerCreate(context.Background(), &config, &hostConfig, &networkingConfig, nil, containerName)
-
-	if err != nil {
-		return newCreateContainerReturn(nil, toError(err))
-	}
-
-	return newCreateContainerReturn(newContainerReference(createdContainer.ID), nil)
+	return hostConfig
 }
 
 //export StartContainer
-func StartContainer(clientHandle DockerClientHandle, id *C.char) Error {
+func StartContainer(clientHandle DockerClientHandle, contextHandle ContextHandle, id *C.char) Error {
 	docker := clientHandle.DockerAPIClient()
+	ctx := contextHandle.Context()
 	opts := types.ContainerStartOptions{}
 
-	if err := docker.ContainerStart(context.Background(), C.GoString(id), opts); err != nil {
+	if err := docker.ContainerStart(ctx, C.GoString(id), opts); err != nil {
 		return toError(err)
 	}
 
@@ -123,11 +137,12 @@ func StartContainer(clientHandle DockerClientHandle, id *C.char) Error {
 }
 
 //export StopContainer
-func StopContainer(clientHandle DockerClientHandle, id *C.char, timeoutSeconds C.int64_t) Error {
+func StopContainer(clientHandle DockerClientHandle, contextHandle ContextHandle, id *C.char, timeoutSeconds C.int64_t) Error {
 	docker := clientHandle.DockerAPIClient()
+	ctx := contextHandle.Context()
 	timeout := time.Second * time.Duration(timeoutSeconds)
 
-	if err := docker.ContainerStop(context.Background(), C.GoString(id), &timeout); err != nil {
+	if err := docker.ContainerStop(ctx, C.GoString(id), &timeout); err != nil {
 		return toError(err)
 	}
 
@@ -135,14 +150,16 @@ func StopContainer(clientHandle DockerClientHandle, id *C.char, timeoutSeconds C
 }
 
 //export RemoveContainer
-func RemoveContainer(clientHandle DockerClientHandle, id *C.char, force C.bool, removeVolumes C.bool) Error {
+func RemoveContainer(clientHandle DockerClientHandle, contextHandle ContextHandle, id *C.char, force C.bool, removeVolumes C.bool) Error {
 	docker := clientHandle.DockerAPIClient()
+	ctx := contextHandle.Context()
+
 	opts := types.ContainerRemoveOptions{
 		Force:         bool(force),
 		RemoveVolumes: bool(removeVolumes),
 	}
 
-	if err := docker.ContainerRemove(context.Background(), C.GoString(id), opts); err != nil {
+	if err := docker.ContainerRemove(ctx, C.GoString(id), opts); err != nil {
 		return toError(err)
 	}
 
@@ -150,9 +167,10 @@ func RemoveContainer(clientHandle DockerClientHandle, id *C.char, force C.bool, 
 }
 
 //export AttachToContainerOutput
-func AttachToContainerOutput(clientHandle DockerClientHandle, contextHandle ContextHandle, id *C.char, stdoutStreamHandle OutputStreamHandle, stderrStreamHandle OutputStreamHandle, onReady ReadyCallback, callbackUserData unsafe.Pointer) Error {
+func AttachToContainerOutput(clientHandle DockerClientHandle, contextHandle ContextHandle, id *C.char, stdoutStreamHandle OutputStreamHandle, stderrStreamHandle OutputStreamHandle, stdinStreamHandle InputStreamHandle, onReady ReadyCallback, callbackUserData unsafe.Pointer) Error {
 	defer stdoutStreamHandle.Close()
 	defer stderrStreamHandle.Close()
+	// We don't need to close stdinStreamHandle - the Kotlin code should do that when there is no more input to stream.
 
 	docker := clientHandle.DockerAPIClient()
 	ctx := contextHandle.Context()
@@ -167,8 +185,25 @@ func AttachToContainerOutput(clientHandle DockerClientHandle, contextHandle Cont
 	opts := types.ContainerAttachOptions{
 		Logs:   true,
 		Stream: true,
-		Stdout: true,
-		Stderr: true,
+	}
+
+	streamer := replacements.HijackedIOStreamer{
+		Tty: config.Config.Tty,
+	}
+
+	if stdoutStreamHandle != 0 {
+		streamer.OutputStream = stdoutStreamHandle.OutputStream()
+		opts.Stdout = true
+	}
+
+	if stderrStreamHandle != 0 {
+		streamer.ErrorStream = stderrStreamHandle.OutputStream()
+		opts.Stderr = true
+	}
+
+	if stdinStreamHandle != 0 {
+		streamer.InputStream = stdinStreamHandle.InputStream()
+		opts.Stdin = true
 	}
 
 	resp, err := docker.ContainerAttach(ctx, containerID, opts)
@@ -179,16 +214,10 @@ func AttachToContainerOutput(clientHandle DockerClientHandle, contextHandle Cont
 
 	defer resp.Close()
 
+	streamer.Resp = resp
+
 	if !invokeReadyCallback(onReady, callbackUserData) {
 		return toError(ErrReadyCallbackFailed)
-	}
-
-	streamer := replacements.HijackedIOStreamer{
-		InputStream:  nil,
-		OutputStream: stdoutStreamHandle.OutputStream(),
-		ErrorStream:  stderrStreamHandle.OutputStream(),
-		Resp:         resp,
-		Tty:          config.Config.Tty,
 	}
 
 	if err := streamer.Stream(ctx); err != nil {

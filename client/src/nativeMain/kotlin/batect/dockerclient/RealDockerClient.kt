@@ -16,6 +16,8 @@
 
 package batect.dockerclient
 
+import batect.dockerclient.io.PreparedOutputStream
+import batect.dockerclient.io.TextInput
 import batect.dockerclient.io.TextOutput
 import batect.dockerclient.native.AttachToContainerOutput
 import batect.dockerclient.native.BuildImage
@@ -72,9 +74,8 @@ import kotlinx.cinterop.pointed
 import kotlinx.cinterop.ptr
 import kotlinx.cinterop.staticCFunction
 import kotlinx.cinterop.toKString
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.runBlocking
-import kotlinx.coroutines.withContext
 import kotlinx.datetime.Instant
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.nanoseconds
@@ -115,175 +116,201 @@ internal actual class RealDockerClient actual constructor(configuration: DockerC
         }
     }
 
-    public override fun ping(): PingResponse {
-        Ping(clientHandle)!!.use { ret ->
-            if (ret.pointed.Error != null) {
-                throw PingFailedException(ret.pointed.Error!!.pointed)
-            }
-
-            val response = ret.pointed.Response!!.pointed
-
-            return PingResponse(
-                response.APIVersion!!.toKString(),
-                response.OSType!!.toKString(),
-                response.Experimental,
-                BuilderVersion.fromAPI(response.BuilderVersion!!.toKString())
-            )
-        }
-    }
-
-    public override fun getDaemonVersionInformation(): DaemonVersionInformation {
-        GetDaemonVersionInformation(clientHandle)!!.use { ret ->
-            if (ret.pointed.Error != null) {
-                throw GetDaemonVersionInformationFailedException(ret.pointed.Error!!.pointed)
-            }
-
-            val response = ret.pointed.Response!!.pointed
-
-            return DaemonVersionInformation(
-                response.Version!!.toKString(),
-                response.APIVersion!!.toKString(),
-                response.MinAPIVersion!!.toKString(),
-                response.GitCommit!!.toKString(),
-                response.OperatingSystem!!.toKString(),
-                response.Architecture!!.toKString(),
-                response.Experimental
-            )
-        }
-    }
-
-    public override fun listAllVolumes(): Set<VolumeReference> {
-        ListAllVolumes(clientHandle)!!.use { ret ->
-            if (ret.pointed.Error != null) {
-                throw ListAllVolumesFailedException(ret.pointed.Error!!.pointed)
-            }
-
-            return fromArray(ret.pointed.Volumes!!, ret.pointed.VolumesCount) { VolumeReference(it) }.toSet()
-        }
-    }
-
-    public override fun createVolume(name: String): VolumeReference {
-        CreateVolume(clientHandle, name.cstr)!!.use { ret ->
-            if (ret.pointed.Error != null) {
-                throw VolumeCreationFailedException(ret.pointed.Error!!.pointed)
-            }
-
-            return VolumeReference(ret.pointed.Response!!.pointed)
-        }
-    }
-
-    public override fun deleteVolume(volume: VolumeReference) {
-        DeleteVolume(clientHandle, volume.name.cstr).ifFailed { error ->
-            throw VolumeDeletionFailedException(error.pointed)
-        }
-    }
-
-    public override fun createNetwork(name: String, driver: String): NetworkReference {
-        CreateNetwork(clientHandle, name.cstr, driver.cstr)!!.use { ret ->
-            if (ret.pointed.Error != null) {
-                throw NetworkCreationFailedException(ret.pointed.Error!!.pointed)
-            }
-
-            return NetworkReference(ret.pointed.Response!!.pointed)
-        }
-    }
-
-    public override fun deleteNetwork(network: NetworkReference) {
-        DeleteNetwork(clientHandle, network.id.cstr).ifFailed { error ->
-            throw NetworkDeletionFailedException(error.pointed)
-        }
-    }
-
-    public override fun getNetworkByNameOrID(searchFor: String): NetworkReference? {
-        GetNetworkByNameOrID(clientHandle, searchFor.cstr)!!.use { ret ->
-            if (ret.pointed.Error != null) {
-                throw NetworkRetrievalFailedException(ret.pointed.Error!!.pointed)
-            }
-
-            if (ret.pointed.Response == null) {
-                return null
-            }
-
-            return NetworkReference(ret.pointed.Response!!.pointed)
-        }
-    }
-
-    public override fun pullImage(name: String, onProgressUpdate: ImagePullProgressReceiver): ImageReference {
-        val callbackState = CallbackState<PullImageProgressUpdate> { progress ->
-            onProgressUpdate.invoke(ImagePullProgressUpdate(progress!!.pointed))
-        }
-
-        return callbackState.use { callback, callbackUserData ->
-            PullImage(clientHandle, name.cstr, callback, callbackUserData)!!.use { ret ->
+    public override suspend fun ping(): PingResponse {
+        return launchWithGolangContext { context ->
+            Ping(clientHandle, context.handle)!!.use { ret ->
                 if (ret.pointed.Error != null) {
-                    val errorType = ret.pointed.Error!!.pointed.Type!!.toKString()
-
-                    if (errorType == "main.ProgressCallbackFailedError") {
-                        throw ImagePullFailedException("Image pull progress receiver threw an exception: ${callbackState.exceptionThrown}", callbackState.exceptionThrown, errorType)
-                    }
-
-                    throw ImagePullFailedException(ret.pointed.Error!!.pointed)
+                    throw PingFailedException(ret.pointed.Error!!.pointed)
                 }
 
-                ImageReference(ret.pointed.Response!!.pointed)
+                val response = ret.pointed.Response!!.pointed
+
+                PingResponse(
+                    response.APIVersion!!.toKString(),
+                    response.OSType!!.toKString(),
+                    response.Experimental,
+                    BuilderVersion.fromAPI(response.BuilderVersion!!.toKString())
+                )
             }
         }
     }
 
-    public override fun deleteImage(image: ImageReference, force: Boolean) {
-        DeleteImage(clientHandle, image.id.cstr, force).ifFailed { error ->
-            throw ImageDeletionFailedException(error.pointed)
-        }
-    }
-
-    public override fun getImage(name: String): ImageReference? {
-        GetImage(clientHandle, name.cstr)!!.use { ret ->
-            if (ret.pointed.Error != null) {
-                throw ImageRetrievalFailedException(ret.pointed.Error!!.pointed)
-            }
-
-            if (ret.pointed.Response == null) {
-                return null
-            }
-
-            return ImageReference(ret.pointed.Response!!.pointed)
-        }
-    }
-
-    public override fun buildImage(spec: ImageBuildSpec, output: TextOutput, onProgressUpdate: ImageBuildProgressReceiver): ImageReference {
-        memScoped {
-            output.prepareStream().use { stream ->
-                val callbackState = CallbackState<BuildImageProgressUpdate> { progress ->
-                    onProgressUpdate.invoke(ImageBuildProgressUpdate(progress!!.pointed))
+    public override suspend fun getDaemonVersionInformation(): DaemonVersionInformation {
+        return launchWithGolangContext { context ->
+            GetDaemonVersionInformation(clientHandle, context.handle)!!.use { ret ->
+                if (ret.pointed.Error != null) {
+                    throw GetDaemonVersionInformationFailedException(ret.pointed.Error!!.pointed)
                 }
 
-                return runBlocking(IODispatcher) {
-                    launch { stream.run() }
+                val response = ret.pointed.Response!!.pointed
 
-                    callbackState.use { callback, callbackUserData ->
-                        BuildImage(
-                            clientHandle,
-                            allocBuildImageRequest(spec).ptr,
-                            stream.outputStreamHandle,
-                            callback,
-                            callbackUserData
-                        )!!.use { ret ->
-                            if (ret.pointed.Error != null) {
-                                val errorType = ret.pointed.Error!!.pointed.Type!!.toKString()
+                DaemonVersionInformation(
+                    response.Version!!.toKString(),
+                    response.APIVersion!!.toKString(),
+                    response.MinAPIVersion!!.toKString(),
+                    response.GitCommit!!.toKString(),
+                    response.OperatingSystem!!.toKString(),
+                    response.Architecture!!.toKString(),
+                    response.Experimental
+                )
+            }
+        }
+    }
 
-                                if (errorType == "main.ProgressCallbackFailedError") {
-                                    throw ImageBuildFailedException("Image build progress receiver threw an exception: ${callbackState.exceptionThrown}", callbackState.exceptionThrown, errorType)
-                                }
+    public override suspend fun listAllVolumes(): Set<VolumeReference> {
+        return launchWithGolangContext { context ->
+            ListAllVolumes(clientHandle, context.handle)!!.use { ret ->
+                if (ret.pointed.Error != null) {
+                    throw ListAllVolumesFailedException(ret.pointed.Error!!.pointed)
+                }
 
-                                throw ImageBuildFailedException(ret.pointed.Error!!.pointed)
-                            }
+                fromArray(ret.pointed.Volumes!!, ret.pointed.VolumesCount) { VolumeReference(it) }.toSet()
+            }
+        }
+    }
 
-                            val imageReference = ImageReference(ret.pointed.Response!!.pointed)
-                            onProgressUpdate(BuildComplete(imageReference))
+    public override suspend fun createVolume(name: String): VolumeReference {
+        return launchWithGolangContext { context ->
+            CreateVolume(clientHandle, context.handle, name.cstr)!!.use { ret ->
+                if (ret.pointed.Error != null) {
+                    throw VolumeCreationFailedException(ret.pointed.Error!!.pointed)
+                }
 
-                            imageReference
+                VolumeReference(ret.pointed.Response!!.pointed)
+            }
+        }
+    }
+
+    public override suspend fun deleteVolume(volume: VolumeReference) {
+        return launchWithGolangContext { context ->
+            DeleteVolume(clientHandle, context.handle, volume.name.cstr).ifFailed { error ->
+                throw VolumeDeletionFailedException(error.pointed)
+            }
+        }
+    }
+
+    public override suspend fun createNetwork(name: String, driver: String): NetworkReference {
+        return launchWithGolangContext { context ->
+            CreateNetwork(clientHandle, context.handle, name.cstr, driver.cstr)!!.use { ret ->
+                if (ret.pointed.Error != null) {
+                    throw NetworkCreationFailedException(ret.pointed.Error!!.pointed)
+                }
+
+                NetworkReference(ret.pointed.Response!!.pointed)
+            }
+        }
+    }
+
+    public override suspend fun deleteNetwork(network: NetworkReference) {
+        return launchWithGolangContext { context ->
+            DeleteNetwork(clientHandle, context.handle, network.id.cstr).ifFailed { error ->
+                throw NetworkDeletionFailedException(error.pointed)
+            }
+        }
+    }
+
+    public override suspend fun getNetworkByNameOrID(searchFor: String): NetworkReference? {
+        return launchWithGolangContext { context ->
+            GetNetworkByNameOrID(clientHandle, context.handle, searchFor.cstr)!!.use { ret ->
+                if (ret.pointed.Error != null) {
+                    throw NetworkRetrievalFailedException(ret.pointed.Error!!.pointed)
+                }
+
+                if (ret.pointed.Response == null) {
+                    null
+                } else {
+                    NetworkReference(ret.pointed.Response!!.pointed)
+                }
+            }
+        }
+    }
+
+    public override suspend fun pullImage(name: String, onProgressUpdate: ImagePullProgressReceiver): ImageReference {
+        return launchWithGolangContext { context ->
+            val callbackState = CallbackState<PullImageProgressUpdate> { progress ->
+                onProgressUpdate.invoke(ImagePullProgressUpdate(progress!!.pointed))
+            }
+
+            callbackState.use { callback, callbackUserData ->
+                PullImage(clientHandle, context.handle, name.cstr, callback, callbackUserData)!!.use { ret ->
+                    if (ret.pointed.Error != null) {
+                        val errorType = ret.pointed.Error!!.pointed.Type!!.toKString()
+
+                        if (errorType == "main.ProgressCallbackFailedError") {
+                            throw ImagePullFailedException("Image pull progress receiver threw an exception: ${callbackState.exceptionThrown}", callbackState.exceptionThrown, errorType)
                         }
+
+                        throw ImagePullFailedException(ret.pointed.Error!!.pointed)
                     }
+
+                    ImageReference(ret.pointed.Response!!.pointed)
+                }
+            }
+        }
+    }
+
+    public override suspend fun deleteImage(image: ImageReference, force: Boolean) {
+        launchWithGolangContext { context ->
+            DeleteImage(clientHandle, context.handle, image.id.cstr, force).ifFailed { error ->
+                throw ImageDeletionFailedException(error.pointed)
+            }
+        }
+    }
+
+    public override suspend fun getImage(name: String): ImageReference? {
+        return launchWithGolangContext { context ->
+            GetImage(clientHandle, context.handle, name.cstr)!!.use { ret ->
+                if (ret.pointed.Error != null) {
+                    throw ImageRetrievalFailedException(ret.pointed.Error!!.pointed)
+                }
+
+                if (ret.pointed.Response == null) {
+                    null
+                } else {
+                    ImageReference(ret.pointed.Response!!.pointed)
+                }
+            }
+        }
+    }
+
+    public override suspend fun buildImage(spec: ImageBuildSpec, output: TextOutput, onProgressUpdate: ImageBuildProgressReceiver): ImageReference {
+        output.prepareStream().use { stream ->
+            val callbackState = CallbackState<BuildImageProgressUpdate> { progress ->
+                onProgressUpdate.invoke(ImageBuildProgressUpdate(progress!!.pointed))
+            }
+
+            return coroutineScope {
+                launch(IODispatcher) { stream.run() }
+
+                launchWithGolangContext { context ->
+                    buildImage(spec, stream, callbackState, context, onProgressUpdate)
+                }
+            }
+        }
+    }
+
+    private fun buildImage(spec: ImageBuildSpec, stream: PreparedOutputStream, callbackState: CallbackState<BuildImageProgressUpdate>, context: GolangContext, onProgressUpdate: ImageBuildProgressReceiver): ImageReference {
+        return memScoped {
+            callbackState.use { callback, callbackUserData ->
+                BuildImage(clientHandle, context.handle, allocBuildImageRequest(spec).ptr, stream.outputStreamHandle, callback, callbackUserData)!!.use { ret ->
+                    if (ret.pointed.Error != null) {
+                        val errorType = ret.pointed.Error!!.pointed.Type!!.toKString()
+
+                        if (errorType == "main.ProgressCallbackFailedError") {
+                            throw ImageBuildFailedException(
+                                "Image build progress receiver threw an exception: ${callbackState.exceptionThrown}",
+                                callbackState.exceptionThrown,
+                                errorType
+                            )
+                        }
+
+                        throw ImageBuildFailedException(ret.pointed.Error!!.pointed)
+                    }
+
+                    val imageReference = ImageReference(ret.pointed.Response!!.pointed)
+                    onProgressUpdate(BuildComplete(imageReference))
+
+                    imageReference
                 }
             }
         }
@@ -304,22 +331,26 @@ internal actual class RealDockerClient actual constructor(configuration: DockerC
         }
     }
 
-    public override fun pruneImageBuildCache() {
-        PruneImageBuildCache(clientHandle).ifFailed { error ->
-            throw ImageBuildCachePruneFailedException(error.pointed)
+    public override suspend fun pruneImageBuildCache() {
+        launchWithGolangContext { context ->
+            PruneImageBuildCache(clientHandle, context.handle).ifFailed { error ->
+                throw ImageBuildCachePruneFailedException(error.pointed)
+            }
         }
     }
 
-    override fun createContainer(spec: ContainerCreationSpec): ContainerReference {
+    public override suspend fun createContainer(spec: ContainerCreationSpec): ContainerReference {
         spec.ensureValid()
 
-        memScoped {
-            CreateContainer(clientHandle, allocCreateContainerRequest(spec).ptr)!!.use { ret ->
-                if (ret.pointed.Error != null) {
-                    throw ContainerCreationFailedException(ret.pointed.Error!!.pointed)
-                }
+        return launchWithGolangContext { context ->
+            memScoped {
+                CreateContainer(clientHandle, context.handle, allocCreateContainerRequest(spec).ptr)!!.use { ret ->
+                    if (ret.pointed.Error != null) {
+                        throw ContainerCreationFailedException(ret.pointed.Error!!.pointed)
+                    }
 
-                return ContainerReference(ret.pointed.Response!!.pointed.ID!!.toKString())
+                    ContainerReference(ret.pointed.Response!!.pointed.ID!!.toKString())
+                }
             }
         }
     }
@@ -369,6 +400,9 @@ internal actual class RealDockerClient actual constructor(configuration: DockerC
             HealthcheckRetries = spec.healthcheckRetries?.toLong() ?: 0
             Labels = allocArrayOf(spec.labels.map { allocStringPair(it.key, it.value).ptr })
             LabelsCount = spec.labels.size.toULong()
+            AttachStdin = spec.attachStdin
+            StdinOnce = spec.stdinOnce
+            OpenStdin = spec.openStdin
         }
     }
 
@@ -398,43 +432,57 @@ internal actual class RealDockerClient actual constructor(configuration: DockerC
         }
     }
 
-    override fun startContainer(container: ContainerReference) {
-        StartContainer(clientHandle, container.id.cstr).ifFailed { error ->
-            throw ContainerStartFailedException(error.pointed)
+    public override suspend fun startContainer(container: ContainerReference) {
+        launchWithGolangContext { context ->
+            StartContainer(clientHandle, context.handle, container.id.cstr).ifFailed { error ->
+                throw ContainerStartFailedException(error.pointed)
+            }
         }
     }
 
-    override fun stopContainer(container: ContainerReference, timeout: Duration) {
-        StopContainer(clientHandle, container.id.cstr, timeout.inWholeSeconds).ifFailed { error ->
-            throw ContainerStopFailedException(error.pointed)
+    public override suspend fun stopContainer(container: ContainerReference, timeout: Duration) {
+        launchWithGolangContext { context ->
+            StopContainer(clientHandle, context.handle, container.id.cstr, timeout.inWholeSeconds).ifFailed { error ->
+                throw ContainerStopFailedException(error.pointed)
+            }
         }
     }
 
-    override suspend fun attachToContainerOutput(container: ContainerReference, stdout: TextOutput, stderr: TextOutput, attachedNotification: ReadyNotification?) {
-        stdout.prepareStream().use { stdoutStream ->
-            stderr.prepareStream().use { stderrStream ->
-                withContext(IODispatcher) {
-                    launch { stdoutStream.run() }
-                    launch { stderrStream.run() }
+    override suspend fun attachToContainerIO(
+        container: ContainerReference,
+        stdout: TextOutput?,
+        stderr: TextOutput?,
+        stdin: TextInput?,
+        attachedNotification: ReadyNotification?
+    ) {
+        stdout?.prepareStream().use { stdoutStream ->
+            stderr?.prepareStream().use { stderrStream ->
+                stdin?.prepareStream().use { stdinStream ->
+                    coroutineScope {
+                        launch(IODispatcher) { stdoutStream?.run() }
+                        launch(IODispatcher) { stderrStream?.run() }
+                        launch(IODispatcher) { stdinStream?.run() }
 
-                    launchWithGolangContext { context ->
-                        val callbackState = ReadyNotificationCallbackState(attachedNotification)
+                        launchWithGolangContext { context ->
+                            val callbackState = ReadyNotificationCallbackState(attachedNotification)
 
-                        callbackState.use { callback, callbackUserData ->
-                            AttachToContainerOutput(
-                                clientHandle,
-                                context.handle,
-                                container.id.cstr,
-                                stdoutStream.outputStreamHandle,
-                                stderrStream.outputStreamHandle,
-                                callback,
-                                callbackUserData
-                            ).ifFailed { error ->
-                                if (error.pointed.Type!!.toKString() == "main.ReadyCallbackFailedError") {
-                                    throw callbackState.exceptionThrown!!
+                            callbackState.use { callback, callbackUserData ->
+                                AttachToContainerOutput(
+                                    clientHandle,
+                                    context.handle,
+                                    container.id.cstr,
+                                    stdoutStream?.outputStreamHandle ?: 0.toULong(),
+                                    stderrStream?.outputStreamHandle ?: 0.toULong(),
+                                    stdinStream?.inputStreamHandle ?: 0.toULong(),
+                                    callback,
+                                    callbackUserData
+                                ).ifFailed { error ->
+                                    if (error.pointed.Type!!.toKString() == "main.ReadyCallbackFailedError") {
+                                        throw callbackState.exceptionThrown!!
+                                    }
+
+                                    throw AttachToContainerFailedException(error.pointed)
                                 }
-
-                                throw AttachToContainerFailedException(error.pointed)
                             }
                         }
                     }
@@ -443,44 +491,42 @@ internal actual class RealDockerClient actual constructor(configuration: DockerC
         }
     }
 
-    override fun removeContainer(container: ContainerReference, force: Boolean, removeVolumes: Boolean) {
-        RemoveContainer(clientHandle, container.id.cstr, force, removeVolumes).ifFailed { error ->
-            throw ContainerRemovalFailedException(error.pointed)
+    override suspend fun removeContainer(container: ContainerReference, force: Boolean, removeVolumes: Boolean) {
+        launchWithGolangContext { context ->
+            RemoveContainer(clientHandle, context.handle, container.id.cstr, force, removeVolumes).ifFailed { error ->
+                throw ContainerRemovalFailedException(error.pointed)
+            }
         }
     }
 
     override suspend fun waitForContainerToExit(container: ContainerReference, waitingNotification: ReadyNotification?): Long {
-        return withContext(IODispatcher) {
-            launchWithGolangContext { context ->
-                val callbackState = ReadyNotificationCallbackState(waitingNotification)
+        return launchWithGolangContext { context ->
+            val callbackState = ReadyNotificationCallbackState(waitingNotification)
 
-                callbackState.use { callback, callbackUserData ->
-                    WaitForContainerToExit(clientHandle, context.handle, container.id.cstr, callback, callbackUserData)!!.use { ret ->
-                        if (ret.pointed.Error != null) {
-                            if (ret.pointed.Error!!.pointed.Type!!.toKString() == "main.ReadyCallbackFailedError") {
-                                throw callbackState.exceptionThrown!!
-                            }
-
-                            throw ContainerWaitFailedException(ret.pointed.Error!!.pointed)
+            callbackState.use { callback, callbackUserData ->
+                WaitForContainerToExit(clientHandle, context.handle, container.id.cstr, callback, callbackUserData)!!.use { ret ->
+                    if (ret.pointed.Error != null) {
+                        if (ret.pointed.Error!!.pointed.Type!!.toKString() == "main.ReadyCallbackFailedError") {
+                            throw callbackState.exceptionThrown!!
                         }
 
-                        ret.pointed.ExitCode
+                        throw ContainerWaitFailedException(ret.pointed.Error!!.pointed)
                     }
+
+                    ret.pointed.ExitCode
                 }
             }
         }
     }
 
     override suspend fun inspectContainer(idOrName: String): ContainerInspectionResult {
-        return withContext(IODispatcher) {
-            launchWithGolangContext { context ->
-                InspectContainer(clientHandle, context.handle, idOrName.cstr)!!.use { ret ->
-                    if (ret.pointed.Error != null) {
-                        throw ContainerInspectionFailedException(ret.pointed.Error!!.pointed)
-                    }
-
-                    ContainerInspectionResult(ret.pointed.Response!!.pointed)
+        return launchWithGolangContext { context ->
+            InspectContainer(clientHandle, context.handle, idOrName.cstr)!!.use { ret ->
+                if (ret.pointed.Error != null) {
+                    throw ContainerInspectionFailedException(ret.pointed.Error!!.pointed)
                 }
+
+                ContainerInspectionResult(ret.pointed.Response!!.pointed)
             }
         }
     }

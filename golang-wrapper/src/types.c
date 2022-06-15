@@ -109,6 +109,22 @@ void FreeCreateOutputPipeReturn(CreateOutputPipeReturn* value) {
     free(value);
 }
 
+CreateInputPipeReturn* AllocCreateInputPipeReturn() {
+    CreateInputPipeReturn* value = malloc(sizeof(CreateInputPipeReturn));
+    value->Error = NULL;
+
+    return value;
+}
+
+void FreeCreateInputPipeReturn(CreateInputPipeReturn* value) {
+    if (value == NULL) {
+        return;
+    }
+
+    FreeError(value->Error);
+    free(value);
+}
+
 PingResponse* AllocPingResponse() {
     PingResponse* value = malloc(sizeof(PingResponse));
     value->APIVersion = NULL;

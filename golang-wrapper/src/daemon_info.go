@@ -19,14 +19,14 @@ import (
 		#include "types.h"
 	*/
 	"C"
-	"context"
 )
 
 //export Ping
-func Ping(clientHandle DockerClientHandle) PingReturn {
+func Ping(clientHandle DockerClientHandle, contextHandle ContextHandle) PingReturn {
 	docker := clientHandle.DockerAPIClient()
+	ctx := contextHandle.Context()
 
-	dockerResponse, err := docker.Ping(context.Background())
+	dockerResponse, err := docker.Ping(ctx)
 
 	if err != nil {
 		return newPingReturn(nil, toError(err))
@@ -43,10 +43,11 @@ func Ping(clientHandle DockerClientHandle) PingReturn {
 }
 
 //export GetDaemonVersionInformation
-func GetDaemonVersionInformation(clientHandle DockerClientHandle) GetDaemonVersionInformationReturn {
+func GetDaemonVersionInformation(clientHandle DockerClientHandle, contextHandle ContextHandle) GetDaemonVersionInformationReturn {
 	docker := clientHandle.DockerAPIClient()
+	ctx := contextHandle.Context()
 
-	dockerResponse, err := docker.ServerVersion(context.Background())
+	dockerResponse, err := docker.ServerVersion(ctx)
 
 	if err != nil {
 		return newGetDaemonVersionInformationReturn(nil, toError(err))

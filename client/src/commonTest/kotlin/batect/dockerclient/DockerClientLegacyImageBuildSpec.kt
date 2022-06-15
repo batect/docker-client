@@ -28,6 +28,7 @@ import io.kotest.matchers.collections.shouldContain
 import io.kotest.matchers.collections.shouldContainAnyOf
 import io.kotest.matchers.collections.shouldEndWith
 import io.kotest.matchers.collections.shouldStartWith
+import io.kotest.matchers.comparables.shouldBeLessThan
 import io.kotest.matchers.longs.shouldBeLessThan
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
@@ -35,12 +36,18 @@ import io.kotest.matchers.string.shouldContain
 import io.kotest.matchers.string.shouldMatch
 import io.kotest.matchers.string.shouldNotContain
 import io.kotest.matchers.types.shouldBeTypeOf
+import kotlinx.coroutines.TimeoutCancellationException
+import kotlinx.coroutines.withTimeout
 import okio.Buffer
 import okio.FileSystem
 import okio.Path
 import okio.Path.Companion.toPath
 import kotlin.random.Random
+import kotlin.time.Duration.Companion.milliseconds
+import kotlin.time.ExperimentalTime
+import kotlin.time.measureTime
 
+@ExperimentalTime
 @OptIn(ExperimentalKotest::class)
 class DockerClientLegacyImageBuildSpec : ShouldSpec({
     val rootTestImagesDirectory: Path = FileSystem.SYSTEM.canonicalize("./src/commonTest/resources/images".toPath())
@@ -571,10 +578,79 @@ class DockerClientLegacyImageBuildSpec : ShouldSpec({
             outputText shouldContain "Value of NO_PROXY is https://no-proxy"
             outputText shouldContain "Value of no_proxy is https://no-proxy"
         }
+
+        should("be able to use Kotlin timeouts to abort a build") {
+            val spec = ImageBuildSpec.Builder(rootTestImagesDirectory.resolve("slow-build"))
+                .withLegacyBuilder()
+                .withNoBuildCache()
+                .build()
+
+            val output = Buffer()
+
+            val duration = measureTime {
+                shouldThrow<TimeoutCancellationException> {
+                    withTimeout(500.milliseconds) {
+                        client.buildImage(spec, SinkTextOutput(output))
+                    }
+                }
+            }
+
+            duration shouldBeLessThan 700.milliseconds
+        }
+    }
+
+    context("when working with Windows container images").onlyIfDockerDaemonSupportsWindowsContainers {
+        should("be able to build a basic Windows container image") {
+            val spec = ImageBuildSpec.Builder(rootTestImagesDirectory.resolve("windows-image"))
+                .withLegacyBuilder()
+                .withNoBuildCache()
+                .build()
+
+            val output = Buffer()
+            val progressUpdatesReceived = mutableListOf<ImageBuildProgressUpdate>()
+
+            val image = client.buildImage(spec, SinkTextOutput(output)) { update ->
+                progressUpdatesReceived.add(update)
+            }
+
+            val outputText = output.readUtf8().trim()
+
+            outputText shouldMatch """
+                Step 1/3 : FROM mcr\.microsoft\.com/windows/nanoserver@sha256:[0-9a-f]{64}(
+                mcr\.microsoft\.com/windows/nanoserver@sha256:[0-9a-f]{64}: Pulling from windows/nanoserver
+                ([a-f0-9]{12}: (Pulling fs layer|Verifying Checksum|Download complete|Extracting|Pull complete|Waiting|Already exists)
+                )*Digest: sha256:[0-9a-f]{64}
+                Status: Downloaded newer image for mcr\.microsoft\.com/windows/nanoserver@sha256:[0-9a-f]{64})?
+                 ---> [0-9a-f]{12}
+                Step 2/3 : COPY file\.txt \.
+                 ---> [0-9a-f]{12}
+                Step 3/3 : RUN type file\.txt
+                 ---> Running in [0-9a-f]{12}
+                This is the file\.
+                Removing intermediate container [0-9a-f]{12}
+                 ---> [0-9a-f]{12}
+                Successfully built [0-9a-f]{12}
+            """.trimIndent().toRegex()
+
+            progressUpdatesReceived shouldStartWith listOf(
+                ImageBuildContextUploadProgress(3072),
+                StepStarting(1, "FROM mcr.microsoft.com/windows/nanoserver@sha256:4f06e1d8263b934d2e88dc1c6ff402f5b499c4d19ad6d0e2a5b9ee945f782928"),
+            )
+
+            progressUpdatesReceived shouldEndWith listOf(
+                StepFinished(1),
+                StepStarting(2, "COPY file.txt ."),
+                StepFinished(2),
+                StepStarting(3, "RUN type file.txt"),
+                StepOutput(3, "This is the file.\n"),
+                StepFinished(3),
+                BuildComplete(image)
+            )
+        }
     }
 })
 
-internal fun DockerClient.removeBaseImagesIfPresent(dockerfile: Path) {
+internal suspend fun DockerClient.removeBaseImagesIfPresent(dockerfile: Path) {
     val dockerfileContent = readFileContents(dockerfile)
     val fromRegex = """^FROM ([a-zA-Z0-9./_-]+(:[a-zA-Z0-9./_-]+)?(@sha256:[0-9a-f]{64})?)$""".toRegex(RegexOption.MULTILINE)
 

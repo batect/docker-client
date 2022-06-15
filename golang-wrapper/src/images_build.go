@@ -19,7 +19,6 @@ import (
 		#include "types.h"
 	*/
 	"C"
-	"context"
 	"encoding/json"
 	"errors"
 	"io"
@@ -33,13 +32,14 @@ import (
 )
 
 //export BuildImage
-func BuildImage(clientHandle DockerClientHandle, request *C.BuildImageRequest, outputStreamHandle OutputStreamHandle, onProgressUpdate BuildImageProgressCallback, callbackUserData unsafe.Pointer) BuildImageReturn {
+func BuildImage(clientHandle DockerClientHandle, contextHandle ContextHandle, request *C.BuildImageRequest, outputStreamHandle OutputStreamHandle, onProgressUpdate BuildImageProgressCallback, callbackUserData unsafe.Pointer) BuildImageReturn {
 	defer outputStreamHandle.Close()
 
+	ctx := contextHandle.Context()
 	builderVersion := C.GoString(request.BuilderVersion)
 
 	if builderVersion == "" {
-		defaultVersion, err := clientHandle.DefaultBuilderVersion()
+		defaultVersion, err := clientHandle.DefaultBuilderVersion(ctx)
 
 		if err != nil {
 			return newBuildImageReturn(nil, toError(err))
@@ -50,10 +50,10 @@ func BuildImage(clientHandle DockerClientHandle, request *C.BuildImageRequest, o
 
 	switch builderVersion {
 	case string(types.BuilderV1):
-		return buildImageWithLegacyBuilder(clientHandle, fromCBuildImageRequest(request), outputStreamHandle, onProgressUpdate, callbackUserData)
+		return buildImageWithLegacyBuilder(clientHandle, ctx, fromCBuildImageRequest(request), outputStreamHandle, onProgressUpdate, callbackUserData)
 
 	case string(types.BuilderBuildKit):
-		return buildImageWithBuildKitBuilder(clientHandle, fromCBuildImageRequest(request), outputStreamHandle, onProgressUpdate, callbackUserData)
+		return buildImageWithBuildKitBuilder(clientHandle, ctx, fromCBuildImageRequest(request), outputStreamHandle, onProgressUpdate, callbackUserData)
 
 	default:
 		return newBuildImageReturn(nil, toError(InvalidBuilderVersionError{builderVersion}))
@@ -247,8 +247,9 @@ func (p *imageBuildProgressCallback) onContextUploadProgress(currentStep int64, 
 }
 
 //export PruneImageBuildCache
-func PruneImageBuildCache(clientHandle DockerClientHandle) Error {
+func PruneImageBuildCache(clientHandle DockerClientHandle, contextHandle ContextHandle) Error {
 	docker := clientHandle.DockerAPIClient()
+	ctx := contextHandle.Context()
 
 	opts := types.BuildCachePruneOptions{
 		All:         false,
@@ -256,7 +257,7 @@ func PruneImageBuildCache(clientHandle DockerClientHandle) Error {
 		Filters:     filters.Args{},
 	}
 
-	_, err := docker.BuildCachePrune(context.Background(), opts)
+	_, err := docker.BuildCachePrune(ctx, opts)
 
 	return toError(err)
 }

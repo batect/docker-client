@@ -85,3 +85,8 @@ linters-settings:
 
   wsl:
     allow-cuddle-declarations: true
+
+run:
+  # HACK: Workaround for https://github.com/golangci/golangci-lint/issues/2649 - tell golangci-lint to treat this code as using Golang 1.17, not
+  # 1.18. This is safe as long as neither we or any of our dependencies use generics.
+  go: 1.17

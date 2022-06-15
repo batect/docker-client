@@ -14,17 +14,17 @@
     limitations under the License.
 */
 
-package batect.dockerclient.buildtools.golang
+plugins {
+    id("batect.dockerclient.buildtools.formatting")
+}
 
-import org.gradle.api.file.DirectoryProperty
-import org.gradle.api.file.RegularFileProperty
-import org.gradle.api.provider.Property
+repositories {
+    mavenCentral()
+}
 
-abstract class GolangPluginExtension {
-    abstract val sourceDirectory: DirectoryProperty
-    abstract val golangVersion: Property<String>
-    abstract val golangCILintVersion: Property<String>
-    abstract val golangRoot: DirectoryProperty
-    abstract val golangCompilerExecutablePath: RegularFileProperty
-    abstract val linterExecutablePath: RegularFileProperty
+tasks.named("check") {
+    subprojects.forEach { subproject ->
+        dependsOn(subproject.tasks.named("check"))
+        dependsOn(subproject.tasks.named("build"))
+    }
 }

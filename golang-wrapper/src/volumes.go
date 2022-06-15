@@ -19,21 +19,21 @@ import (
 		#include "types.h"
 	*/
 	"C"
-	"context"
 
 	"github.com/docker/docker/api/types/filters"
 	"github.com/docker/docker/api/types/volume"
 )
 
 //export CreateVolume
-func CreateVolume(clientHandle DockerClientHandle, name *C.char) CreateVolumeReturn {
+func CreateVolume(clientHandle DockerClientHandle, contextHandle ContextHandle, name *C.char) CreateVolumeReturn {
 	docker := clientHandle.DockerAPIClient()
+	ctx := contextHandle.Context()
 
 	request := volume.VolumeCreateBody{
 		Name: C.GoString(name),
 	}
 
-	dockerResponse, err := docker.VolumeCreate(context.Background(), request)
+	dockerResponse, err := docker.VolumeCreate(ctx, request)
 
 	if err != nil {
 		return newCreateVolumeReturn(nil, toError(err))
@@ -45,19 +45,21 @@ func CreateVolume(clientHandle DockerClientHandle, name *C.char) CreateVolumeRet
 }
 
 //export DeleteVolume
-func DeleteVolume(clientHandle DockerClientHandle, name *C.char) Error {
+func DeleteVolume(clientHandle DockerClientHandle, contextHandle ContextHandle, name *C.char) Error {
 	docker := clientHandle.DockerAPIClient()
+	ctx := contextHandle.Context()
 
-	err := docker.VolumeRemove(context.Background(), C.GoString(name), false)
+	err := docker.VolumeRemove(ctx, C.GoString(name), false)
 
 	return toError(err)
 }
 
 //export ListAllVolumes
-func ListAllVolumes(clientHandle DockerClientHandle) ListAllVolumesReturn {
+func ListAllVolumes(clientHandle DockerClientHandle, contextHandle ContextHandle) ListAllVolumesReturn {
 	docker := clientHandle.DockerAPIClient()
+	ctx := contextHandle.Context()
 
-	dockerResponse, err := docker.VolumeList(context.Background(), filters.NewArgs())
+	dockerResponse, err := docker.VolumeList(ctx, filters.NewArgs())
 
 	if err != nil {
 		return newListAllVolumesReturn(nil, toError(err))

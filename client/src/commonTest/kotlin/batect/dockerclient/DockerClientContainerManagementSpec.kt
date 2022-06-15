@@ -17,6 +17,7 @@
 package batect.dockerclient
 
 import batect.dockerclient.io.SinkTextOutput
+import batect.dockerclient.io.SourceTextInput
 import io.kotest.assertions.asClue
 import io.kotest.assertions.throwables.shouldNotThrowAny
 import io.kotest.assertions.throwables.shouldThrow
@@ -39,8 +40,8 @@ import io.ktor.http.HttpStatusCode
 import io.ktor.utils.io.core.use
 import kotlinx.coroutines.TimeoutCancellationException
 import kotlinx.coroutines.async
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 import kotlinx.coroutines.withTimeout
 import kotlinx.datetime.Clock
 import okio.Buffer
@@ -55,11 +56,12 @@ import kotlin.time.measureTime
 @ExperimentalTime
 @OptIn(ExperimentalKotest::class)
 class DockerClientContainerManagementSpec : ShouldSpec({
+    val client = closeAfterTest(DockerClient.Builder().build())
+
     context("when working with Linux containers").onlyIfDockerDaemonSupportsLinuxContainers {
-        val client = closeAfterTest(DockerClient.Builder().build())
         val image = client.pullImage("alpine:3.15.0")
 
-        fun buildTestImage(name: String): ImageReference {
+        suspend fun buildTestImage(name: String): ImageReference {
             val path = systemFileSystem.canonicalize("./src/commonTest/resources/images/$name".toPath())
             val spec = ImageBuildSpec.Builder(path).build()
 
@@ -75,19 +77,15 @@ class DockerClientContainerManagementSpec : ShouldSpec({
                 val container = client.createContainer(spec)
 
                 try {
-                    val exitCode = withContext(IODispatcher) {
-                        val waitingForContainerToExit = ReadyNotification()
-                        val exitCodeSource = async { client.waitForContainerToExit(container, waitingForContainerToExit) }
+                    val waitingForContainerToExit = ReadyNotification()
+                    val exitCodeSource = async { client.waitForContainerToExit(container, waitingForContainerToExit) }
 
-                        launch {
-                            waitingForContainerToExit.waitForReady()
-                            client.startContainer(container)
-                        }
-
-                        exitCodeSource.await()
+                    launch {
+                        waitingForContainerToExit.waitForReady()
+                        client.startContainer(container)
                     }
 
-                    exitCode shouldBe 123
+                    exitCodeSource.await() shouldBe 123
                 } finally {
                     client.removeContainer(container, force = true)
                 }
@@ -121,11 +119,11 @@ class DockerClientContainerManagementSpec : ShouldSpec({
                     val stdout = Buffer()
                     val stderr = Buffer()
 
-                    withContext(IODispatcher) {
+                    coroutineScope {
                         val listeningToOutput = ReadyNotification()
 
                         launch {
-                            client.attachToContainerOutput(container, SinkTextOutput(stdout), SinkTextOutput(stderr), listeningToOutput)
+                            client.attachToContainerIO(container, SinkTextOutput(stdout), SinkTextOutput(stderr), null, listeningToOutput)
                         }
 
                         launch {
@@ -239,16 +237,14 @@ class DockerClientContainerManagementSpec : ShouldSpec({
                 try {
                     val duration = measureTime {
                         shouldThrow<TimeoutCancellationException> {
-                            withContext(IODispatcher) {
-                                withTimeout(2.seconds) {
-                                    val waitingForContainerToExit = ReadyNotification()
+                            withTimeout(2.seconds) {
+                                val waitingForContainerToExit = ReadyNotification()
 
-                                    launch { client.waitForContainerToExit(container, waitingForContainerToExit) }
+                                launch { client.waitForContainerToExit(container, waitingForContainerToExit) }
 
-                                    launch {
-                                        waitingForContainerToExit.waitForReady()
-                                        client.startContainer(container)
-                                    }
+                                launch {
+                                    waitingForContainerToExit.waitForReady()
+                                    client.startContainer(container)
                                 }
                             }
                         }
@@ -273,18 +269,16 @@ class DockerClientContainerManagementSpec : ShouldSpec({
 
                     val duration = measureTime {
                         shouldThrow<TimeoutCancellationException> {
-                            withContext(IODispatcher) {
-                                withTimeout(2.seconds) {
-                                    val listeningToOutput = ReadyNotification()
+                            withTimeout(2.seconds) {
+                                val listeningToOutput = ReadyNotification()
 
-                                    launch {
-                                        client.attachToContainerOutput(container, SinkTextOutput(stdout), SinkTextOutput(stderr), listeningToOutput)
-                                    }
+                                launch {
+                                    client.attachToContainerIO(container, SinkTextOutput(stdout), SinkTextOutput(stderr), null, listeningToOutput)
+                                }
 
-                                    launch {
-                                        listeningToOutput.waitForReady()
-                                        client.startContainer(container)
-                                    }
+                                launch {
+                                    listeningToOutput.waitForReady()
+                                    client.startContainer(container)
                                 }
                             }
                         }
@@ -297,6 +291,30 @@ class DockerClientContainerManagementSpec : ShouldSpec({
                     stderrText shouldBe "Hello stderr\n"
 
                     duration shouldBeLessThan 5.seconds
+                } finally {
+                    client.removeContainer(container, force = true)
+                }
+            }
+
+            should("be able to use Kotlin timeouts to abort stopping a container") {
+                val spec = ContainerCreationSpec.Builder(image)
+                    .withCommand("sh", "-c", "sleep 5") // `sleep` does not respond to signals, so this will wait for five seconds then exit
+                    .build()
+
+                val container = client.createContainer(spec)
+
+                try {
+                    client.startContainer(container)
+
+                    val duration = measureTime {
+                        shouldThrow<TimeoutCancellationException> {
+                            withTimeout(500.milliseconds) {
+                                client.stopContainer(container, 1.seconds)
+                            }
+                        }
+                    }
+
+                    duration shouldBeLessThan 1.seconds
                 } finally {
                     client.removeContainer(container, force = true)
                 }
@@ -478,57 +496,55 @@ class DockerClientContainerManagementSpec : ShouldSpec({
                 val container = client.createContainer(spec)
 
                 try {
-                    withContext(IODispatcher) {
-                        val stdout = Buffer()
-                        val stderr = Buffer()
-                        val startedAt = Clock.System.now()
+                    val stdout = Buffer()
+                    val stderr = Buffer()
+                    val startedAt = Clock.System.now()
 
-                        val listeningToOutput = ReadyNotification()
-                        val waitingForExitCode = ReadyNotification()
+                    val listeningToOutput = ReadyNotification()
+                    val waitingForExitCode = ReadyNotification()
 
-                        launch {
-                            client.attachToContainerOutput(container, SinkTextOutput(stdout), SinkTextOutput(stderr), listeningToOutput)
-                        }
+                    launch {
+                        client.attachToContainerIO(container, SinkTextOutput(stdout), SinkTextOutput(stderr), null, listeningToOutput)
+                    }
 
-                        val exitCodeSource = async {
-                            client.waitForContainerToExit(container, waitingForExitCode)
-                        }
+                    val exitCodeSource = async {
+                        client.waitForContainerToExit(container, waitingForExitCode)
+                    }
 
-                        listeningToOutput.waitForReady()
-                        waitingForExitCode.waitForReady()
-                        client.startContainer(container)
+                    listeningToOutput.waitForReady()
+                    waitingForExitCode.waitForReady()
+                    client.startContainer(container)
 
-                        eventually(1.seconds, poll = 100.milliseconds) {
-                            // We must inspect the container while it is running - otherwise Docker will always consider the container unhealthy if it is stopped.
-                            val inspectionResult = client.inspectContainer(container)
+                    eventually(1.seconds, poll = 100.milliseconds) {
+                        // We must inspect the container while it is running - otherwise Docker will always consider the container unhealthy if it is stopped.
+                        val inspectionResult = client.inspectContainer(container)
 
-                            inspectionResult.state.health.shouldNotBeNull()
-                            inspectionResult.state.health!!.asClue {
-                                it.status shouldBe "healthy"
-                                it.log shouldHaveAtLeastSize 1
+                        inspectionResult.state.health.shouldNotBeNull()
+                        inspectionResult.state.health!!.asClue {
+                            it.status shouldBe "healthy"
+                            it.log shouldHaveAtLeastSize 1
 
-                                // On Windows and macOS machines where Docker is running in a VM, it's possible that the daemon's clock is out of sync with the machine's clock.
-                                val clockSkewFudgeFactor = 60.seconds
+                            // On Windows and macOS machines where Docker is running in a VM, it's possible that the daemon's clock is out of sync with the machine's clock.
+                            val clockSkewFudgeFactor = 60.seconds
 
-                                it.log.forAll { log ->
-                                    log.start shouldBeLessThan log.end
-                                    log.start shouldBeGreaterThan startedAt.minus(clockSkewFudgeFactor)
-                                    log.end shouldBeLessThan Clock.System.now()
-                                    log.exitCode shouldBe 0
-                                    log.output shouldBe "Healthy!\n"
-                                }
+                            it.log.forAll { log ->
+                                log.start shouldBeLessThan log.end
+                                log.start shouldBeGreaterThan startedAt.minus(clockSkewFudgeFactor)
+                                log.end shouldBeLessThan Clock.System.now()
+                                log.exitCode shouldBe 0
+                                log.output shouldBe "Healthy!\n"
                             }
                         }
-
-                        val exitCode = exitCodeSource.await()
-                        val stdoutText = stdout.readUtf8()
-                        val stderrText = stderr.readUtf8()
-
-                        stdoutText.lines() shouldHaveAtLeastSize 4
-                        stdoutText.lines() shouldHaveAtMostSize 6
-                        stderrText shouldBe ""
-                        exitCode shouldBe 0
                     }
+
+                    val exitCode = exitCodeSource.await()
+                    val stdoutText = stdout.readUtf8()
+                    val stderrText = stderr.readUtf8()
+
+                    stdoutText.lines() shouldHaveAtLeastSize 4
+                    stdoutText.lines() shouldHaveAtMostSize 6
+                    stderrText shouldBe ""
+                    exitCode shouldBe 0
                 } finally {
                     client.removeContainer(container, force = true)
                 }
@@ -571,13 +587,71 @@ class DockerClientContainerManagementSpec : ShouldSpec({
                     val stdout = Buffer()
                     val stderr = Buffer()
 
-                    val exitCode = client.run(container, SinkTextOutput(stdout), SinkTextOutput(stderr))
+                    val exitCode = client.run(container, SinkTextOutput(stdout), SinkTextOutput(stderr), null)
                     val stdoutText = stdout.readUtf8()
                     val stderrText = stderr.readUtf8()
 
                     exitCode shouldBe 123
                     stdoutText shouldBe "Hello stdout\n"
                     stderrText shouldBe "Hello stderr\n"
+                } finally {
+                    client.removeContainer(container, force = true)
+                }
+            }
+
+            should("be able to reuse output streams") {
+                suspend fun runContainer(stdout: SinkTextOutput, stderr: SinkTextOutput, name: String) {
+                    val spec = ContainerCreationSpec.Builder(image)
+                        .withCommand("sh", "-c", "echo 'Hello stdout from $name' >/dev/stdout && echo 'Hello stderr from $name' >/dev/stderr && exit 123")
+                        .build()
+
+                    val container = client.createContainer(spec)
+
+                    try {
+                        val exitCode = client.run(container, stdout, stderr, null)
+                        exitCode shouldBe 123
+                    } finally {
+                        client.removeContainer(container, force = true)
+                    }
+                }
+
+                val stdout = Buffer()
+                val stdoutOutput = SinkTextOutput(stdout)
+                val stderr = Buffer()
+                val stderrOutput = SinkTextOutput(stderr)
+
+                runContainer(stdoutOutput, stderrOutput, "first")
+                runContainer(stdoutOutput, stderrOutput, "second")
+
+                val stdoutText = stdout.readUtf8()
+                val stderrText = stderr.readUtf8()
+
+                stdoutText shouldBe "Hello stdout from first\nHello stdout from second\n"
+                stderrText shouldBe "Hello stderr from first\nHello stderr from second\n"
+            }
+
+            should("be able to stream input to a container") {
+                val spec = ContainerCreationSpec.Builder(image)
+                    .withCommand("sh", "-c", "cat >/input.txt && echo \"Size of file: $(stat -c %s input.txt)\" && cat input.txt && exit 123")
+                    .withStdinAttached()
+                    .build()
+
+                val container = client.createContainer(spec)
+
+                try {
+                    val stdout = Buffer()
+                    val stderr = Buffer()
+                    val stdin = Buffer()
+                    stdin.writeUtf8("Hello world!\nThis is some input.")
+                    stdin.close()
+
+                    val exitCode = client.run(container, SinkTextOutput(stdout), SinkTextOutput(stderr), SourceTextInput(stdin))
+                    val stdoutText = stdout.readUtf8()
+                    val stderrText = stderr.readUtf8()
+
+                    exitCode shouldBe 123
+                    stdoutText shouldBe "Size of file: 32\nHello world!\nThis is some input."
+                    stderrText shouldBe ""
                 } finally {
                     client.removeContainer(container, force = true)
                 }
@@ -597,7 +671,7 @@ class DockerClientContainerManagementSpec : ShouldSpec({
                     val duration = measureTime {
                         shouldThrow<TimeoutCancellationException> {
                             withTimeout(2.seconds) {
-                                client.run(container, SinkTextOutput(stdout), SinkTextOutput(stderr))
+                                client.run(container, SinkTextOutput(stdout), SinkTextOutput(stderr), null)
                             }
                         }
                     }
@@ -896,7 +970,7 @@ class DockerClientContainerManagementSpec : ShouldSpec({
                         val stdout = Buffer()
                         val stderr = Buffer()
 
-                        val exitCode = client.run(container, SinkTextOutput(stdout), SinkTextOutput(stderr))
+                        val exitCode = client.run(container, SinkTextOutput(stdout), SinkTextOutput(stderr), null)
                         val stdoutText = stdout.readUtf8()
                         val stderrText = stderr.readUtf8()
 
@@ -927,7 +1001,7 @@ class DockerClientContainerManagementSpec : ShouldSpec({
                     val stdout = Buffer()
                     val stderr = Buffer()
 
-                    val exitCode = client.run(container, SinkTextOutput(stdout), SinkTextOutput(stderr))
+                    val exitCode = client.run(container, SinkTextOutput(stdout), SinkTextOutput(stderr), null)
                     val stdoutText = stdout.readUtf8()
                     val stderrText = stderr.readUtf8()
 
@@ -952,7 +1026,7 @@ class DockerClientContainerManagementSpec : ShouldSpec({
                     val stdout = Buffer()
                     val stderr = Buffer()
 
-                    val exitCode = client.run(container, SinkTextOutput(stdout), SinkTextOutput(stderr))
+                    val exitCode = client.run(container, SinkTextOutput(stdout), SinkTextOutput(stderr), null)
                     val stdoutText = stdout.readUtf8()
                     val stderrText = stderr.readUtf8()
 
@@ -981,7 +1055,7 @@ class DockerClientContainerManagementSpec : ShouldSpec({
                         val stdout = Buffer()
                         val stderr = Buffer()
 
-                        val exitCode = client.run(container, SinkTextOutput(stdout), SinkTextOutput(stderr))
+                        val exitCode = client.run(container, SinkTextOutput(stdout), SinkTextOutput(stderr), null)
                         val stdoutText = stdout.readUtf8()
                         val stderrText = stderr.readUtf8()
 
@@ -1011,7 +1085,7 @@ class DockerClientContainerManagementSpec : ShouldSpec({
                         val stdout = Buffer()
                         val stderr = Buffer()
 
-                        val exitCode = client.run(container, SinkTextOutput(stdout), SinkTextOutput(stderr))
+                        val exitCode = client.run(container, SinkTextOutput(stdout), SinkTextOutput(stderr), null)
                         val stdoutText = stdout.readUtf8()
                         val stderrText = stderr.readUtf8()
 
@@ -1040,7 +1114,7 @@ class DockerClientContainerManagementSpec : ShouldSpec({
                     val stdout = Buffer()
                     val stderr = Buffer()
 
-                    val exitCode = client.run(container, SinkTextOutput(stdout), SinkTextOutput(stderr))
+                    val exitCode = client.run(container, SinkTextOutput(stdout), SinkTextOutput(stderr), null)
                     val stdoutText = stdout.readUtf8()
                     val stderrText = stderr.readUtf8()
 
@@ -1064,7 +1138,7 @@ class DockerClientContainerManagementSpec : ShouldSpec({
                     val stdout = Buffer()
                     val stderr = Buffer()
 
-                    val exitCode = client.run(container, SinkTextOutput(stdout), SinkTextOutput(stderr))
+                    val exitCode = client.run(container, SinkTextOutput(stdout), SinkTextOutput(stderr), null)
                     val stdoutText = stdout.readUtf8()
                     val stderrText = stderr.readUtf8()
 
@@ -1110,7 +1184,7 @@ class DockerClientContainerManagementSpec : ShouldSpec({
                         val stdout = Buffer()
                         val stderr = Buffer()
 
-                        val exitCode = client.run(container, SinkTextOutput(stdout), SinkTextOutput(stderr))
+                        val exitCode = client.run(container, SinkTextOutput(stdout), SinkTextOutput(stderr), null)
                         val stdoutText = stdout.readUtf8()
                         val stderrText = stderr.readUtf8()
 
@@ -1127,6 +1201,34 @@ class DockerClientContainerManagementSpec : ShouldSpec({
                 } finally {
                     client.deleteNetwork(network)
                 }
+            }
+        }
+    }
+
+    context("when working with Windows containers").onlyIfDockerDaemonSupportsWindowsContainers {
+        should("be able to run a basic container") {
+            val imageTag = "mcr.microsoft.com/windows/nanoserver@sha256:4f06e1d8263b934d2e88dc1c6ff402f5b499c4d19ad6d0e2a5b9ee945f782928" // This is nanoserver:1809
+            val image = client.getImage(imageTag) ?: client.pullImage(imageTag)
+
+            val spec = ContainerCreationSpec.Builder(image)
+                .withCommand("cmd", "/c", "echo Hello stdout && echo Hello stderr 1>&2 && exit 123")
+                .build()
+
+            val container = client.createContainer(spec)
+
+            try {
+                val stdout = Buffer()
+                val stderr = Buffer()
+
+                val exitCode = client.run(container, SinkTextOutput(stdout), SinkTextOutput(stderr), null)
+                val stdoutText = stdout.readUtf8()
+                val stderrText = stderr.readUtf8()
+
+                exitCode shouldBe 123
+                stdoutText shouldBe "Hello stdout \r\n"
+                stderrText shouldBe "Hello stderr  \r\n"
+            } finally {
+                client.removeContainer(container, force = true)
             }
         }
     }

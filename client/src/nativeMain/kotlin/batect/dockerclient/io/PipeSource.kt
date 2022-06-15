@@ -16,11 +16,12 @@
 
 package batect.dockerclient.io
 
+import batect.dockerclient.native.FileDescriptor
 import okio.Buffer
 import okio.Source
 import okio.Timeout
 
-internal expect class PipeSource(fd: Int) : Source {
+internal expect class PipeSource(fd: FileDescriptor) : Source {
     override fun timeout(): Timeout
     override fun read(sink: Buffer, byteCount: Long): Long
     override fun close()

@@ -41,6 +41,13 @@ internal suspend fun TestWithConfigBuilder.onlyIfDockerDaemonSupportsLinuxContai
 internal fun RootTestWithConfigBuilder.onlyIfDockerDaemonSupportsWindowsContainers(test: suspend TestContext.() -> Unit) =
     this.config(enabledIf = { dockerDaemonPresent && testEnvironmentContainerOperatingSystem == ContainerOperatingSystem.Windows }, test = test)
 
+@OptIn(ExperimentalKotest::class)
+internal fun <T> RootContainerWithConfigBuilder<T>.onlyIfDockerDaemonSupportsWindowsContainers(test: suspend T.() -> Unit) =
+    this.config(enabledIf = { dockerDaemonPresent && testEnvironmentContainerOperatingSystem == ContainerOperatingSystem.Windows }, test = test)
+
+internal suspend fun TestWithConfigBuilder.onlyIfDockerDaemonSupportsWindowsContainers(test: suspend TestContext.() -> Unit) =
+    this.config(enabledIf = { dockerDaemonPresent && testEnvironmentContainerOperatingSystem == ContainerOperatingSystem.Windows }, test = test)
+
 internal val testEnvironmentContainerOperatingSystem: ContainerOperatingSystem
     get() = when (val value = getEnvironmentVariable("DOCKER_CONTAINER_OPERATING_SYSTEM")) {
         "windows" -> ContainerOperatingSystem.Windows

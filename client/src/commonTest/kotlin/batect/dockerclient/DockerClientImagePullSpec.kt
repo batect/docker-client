@@ -24,9 +24,16 @@ import io.kotest.matchers.collections.shouldContain
 import io.kotest.matchers.collections.shouldContainAnyOf
 import io.kotest.matchers.collections.shouldEndWith
 import io.kotest.matchers.collections.shouldStartWith
+import io.kotest.matchers.comparables.shouldBeLessThan
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
+import kotlinx.coroutines.TimeoutCancellationException
+import kotlinx.coroutines.withTimeout
+import kotlin.time.Duration.Companion.milliseconds
+import kotlin.time.ExperimentalTime
+import kotlin.time.measureTime
 
+@ExperimentalTime
 class DockerClientImagePullSpec : ShouldSpec({
     val client = closeAfterTest(DockerClient.Builder().build())
 
@@ -174,6 +181,30 @@ class DockerClientImagePullSpec : ShouldSpec({
         )
     }
 
+    should("gracefully handle a Kotlin timeout when pulling a Linux image").onlyIfDockerDaemonSupportsLinuxContainers {
+        val duration = measureTime {
+            shouldThrow<TimeoutCancellationException> {
+                withTimeout(20.milliseconds) {
+                    client.pullImage(defaultLinuxTestImage)
+                }
+            }
+        }
+
+        duration shouldBeLessThan 200.milliseconds
+    }
+
+    should("gracefully handle a Kotlin timeout when pulling a Windows image").onlyIfDockerDaemonSupportsWindowsContainers {
+        val duration = measureTime {
+            shouldThrow<TimeoutCancellationException> {
+                withTimeout(100.milliseconds) {
+                    client.pullImage(defaultWindowsTestImage)
+                }
+            }
+        }
+
+        duration shouldBeLessThan 200.milliseconds
+    }
+
     should("fail when pulling a non-existent image").onlyIfDockerDaemonPresent {
         val exception = shouldThrow<ImagePullFailedException> {
             client.pullImage(imageThatDoesNotExist)
@@ -228,7 +259,7 @@ class DockerClientImagePullSpec : ShouldSpec({
     }
 })
 
-internal fun DockerClient.deleteImageIfPresent(name: String) {
+internal suspend fun DockerClient.deleteImageIfPresent(name: String) {
     val image = getImage(name)
 
     if (image != null) {

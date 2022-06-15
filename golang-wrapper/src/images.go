@@ -27,14 +27,15 @@ import (
 )
 
 //export DeleteImage
-func DeleteImage(clientHandle DockerClientHandle, ref *C.char, force C.bool) Error {
+func DeleteImage(clientHandle DockerClientHandle, contextHandle ContextHandle, ref *C.char, force C.bool) Error {
 	docker := clientHandle.DockerAPIClient()
+	ctx := contextHandle.Context()
 
 	opts := types.ImageRemoveOptions{
 		Force: bool(force),
 	}
 
-	_, err := docker.ImageRemove(context.Background(), C.GoString(ref), opts)
+	_, err := docker.ImageRemove(ctx, C.GoString(ref), opts)
 
 	if err != nil {
 		return toError(err)
@@ -44,10 +45,11 @@ func DeleteImage(clientHandle DockerClientHandle, ref *C.char, force C.bool) Err
 }
 
 //export GetImage
-func GetImage(clientHandle DockerClientHandle, ref *C.char) GetImageReturn {
+func GetImage(clientHandle DockerClientHandle, contextHandle ContextHandle, ref *C.char) GetImageReturn {
 	docker := clientHandle.DockerAPIClient()
+	ctx := contextHandle.Context()
 
-	response, err := getImageReference(docker, C.GoString(ref))
+	response, err := getImageReference(ctx, docker, C.GoString(ref))
 
 	if err != nil {
 		if client.IsErrNotFound(err) {
@@ -60,8 +62,8 @@ func GetImage(clientHandle DockerClientHandle, ref *C.char) GetImageReturn {
 	return newGetImageReturn(response, nil)
 }
 
-func getImageReference(docker *client.Client, reference string) (ImageReference, error) {
-	dockerResponse, _, err := docker.ImageInspectWithRaw(context.Background(), reference)
+func getImageReference(ctx context.Context, docker *client.Client, reference string) (ImageReference, error) {
+	dockerResponse, _, err := docker.ImageInspectWithRaw(ctx, reference)
 
 	if err != nil {
 		return nil, err

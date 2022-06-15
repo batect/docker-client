@@ -14,7 +14,7 @@
     limitations under the License.
 */
 
-package batect.dockerclient.buildtools.golang
+package batect.dockerclient.buildtools.golang.crosscompilation
 
 import org.gradle.api.DefaultTask
 import org.gradle.api.file.RegularFileProperty

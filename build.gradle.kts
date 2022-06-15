@@ -15,8 +15,10 @@
 */
 
 plugins {
+    alias(libs.plugins.kotlin.multiplatform) apply false
     alias(libs.plugins.reckon)
     alias(libs.plugins.publish)
+
     id("batect.dockerclient.buildtools.formatting")
 }
 

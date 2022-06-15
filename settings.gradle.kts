@@ -24,3 +24,4 @@ includeBuild("build-logic")
 
 include("golang-wrapper")
 include("client")
+include("samples:interactive-container")

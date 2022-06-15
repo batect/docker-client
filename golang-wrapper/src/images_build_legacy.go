@@ -46,7 +46,7 @@ var removingIntermediateContainerLineRegex = regexp.MustCompile(`^Removing inter
 var buildStepFinishedLineRegex = regexp.MustCompile(`^ ---> [0-9a-f]{12}\n$`)
 var buildSuccessfullyFinishedLineRegex = regexp.MustCompile(`^Successfully built [0-9a-f]{12}\n$`)
 
-func buildImageWithLegacyBuilder(clientHandle DockerClientHandle, request *imageBuildRequest, outputStreamHandle OutputStreamHandle, onProgressUpdate BuildImageProgressCallback, callbackUserData unsafe.Pointer) BuildImageReturn {
+func buildImageWithLegacyBuilder(clientHandle DockerClientHandle, ctx context.Context, request *imageBuildRequest, outputStreamHandle OutputStreamHandle, onProgressUpdate BuildImageProgressCallback, callbackUserData unsafe.Pointer) BuildImageReturn {
 	docker := clientHandle.DockerAPIClient()
 	configFile := clientHandle.ClientConfigFile()
 	contextDir := request.ContextDirectory
@@ -84,7 +84,7 @@ func buildImageWithLegacyBuilder(clientHandle DockerClientHandle, request *image
 	buildContext = replacements.NewProgressReader(buildContext, contextUploadEventHandler, 0, "", "Sending build context to Docker daemon")
 
 	opts := createLegacyBuilderImageBuildOptions(docker, configFile, pathToDockerfile, request)
-	response, err := docker.ImageBuild(context.Background(), buildContext, opts)
+	response, err := docker.ImageBuild(ctx, buildContext, opts)
 
 	if err != nil {
 		if errors.Is(err, ErrProgressCallbackFailed) {

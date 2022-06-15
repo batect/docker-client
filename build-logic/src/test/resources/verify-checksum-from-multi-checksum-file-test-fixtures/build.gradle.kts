@@ -1,7 +1,7 @@
-import batect.dockerclient.buildtools.golang.VerifyChecksumFromMultiChecksumFile
+import batect.dockerclient.buildtools.golang.crosscompilation.VerifyChecksumFromMultiChecksumFile
 
 plugins {
-    id("batect.dockerclient.buildtools.golang")
+    id("batect.dockerclient.buildtools.golang.crosscompilation")
 }
 
 tasks.create<VerifyChecksumFromMultiChecksumFile>("verifyMatchingFile") {

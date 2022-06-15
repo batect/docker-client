@@ -16,6 +16,7 @@
 
 package batect.dockerclient
 
+import batect.dockerclient.io.TextInput
 import batect.dockerclient.io.TextOutput
 import batect.dockerclient.native.BuildImageProgressCallback
 import batect.dockerclient.native.BuildImageProgressUpdate
@@ -59,8 +60,8 @@ import jnr.ffi.Pointer
 import jnr.ffi.Runtime
 import jnr.ffi.Struct
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withContext
 import kotlinx.datetime.Instant
 import kotlin.time.Duration
@@ -81,104 +82,120 @@ internal actual class RealDockerClient actual constructor(configuration: DockerC
         }
     }
 
-    public override fun ping(): PingResponse {
-        nativeAPI.Ping(clientHandle)!!.use { ret ->
-            if (ret.error != null) {
-                throw PingFailedException(ret.error!!)
-            }
+    public override suspend fun ping(): PingResponse {
+        return launchWithGolangContext { context ->
+            nativeAPI.Ping(clientHandle, context.handle)!!.use { ret ->
+                if (ret.error != null) {
+                    throw PingFailedException(ret.error!!)
+                }
 
-            val response = ret.response!!
+                val response = ret.response!!
 
-            return PingResponse(
-                response.apiVersion.get(),
-                response.osType.get(),
-                response.experimental.get(),
-                BuilderVersion.fromAPI(response.builderVersion.get())
-            )
-        }
-    }
-
-    public override fun getDaemonVersionInformation(): DaemonVersionInformation {
-        nativeAPI.GetDaemonVersionInformation(clientHandle)!!.use { ret ->
-            if (ret.error != null) {
-                throw GetDaemonVersionInformationFailedException(ret.error!!)
-            }
-
-            val response = ret.response!!
-
-            return DaemonVersionInformation(
-                response.version.get(),
-                response.apiVersion.get(),
-                response.minAPIVersion.get(),
-                response.gitCommit.get(),
-                response.operatingSystem.get(),
-                response.architecture.get(),
-                response.experimental.get()
-            )
-        }
-    }
-
-    public override fun listAllVolumes(): Set<VolumeReference> {
-        nativeAPI.ListAllVolumes(clientHandle)!!.use { ret ->
-            if (ret.error != null) {
-                throw ListAllVolumesFailedException(ret.error!!)
-            }
-
-            return ret.volumes.map { VolumeReference(it) }.toSet()
-        }
-    }
-
-    public override fun createVolume(name: String): VolumeReference {
-        nativeAPI.CreateVolume(clientHandle, name)!!.use { ret ->
-            if (ret.error != null) {
-                throw VolumeCreationFailedException(ret.error!!)
-            }
-
-            return VolumeReference(ret.response!!)
-        }
-    }
-
-    public override fun deleteVolume(volume: VolumeReference) {
-        nativeAPI.DeleteVolume(clientHandle, volume.name).use { error ->
-            if (error != null) {
-                throw VolumeDeletionFailedException(error)
+                PingResponse(
+                    response.apiVersion.get(),
+                    response.osType.get(),
+                    response.experimental.get(),
+                    BuilderVersion.fromAPI(response.builderVersion.get())
+                )
             }
         }
     }
 
-    public override fun createNetwork(name: String, driver: String): NetworkReference {
-        nativeAPI.CreateNetwork(clientHandle, name, driver)!!.use { ret ->
-            if (ret.error != null) {
-                throw NetworkCreationFailedException(ret.error!!)
-            }
+    public override suspend fun getDaemonVersionInformation(): DaemonVersionInformation {
+        return launchWithGolangContext { context ->
+            nativeAPI.GetDaemonVersionInformation(clientHandle, context.handle)!!.use { ret ->
+                if (ret.error != null) {
+                    throw GetDaemonVersionInformationFailedException(ret.error!!)
+                }
 
-            return NetworkReference(ret.response!!)
+                val response = ret.response!!
+
+                DaemonVersionInformation(
+                    response.version.get(),
+                    response.apiVersion.get(),
+                    response.minAPIVersion.get(),
+                    response.gitCommit.get(),
+                    response.operatingSystem.get(),
+                    response.architecture.get(),
+                    response.experimental.get()
+                )
+            }
         }
     }
 
-    public override fun deleteNetwork(network: NetworkReference) {
-        nativeAPI.DeleteNetwork(clientHandle, network.id).use { error ->
-            if (error != null) {
-                throw NetworkDeletionFailedException(error)
+    public override suspend fun listAllVolumes(): Set<VolumeReference> {
+        return launchWithGolangContext { context ->
+            nativeAPI.ListAllVolumes(clientHandle, context.handle)!!.use { ret ->
+                if (ret.error != null) {
+                    throw ListAllVolumesFailedException(ret.error!!)
+                }
+
+                ret.volumes.map { VolumeReference(it) }.toSet()
             }
         }
     }
 
-    public override fun getNetworkByNameOrID(searchFor: String): NetworkReference? {
-        nativeAPI.GetNetworkByNameOrID(clientHandle, searchFor)!!.use { ret ->
-            if (ret.error != null) {
-                throw NetworkRetrievalFailedException(ret.error!!)
-            }
+    public override suspend fun createVolume(name: String): VolumeReference {
+        return launchWithGolangContext { context ->
+            nativeAPI.CreateVolume(clientHandle, context.handle, name)!!.use { ret ->
+                if (ret.error != null) {
+                    throw VolumeCreationFailedException(ret.error!!)
+                }
 
-            if (ret.response == null) {
-                return null
+                VolumeReference(ret.response!!)
             }
-
-            return NetworkReference(ret.response!!)
         }
     }
 
-    public override fun pullImage(name: String, onProgressUpdate: ImagePullProgressReceiver): ImageReference {
+    public override suspend fun deleteVolume(volume: VolumeReference) {
+        return launchWithGolangContext { context ->
+            nativeAPI.DeleteVolume(clientHandle, context.handle, volume.name).use { error ->
+                if (error != null) {
+                    throw VolumeDeletionFailedException(error)
+                }
+            }
+        }
+    }
+
+    public override suspend fun createNetwork(name: String, driver: String): NetworkReference {
+        return launchWithGolangContext { context ->
+            nativeAPI.CreateNetwork(clientHandle, context.handle, name, driver)!!.use { ret ->
+                if (ret.error != null) {
+                    throw NetworkCreationFailedException(ret.error!!)
+                }
+
+                NetworkReference(ret.response!!)
+            }
+        }
+    }
+
+    public override suspend fun deleteNetwork(network: NetworkReference) {
+        return launchWithGolangContext { context ->
+            nativeAPI.DeleteNetwork(clientHandle, context.handle, network.id).use { error ->
+                if (error != null) {
+                    throw NetworkDeletionFailedException(error)
+                }
+            }
+        }
+    }
+
+    public override suspend fun getNetworkByNameOrID(searchFor: String): NetworkReference? {
+        return launchWithGolangContext { context ->
+            nativeAPI.GetNetworkByNameOrID(clientHandle, context.handle, searchFor)!!.use { ret ->
+                if (ret.error != null) {
+                    throw NetworkRetrievalFailedException(ret.error!!)
+                }
+
+                if (ret.response == null) {
+                    null
+                } else {
+                    NetworkReference(ret.response!!)
+                }
+            }
+        }
+    }
+
+    public override suspend fun pullImage(name: String, onProgressUpdate: ImagePullProgressReceiver): ImageReference {
         var exceptionThrownInCallback: Throwable? = null
 
         val callback = object : PullImageProgressCallback {
@@ -196,42 +213,48 @@ internal actual class RealDockerClient actual constructor(configuration: DockerC
             }
         }
 
-        nativeAPI.PullImage(clientHandle, name, callback, null)!!.use { ret ->
-            if (ret.error != null) {
-                if (ret.error!!.type.get() == "main.ProgressCallbackFailedError") {
-                    throw ImagePullFailedException("Image pull progress receiver threw an exception: $exceptionThrownInCallback", exceptionThrownInCallback)
+        return launchWithGolangContext { context ->
+            nativeAPI.PullImage(clientHandle, context.handle, name, callback, null)!!.use { ret ->
+                if (ret.error != null) {
+                    if (ret.error!!.type.get() == "main.ProgressCallbackFailedError") {
+                        throw ImagePullFailedException("Image pull progress receiver threw an exception: $exceptionThrownInCallback", exceptionThrownInCallback)
+                    }
+
+                    throw ImagePullFailedException(ret.error!!)
                 }
 
-                throw ImagePullFailedException(ret.error!!)
-            }
-
-            return ImageReference(ret.response!!)
-        }
-    }
-
-    public override fun deleteImage(image: ImageReference, force: Boolean) {
-        nativeAPI.DeleteImage(clientHandle, image.id, force).use { error ->
-            if (error != null) {
-                throw ImageDeletionFailedException(error)
+                ImageReference(ret.response!!)
             }
         }
     }
 
-    public override fun getImage(name: String): ImageReference? {
-        nativeAPI.GetImage(clientHandle, name)!!.use { ret ->
-            if (ret.error != null) {
-                throw ImageRetrievalFailedException(ret.error!!)
+    public override suspend fun deleteImage(image: ImageReference, force: Boolean) {
+        launchWithGolangContext { context ->
+            nativeAPI.DeleteImage(clientHandle, context.handle, image.id, force).use { error ->
+                if (error != null) {
+                    throw ImageDeletionFailedException(error)
+                }
             }
-
-            if (ret.response == null) {
-                return null
-            }
-
-            return ImageReference(ret.response!!)
         }
     }
 
-    override fun buildImage(spec: ImageBuildSpec, output: TextOutput, onProgressUpdate: ImageBuildProgressReceiver): ImageReference {
+    public override suspend fun getImage(name: String): ImageReference? {
+        return launchWithGolangContext { context ->
+            nativeAPI.GetImage(clientHandle, context.handle, name)!!.use { ret ->
+                if (ret.error != null) {
+                    throw ImageRetrievalFailedException(ret.error!!)
+                }
+
+                if (ret.response == null) {
+                    null
+                } else {
+                    ImageReference(ret.response!!)
+                }
+            }
+        }
+    }
+
+    override suspend fun buildImage(spec: ImageBuildSpec, output: TextOutput, onProgressUpdate: ImageBuildProgressReceiver): ImageReference {
         var exceptionThrownInCallback: Throwable? = null
 
         val callback = object : BuildImageProgressCallback {
@@ -250,104 +273,121 @@ internal actual class RealDockerClient actual constructor(configuration: DockerC
         }
 
         output.prepareStream().use { stream ->
-            return runBlocking(Dispatchers.IO) {
+            return withContext(Dispatchers.IO) {
                 launch { stream.run() }
 
-                nativeAPI.BuildImage(clientHandle, BuildImageRequest(spec), stream.outputStreamHandle.toLong(), callback, null)!!.use { ret ->
-                    if (ret.error != null) {
-                        if (ret.error!!.type.get() == "main.ProgressCallbackFailedError") {
-                            throw ImageBuildFailedException(
-                                "Image build progress receiver threw an exception: $exceptionThrownInCallback",
-                                exceptionThrownInCallback
-                            )
+                launchWithGolangContext { context ->
+                    nativeAPI.BuildImage(clientHandle, context.handle, BuildImageRequest(spec), stream.outputStreamHandle.toLong(), callback, null)!!.use { ret ->
+                        if (ret.error != null) {
+                            if (ret.error!!.type.get() == "main.ProgressCallbackFailedError") {
+                                throw ImageBuildFailedException(
+                                    "Image build progress receiver threw an exception: $exceptionThrownInCallback",
+                                    exceptionThrownInCallback
+                                )
+                            }
+
+                            throw ImageBuildFailedException(ret.error!!)
                         }
 
-                        throw ImageBuildFailedException(ret.error!!)
+                        val imageReference = ImageReference(ret.response!!)
+                        onProgressUpdate(BuildComplete(imageReference))
+
+                        imageReference
                     }
-
-                    val imageReference = ImageReference(ret.response!!)
-                    onProgressUpdate(BuildComplete(imageReference))
-
-                    imageReference
                 }
             }
         }
     }
 
-    override fun pruneImageBuildCache() {
-        nativeAPI.PruneImageBuildCache(clientHandle).use { error ->
-            if (error != null) {
-                throw ImageBuildCachePruneFailedException(error)
+    override suspend fun pruneImageBuildCache() {
+        launchWithGolangContext { context ->
+            nativeAPI.PruneImageBuildCache(clientHandle, context.handle).use { error ->
+                if (error != null) {
+                    throw ImageBuildCachePruneFailedException(error)
+                }
             }
         }
     }
 
-    override fun createContainer(spec: ContainerCreationSpec): ContainerReference {
+    override suspend fun createContainer(spec: ContainerCreationSpec): ContainerReference {
         spec.ensureValid()
 
-        nativeAPI.CreateContainer(clientHandle, CreateContainerRequest(spec))!!.use { ret ->
-            if (ret.error != null) {
-                throw ContainerCreationFailedException(ret.error!!)
-            }
+        return launchWithGolangContext { context ->
+            nativeAPI.CreateContainer(clientHandle, context.handle, CreateContainerRequest(spec))!!.use { ret ->
+                if (ret.error != null) {
+                    throw ContainerCreationFailedException(ret.error!!)
+                }
 
-            return ContainerReference(ret.response!!.id.get())
-        }
-    }
-
-    override fun startContainer(container: ContainerReference) {
-        nativeAPI.StartContainer(clientHandle, container.id).use { error ->
-            if (error != null) {
-                throw ContainerStartFailedException(error)
+                ContainerReference(ret.response!!.id.get())
             }
         }
     }
 
-    override fun stopContainer(container: ContainerReference, timeout: Duration) {
-        nativeAPI.StopContainer(clientHandle, container.id, timeout.inWholeSeconds).use { error ->
-            if (error != null) {
-                throw ContainerStopFailedException(error)
+    override suspend fun startContainer(container: ContainerReference) {
+        launchWithGolangContext { context ->
+            nativeAPI.StartContainer(clientHandle, context.handle, container.id).use { error ->
+                if (error != null) {
+                    throw ContainerStartFailedException(error)
+                }
             }
         }
     }
 
-    override fun removeContainer(container: ContainerReference, force: Boolean, removeVolumes: Boolean) {
-        nativeAPI.RemoveContainer(clientHandle, container.id, force, removeVolumes).use { error ->
-            if (error != null) {
-                throw ContainerRemovalFailedException(error)
+    override suspend fun stopContainer(container: ContainerReference, timeout: Duration) {
+        launchWithGolangContext { context ->
+            nativeAPI.StopContainer(clientHandle, context.handle, container.id, timeout.inWholeSeconds).use { error ->
+                if (error != null) {
+                    throw ContainerStopFailedException(error)
+                }
             }
         }
     }
 
-    override suspend fun attachToContainerOutput(
+    override suspend fun removeContainer(container: ContainerReference, force: Boolean, removeVolumes: Boolean) {
+        launchWithGolangContext { context ->
+            nativeAPI.RemoveContainer(clientHandle, context.handle, container.id, force, removeVolumes).use { error ->
+                if (error != null) {
+                    throw ContainerRemovalFailedException(error)
+                }
+            }
+        }
+    }
+
+    override suspend fun attachToContainerIO(
         container: ContainerReference,
-        stdout: TextOutput,
-        stderr: TextOutput,
+        stdout: TextOutput?,
+        stderr: TextOutput?,
+        stdin: TextInput?,
         attachedNotification: ReadyNotification?
     ) {
         val callback = ReadyCallback(attachedNotification)
 
-        stdout.prepareStream().use { stdoutStream ->
-            stderr.prepareStream().use { stderrStream ->
-                withContext(IODispatcher) {
-                    launch { stdoutStream.run() }
-                    launch { stderrStream.run() }
+        stdout?.prepareStream().use { stdoutStream ->
+            stderr?.prepareStream().use { stderrStream ->
+                stdin?.prepareStream().use { stdinStream ->
+                    coroutineScope {
+                        launch(IODispatcher) { stdoutStream?.run() }
+                        launch(IODispatcher) { stderrStream?.run() }
+                        launch(IODispatcher) { stdinStream?.run() }
 
-                    launchWithGolangContext { context ->
-                        nativeAPI.AttachToContainerOutput(
-                            clientHandle,
-                            context.handle,
-                            container.id,
-                            stdoutStream.outputStreamHandle.toLong(),
-                            stderrStream.outputStreamHandle.toLong(),
-                            callback,
-                            null
-                        ).use { error ->
-                            if (error != null) {
-                                if (error.type.get() == "main.ReadyCallbackFailedError") {
-                                    throw callback.exceptionThrownInCallback!!
+                        launchWithGolangContext { context ->
+                            nativeAPI.AttachToContainerOutput(
+                                clientHandle,
+                                context.handle,
+                                container.id,
+                                stdoutStream?.outputStreamHandle?.toLong() ?: 0,
+                                stderrStream?.outputStreamHandle?.toLong() ?: 0,
+                                stdinStream?.inputStreamHandle?.toLong() ?: 0,
+                                callback,
+                                null
+                            ).use { error ->
+                                if (error != null) {
+                                    if (error.type.get() == "main.ReadyCallbackFailedError") {
+                                        throw callback.exceptionThrownInCallback!!
+                                    }
+
+                                    throw AttachToContainerFailedException(error)
                                 }
-
-                                throw AttachToContainerFailedException(error)
                             }
                         }
                     }
@@ -357,35 +397,31 @@ internal actual class RealDockerClient actual constructor(configuration: DockerC
     }
 
     override suspend fun waitForContainerToExit(container: ContainerReference, waitingNotification: ReadyNotification?): Long {
-        return withContext(IODispatcher) {
-            launchWithGolangContext { context ->
-                val callback = ReadyCallback(waitingNotification)
+        return launchWithGolangContext { context ->
+            val callback = ReadyCallback(waitingNotification)
 
-                nativeAPI.WaitForContainerToExit(clientHandle, context.handle, container.id, callback, null)!!.use { ret ->
-                    if (ret.error != null) {
-                        if (ret.error!!.type.get() == "main.ReadyCallbackFailedError") {
-                            throw callback.exceptionThrownInCallback!!
-                        }
-
-                        throw ContainerWaitFailedException(ret.error!!)
+            nativeAPI.WaitForContainerToExit(clientHandle, context.handle, container.id, callback, null)!!.use { ret ->
+                if (ret.error != null) {
+                    if (ret.error!!.type.get() == "main.ReadyCallbackFailedError") {
+                        throw callback.exceptionThrownInCallback!!
                     }
 
-                    ret.exitCode.longValue()
+                    throw ContainerWaitFailedException(ret.error!!)
                 }
+
+                ret.exitCode.longValue()
             }
         }
     }
 
     override suspend fun inspectContainer(idOrName: String): ContainerInspectionResult {
-        return withContext(IODispatcher) {
-            launchWithGolangContext { context ->
-                nativeAPI.InspectContainer(clientHandle, context.handle, idOrName)!!.use { ret ->
-                    if (ret.error != null) {
-                        throw ContainerInspectionFailedException(ret.error!!)
-                    }
-
-                    ContainerInspectionResult(ret.response!!)
+        return launchWithGolangContext { context ->
+            nativeAPI.InspectContainer(clientHandle, context.handle, idOrName)!!.use { ret ->
+                if (ret.error != null) {
+                    throw ContainerInspectionFailedException(ret.error!!)
                 }
+
+                ContainerInspectionResult(ret.response!!)
             }
         }
     }
@@ -516,6 +552,9 @@ internal actual class RealDockerClient actual constructor(configuration: DockerC
         request.healthcheckStartPeriod.set(jvm.healthcheckStartPeriod?.inWholeNanoseconds ?: 0)
         request.healthcheckRetries.set(jvm.healthcheckRetries ?: 0)
         request.labels = jvm.labels.map { StringPair(it.key, it.value) }
+        request.attachStdin.set(jvm.attachStdin)
+        request.stdinOnce.set(jvm.stdinOnce)
+        request.openStdin.set(jvm.openStdin)
 
         return request
     }

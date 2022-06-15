@@ -14,40 +14,31 @@
     limitations under the License.
 */
 
-package batect.dockerclient.io
+package batect.dockerclient.io.posix
 
-import kotlinx.cinterop.addressOf
-import kotlinx.cinterop.usePinned
 import okio.Buffer
 import okio.Source
 import okio.Timeout
-import platform.posix.errno
 
-internal actual class PipeSource actual constructor(private val fd: Int) : Source {
-    actual override fun timeout(): Timeout = Timeout.NONE
+internal class POSIXPipeSource(private val fd: Int) : Source {
+    override fun timeout(): Timeout = Timeout.NONE
 
-    actual override fun read(sink: Buffer, byteCount: Long): Long {
+    override fun read(sink: Buffer, byteCount: Long): Long {
         val bytesToRead = if (byteCount > Int.MAX_VALUE) Int.MAX_VALUE else byteCount.toInt()
         val buffer = ByteArray(bytesToRead)
 
-        val bytesRead = buffer.usePinned { pinned ->
-            platform.posix.read(fd, pinned.addressOf(0), bytesToRead.toULong())
-        }
-
-        return when (bytesRead) {
-            0L -> -1
-            -1L -> throw errnoToIOException(errno)
+        return when (val bytesRead = posix.read(fd, buffer, bytesToRead)) {
+            0 -> -1
+            -1 -> throw errnoToIOException(posix.errno())
             else -> {
-                sink.write(buffer, 0, bytesRead.safeToInt())
+                sink.write(buffer, 0, bytesRead)
 
-                bytesRead
+                bytesRead.toLong()
             }
         }
     }
 
-    actual override fun close() {
+    override fun close() {
         // Nothing to do.
     }
 }
-
-private fun Long.safeToInt() = if (this > Int.MAX_VALUE.toLong()) throw IllegalArgumentException("Value out of range") else this.toInt()
