@@ -28,7 +28,6 @@ import kotlinx.cinterop.pointed
 import okio.Buffer
 import okio.IOException
 import okio.Sink
-import okio.buffer
 import platform.posix.strerror
 
 public actual sealed interface TextOutput {
@@ -66,7 +65,7 @@ public actual class SinkTextOutput actual constructor(public val sink: Sink) : T
         }
 
         override fun run() {
-            source.buffer().readAll(sink)
+            source.streamTo(sink)
         }
 
         override fun close() {

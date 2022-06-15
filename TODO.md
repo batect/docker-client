@@ -3,7 +3,7 @@
 * Demo / sample project
   * Add snippets to readme
   * Pulling an image
-    * Make output from sample app nicer / clearer
+    * Make output from sample apps nicer / clearer
   * Building an image
 * License checking
   * Gradle dependencies

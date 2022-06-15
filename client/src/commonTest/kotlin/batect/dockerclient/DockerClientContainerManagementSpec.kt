@@ -47,6 +47,8 @@ import kotlinx.datetime.Clock
 import okio.Buffer
 import okio.Path
 import okio.Path.Companion.toPath
+import okio.Sink
+import okio.Timeout
 import kotlin.random.Random
 import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Duration.Companion.seconds
@@ -137,6 +139,49 @@ class DockerClientContainerManagementSpec : ShouldSpec({
 
                     stdoutText shouldBe "Hello stdout\n"
                     stderrText shouldBe "Hello stderr\n"
+                } finally {
+                    client.removeContainer(container, force = true)
+                }
+            }
+
+            should("write container output to the provided output sink without any buffering") {
+                val spec = ContainerCreationSpec.Builder(image)
+                    .withCommand("sh", "-c", "for i in 1 2; do sleep 1; echo Line \$i; done")
+                    .build()
+
+                val container = client.createContainer(spec)
+
+                try {
+                    val stdout = object : Sink {
+                        val writesReceived = mutableListOf<String>()
+
+                        override fun timeout(): Timeout = Timeout.NONE
+                        override fun flush() {}
+                        override fun close() {}
+
+                        override fun write(source: Buffer, byteCount: Long) {
+                            writesReceived += source.readUtf8(byteCount)
+                        }
+                    }
+
+                    coroutineScope {
+                        val listeningToOutput = ReadyNotification()
+
+                        launch {
+                            client.attachToContainerIO(container, SinkTextOutput(stdout), null, null, listeningToOutput)
+                        }
+
+                        launch {
+                            listeningToOutput.waitForReady()
+                            client.startContainer(container)
+                        }
+                    }
+
+                    // If the output is streamed with any kind of buffering, it will be received by our test sink above as one write.
+                    stdout.writesReceived shouldBe listOf(
+                        "Line 1\n",
+                        "Line 2\n"
+                    )
                 } finally {
                     client.removeContainer(container, force = true)
                 }
