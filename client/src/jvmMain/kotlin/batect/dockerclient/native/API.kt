@@ -35,6 +35,7 @@ internal interface API {
     fun AttachToContainerOutput(@In clientHandle: DockerClientHandle, @In contextHandle: ContextHandle, @In id: kotlin.String, @In stdoutStreamHandle: OutputStreamHandle, @In stderrStreamHandle: OutputStreamHandle, @In stdinStreamHandle: InputStreamHandle, @In onReady: ReadyCallback, @In callbackUserData: Pointer?): Error?
     fun WaitForContainerToExit(@In clientHandle: DockerClientHandle, @In contextHandle: ContextHandle, @In id: kotlin.String, @In onReady: ReadyCallback, @In callbackUserData: Pointer?): WaitForContainerToExitReturn?
     fun InspectContainer(@In clientHandle: DockerClientHandle, @In contextHandle: ContextHandle, @In idOrName: kotlin.String): InspectContainerReturn?
+    fun UploadToContainer(@In clientHandle: DockerClientHandle, @In contextHandle: ContextHandle, @In containerId: kotlin.String, @In request: UploadToContainerRequest, @In destinationPath: kotlin.String): Error?
     fun CreateContext(): ContextHandle
     fun CancelContext(@In contextHandle: ContextHandle)
     fun DestroyContext(@In contextHandle: ContextHandle): Error?
@@ -151,4 +152,10 @@ internal interface API {
     fun AllocContainerInspectionResult(): ContainerInspectionResult?
     fun FreeInspectContainerReturn(@In value: InspectContainerReturn)
     fun AllocInspectContainerReturn(): InspectContainerReturn?
+    fun FreeUploadDirectory(@In value: UploadDirectory)
+    fun AllocUploadDirectory(): UploadDirectory?
+    fun FreeUploadFile(@In value: UploadFile)
+    fun AllocUploadFile(): UploadFile?
+    fun FreeUploadToContainerRequest(@In value: UploadToContainerRequest)
+    fun AllocUploadToContainerRequest(): UploadToContainerRequest?
 }

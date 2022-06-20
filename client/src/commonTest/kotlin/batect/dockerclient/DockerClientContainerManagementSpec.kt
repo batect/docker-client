@@ -1253,6 +1253,258 @@ class DockerClientContainerManagementSpec : ShouldSpec({
                 }
             }
         }
+
+        context("uploading files and directories to a container") {
+            val uploadTargetImage = buildTestImage("upload-target")
+
+            should("upload a file to an existing directory") {
+                val spec = ContainerCreationSpec.Builder(uploadTargetImage)
+                    .withCommand("sh", "-c", "cat /existing-directory/new-file.txt && echo --DIVIDER-- && tree -Jug --noreport /existing-directory")
+                    .build()
+
+                val container = client.createContainer(spec)
+
+                try {
+                    client.uploadToContainer(
+                        container,
+                        setOf(UploadFile("new-file.txt", 1234, 5678, "This is the new file\n".encodeToByteArray())),
+                        "/existing-directory"
+                    )
+
+                    val stdout = Buffer()
+                    val stderr = Buffer()
+
+                    val exitCode = client.run(container, SinkTextOutput(stdout), SinkTextOutput(stderr), null)
+                    val stdoutText = stdout.readUtf8()
+                    val stderrText = stderr.readUtf8()
+
+                    stdoutText.substringBefore("--DIVIDER--\n") shouldBe "This is the new file\n"
+
+                    // FIXME: replace this with shouldMatchJson once https://github.com/kotest/kotest/pull/3021 is available.
+                    stdoutText.substringAfter("--DIVIDER--\n").trim() shouldBe
+                        """
+                        [
+                          {"type":"directory","name":"/existing-directory","user":"root","group":"root","contents":[
+                            {"type":"file","name":"existing-file.txt","user":"root","group":"root"},
+                            {"type":"file","name":"new-file.txt","user":"1234","group":"5678"}
+                          ]}
+
+                        ]
+                        """.trimIndent()
+
+                    stderrText.trim() shouldBe ""
+                    exitCode shouldBe 0
+                } finally {
+                    client.removeContainer(container, force = true)
+                }
+            }
+
+            should("upload a file over an existing file") {
+                val spec = ContainerCreationSpec.Builder(uploadTargetImage)
+                    .withCommand("sh", "-c", "cat /existing-directory/existing-file.txt && echo --DIVIDER-- && tree -Jug --noreport /existing-directory")
+                    .build()
+
+                val container = client.createContainer(spec)
+
+                try {
+                    client.uploadToContainer(
+                        container,
+                        setOf(UploadFile("existing-file.txt", 1234, 5678, "This is the new file\n".encodeToByteArray())),
+                        "/existing-directory"
+                    )
+
+                    val stdout = Buffer()
+                    val stderr = Buffer()
+
+                    val exitCode = client.run(container, SinkTextOutput(stdout), SinkTextOutput(stderr), null)
+                    val stdoutText = stdout.readUtf8()
+                    val stderrText = stderr.readUtf8()
+
+                    stdoutText.substringBefore("--DIVIDER--\n") shouldBe "This is the new file\n"
+
+                    // FIXME: replace this with shouldMatchJson once https://github.com/kotest/kotest/pull/3021 is available.
+                    stdoutText.substringAfter("--DIVIDER--\n").trim() shouldBe
+                        """
+                        [
+                          {"type":"directory","name":"/existing-directory","user":"root","group":"root","contents":[
+                            {"type":"file","name":"existing-file.txt","user":"1234","group":"5678"}
+                          ]}
+
+                        ]
+                        """.trimIndent()
+
+                    stderrText.trim() shouldBe ""
+                    exitCode shouldBe 0
+                } finally {
+                    client.removeContainer(container, force = true)
+                }
+            }
+
+            should("upload a directory to an existing directory") {
+                val spec = ContainerCreationSpec.Builder(uploadTargetImage)
+                    .withCommand("tree", "-Jug", "--noreport", "/existing-directory")
+                    .build()
+
+                val container = client.createContainer(spec)
+
+                try {
+                    client.uploadToContainer(
+                        container,
+                        setOf(UploadDirectory("new-directory", 1234, 5678)),
+                        "/existing-directory"
+                    )
+
+                    val stdout = Buffer()
+                    val stderr = Buffer()
+
+                    val exitCode = client.run(container, SinkTextOutput(stdout), SinkTextOutput(stderr), null)
+                    val stdoutText = stdout.readUtf8()
+                    val stderrText = stderr.readUtf8()
+
+                    // FIXME: replace this with shouldMatchJson once https://github.com/kotest/kotest/pull/3021 is available.
+                    stdoutText.trim() shouldBe
+                        """
+                        [
+                          {"type":"directory","name":"/existing-directory","user":"root","group":"root","contents":[
+                            {"type":"file","name":"existing-file.txt","user":"root","group":"root"},
+                            {"type":"directory","name":"new-directory","user":"1234","group":"5678"}
+                          ]}
+
+                        ]
+                        """.trimIndent()
+
+                    stderrText.trim() shouldBe ""
+                    exitCode shouldBe 0
+                } finally {
+                    client.removeContainer(container, force = true)
+                }
+            }
+
+            should("upload a directory over an existing directory, preserving its contents but applying new ownership information") {
+                val spec = ContainerCreationSpec.Builder(uploadTargetImage)
+                    .withCommand("tree", "-Jug", "--noreport", "/existing-directory")
+                    .build()
+
+                val container = client.createContainer(spec)
+
+                try {
+                    client.uploadToContainer(
+                        container,
+                        setOf(UploadDirectory("existing-directory", 1234, 5678)),
+                        "/"
+                    )
+
+                    val stdout = Buffer()
+                    val stderr = Buffer()
+
+                    val exitCode = client.run(container, SinkTextOutput(stdout), SinkTextOutput(stderr), null)
+                    val stdoutText = stdout.readUtf8()
+                    val stderrText = stderr.readUtf8()
+
+                    // FIXME: replace this with shouldMatchJson once https://github.com/kotest/kotest/pull/3021 is available.
+                    stdoutText.trim() shouldBe
+                        """
+                        [
+                          {"type":"directory","name":"/existing-directory","user":"1234","group":"5678","contents":[
+                            {"type":"file","name":"existing-file.txt","user":"root","group":"root"}
+                          ]}
+
+                        ]
+                        """.trimIndent()
+
+                    stderrText.trim() shouldBe ""
+                    exitCode shouldBe 0
+                } finally {
+                    client.removeContainer(container, force = true)
+                }
+            }
+
+            should("upload a directory and its contents") {
+                val spec = ContainerCreationSpec.Builder(uploadTargetImage)
+                    .withCommand("sh", "-c", "cat /existing-directory/new-directory/new-file.txt && echo --DIVIDER-- && tree -Jug --noreport /existing-directory/new-directory")
+                    .build()
+
+                val container = client.createContainer(spec)
+
+                try {
+                    client.uploadToContainer(
+                        container,
+                        setOf(
+                            UploadFile("new-directory/new-file.txt", 1234, 5678, "This is the new file\n".encodeToByteArray()),
+                            UploadDirectory("new-directory", 4321, 8765)
+                        ),
+                        "/existing-directory"
+                    )
+
+                    val stdout = Buffer()
+                    val stderr = Buffer()
+
+                    val exitCode = client.run(container, SinkTextOutput(stdout), SinkTextOutput(stderr), null)
+                    val stdoutText = stdout.readUtf8()
+                    val stderrText = stderr.readUtf8()
+
+                    stdoutText.substringBefore("--DIVIDER--\n") shouldBe "This is the new file\n"
+
+                    // FIXME: replace this with shouldMatchJson once https://github.com/kotest/kotest/pull/3021 is available.
+                    stdoutText.substringAfter("--DIVIDER--\n").trim() shouldBe
+                        """
+                        [
+                          {"type":"directory","name":"/existing-directory/new-directory","user":"4321","group":"8765","contents":[
+                            {"type":"file","name":"new-file.txt","user":"1234","group":"5678"}
+                          ]}
+
+                        ]
+                        """.trimIndent()
+
+                    stderrText.trim() shouldBe ""
+                    exitCode shouldBe 0
+                } finally {
+                    client.removeContainer(container, force = true)
+                }
+            }
+
+            should("throw an appropriate exception when attempting to upload a file to a non-existent target directory") {
+                val spec = ContainerCreationSpec.Builder(uploadTargetImage)
+                    .build()
+
+                val container = client.createContainer(spec)
+
+                try {
+                    val exception = shouldThrow<ContainerUploadFailedException> {
+                        client.uploadToContainer(
+                            container,
+                            setOf(UploadFile("new-file.txt", 1234, 5678, "This is the new file\n".encodeToByteArray())),
+                            "/does-not-exist"
+                        )
+                    }
+
+                    exception.message shouldBe "No such container:path: ${container.id}:/does-not-exist"
+                } finally {
+                    client.removeContainer(container, force = true)
+                }
+            }
+
+            should("throw an appropriate exception when attempting to upload a directory to a non-existent target directory") {
+                val spec = ContainerCreationSpec.Builder(uploadTargetImage)
+                    .build()
+
+                val container = client.createContainer(spec)
+
+                try {
+                    val exception = shouldThrow<ContainerUploadFailedException> {
+                        client.uploadToContainer(
+                            container,
+                            setOf(UploadDirectory("new-directory", 1234, 5678)),
+                            "/does-not-exist"
+                        )
+                    }
+
+                    exception.message shouldBe "No such container:path: ${container.id}:/does-not-exist"
+                } finally {
+                    client.removeContainer(container, force = true)
+                }
+            }
+        }
     }
 
     context("when working with Windows containers").onlyIfDockerDaemonSupportsWindowsContainers {

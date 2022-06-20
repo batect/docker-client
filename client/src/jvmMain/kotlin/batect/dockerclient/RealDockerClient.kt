@@ -35,6 +35,7 @@ import batect.dockerclient.native.PullImageProgressCallback
 import batect.dockerclient.native.PullImageProgressUpdate
 import batect.dockerclient.native.StringPair
 import batect.dockerclient.native.TLSConfiguration
+import batect.dockerclient.native.UploadToContainerRequest
 import batect.dockerclient.native.bindMounts
 import batect.dockerclient.native.buildArgs
 import batect.dockerclient.native.capabilitiesToAdd
@@ -42,10 +43,12 @@ import batect.dockerclient.native.capabilitiesToDrop
 import batect.dockerclient.native.command
 import batect.dockerclient.native.config
 import batect.dockerclient.native.deviceMounts
+import batect.dockerclient.native.directories
 import batect.dockerclient.native.entrypoint
 import batect.dockerclient.native.environmentVariables
 import batect.dockerclient.native.exposedPorts
 import batect.dockerclient.native.extraHosts
+import batect.dockerclient.native.files
 import batect.dockerclient.native.healthcheckCommand
 import batect.dockerclient.native.imageTags
 import batect.dockerclient.native.labels
@@ -426,6 +429,16 @@ internal actual class RealDockerClient actual constructor(configuration: DockerC
         }
     }
 
+    override suspend fun uploadToContainer(container: ContainerReference, items: Set<UploadItem>, destinationPath: String) {
+        return launchWithGolangContext { context ->
+            nativeAPI.UploadToContainer(clientHandle, context.handle, container.id, UploadToContainerRequest(items), destinationPath).use { error ->
+                if (error != null) {
+                    throw ContainerUploadFailedException(error)
+                }
+            }
+        }
+    }
+
     override fun close() {
         nativeAPI.DisposeClient(clientHandle).use { error ->
             if (error != null) {
@@ -610,6 +623,16 @@ internal actual class RealDockerClient actual constructor(configuration: DockerC
             native.startPeriod.get().nanoseconds,
             native.retries.intValue()
         )
+
+    private fun UploadToContainerRequest(items: Set<UploadItem>): UploadToContainerRequest {
+        val directories = items.filterIsInstance<UploadDirectory>()
+        val files = items.filterIsInstance<UploadFile>()
+        val request = UploadToContainerRequest(Runtime.getRuntime(nativeAPI))
+        request.directories = directories
+        request.files = files
+
+        return request
+    }
 
     private class ReadyCallback(private val notification: ReadyNotification?) : batect.dockerclient.native.ReadyCallback {
         var exceptionThrownInCallback: Throwable? = null

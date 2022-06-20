@@ -47,6 +47,7 @@ public interface DockerClient : AutoCloseable {
     public suspend fun startContainer(container: ContainerReference)
     public suspend fun stopContainer(container: ContainerReference, timeout: Duration)
     public suspend fun removeContainer(container: ContainerReference, force: Boolean = false, removeVolumes: Boolean = false)
+    public suspend fun uploadToContainer(container: ContainerReference, items: Set<UploadItem>, destinationPath: String)
 
     /**
      * Streams input and output to/from the provided container.

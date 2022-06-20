@@ -148,3 +148,9 @@ public expect class ContainerInspectionFailedException(
     cause: Throwable? = null,
     golangErrorType: String? = null
 ) : DockerClientException
+
+public expect class ContainerUploadFailedException(
+    message: String,
+    cause: Throwable? = null,
+    golangErrorType: String? = null
+) : DockerClientException

@@ -780,3 +780,48 @@ internal class InspectContainerReturn(runtime: Runtime) : Struct(runtime), AutoC
         nativeAPI.FreeInspectContainerReturn(this)
     }
 }
+
+internal class UploadDirectory(runtime: Runtime) : Struct(runtime), AutoCloseable {
+    constructor(pointer: jnr.ffi.Pointer) : this(pointer.runtime) {
+        this.useMemory(pointer)
+    }
+
+    val path = UTF8StringRef()
+    val owner = int32_t()
+    val group = int32_t()
+
+    override fun close() {
+        nativeAPI.FreeUploadDirectory(this)
+    }
+}
+
+internal class UploadFile(runtime: Runtime) : Struct(runtime), AutoCloseable {
+    constructor(pointer: jnr.ffi.Pointer) : this(pointer.runtime) {
+        this.useMemory(pointer)
+    }
+
+    val path = UTF8StringRef()
+    val owner = int32_t()
+    val group = int32_t()
+    val contents = Pointer()
+    val contentsSize = int32_t()
+
+    override fun close() {
+        nativeAPI.FreeUploadFile(this)
+    }
+}
+
+internal class UploadToContainerRequest(runtime: Runtime) : Struct(runtime), AutoCloseable {
+    constructor(pointer: jnr.ffi.Pointer) : this(pointer.runtime) {
+        this.useMemory(pointer)
+    }
+
+    val directoriesCount = u_int64_t()
+    val directoriesPointer = Pointer()
+    val filesCount = u_int64_t()
+    val filesPointer = Pointer()
+
+    override fun close() {
+        nativeAPI.FreeUploadToContainerRequest(this)
+    }
+}

@@ -32,6 +32,7 @@
   * Currently ignored through `isSameOperatingSystemAsHost` checks in `build.gradle.kts`
 * Move `nonMingwTest` tests back into `commonTest` once https://youtrack.jetbrains.com/issue/KTOR-4307 is resolved or there's an alternative Ktor engine available for Kotlin/Native on Windows.
 * Remove `with...` prefixes from ImageBuildSpec / ContainerCreationSpec?
+* Replace use of `shouldBe` in upload tests in `DockerClientContainerManagementSpec` with `shouldMatchJson` once https://github.com/kotest/kotest/pull/3021 is available
 
 # APIs
 
@@ -48,6 +49,7 @@
 * Allow calling `ReadyNotification.waitForReady()` from multiple places (will currently only release one caller, not all)
 
 * Add `ifFailed` helper method to JVM `RealDockerClient`
+* Replace use of `allocArrayOf` with `allocArrayOfPointersTo` where appropriate
 
 * Images
   * Build
@@ -57,9 +59,6 @@
       * Add support for warnings (added in BuildKit 0.10.0)
       * Upgrade to most recent version of BuildKit library (currently blocked due to version hell)
 * Containers
-  * Upload files
-  * Attach
-    * Forward signals to container (test by sending Ctrl-C to self)
   * Stream events (for waiting for health check)
 * Exec
   * Create

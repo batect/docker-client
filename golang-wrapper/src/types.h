@@ -358,6 +358,27 @@ typedef struct {
     Error* Error;
 } InspectContainerReturn;
 
+typedef struct {
+    char* Path;
+    int32_t Owner;
+    int32_t Group;
+} UploadDirectory;
+
+typedef struct {
+    char* Path;
+    int32_t Owner;
+    int32_t Group;
+    void* Contents;
+    int32_t ContentsSize;
+} UploadFile;
+
+typedef struct {
+    uint64_t DirectoriesCount;
+    UploadDirectory** Directories;
+    uint64_t FilesCount;
+    UploadFile** Files;
+} UploadToContainerRequest;
+
 EXPORTED_FUNCTION Error* AllocError();
 EXPORTED_FUNCTION void FreeError(Error* value);
 EXPORTED_FUNCTION TLSConfiguration* AllocTLSConfiguration();
@@ -455,6 +476,12 @@ EXPORTED_FUNCTION ContainerInspectionResult* AllocContainerInspectionResult();
 EXPORTED_FUNCTION void FreeContainerInspectionResult(ContainerInspectionResult* value);
 EXPORTED_FUNCTION InspectContainerReturn* AllocInspectContainerReturn();
 EXPORTED_FUNCTION void FreeInspectContainerReturn(InspectContainerReturn* value);
+EXPORTED_FUNCTION UploadDirectory* AllocUploadDirectory();
+EXPORTED_FUNCTION void FreeUploadDirectory(UploadDirectory* value);
+EXPORTED_FUNCTION UploadFile* AllocUploadFile();
+EXPORTED_FUNCTION void FreeUploadFile(UploadFile* value);
+EXPORTED_FUNCTION UploadToContainerRequest* AllocUploadToContainerRequest();
+EXPORTED_FUNCTION void FreeUploadToContainerRequest(UploadToContainerRequest* value);
 EXPORTED_FUNCTION VolumeReference** CreateVolumeReferenceArray(uint64_t size);
 EXPORTED_FUNCTION void SetVolumeReferenceArrayElement(VolumeReference** array, uint64_t index, VolumeReference* value);
 EXPORTED_FUNCTION VolumeReference* GetVolumeReferenceArrayElement(VolumeReference** array, uint64_t index);
@@ -473,4 +500,10 @@ EXPORTED_FUNCTION ExposedPort* GetExposedPortArrayElement(ExposedPort** array, u
 EXPORTED_FUNCTION ContainerHealthLogEntry** CreateContainerHealthLogEntryArray(uint64_t size);
 EXPORTED_FUNCTION void SetContainerHealthLogEntryArrayElement(ContainerHealthLogEntry** array, uint64_t index, ContainerHealthLogEntry* value);
 EXPORTED_FUNCTION ContainerHealthLogEntry* GetContainerHealthLogEntryArrayElement(ContainerHealthLogEntry** array, uint64_t index);
+EXPORTED_FUNCTION UploadDirectory** CreateUploadDirectoryArray(uint64_t size);
+EXPORTED_FUNCTION void SetUploadDirectoryArrayElement(UploadDirectory** array, uint64_t index, UploadDirectory* value);
+EXPORTED_FUNCTION UploadDirectory* GetUploadDirectoryArrayElement(UploadDirectory** array, uint64_t index);
+EXPORTED_FUNCTION UploadFile** CreateUploadFileArray(uint64_t size);
+EXPORTED_FUNCTION void SetUploadFileArrayElement(UploadFile** array, uint64_t index, UploadFile* value);
+EXPORTED_FUNCTION UploadFile* GetUploadFileArrayElement(UploadFile** array, uint64_t index);
 #endif

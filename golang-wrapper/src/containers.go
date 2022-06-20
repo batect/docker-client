@@ -19,6 +19,8 @@ import (
 		#include "types.h"
 	*/
 	"C"
+	"archive/tar"
+	"bytes"
 	"fmt"
 	"strconv"
 	"time"
@@ -297,6 +299,66 @@ func InspectContainer(clientHandle DockerClientHandle, contextHandle ContextHand
 	result := newContainerInspectionResult(resp.ID, resp.Name, hostConfig, state, config)
 
 	return newInspectContainerReturn(result, nil)
+}
+
+//export UploadToContainer
+func UploadToContainer(clientHandle DockerClientHandle, contextHandle ContextHandle, containerID *C.char, request *C.UploadToContainerRequest, destinationPath *C.char) Error {
+	docker := clientHandle.DockerAPIClient()
+	ctx := contextHandle.Context()
+	buf := bytes.Buffer{}
+	writer := tar.NewWriter(&buf)
+
+	for i := 0; i < int(request.DirectoriesCount); i++ {
+		dir := C.GetUploadDirectoryArrayElement(request.Directories, C.uint64_t(i))
+
+		h := &tar.Header{
+			Typeflag: tar.TypeDir,
+			Name:     C.GoString(dir.Path) + "/",
+			Uid:      int(dir.Owner),
+			Gid:      int(dir.Group),
+		}
+
+		if err := writer.WriteHeader(h); err != nil {
+			return toError(err)
+		}
+	}
+
+	for i := 0; i < int(request.FilesCount); i++ {
+		file := C.GetUploadFileArrayElement(request.Files, C.uint64_t(i))
+
+		h := &tar.Header{
+			Typeflag: tar.TypeReg,
+			Name:     C.GoString(file.Path),
+			Size:     int64(file.ContentsSize),
+			Uid:      int(file.Owner),
+			Gid:      int(file.Group),
+		}
+
+		if err := writer.WriteHeader(h); err != nil {
+			return toError(err)
+		}
+
+		contents := C.GoBytes(file.Contents, file.ContentsSize)
+
+		if _, err := writer.Write(contents); err != nil {
+			return toError(err)
+		}
+	}
+
+	if err := writer.Close(); err != nil {
+		return toError(err)
+	}
+
+	opts := types.CopyToContainerOptions{
+		AllowOverwriteDirWithFile: false,
+		CopyUIDGID:                true,
+	}
+
+	if err := docker.CopyToContainer(ctx, C.GoString(containerID), C.GoString(destinationPath), &buf, opts); err != nil {
+		return toError(err)
+	}
+
+	return nil
 }
 
 func fromStringPairs(pairs **C.StringPair, count C.uint64_t) map[string]string {

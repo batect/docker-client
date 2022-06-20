@@ -56,6 +56,8 @@ import batect.dockerclient.native.StartContainer
 import batect.dockerclient.native.StopContainer
 import batect.dockerclient.native.StringPair
 import batect.dockerclient.native.TLSConfiguration
+import batect.dockerclient.native.UploadToContainer
+import batect.dockerclient.native.UploadToContainerRequest
 import batect.dockerclient.native.WaitForContainerToExit
 import kotlinx.cinterop.CFunction
 import kotlinx.cinterop.COpaquePointer
@@ -73,6 +75,7 @@ import kotlinx.cinterop.memScoped
 import kotlinx.cinterop.pointed
 import kotlinx.cinterop.ptr
 import kotlinx.cinterop.staticCFunction
+import kotlinx.cinterop.toCValues
 import kotlinx.cinterop.toKString
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.launch
@@ -528,6 +531,46 @@ internal actual class RealDockerClient actual constructor(configuration: DockerC
 
                 ContainerInspectionResult(ret.pointed.Response!!.pointed)
             }
+        }
+    }
+
+    override suspend fun uploadToContainer(container: ContainerReference, items: Set<UploadItem>, destinationPath: String) {
+        return launchWithGolangContext { context ->
+            memScoped {
+                UploadToContainer(clientHandle, context.handle, container.id.cstr, allocUploadToContainerRequest(items).ptr, destinationPath.cstr).ifFailed { error ->
+                    throw ContainerUploadFailedException(error.pointed)
+                }
+            }
+        }
+    }
+
+    private fun MemScope.allocUploadToContainerRequest(items: Set<UploadItem>): UploadToContainerRequest {
+        return alloc<UploadToContainerRequest> {
+            val directories = items.filterIsInstance<UploadDirectory>()
+            val files = items.filterIsInstance<UploadFile>()
+
+            Directories = allocArrayOf(directories.map { allocUploadDirectory(it).ptr })
+            DirectoriesCount = directories.size.toULong()
+            Files = allocArrayOf(files.map { allocUploadFile(it).ptr })
+            FilesCount = files.size.toULong()
+        }
+    }
+
+    private fun MemScope.allocUploadDirectory(directory: UploadDirectory): batect.dockerclient.native.UploadDirectory {
+        return alloc<batect.dockerclient.native.UploadDirectory> {
+            Path = directory.path.cstr.ptr
+            Owner = directory.owner
+            Group = directory.group
+        }
+    }
+
+    private fun MemScope.allocUploadFile(file: UploadFile): batect.dockerclient.native.UploadFile {
+        return alloc<batect.dockerclient.native.UploadFile> {
+            Path = file.path.cstr.ptr
+            Owner = file.owner
+            Group = file.group
+            Contents = file.contents.toCValues().ptr
+            ContentsSize = file.contents.size
         }
     }
 

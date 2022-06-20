@@ -80,6 +80,9 @@ type ContainerLogConfig *C.ContainerLogConfig
 type ContainerHostConfig *C.ContainerHostConfig
 type ContainerInspectionResult *C.ContainerInspectionResult
 type InspectContainerReturn *C.InspectContainerReturn
+type UploadDirectory *C.UploadDirectory
+type UploadFile *C.UploadFile
+type UploadToContainerRequest *C.UploadToContainerRequest
 
 func newError(
     Type string,
@@ -857,6 +860,61 @@ func newInspectContainerReturn(
     value := C.AllocInspectContainerReturn()
     value.Response = Response
     value.Error = Error
+
+    return value
+}
+
+func newUploadDirectory(
+    Path string,
+    Owner int32,
+    Group int32,
+) UploadDirectory {
+    value := C.AllocUploadDirectory()
+    value.Path = C.CString(Path)
+    value.Owner = C.int32_t(Owner)
+    value.Group = C.int32_t(Group)
+
+    return value
+}
+
+func newUploadFile(
+    Path string,
+    Owner int32,
+    Group int32,
+    Contents []byte,
+    ContentsSize int32,
+) UploadFile {
+    value := C.AllocUploadFile()
+    value.Path = C.CString(Path)
+    value.Owner = C.int32_t(Owner)
+    value.Group = C.int32_t(Group)
+    value.Contents = C.CBytes(Contents)
+    value.ContentsSize = C.int32_t(ContentsSize)
+
+    return value
+}
+
+func newUploadToContainerRequest(
+    Directories []UploadDirectory,
+    Files []UploadFile,
+) UploadToContainerRequest {
+    value := C.AllocUploadToContainerRequest()
+
+    value.DirectoriesCount = C.uint64_t(len(Directories))
+    value.Directories = C.CreateUploadDirectoryArray(value.DirectoriesCount)
+
+    for i, v := range Directories {
+        C.SetUploadDirectoryArrayElement(value.Directories, C.uint64_t(i), v)
+    }
+
+
+    value.FilesCount = C.uint64_t(len(Files))
+    value.Files = C.CreateUploadFileArray(value.FilesCount)
+
+    for i, v := range Files {
+        C.SetUploadFileArrayElement(value.Files, C.uint64_t(i), v)
+    }
+
 
     return value
 }

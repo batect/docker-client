@@ -534,3 +534,35 @@
       type: ContainerInspectionResult
     - name: Error
       type: Error
+
+- name: UploadDirectory
+  type: struct
+  fields:
+    - name: Path
+      type: string
+    - name: Owner
+      type: int32
+    - name: Group
+      type: int32
+
+- name: UploadFile
+  type: struct
+  fields:
+    - name: Path
+      type: string
+    - name: Owner
+      type: int32
+    - name: Group
+      type: int32
+    - name: Contents
+      type: byteArray
+    - name: ContentsSize
+      type: int32
+
+- name: UploadToContainerRequest
+  type: struct
+  fields:
+    - name: Directories
+      type: UploadDirectory[]
+    - name: Files
+      type: UploadFile[]

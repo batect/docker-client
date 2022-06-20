@@ -1012,6 +1012,68 @@ void FreeInspectContainerReturn(InspectContainerReturn* value) {
     free(value);
 }
 
+UploadDirectory* AllocUploadDirectory() {
+    UploadDirectory* value = malloc(sizeof(UploadDirectory));
+    value->Path = NULL;
+
+    return value;
+}
+
+void FreeUploadDirectory(UploadDirectory* value) {
+    if (value == NULL) {
+        return;
+    }
+
+    free(value->Path);
+    free(value);
+}
+
+UploadFile* AllocUploadFile() {
+    UploadFile* value = malloc(sizeof(UploadFile));
+    value->Path = NULL;
+    value->Contents = NULL;
+
+    return value;
+}
+
+void FreeUploadFile(UploadFile* value) {
+    if (value == NULL) {
+        return;
+    }
+
+    free(value->Path);
+    free(value->Contents);
+    free(value);
+}
+
+UploadToContainerRequest* AllocUploadToContainerRequest() {
+    UploadToContainerRequest* value = malloc(sizeof(UploadToContainerRequest));
+    value->Directories = NULL;
+    value->Files = NULL;
+    value->DirectoriesCount = 0;
+    value->FilesCount = 0;
+
+    return value;
+}
+
+void FreeUploadToContainerRequest(UploadToContainerRequest* value) {
+    if (value == NULL) {
+        return;
+    }
+
+    for (uint64_t i = 0; i < value->DirectoriesCount; i++) {
+        FreeUploadDirectory(value->Directories[i]);
+    }
+
+    free(value->Directories);
+    for (uint64_t i = 0; i < value->FilesCount; i++) {
+        FreeUploadFile(value->Files[i]);
+    }
+
+    free(value->Files);
+    free(value);
+}
+
 VolumeReference** CreateVolumeReferenceArray(uint64_t size) {
     return malloc(size * sizeof(VolumeReference*));
 }
@@ -1081,5 +1143,29 @@ void SetContainerHealthLogEntryArrayElement(ContainerHealthLogEntry** array, uin
 }
 
 ContainerHealthLogEntry* GetContainerHealthLogEntryArrayElement(ContainerHealthLogEntry** array, uint64_t index) {
+    return array[index];
+}
+
+UploadDirectory** CreateUploadDirectoryArray(uint64_t size) {
+    return malloc(size * sizeof(UploadDirectory*));
+}
+
+void SetUploadDirectoryArrayElement(UploadDirectory** array, uint64_t index, UploadDirectory* value) {
+    array[index] = value;
+}
+
+UploadDirectory* GetUploadDirectoryArrayElement(UploadDirectory** array, uint64_t index) {
+    return array[index];
+}
+
+UploadFile** CreateUploadFileArray(uint64_t size) {
+    return malloc(size * sizeof(UploadFile*));
+}
+
+void SetUploadFileArrayElement(UploadFile** array, uint64_t index, UploadFile* value) {
+    array[index] = value;
+}
+
+UploadFile* GetUploadFileArrayElement(UploadFile** array, uint64_t index) {
     return array[index];
 }
