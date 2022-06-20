@@ -31,6 +31,7 @@ import batect.dockerclient.native.BuildImageRequest
 import batect.dockerclient.native.ClientConfiguration
 import batect.dockerclient.native.CreateContainerRequest
 import batect.dockerclient.native.DockerClientHandle
+import batect.dockerclient.native.Error
 import batect.dockerclient.native.PullImageProgressCallback
 import batect.dockerclient.native.PullImageProgressUpdate
 import batect.dockerclient.native.StringPair
@@ -152,10 +153,8 @@ internal actual class RealDockerClient actual constructor(configuration: DockerC
 
     public override suspend fun deleteVolume(volume: VolumeReference) {
         return launchWithGolangContext { context ->
-            nativeAPI.DeleteVolume(clientHandle, context.handle, volume.name).use { error ->
-                if (error != null) {
-                    throw VolumeDeletionFailedException(error)
-                }
+            nativeAPI.DeleteVolume(clientHandle, context.handle, volume.name).ifFailed { error ->
+                throw VolumeDeletionFailedException(error)
             }
         }
     }
@@ -174,10 +173,8 @@ internal actual class RealDockerClient actual constructor(configuration: DockerC
 
     public override suspend fun deleteNetwork(network: NetworkReference) {
         return launchWithGolangContext { context ->
-            nativeAPI.DeleteNetwork(clientHandle, context.handle, network.id).use { error ->
-                if (error != null) {
-                    throw NetworkDeletionFailedException(error)
-                }
+            nativeAPI.DeleteNetwork(clientHandle, context.handle, network.id).ifFailed { error ->
+                throw NetworkDeletionFailedException(error)
             }
         }
     }
@@ -233,10 +230,8 @@ internal actual class RealDockerClient actual constructor(configuration: DockerC
 
     public override suspend fun deleteImage(image: ImageReference, force: Boolean) {
         launchWithGolangContext { context ->
-            nativeAPI.DeleteImage(clientHandle, context.handle, image.id, force).use { error ->
-                if (error != null) {
-                    throw ImageDeletionFailedException(error)
-                }
+            nativeAPI.DeleteImage(clientHandle, context.handle, image.id, force).ifFailed { error ->
+                throw ImageDeletionFailedException(error)
             }
         }
     }
@@ -304,10 +299,8 @@ internal actual class RealDockerClient actual constructor(configuration: DockerC
 
     override suspend fun pruneImageBuildCache() {
         launchWithGolangContext { context ->
-            nativeAPI.PruneImageBuildCache(clientHandle, context.handle).use { error ->
-                if (error != null) {
-                    throw ImageBuildCachePruneFailedException(error)
-                }
+            nativeAPI.PruneImageBuildCache(clientHandle, context.handle).ifFailed { error ->
+                throw ImageBuildCachePruneFailedException(error)
             }
         }
     }
@@ -328,30 +321,24 @@ internal actual class RealDockerClient actual constructor(configuration: DockerC
 
     override suspend fun startContainer(container: ContainerReference) {
         launchWithGolangContext { context ->
-            nativeAPI.StartContainer(clientHandle, context.handle, container.id).use { error ->
-                if (error != null) {
-                    throw ContainerStartFailedException(error)
-                }
+            nativeAPI.StartContainer(clientHandle, context.handle, container.id).ifFailed { error ->
+                throw ContainerStartFailedException(error)
             }
         }
     }
 
     override suspend fun stopContainer(container: ContainerReference, timeout: Duration) {
         launchWithGolangContext { context ->
-            nativeAPI.StopContainer(clientHandle, context.handle, container.id, timeout.inWholeSeconds).use { error ->
-                if (error != null) {
-                    throw ContainerStopFailedException(error)
-                }
+            nativeAPI.StopContainer(clientHandle, context.handle, container.id, timeout.inWholeSeconds).ifFailed { error ->
+                throw ContainerStopFailedException(error)
             }
         }
     }
 
     override suspend fun removeContainer(container: ContainerReference, force: Boolean, removeVolumes: Boolean) {
         launchWithGolangContext { context ->
-            nativeAPI.RemoveContainer(clientHandle, context.handle, container.id, force, removeVolumes).use { error ->
-                if (error != null) {
-                    throw ContainerRemovalFailedException(error)
-                }
+            nativeAPI.RemoveContainer(clientHandle, context.handle, container.id, force, removeVolumes).ifFailed { error ->
+                throw ContainerRemovalFailedException(error)
             }
         }
     }
@@ -383,14 +370,12 @@ internal actual class RealDockerClient actual constructor(configuration: DockerC
                                 stdinStream?.inputStreamHandle?.toLong() ?: 0,
                                 callback,
                                 null
-                            ).use { error ->
-                                if (error != null) {
-                                    if (error.type.get() == "main.ReadyCallbackFailedError") {
-                                        throw callback.exceptionThrownInCallback!!
-                                    }
-
-                                    throw AttachToContainerFailedException(error)
+                            ).ifFailed { error ->
+                                if (error.type.get() == "main.ReadyCallbackFailedError") {
+                                    throw callback.exceptionThrownInCallback!!
                                 }
+
+                                throw AttachToContainerFailedException(error)
                             }
                         }
                     }
@@ -431,19 +416,15 @@ internal actual class RealDockerClient actual constructor(configuration: DockerC
 
     override suspend fun uploadToContainer(container: ContainerReference, items: Set<UploadItem>, destinationPath: String) {
         return launchWithGolangContext { context ->
-            nativeAPI.UploadToContainer(clientHandle, context.handle, container.id, UploadToContainerRequest(items), destinationPath).use { error ->
-                if (error != null) {
-                    throw ContainerUploadFailedException(error)
-                }
+            nativeAPI.UploadToContainer(clientHandle, context.handle, container.id, UploadToContainerRequest(items), destinationPath).ifFailed { error ->
+                throw ContainerUploadFailedException(error)
             }
         }
     }
 
     override fun close() {
-        nativeAPI.DisposeClient(clientHandle).use { error ->
-            if (error != null) {
-                throw DockerClientException(error)
-            }
+        nativeAPI.DisposeClient(clientHandle).ifFailed { error ->
+            throw DockerClientException(error)
         }
     }
 
@@ -646,5 +627,11 @@ internal actual class RealDockerClient actual constructor(configuration: DockerC
                 return false
             }
         }
+    }
+}
+
+private fun Error?.ifFailed(handler: (Error) -> Unit) {
+    if (this != null) {
+        handler(this)
     }
 }
