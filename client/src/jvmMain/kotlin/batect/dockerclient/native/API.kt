@@ -35,7 +35,7 @@ internal interface API {
     fun AttachToContainerOutput(@In clientHandle: DockerClientHandle, @In contextHandle: ContextHandle, @In id: kotlin.String, @In stdoutStreamHandle: OutputStreamHandle, @In stderrStreamHandle: OutputStreamHandle, @In stdinStreamHandle: InputStreamHandle, @In onReady: ReadyCallback, @In callbackUserData: Pointer?): Error?
     fun WaitForContainerToExit(@In clientHandle: DockerClientHandle, @In contextHandle: ContextHandle, @In id: kotlin.String, @In onReady: ReadyCallback, @In callbackUserData: Pointer?): WaitForContainerToExitReturn?
     fun InspectContainer(@In clientHandle: DockerClientHandle, @In contextHandle: ContextHandle, @In idOrName: kotlin.String): InspectContainerReturn?
-    fun UploadToContainer(@In clientHandle: DockerClientHandle, @In contextHandle: ContextHandle, @In containerId: kotlin.String, @In request: UploadToContainerRequest, @In destinationPath: kotlin.String): Error?
+    fun UploadToContainer(@In clientHandle: DockerClientHandle, @In contextHandle: ContextHandle, @In containerID: kotlin.String, @In request: UploadToContainerRequest, @In destinationPath: kotlin.String): Error?
     fun CreateContext(): ContextHandle
     fun CancelContext(@In contextHandle: ContextHandle)
     fun DestroyContext(@In contextHandle: ContextHandle): Error?
