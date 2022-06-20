@@ -602,39 +602,43 @@ class DockerClientLegacyImageBuildSpec : ShouldSpec({
                 progressUpdatesReceived.add(update)
             }
 
-            val outputText = output.readUtf8().trim()
+            try {
+                val outputText = output.readUtf8().trim()
 
-            outputText shouldMatch """
-                Step 1/3 : FROM mcr\.microsoft\.com/windows/nanoserver@sha256:[0-9a-f]{64}(
-                mcr\.microsoft\.com/windows/nanoserver@sha256:[0-9a-f]{64}: Pulling from windows/nanoserver
-                ([a-f0-9]{12}: (Pulling fs layer|Verifying Checksum|Download complete|Extracting|Pull complete|Waiting|Already exists)
-                )*Digest: sha256:[0-9a-f]{64}
-                Status: Downloaded newer image for mcr\.microsoft\.com/windows/nanoserver@sha256:[0-9a-f]{64})?
-                 ---> [0-9a-f]{12}
-                Step 2/3 : COPY file\.txt \.
-                 ---> [0-9a-f]{12}
-                Step 3/3 : RUN type file\.txt
-                 ---> Running in [0-9a-f]{12}
-                This is the file\.
-                Removing intermediate container [0-9a-f]{12}
-                 ---> [0-9a-f]{12}
-                Successfully built [0-9a-f]{12}
-            """.trimIndent().toRegex()
+                outputText shouldMatch """
+                    Step 1/3 : FROM mcr\.microsoft\.com/windows/nanoserver@sha256:[0-9a-f]{64}(
+                    mcr\.microsoft\.com/windows/nanoserver@sha256:[0-9a-f]{64}: Pulling from windows/nanoserver
+                    ([a-f0-9]{12}: (Pulling fs layer|Verifying Checksum|Download complete|Extracting|Pull complete|Waiting|Already exists)
+                    )*Digest: sha256:[0-9a-f]{64}
+                    Status: Downloaded newer image for mcr\.microsoft\.com/windows/nanoserver@sha256:[0-9a-f]{64})?
+                     ---> [0-9a-f]{12}
+                    Step 2/3 : COPY file\.txt \.
+                     ---> [0-9a-f]{12}
+                    Step 3/3 : RUN type file\.txt
+                     ---> Running in [0-9a-f]{12}
+                    This is the file\.
+                    Removing intermediate container [0-9a-f]{12}
+                     ---> [0-9a-f]{12}
+                    Successfully built [0-9a-f]{12}
+                """.trimIndent().toRegex()
 
-            progressUpdatesReceived shouldStartWith listOf(
-                ImageBuildContextUploadProgress(3072),
-                StepStarting(1, "FROM mcr.microsoft.com/windows/nanoserver@sha256:4f06e1d8263b934d2e88dc1c6ff402f5b499c4d19ad6d0e2a5b9ee945f782928"),
-            )
+                progressUpdatesReceived shouldStartWith listOf(
+                    ImageBuildContextUploadProgress(3072),
+                    StepStarting(1, "FROM mcr.microsoft.com/windows/nanoserver@sha256:4f06e1d8263b934d2e88dc1c6ff402f5b499c4d19ad6d0e2a5b9ee945f782928"),
+                )
 
-            progressUpdatesReceived shouldEndWith listOf(
-                StepFinished(1),
-                StepStarting(2, "COPY file.txt ."),
-                StepFinished(2),
-                StepStarting(3, "RUN type file.txt"),
-                StepOutput(3, "This is the file.\n"),
-                StepFinished(3),
-                BuildComplete(image)
-            )
+                progressUpdatesReceived shouldEndWith listOf(
+                    StepFinished(1),
+                    StepStarting(2, "COPY file.txt ."),
+                    StepFinished(2),
+                    StepStarting(3, "RUN type file.txt"),
+                    StepOutput(3, "This is the file.\n"),
+                    StepFinished(3),
+                    BuildComplete(image)
+                )
+            } finally {
+                client.deleteImage(image, force = true)
+            }
         }
     }
 })
