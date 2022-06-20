@@ -702,6 +702,63 @@ class DockerClientContainerManagementSpec : ShouldSpec({
                 }
             }
 
+            should("be able to stream input to a container without closing the input stream") {
+                val spec = ContainerCreationSpec.Builder(image)
+                    .withCommand("sh", "-c", "read input_received && echo \"Received input: '\$input_received'\" && exit 123")
+                    .withStdinAttached()
+                    .build()
+
+                val container = client.createContainer(spec)
+
+                try {
+                    val stdout = Buffer()
+                    val stderr = Buffer()
+                    val stdin = object : Source {
+                        private var haveSentOutput = false
+                        private var closedLatch = Semaphore(1, 1)
+
+                        override fun timeout(): Timeout = Timeout.NONE
+
+                        override fun read(sink: Buffer, byteCount: Long): Long {
+                            return when (haveSentOutput) {
+                                false -> readInput(sink, byteCount)
+                                true -> {
+                                    waitForClose()
+                                    return -1
+                                }
+                            }
+                        }
+
+                        private fun readInput(sink: Buffer, @Suppress("UNUSED_PARAMETER") byteCount: Long): Long {
+                            haveSentOutput = true
+
+                            val bytes = "Hello world!\n".toByteArray()
+                            sink.write(bytes)
+
+                            return bytes.size.toLong()
+                        }
+
+                        private fun waitForClose() = runBlocking {
+                            closedLatch.acquire()
+                        }
+
+                        override fun close() {
+                            closedLatch.release()
+                        }
+                    }
+
+                    val exitCode = client.run(container, SinkTextOutput(stdout), SinkTextOutput(stderr), SourceTextInput(stdin))
+                    val stdoutText = stdout.readUtf8()
+                    val stderrText = stderr.readUtf8()
+
+                    exitCode shouldBe 123
+                    stdoutText shouldBe "Received input: 'Hello world!'\n"
+                    stderrText shouldBe ""
+                } finally {
+                    client.removeContainer(container, force = true)
+                }
+            }
+
             should("be able to use Kotlin timeouts to abort running a container while still receiving any output from before the timeout") {
                 val spec = ContainerCreationSpec.Builder(image)
                     .withCommand("sh", "-c", "echo 'Hello stdout' >/dev/stdout && echo 'Hello stderr' >/dev/stderr && sleep 5 && echo 'Stdout should never receive this' >/dev/stdout && echo 'Stderr should never receive this' >/dev/stderr")

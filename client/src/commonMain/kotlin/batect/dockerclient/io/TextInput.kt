@@ -21,6 +21,7 @@ import okio.Source
 
 public expect sealed interface TextInput {
     public fun prepareStream(): PreparedInputStream
+    public fun abortRead()
 
     public companion object {
         public val StandardInput: TextInput
@@ -45,6 +46,10 @@ internal class StandardTextInput(val wellKnownInputStreamHandle: ULong) : TextIn
                 // Nothing to do.
             }
         }
+    }
+
+    override fun abortRead() {
+        // Nothing to do.
     }
 }
 

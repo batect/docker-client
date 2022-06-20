@@ -61,12 +61,8 @@
     * Stream input to stdin - from console or from buffer
       * Remove need to cast to and from `ULong` in JVM's `TextInput.kt`
       * Test on Windows - check this is really passing (native tests are disabled on CI, try moving broken tests into their own source set so we can re-enable tests)
-      * Fail if attempting to attach non-TTY stdin to container expecting TTY?
-      * Check if implementations of `Sink` need to flush data written to FD
-      * Stream from unclosed sink / test case where container exits before stdin closes - should abort read
     * Forward signals to container (test by sending Ctrl-C to self)
     * Set and update TTY size
-    * Handle case where container hasn't been started or has already finished
   * Stream events (for waiting for health check)
 * Exec
   * Create

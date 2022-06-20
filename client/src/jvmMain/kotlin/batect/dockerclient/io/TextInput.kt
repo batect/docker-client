@@ -23,19 +23,23 @@ import batect.dockerclient.native.nativeAPI
 import jnr.posix.util.Platform
 import okio.Sink
 import okio.Source
-import okio.buffer
 
 public actual sealed interface TextInput {
     public actual fun prepareStream(): PreparedInputStream
+    public actual fun abortRead()
 
     public actual companion object {
         public actual val StandardInput: TextInput = StandardTextInput(1u)
     }
 }
 
-public actual class SourceTextInput actual constructor(public val source: Source) : TextInput {
+public actual class SourceTextInput actual constructor(private val source: Source) : TextInput {
     override fun prepareStream(): PreparedInputStream {
         return Pipe(source)
+    }
+
+    override fun abortRead() {
+        source.close()
     }
 
     private class Pipe(private val source: Source) : PreparedInputStream {
@@ -59,9 +63,8 @@ public actual class SourceTextInput actual constructor(public val source: Source
         }
 
         override fun run() {
-            sink.buffer().use { buffer ->
-                buffer.writeAll(source)
-            }
+            source.streamTo(sink)
+            sink.close()
         }
 
         override fun close() {
