@@ -167,6 +167,7 @@ func RemoveContainer(clientHandle DockerClientHandle, contextHandle ContextHandl
 }
 
 //export AttachToContainerOutput
+//nolint:funlen
 func AttachToContainerOutput(clientHandle DockerClientHandle, contextHandle ContextHandle, id *C.char, stdoutStreamHandle OutputStreamHandle, stderrStreamHandle OutputStreamHandle, stdinStreamHandle InputStreamHandle, onReady ReadyCallback, callbackUserData unsafe.Pointer) Error {
 	defer stdoutStreamHandle.Close()
 	defer stderrStreamHandle.Close()
@@ -218,6 +219,10 @@ func AttachToContainerOutput(clientHandle DockerClientHandle, contextHandle Cont
 
 	if !invokeReadyCallback(onReady, callbackUserData) {
 		return toError(ErrReadyCallbackFailed)
+	}
+
+	if config.Config.Tty && stdoutStreamHandle.OutputStream().IsTerminal() {
+		replacements.StartMonitoringTTYSize(ctx, docker, stdoutStreamHandle.OutputStream(), containerID)
 	}
 
 	if err := streamer.Stream(ctx); err != nil {

@@ -31,6 +31,7 @@
 * Fix issue linking sample apps and tests for non-Mac targets from Mac hosts (eg. running `./gradlew samples:interactive-container:linkReleaseExecutableLinuxX64` on a Mac host)
   * Currently ignored through `isSameOperatingSystemAsHost` checks in `build.gradle.kts`
 * Move `nonMingwTest` tests back into `commonTest` once https://youtrack.jetbrains.com/issue/KTOR-4307 is resolved or there's an alternative Ktor engine available for Kotlin/Native on Windows.
+* Remove `with...` prefixes from ImageBuildSpec / ContainerCreationSpec?
 
 # APIs
 
@@ -46,7 +47,6 @@
 
 * Allow calling `ReadyNotification.waitForReady()` from multiple places (will currently only release one caller, not all)
 
-* Remove `with...` prefixes from ImageBuildSpec / ContainerCreationSpec?
 * Add `ifFailed` helper method to JVM `RealDockerClient`
 
 * Images
@@ -59,10 +59,7 @@
 * Containers
   * Upload files
   * Attach
-    * Stream input to stdin - from console or from buffer
-      * Remove need to cast to and from `ULong` in JVM's `TextInput.kt`
     * Forward signals to container (test by sending Ctrl-C to self)
-    * Set and update TTY size
   * Stream events (for waiting for health check)
 * Exec
   * Create
