@@ -30,6 +30,7 @@
 * Restore AssertionMode to Error once https://github.com/kotest/kotest/issues/3022 is resolved
 * Fix issue linking sample apps and tests for non-Mac targets from Mac hosts (eg. running `./gradlew samples:interactive-container:linkReleaseExecutableLinuxX64` on a Mac host)
   * Currently ignored through `isSameOperatingSystemAsHost` checks in `build.gradle.kts`
+* Move `nonMingwTest` tests back into `commonTest` once https://youtrack.jetbrains.com/issue/KTOR-4307 is resolved or there's an alternative Ktor engine available for Kotlin/Native on Windows.
 
 # APIs
 
@@ -60,7 +61,6 @@
   * Attach
     * Stream input to stdin - from console or from buffer
       * Remove need to cast to and from `ULong` in JVM's `TextInput.kt`
-      * Test on Windows - check this is really passing (native tests are disabled on CI, try moving broken tests into their own source set so we can re-enable tests)
     * Forward signals to container (test by sending Ctrl-C to self)
     * Set and update TTY size
   * Stream events (for waiting for health check)

@@ -101,11 +101,10 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         if: matrix.disableDockerDaemonTests != 1
 
-      # linkDebugTestMingwX64 and mingwX64Test are disabled until https://youtrack.jetbrains.com/issue/KTOR-4307 is resolved.
       - name: Build, test and package
         uses: burrunan/gradle-cache-action@v1.10
         with:
-          arguments: client:check client:jvmJar --exclude-task linkDebugTestMingwX64 --exclude-task mingwX64Test --scan
+          arguments: client:check client:jvmJar --scan
         env:
           DISABLE_DOCKER_DAEMON_TESTS: ${{ matrix.disableDockerDaemonTests }}
           DOCKER_CONTAINER_OPERATING_SYSTEM: ${{ matrix.containerOperatingSystem }}
