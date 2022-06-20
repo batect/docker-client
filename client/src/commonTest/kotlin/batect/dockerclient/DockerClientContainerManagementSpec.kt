@@ -42,12 +42,15 @@ import kotlinx.coroutines.TimeoutCancellationException
 import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.sync.Semaphore
 import kotlinx.coroutines.withTimeout
 import kotlinx.datetime.Clock
 import okio.Buffer
 import okio.Path
 import okio.Path.Companion.toPath
 import okio.Sink
+import okio.Source
 import okio.Timeout
 import kotlin.random.Random
 import kotlin.time.Duration.Companion.milliseconds
@@ -732,7 +735,7 @@ class DockerClientContainerManagementSpec : ShouldSpec({
                         private fun readInput(sink: Buffer, @Suppress("UNUSED_PARAMETER") byteCount: Long): Long {
                             haveSentOutput = true
 
-                            val bytes = "Hello world!\n".toByteArray()
+                            val bytes = "Hello world!\n".encodeToByteArray()
                             sink.write(bytes)
 
                             return bytes.size.toLong()
