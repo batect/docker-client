@@ -6,8 +6,8 @@
     * Make output from sample apps nicer / clearer
   * Building an image
 * License checking
-  * Gradle dependencies
-  * Golang dependencies
+  * Gradle dependencies: Licensee
+  * Golang dependencies: https://github.com/google/go-licenses perhaps?
 * Test more environments:
   * Podman?
   * Colima?
@@ -17,21 +17,22 @@
 * Contributor guide
 * KDoc comments for public API
   * Enforce this with Detekt (https://detekt.dev/docs/rules/comments#undocumentedpublicclass, https://detekt.dev/docs/rules/comments#undocumentedpublicfunction, https://detekt.dev/docs/rules/comments#undocumentedpublicproperty)
-* Go build: use Zig for compilation
-  * Set ZIG_LOCAL_CACHE_DIR and ZIG_GLOBAL_CACHE_DIR to the same thing for all builds once https://github.com/ziglang/zig/issues/9711 is resolved
 * Run tests with memory leak detector - eg. valgrind
 * Linter to catch when memory is not freed (eg. Golang code allocates struct that is used as callback parameter)
-* Switch Golang linter back to using Go 1.18 syntax in `.golangci.yml` once it supports Go 1.18: https://github.com/golangci/golangci-lint/issues/2649
 * Remove "be able to" prefixes from test descriptions
-* Remove `IODispatcher` / `Dispatchers.kt` once https://github.com/Kotlin/kotlinx.coroutines/issues/3205 is resolved
 * Refactor / rework code generation - it's a mess and needs tests
   * Use https://github.com/square/kotlinpoet/ to generate Kotlin code rather than current string concatenation approach?
-* Remove use of panics in Golang code
-* Restore AssertionMode to Error once https://github.com/kotest/kotest/issues/3022 is resolved
 * Fix issue linking sample apps and tests for non-Mac targets from Mac hosts (eg. running `./gradlew samples:interactive-container:linkReleaseExecutableLinuxX64` on a Mac host)
   * Currently ignored through `isSameOperatingSystemAsHost` checks in `build.gradle.kts`
+
+# Issues blocked by upstream dependencies
+
+* Go build: use Zig for compilation
+  * Set ZIG_LOCAL_CACHE_DIR and ZIG_GLOBAL_CACHE_DIR to the same thing for all builds once https://github.com/ziglang/zig/issues/9711 is resolved
+* Switch Golang linter back to using Go 1.18 syntax in `.golangci.yml` once it supports Go 1.18: https://github.com/golangci/golangci-lint/issues/2649
+* Remove `IODispatcher` / `Dispatchers.kt` once https://github.com/Kotlin/kotlinx.coroutines/issues/3205 is resolved
+* Restore AssertionMode to Error once https://github.com/kotest/kotest/issues/3022 is resolved
 * Move `nonMingwTest` tests back into `commonTest` once https://youtrack.jetbrains.com/issue/KTOR-4307 is resolved or there's an alternative Ktor engine available for Kotlin/Native on Windows.
-* Remove `with...` prefixes from ImageBuildSpec / ContainerCreationSpec?
 * Replace use of `shouldBe` in upload tests in `DockerClientContainerManagementSpec` with `shouldMatchJson` once https://github.com/kotest/kotest/pull/3021 is available
 
 # APIs
@@ -47,6 +48,7 @@
 * Check that Golang code can return an empty list (eg. listing all volumes returns no volumes)
 
 * Allow calling `ReadyNotification.waitForReady()` from multiple places (will currently only release one caller, not all)
+* Remove `with...` prefixes from ImageBuildSpec / ContainerCreationSpec?
 
 * Images
   * Build
