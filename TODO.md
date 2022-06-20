@@ -48,8 +48,6 @@
 
 * Allow calling `ReadyNotification.waitForReady()` from multiple places (will currently only release one caller, not all)
 
-* Replace use of `allocArrayOf` with `allocArrayOfPointersTo` where appropriate
-
 * Images
   * Build
     * BuildKit

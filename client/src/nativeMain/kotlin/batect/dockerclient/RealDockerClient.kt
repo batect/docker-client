@@ -68,6 +68,7 @@ import kotlinx.cinterop.MemScope
 import kotlinx.cinterop.StableRef
 import kotlinx.cinterop.alloc
 import kotlinx.cinterop.allocArrayOf
+import kotlinx.cinterop.allocArrayOfPointersTo
 import kotlinx.cinterop.asStableRef
 import kotlinx.cinterop.cstr
 import kotlinx.cinterop.get
@@ -323,9 +324,9 @@ internal actual class RealDockerClient actual constructor(configuration: DockerC
         return alloc {
             ContextDirectory = spec.contextDirectory.toString().cstr.ptr
             PathToDockerfile = spec.pathToDockerfile.toString().cstr.ptr
-            BuildArgs = allocArrayOf(spec.buildArgs.map { allocStringPair(it).ptr })
+            BuildArgs = allocArrayOfPointersTo(spec.buildArgs.map { allocStringPair(it) })
             BuildArgsCount = spec.buildArgs.size.toULong()
-            ImageTags = allocArrayOf(spec.imageTags.map { it.cstr.ptr })
+            ImageTags = allocArrayOfPointersTo(spec.imageTags)
             ImageTagsCount = spec.imageTags.size.toULong()
             AlwaysPullBaseImages = spec.alwaysPullBaseImages
             NoCache = spec.noCache
@@ -362,46 +363,46 @@ internal actual class RealDockerClient actual constructor(configuration: DockerC
         return alloc {
             ImageReference = spec.image.id.cstr.ptr
             Name = spec.name?.cstr?.ptr
-            Command = allocArrayOf(spec.command.map { it.cstr.ptr })
+            Command = allocArrayOfPointersTo(spec.command)
             CommandCount = spec.command.size.toULong()
-            Entrypoint = allocArrayOf(spec.entrypoint.map { it.cstr.ptr })
+            Entrypoint = allocArrayOfPointersTo(spec.entrypoint)
             EntrypointCount = spec.entrypoint.size.toULong()
             WorkingDirectory = spec.workingDirectory?.cstr?.ptr
             Hostname = spec.hostname?.cstr?.ptr
-            ExtraHosts = allocArrayOf(spec.extraHostsFormattedForDocker.map { it.cstr.ptr })
+            ExtraHosts = allocArrayOfPointersTo(spec.extraHostsFormattedForDocker)
             ExtraHostsCount = spec.extraHostsFormattedForDocker.size.toULong()
-            EnvironmentVariables = allocArrayOf(spec.environmentVariablesFormattedForDocker.map { it.cstr.ptr })
+            EnvironmentVariables = allocArrayOfPointersTo(spec.environmentVariablesFormattedForDocker)
             EnvironmentVariablesCount = spec.environmentVariablesFormattedForDocker.size.toULong()
-            BindMounts = allocArrayOf(spec.bindMountsFormattedForDocker.map { it.cstr.ptr })
+            BindMounts = allocArrayOfPointersTo(spec.bindMountsFormattedForDocker)
             BindMountsCount = spec.bindMountsFormattedForDocker.size.toULong()
-            TmpfsMounts = allocArrayOf(spec.tmpfsMounts.map { allocStringPair(it).ptr })
+            TmpfsMounts = allocArrayOfPointersTo(spec.tmpfsMounts.map { allocStringPair(it) })
             TmpfsMountsCount = spec.tmpfsMounts.size.toULong()
-            DeviceMounts = allocArrayOf(spec.deviceMounts.map { allocDeviceMount(it).ptr })
+            DeviceMounts = allocArrayOfPointersTo(spec.deviceMounts.map { allocDeviceMount(it) })
             DeviceMountsCount = spec.deviceMounts.size.toULong()
-            ExposedPorts = allocArrayOf(spec.exposedPorts.map { allocExposedPort(it).ptr })
+            ExposedPorts = allocArrayOfPointersTo(spec.exposedPorts.map { allocExposedPort(it) })
             ExposedPortsCount = spec.exposedPorts.size.toULong()
             User = spec.userAndGroupFormattedForDocker?.cstr?.ptr
             UseInitProcess = spec.useInitProcess
             ShmSizeInBytes = spec.shmSizeInBytes ?: 0
             AttachTTY = spec.attachTTY
             Privileged = spec.privileged
-            CapabilitiesToAdd = allocArrayOf(spec.capabilitiesToAdd.map { it.name.cstr.ptr })
+            CapabilitiesToAdd = allocArrayOfPointersTo(spec.capabilitiesToAdd.map { it.name })
             CapabilitiesToAddCount = spec.capabilitiesToAdd.size.toULong()
-            CapabilitiesToDrop = allocArrayOf(spec.capabilitiesToDrop.map { it.name.cstr.ptr })
+            CapabilitiesToDrop = allocArrayOfPointersTo(spec.capabilitiesToDrop.map { it.name })
             CapabilitiesToDropCount = spec.capabilitiesToDrop.size.toULong()
             NetworkReference = spec.network?.id?.cstr?.ptr
-            NetworkAliases = allocArrayOf(spec.networkAliases.map { it.cstr.ptr })
+            NetworkAliases = allocArrayOfPointersTo(spec.networkAliases)
             NetworkAliasesCount = spec.networkAliases.size.toULong()
             LogDriver = spec.logDriver?.cstr?.ptr
-            LoggingOptions = allocArrayOf(spec.loggingOptions.map { allocStringPair(it).ptr })
+            LoggingOptions = allocArrayOfPointersTo(spec.loggingOptions.map { allocStringPair(it) })
             LoggingOptionsCount = spec.loggingOptions.size.toULong()
-            HealthcheckCommand = allocArrayOf(spec.healthcheckCommand.map { it.cstr.ptr })
+            HealthcheckCommand = allocArrayOfPointersTo(spec.healthcheckCommand)
             HealthcheckCommandCount = spec.healthcheckCommand.size.toULong()
             HealthcheckInterval = spec.healthcheckInterval?.inWholeNanoseconds ?: 0
             HealthcheckTimeout = spec.healthcheckTimeout?.inWholeNanoseconds ?: 0
             HealthcheckStartPeriod = spec.healthcheckStartPeriod?.inWholeNanoseconds ?: 0
             HealthcheckRetries = spec.healthcheckRetries?.toLong() ?: 0
-            Labels = allocArrayOf(spec.labels.map { allocStringPair(it.key, it.value).ptr })
+            Labels = allocArrayOfPointersTo(spec.labels.map { allocStringPair(it.key, it.value) })
             LabelsCount = spec.labels.size.toULong()
             AttachStdin = spec.attachStdin
             StdinOnce = spec.stdinOnce
@@ -409,6 +410,7 @@ internal actual class RealDockerClient actual constructor(configuration: DockerC
         }
     }
 
+    private fun MemScope.allocArrayOfPointersTo(strings: Iterable<String>) = allocArrayOf(strings.map { it.cstr.ptr })
     private fun MemScope.allocStringPair(mount: TmpfsMount): StringPair = allocStringPair(mount.containerPath, mount.options)
     private fun MemScope.allocStringPair(entry: Map.Entry<String, String>): StringPair = allocStringPair(entry.key, entry.value)
 
@@ -549,9 +551,9 @@ internal actual class RealDockerClient actual constructor(configuration: DockerC
             val directories = items.filterIsInstance<UploadDirectory>()
             val files = items.filterIsInstance<UploadFile>()
 
-            Directories = allocArrayOf(directories.map { allocUploadDirectory(it).ptr })
+            Directories = allocArrayOfPointersTo(directories.map { allocUploadDirectory(it) })
             DirectoriesCount = directories.size.toULong()
-            Files = allocArrayOf(files.map { allocUploadFile(it).ptr })
+            Files = allocArrayOfPointersTo(files.map { allocUploadFile(it) })
             FilesCount = files.size.toULong()
         }
     }
