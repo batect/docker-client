@@ -86,7 +86,7 @@ internal actual class RealDockerClient actual constructor(configuration: DockerC
         }
     }
 
-    public override suspend fun ping(): PingResponse {
+    override suspend fun ping(): PingResponse {
         return launchWithGolangContext { context ->
             nativeAPI.Ping(clientHandle, context.handle)!!.use { ret ->
                 if (ret.error != null) {
@@ -105,7 +105,7 @@ internal actual class RealDockerClient actual constructor(configuration: DockerC
         }
     }
 
-    public override suspend fun getDaemonVersionInformation(): DaemonVersionInformation {
+    override suspend fun getDaemonVersionInformation(): DaemonVersionInformation {
         return launchWithGolangContext { context ->
             nativeAPI.GetDaemonVersionInformation(clientHandle, context.handle)!!.use { ret ->
                 if (ret.error != null) {
@@ -127,7 +127,7 @@ internal actual class RealDockerClient actual constructor(configuration: DockerC
         }
     }
 
-    public override suspend fun listAllVolumes(): Set<VolumeReference> {
+    override suspend fun listAllVolumes(): Set<VolumeReference> {
         return launchWithGolangContext { context ->
             nativeAPI.ListAllVolumes(clientHandle, context.handle)!!.use { ret ->
                 if (ret.error != null) {
@@ -139,7 +139,7 @@ internal actual class RealDockerClient actual constructor(configuration: DockerC
         }
     }
 
-    public override suspend fun createVolume(name: String): VolumeReference {
+    override suspend fun createVolume(name: String): VolumeReference {
         return launchWithGolangContext { context ->
             nativeAPI.CreateVolume(clientHandle, context.handle, name)!!.use { ret ->
                 if (ret.error != null) {
@@ -151,7 +151,7 @@ internal actual class RealDockerClient actual constructor(configuration: DockerC
         }
     }
 
-    public override suspend fun deleteVolume(volume: VolumeReference) {
+    override suspend fun deleteVolume(volume: VolumeReference) {
         return launchWithGolangContext { context ->
             nativeAPI.DeleteVolume(clientHandle, context.handle, volume.name).ifFailed { error ->
                 throw VolumeDeletionFailedException(error)
@@ -159,7 +159,7 @@ internal actual class RealDockerClient actual constructor(configuration: DockerC
         }
     }
 
-    public override suspend fun createNetwork(name: String, driver: String): NetworkReference {
+    override suspend fun createNetwork(name: String, driver: String): NetworkReference {
         return launchWithGolangContext { context ->
             nativeAPI.CreateNetwork(clientHandle, context.handle, name, driver)!!.use { ret ->
                 if (ret.error != null) {
@@ -171,7 +171,7 @@ internal actual class RealDockerClient actual constructor(configuration: DockerC
         }
     }
 
-    public override suspend fun deleteNetwork(network: NetworkReference) {
+    override suspend fun deleteNetwork(network: NetworkReference) {
         return launchWithGolangContext { context ->
             nativeAPI.DeleteNetwork(clientHandle, context.handle, network.id).ifFailed { error ->
                 throw NetworkDeletionFailedException(error)
@@ -179,7 +179,7 @@ internal actual class RealDockerClient actual constructor(configuration: DockerC
         }
     }
 
-    public override suspend fun getNetworkByNameOrID(searchFor: String): NetworkReference? {
+    override suspend fun getNetworkByNameOrID(searchFor: String): NetworkReference? {
         return launchWithGolangContext { context ->
             nativeAPI.GetNetworkByNameOrID(clientHandle, context.handle, searchFor)!!.use { ret ->
                 if (ret.error != null) {
@@ -195,7 +195,7 @@ internal actual class RealDockerClient actual constructor(configuration: DockerC
         }
     }
 
-    public override suspend fun pullImage(name: String, onProgressUpdate: ImagePullProgressReceiver): ImageReference {
+    override suspend fun pullImage(name: String, onProgressUpdate: ImagePullProgressReceiver): ImageReference {
         var exceptionThrownInCallback: Throwable? = null
 
         val callback = object : PullImageProgressCallback {
@@ -228,7 +228,7 @@ internal actual class RealDockerClient actual constructor(configuration: DockerC
         }
     }
 
-    public override suspend fun deleteImage(image: ImageReference, force: Boolean) {
+    override suspend fun deleteImage(image: ImageReference, force: Boolean) {
         launchWithGolangContext { context ->
             nativeAPI.DeleteImage(clientHandle, context.handle, image.id, force).ifFailed { error ->
                 throw ImageDeletionFailedException(error)
@@ -236,7 +236,7 @@ internal actual class RealDockerClient actual constructor(configuration: DockerC
         }
     }
 
-    public override suspend fun getImage(name: String): ImageReference? {
+    override suspend fun getImage(name: String): ImageReference? {
         return launchWithGolangContext { context ->
             nativeAPI.GetImage(clientHandle, context.handle, name)!!.use { ret ->
                 if (ret.error != null) {

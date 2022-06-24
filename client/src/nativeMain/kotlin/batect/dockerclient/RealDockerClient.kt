@@ -72,7 +72,7 @@ internal actual class RealDockerClient actual constructor(configuration: DockerC
         }
     }
 
-    public override suspend fun ping(): PingResponse {
+    override suspend fun ping(): PingResponse {
         return launchWithGolangContext { context ->
             Ping(clientHandle, context.handle)!!.use { ret ->
                 if (ret.pointed.Error != null) {
@@ -91,7 +91,7 @@ internal actual class RealDockerClient actual constructor(configuration: DockerC
         }
     }
 
-    public override suspend fun getDaemonVersionInformation(): DaemonVersionInformation {
+    override suspend fun getDaemonVersionInformation(): DaemonVersionInformation {
         return launchWithGolangContext { context ->
             GetDaemonVersionInformation(clientHandle, context.handle)!!.use { ret ->
                 if (ret.pointed.Error != null) {
@@ -113,7 +113,7 @@ internal actual class RealDockerClient actual constructor(configuration: DockerC
         }
     }
 
-    public override suspend fun listAllVolumes(): Set<VolumeReference> {
+    override suspend fun listAllVolumes(): Set<VolumeReference> {
         return launchWithGolangContext { context ->
             ListAllVolumes(clientHandle, context.handle)!!.use { ret ->
                 if (ret.pointed.Error != null) {
@@ -125,7 +125,7 @@ internal actual class RealDockerClient actual constructor(configuration: DockerC
         }
     }
 
-    public override suspend fun createVolume(name: String): VolumeReference {
+    override suspend fun createVolume(name: String): VolumeReference {
         return launchWithGolangContext { context ->
             CreateVolume(clientHandle, context.handle, name.cstr)!!.use { ret ->
                 if (ret.pointed.Error != null) {
@@ -137,7 +137,7 @@ internal actual class RealDockerClient actual constructor(configuration: DockerC
         }
     }
 
-    public override suspend fun deleteVolume(volume: VolumeReference) {
+    override suspend fun deleteVolume(volume: VolumeReference) {
         return launchWithGolangContext { context ->
             DeleteVolume(clientHandle, context.handle, volume.name.cstr).ifFailed { error ->
                 throw VolumeDeletionFailedException(error.pointed)
@@ -145,7 +145,7 @@ internal actual class RealDockerClient actual constructor(configuration: DockerC
         }
     }
 
-    public override suspend fun createNetwork(name: String, driver: String): NetworkReference {
+    override suspend fun createNetwork(name: String, driver: String): NetworkReference {
         return launchWithGolangContext { context ->
             CreateNetwork(clientHandle, context.handle, name.cstr, driver.cstr)!!.use { ret ->
                 if (ret.pointed.Error != null) {
@@ -157,7 +157,7 @@ internal actual class RealDockerClient actual constructor(configuration: DockerC
         }
     }
 
-    public override suspend fun deleteNetwork(network: NetworkReference) {
+    override suspend fun deleteNetwork(network: NetworkReference) {
         return launchWithGolangContext { context ->
             DeleteNetwork(clientHandle, context.handle, network.id.cstr).ifFailed { error ->
                 throw NetworkDeletionFailedException(error.pointed)
@@ -165,7 +165,7 @@ internal actual class RealDockerClient actual constructor(configuration: DockerC
         }
     }
 
-    public override suspend fun getNetworkByNameOrID(searchFor: String): NetworkReference? {
+    override suspend fun getNetworkByNameOrID(searchFor: String): NetworkReference? {
         return launchWithGolangContext { context ->
             GetNetworkByNameOrID(clientHandle, context.handle, searchFor.cstr)!!.use { ret ->
                 if (ret.pointed.Error != null) {
@@ -181,7 +181,7 @@ internal actual class RealDockerClient actual constructor(configuration: DockerC
         }
     }
 
-    public override suspend fun pullImage(name: String, onProgressUpdate: ImagePullProgressReceiver): ImageReference {
+    override suspend fun pullImage(name: String, onProgressUpdate: ImagePullProgressReceiver): ImageReference {
         return launchWithGolangContext { context ->
             val callbackState = CallbackState<PullImageProgressUpdate> { progress ->
                 onProgressUpdate.invoke(ImagePullProgressUpdate(progress!!.pointed))
@@ -205,7 +205,7 @@ internal actual class RealDockerClient actual constructor(configuration: DockerC
         }
     }
 
-    public override suspend fun deleteImage(image: ImageReference, force: Boolean) {
+    override suspend fun deleteImage(image: ImageReference, force: Boolean) {
         launchWithGolangContext { context ->
             DeleteImage(clientHandle, context.handle, image.id.cstr, force).ifFailed { error ->
                 throw ImageDeletionFailedException(error.pointed)
@@ -213,7 +213,7 @@ internal actual class RealDockerClient actual constructor(configuration: DockerC
         }
     }
 
-    public override suspend fun getImage(name: String): ImageReference? {
+    override suspend fun getImage(name: String): ImageReference? {
         return launchWithGolangContext { context ->
             GetImage(clientHandle, context.handle, name.cstr)!!.use { ret ->
                 if (ret.pointed.Error != null) {
@@ -229,7 +229,7 @@ internal actual class RealDockerClient actual constructor(configuration: DockerC
         }
     }
 
-    public override suspend fun buildImage(spec: ImageBuildSpec, output: TextOutput, onProgressUpdate: ImageBuildProgressReceiver): ImageReference {
+    override suspend fun buildImage(spec: ImageBuildSpec, output: TextOutput, onProgressUpdate: ImageBuildProgressReceiver): ImageReference {
         output.prepareStream().use { stream ->
             val callbackState = CallbackState<BuildImageProgressUpdate> { progress ->
                 onProgressUpdate.invoke(ImageBuildProgressUpdate(progress!!.pointed))
@@ -272,7 +272,7 @@ internal actual class RealDockerClient actual constructor(configuration: DockerC
         }
     }
 
-    public override suspend fun pruneImageBuildCache() {
+    override suspend fun pruneImageBuildCache() {
         launchWithGolangContext { context ->
             PruneImageBuildCache(clientHandle, context.handle).ifFailed { error ->
                 throw ImageBuildCachePruneFailedException(error.pointed)
@@ -280,7 +280,7 @@ internal actual class RealDockerClient actual constructor(configuration: DockerC
         }
     }
 
-    public override suspend fun createContainer(spec: ContainerCreationSpec): ContainerReference {
+    override suspend fun createContainer(spec: ContainerCreationSpec): ContainerReference {
         spec.ensureValid()
 
         return launchWithGolangContext { context ->
@@ -296,7 +296,7 @@ internal actual class RealDockerClient actual constructor(configuration: DockerC
         }
     }
 
-    public override suspend fun startContainer(container: ContainerReference) {
+    override suspend fun startContainer(container: ContainerReference) {
         launchWithGolangContext { context ->
             StartContainer(clientHandle, context.handle, container.id.cstr).ifFailed { error ->
                 throw ContainerStartFailedException(error.pointed)
@@ -304,7 +304,7 @@ internal actual class RealDockerClient actual constructor(configuration: DockerC
         }
     }
 
-    public override suspend fun stopContainer(container: ContainerReference, timeout: Duration) {
+    override suspend fun stopContainer(container: ContainerReference, timeout: Duration) {
         launchWithGolangContext { context ->
             StopContainer(clientHandle, context.handle, container.id.cstr, timeout.inWholeSeconds).ifFailed { error ->
                 throw ContainerStopFailedException(error.pointed)
