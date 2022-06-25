@@ -29,7 +29,9 @@ import batect.dockerclient.native.ClientConfiguration
 import batect.dockerclient.native.CreateContainerRequest
 import batect.dockerclient.native.PullImageProgressDetail
 import batect.dockerclient.native.PullImageProgressUpdate
+import batect.dockerclient.native.StreamEventsRequest
 import batect.dockerclient.native.StringPair
+import batect.dockerclient.native.StringToStringListPair
 import batect.dockerclient.native.TLSConfiguration
 import batect.dockerclient.native.UploadToContainerRequest
 import kotlinx.cinterop.CPointed
@@ -129,7 +131,7 @@ internal fun ContainerHostConfig(native: batect.dockerclient.native.ContainerHos
 internal fun ContainerLogConfig(native: batect.dockerclient.native.ContainerLogConfig): ContainerLogConfig =
     ContainerLogConfig(
         native.Type!!.toKString(),
-        fromArray(native.Config!!, native.ConfigCount) { it.Key!!.toKString() to it.Value!!.toKString() }.associate { it }
+        mapFromStringPairs(native.Config!!, native.ConfigCount)
     )
 
 internal fun ContainerState(native: batect.dockerclient.native.ContainerState): ContainerState =
@@ -153,7 +155,7 @@ internal fun ContainerHealthLogEntry(native: batect.dockerclient.native.Containe
 
 internal fun ContainerConfig(native: batect.dockerclient.native.ContainerConfig): ContainerConfig =
     ContainerConfig(
-        fromArray(native.Labels!!, native.LabelsCount) { it.Key!!.toKString() to it.Value!!.toKString() }.associate { it },
+        mapFromStringPairs(native.Labels!!, native.LabelsCount),
         if (native.Healthcheck == null) null else ContainerHealthcheckConfig(native.Healthcheck!!.pointed)
     )
 
@@ -166,6 +168,21 @@ internal fun ContainerHealthcheckConfig(native: batect.dockerclient.native.Conta
         native.Retries.toInt()
     )
 
+internal fun Event(native: batect.dockerclient.native.Event): Event =
+    Event(
+        native.Type!!.toKString(),
+        native.Action!!.toKString(),
+        Actor(native.Actor!!.pointed),
+        native.Scope!!.toKString(),
+        fromEpochNanoseconds(native.Timestamp)
+    )
+
+internal fun Actor(native: batect.dockerclient.native.Actor): Actor =
+    Actor(
+        native.ID!!.toKString(),
+        mapFromStringPairs(native.Attributes!!, native.AttributesCount)
+    )
+
 internal inline fun <reified NativeType : CPointed, KotlinType> fromArray(
     source: CPointer<CPointerVar<NativeType>>,
     count: ULong,
@@ -174,6 +191,9 @@ internal inline fun <reified NativeType : CPointed, KotlinType> fromArray(
     return (0.toULong().until(count))
         .map { i -> creator(source[i.toLong()]!!.pointed) }
 }
+
+private fun mapFromStringPairs(array: CPointer<CPointerVar<StringPair>>, count: ULong): Map<String, String> =
+    fromArray(array, count) { it.Key!!.toKString() to it.Value!!.toKString() }.associate { it }
 
 internal fun MemScope.allocArrayOfPointersTo(strings: Iterable<String>) = allocArrayOf(strings.map { it.cstr.ptr })
 internal fun MemScope.allocStringPair(mount: TmpfsMount): StringPair = allocStringPair(mount.containerPath, mount.options)
@@ -315,4 +335,21 @@ internal fun MemScope.allocUploadFile(file: UploadFile): batect.dockerclient.nat
         Contents = file.contents.toCValues().ptr
         ContentsSize = file.contents.size
     }
+}
+
+internal fun MemScope.allocFilters(filters: Map<String, Set<String>>) = allocArrayOfPointersTo(filters.map { (key, value) -> allocStringToStringListPair(key, value) })
+
+internal fun MemScope.allocStringToStringListPair(key: String, values: Set<String>) = alloc<StringToStringListPair> {
+    Key = key.cstr.ptr
+    Values = allocArrayOfPointersTo(values)
+    ValuesCount = values.size.toULong()
+}
+
+internal fun MemScope.allocStreamEventsRequest(since: Instant?, until: Instant?, filters: Map<String, Set<String>>): StreamEventsRequest = alloc<StreamEventsRequest> {
+    SinceSeconds = since?.epochSeconds ?: 0
+    SinceNanoseconds = since?.nanosecondsOfSecond?.toLong() ?: 0
+    UntilSeconds = until?.epochSeconds ?: 0
+    UntilNanoseconds = until?.nanosecondsOfSecond?.toLong() ?: 0
+    Filters = allocFilters(filters)
+    FiltersCount = filters.size.toULong()
 }

@@ -566,3 +566,53 @@
       type: UploadDirectory[]
     - name: Files
       type: UploadFile[]
+
+- name: StringToStringListPair
+  type: struct
+  fields:
+    - name: Key
+      type: string
+    - name: Values
+      type: string[]
+
+- name: StreamEventsRequest
+  type: struct
+  fields:
+    - name: SinceSeconds
+      type: int64
+    - name: SinceNanoseconds
+      type: int64
+    - name: UntilSeconds
+      type: int64
+    - name: UntilNanoseconds
+      type: int64
+    - name: Filters
+      type: StringToStringListPair[]
+
+- name: Actor
+  type: struct
+  fields:
+    - name: ID
+      type: string
+    - name: Attributes
+      type: StringPair[]
+
+- name: Event
+  type: struct
+  fields:
+    - name: Type
+      type: string
+    - name: Action
+      type: string
+    - name: Actor
+      type: Actor
+    - name: Scope
+      type: string
+    - name: Timestamp
+      type: int64
+
+- name: EventCallback
+  type: callback
+  parameters:
+    - name: event
+      type: Event

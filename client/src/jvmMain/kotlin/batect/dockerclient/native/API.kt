@@ -41,6 +41,7 @@ internal interface API {
     fun DestroyContext(@In contextHandle: ContextHandle): Error?
     fun Ping(@In clientHandle: DockerClientHandle, @In contextHandle: ContextHandle): PingReturn?
     fun GetDaemonVersionInformation(@In clientHandle: DockerClientHandle, @In contextHandle: ContextHandle): GetDaemonVersionInformationReturn?
+    fun StreamEvents(@In clientHandle: DockerClientHandle, @In contextHandle: ContextHandle, @In request: StreamEventsRequest, @In onEvent: EventCallback, @In callbackUserData: Pointer?): Error?
     fun DeleteImage(@In clientHandle: DockerClientHandle, @In contextHandle: ContextHandle, @In ref: kotlin.String, @In force: Boolean): Error?
     fun GetImage(@In clientHandle: DockerClientHandle, @In contextHandle: ContextHandle, @In ref: kotlin.String): GetImageReturn?
     fun ValidateImageTag(@In tag: kotlin.String): Error?
@@ -158,4 +159,12 @@ internal interface API {
     fun AllocUploadFile(): UploadFile?
     fun FreeUploadToContainerRequest(@In value: UploadToContainerRequest)
     fun AllocUploadToContainerRequest(): UploadToContainerRequest?
+    fun FreeStringToStringListPair(@In value: StringToStringListPair)
+    fun AllocStringToStringListPair(): StringToStringListPair?
+    fun FreeStreamEventsRequest(@In value: StreamEventsRequest)
+    fun AllocStreamEventsRequest(): StreamEventsRequest?
+    fun FreeActor(@In value: Actor)
+    fun AllocActor(): Actor?
+    fun FreeEvent(@In value: Event)
+    fun AllocEvent(): Event?
 }

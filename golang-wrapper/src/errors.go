@@ -20,6 +20,7 @@ var (
 	ErrInvalidDockerClientHandle = InvalidDockerClientHandleError{}
 	ErrProgressCallbackFailed    = ProgressCallbackFailedError{}
 	ErrReadyCallbackFailed       = ReadyCallbackFailedError{}
+	ErrEventCallbackFailed       = EventCallbackFailedError{}
 	ErrInvalidOutputStreamHandle = InvalidOutputStreamHandleError{}
 	ErrInvalidInputStreamHandle  = InvalidInputStreamHandleError{}
 	ErrBuildKitNotSupported      = BuildKitNotSupportedError{}
@@ -42,6 +43,12 @@ type ReadyCallbackFailedError struct{}
 
 func (e ReadyCallbackFailedError) Error() string {
 	return "ready callback failed"
+}
+
+type EventCallbackFailedError struct{}
+
+func (e EventCallbackFailedError) Error() string {
+	return "event callback failed"
 }
 
 type InvalidOutputStreamHandleError struct{}

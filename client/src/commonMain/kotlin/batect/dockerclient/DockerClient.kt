@@ -21,9 +21,18 @@ import batect.dockerclient.io.TextOutput
 import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.launch
+import kotlinx.datetime.Instant
 import okio.Path
 import kotlin.time.Duration
 
+/**
+ * TODO: documentation
+ *
+ * Callbacks:
+ * Some methods take callback functions. These methods are not guaranteed to be called from any particular thread, but are
+ * guaranteed to only be called from one thread at a time.
+ *
+ */
 public interface DockerClient : AutoCloseable {
     public suspend fun ping(): PingResponse
     public suspend fun getDaemonVersionInformation(): DaemonVersionInformation
@@ -76,6 +85,8 @@ public interface DockerClient : AutoCloseable {
      * @return the container's exit code
      */
     public suspend fun waitForContainerToExit(container: ContainerReference, waitingNotification: ReadyNotification? = null): Long
+
+    public suspend fun streamEvents(since: Instant?, until: Instant?, filters: Map<String, Set<String>>, onEventReceived: EventHandler)
 
     public class Builder internal constructor(internal val factory: DockerClientFactory) {
         public constructor() : this({ config -> RealDockerClient(config) })

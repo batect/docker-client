@@ -1074,6 +1074,99 @@ void FreeUploadToContainerRequest(UploadToContainerRequest* value) {
     free(value);
 }
 
+StringToStringListPair* AllocStringToStringListPair() {
+    StringToStringListPair* value = malloc(sizeof(StringToStringListPair));
+    value->Key = NULL;
+    value->Values = NULL;
+    value->ValuesCount = 0;
+
+    return value;
+}
+
+void FreeStringToStringListPair(StringToStringListPair* value) {
+    if (value == NULL) {
+        return;
+    }
+
+    free(value->Key);
+    for (uint64_t i = 0; i < value->ValuesCount; i++) {
+        free(value->Values[i]);
+    }
+
+    free(value->Values);
+    free(value);
+}
+
+StreamEventsRequest* AllocStreamEventsRequest() {
+    StreamEventsRequest* value = malloc(sizeof(StreamEventsRequest));
+    value->Filters = NULL;
+    value->FiltersCount = 0;
+
+    return value;
+}
+
+void FreeStreamEventsRequest(StreamEventsRequest* value) {
+    if (value == NULL) {
+        return;
+    }
+
+    for (uint64_t i = 0; i < value->FiltersCount; i++) {
+        FreeStringToStringListPair(value->Filters[i]);
+    }
+
+    free(value->Filters);
+    free(value);
+}
+
+Actor* AllocActor() {
+    Actor* value = malloc(sizeof(Actor));
+    value->ID = NULL;
+    value->Attributes = NULL;
+    value->AttributesCount = 0;
+
+    return value;
+}
+
+void FreeActor(Actor* value) {
+    if (value == NULL) {
+        return;
+    }
+
+    free(value->ID);
+    for (uint64_t i = 0; i < value->AttributesCount; i++) {
+        FreeStringPair(value->Attributes[i]);
+    }
+
+    free(value->Attributes);
+    free(value);
+}
+
+Event* AllocEvent() {
+    Event* value = malloc(sizeof(Event));
+    value->Type = NULL;
+    value->Action = NULL;
+    value->Actor = NULL;
+    value->Scope = NULL;
+
+    return value;
+}
+
+void FreeEvent(Event* value) {
+    if (value == NULL) {
+        return;
+    }
+
+    free(value->Type);
+    free(value->Action);
+    FreeActor(value->Actor);
+    free(value->Scope);
+    free(value);
+}
+
+bool InvokeEventCallback(EventCallback method, void* userData, Event* event) {
+    return method(userData, event);
+}
+
 VolumeReference** CreateVolumeReferenceArray(uint64_t size) {
     return malloc(size * sizeof(VolumeReference*));
 }
@@ -1167,5 +1260,17 @@ void SetUploadFileArrayElement(UploadFile** array, uint64_t index, UploadFile* v
 }
 
 UploadFile* GetUploadFileArrayElement(UploadFile** array, uint64_t index) {
+    return array[index];
+}
+
+StringToStringListPair** CreateStringToStringListPairArray(uint64_t size) {
+    return malloc(size * sizeof(StringToStringListPair*));
+}
+
+void SetStringToStringListPairArrayElement(StringToStringListPair** array, uint64_t index, StringToStringListPair* value) {
+    array[index] = value;
+}
+
+StringToStringListPair* GetStringToStringListPairArrayElement(StringToStringListPair** array, uint64_t index) {
     return array[index];
 }

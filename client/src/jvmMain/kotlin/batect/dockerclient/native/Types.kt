@@ -825,3 +825,70 @@ internal class UploadToContainerRequest(runtime: Runtime) : Struct(runtime), Aut
         nativeAPI.FreeUploadToContainerRequest(this)
     }
 }
+
+internal class StringToStringListPair(runtime: Runtime) : Struct(runtime), AutoCloseable {
+    constructor(pointer: jnr.ffi.Pointer) : this(pointer.runtime) {
+        this.useMemory(pointer)
+    }
+
+    val key = UTF8StringRef()
+    val valuesCount = u_int64_t()
+    val valuesPointer = Pointer()
+
+    override fun close() {
+        nativeAPI.FreeStringToStringListPair(this)
+    }
+}
+
+internal class StreamEventsRequest(runtime: Runtime) : Struct(runtime), AutoCloseable {
+    constructor(pointer: jnr.ffi.Pointer) : this(pointer.runtime) {
+        this.useMemory(pointer)
+    }
+
+    val sinceSeconds = int64_t()
+    val sinceNanoseconds = int64_t()
+    val untilSeconds = int64_t()
+    val untilNanoseconds = int64_t()
+    val filtersCount = u_int64_t()
+    val filtersPointer = Pointer()
+
+    override fun close() {
+        nativeAPI.FreeStreamEventsRequest(this)
+    }
+}
+
+internal class Actor(runtime: Runtime) : Struct(runtime), AutoCloseable {
+    constructor(pointer: jnr.ffi.Pointer) : this(pointer.runtime) {
+        this.useMemory(pointer)
+    }
+
+    val id = UTF8StringRef()
+    val attributesCount = u_int64_t()
+    val attributesPointer = Pointer()
+
+    override fun close() {
+        nativeAPI.FreeActor(this)
+    }
+}
+
+internal class Event(runtime: Runtime) : Struct(runtime), AutoCloseable {
+    constructor(pointer: jnr.ffi.Pointer) : this(pointer.runtime) {
+        this.useMemory(pointer)
+    }
+
+    val type = UTF8StringRef()
+    val action = UTF8StringRef()
+    val actorPointer = Pointer()
+    val actor: Actor? by lazy { if (actorPointer.intValue() == 0) null else Actor(actorPointer.get()) }
+    val scope = UTF8StringRef()
+    val timestamp = int64_t()
+
+    override fun close() {
+        nativeAPI.FreeEvent(this)
+    }
+}
+
+internal interface EventCallback {
+    @Delegate
+    fun invoke(userData: Pointer?, eventPointer: Pointer?): Boolean
+}

@@ -43,6 +43,7 @@ import batect.dockerclient.native.PullImageProgressUpdate
 import batect.dockerclient.native.RemoveContainer
 import batect.dockerclient.native.StartContainer
 import batect.dockerclient.native.StopContainer
+import batect.dockerclient.native.StreamEvents
 import batect.dockerclient.native.UploadToContainer
 import batect.dockerclient.native.WaitForContainerToExit
 import kotlinx.cinterop.cstr
@@ -406,7 +407,43 @@ internal actual class RealDockerClient actual constructor(configuration: DockerC
     }
 
     override suspend fun streamEvents(since: Instant?, until: Instant?, filters: Map<String, Set<String>>, onEventReceived: EventHandler) {
-        TODO("Not yet implemented")
+        launchWithGolangContext { context ->
+            val streamingAbortedException = Exception("Event handler aborted streaming.")
+
+            val callbackState = CallbackState<batect.dockerclient.native.Event> { event ->
+                if (onEventReceived.invoke(Event(event!!.pointed)) == EventHandlerAction.Stop) {
+                    throw streamingAbortedException
+                }
+            }
+
+            callbackState.use { callback, callbackUserData ->
+                memScoped {
+                    StreamEvents(
+                        clientHandle,
+                        context.handle,
+                        allocStreamEventsRequest(since, until, filters).ptr,
+                        callback,
+                        callbackUserData
+                    ).ifFailed { error ->
+                        val errorType = error.pointed.Type!!.toKString()
+
+                        if (errorType != "main.EventCallbackFailedError") {
+                            throw StreamingEventsFailedException(error.pointed)
+                        }
+
+                        if (callbackState.exceptionThrown != streamingAbortedException) {
+                            throw StreamingEventsFailedException(
+                                "Event receiver threw an exception: ${callbackState.exceptionThrown}",
+                                callbackState.exceptionThrown,
+                                errorType
+                            )
+                        } else {
+                            // Event receiver aborted streaming - do not propagate the exception.
+                        }
+                    }
+                }
+            }
+        }
     }
 
     override fun close() {

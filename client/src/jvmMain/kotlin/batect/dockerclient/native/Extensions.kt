@@ -148,6 +148,12 @@ internal val ContainerHealthcheckConfig.test by ReadOnlyList(
     ::pointerToString
 )
 
+internal val Actor.attributes by ReadOnlyList(
+    Actor::attributesCount,
+    Actor::attributesPointer,
+    ::StringPair
+)
+
 internal var UploadToContainerRequest.directories by WriteOnlyList<UploadToContainerRequest, batect.dockerclient.UploadDirectory>(
     UploadToContainerRequest::directoriesCount,
     UploadToContainerRequest::directoriesPointer,
@@ -158,6 +164,17 @@ internal var UploadToContainerRequest.files by WriteOnlyList<UploadToContainerRe
     UploadToContainerRequest::filesCount,
     UploadToContainerRequest::filesPointer,
     ::uploadFileToNative
+)
+
+internal var StreamEventsRequest.filters by WriteOnlyList<StreamEventsRequest, StringToStringListPair>(
+    StreamEventsRequest::filtersCount,
+    StreamEventsRequest::filtersPointer
+)
+
+internal var StringToStringListPair.values by WriteOnlyList<StringToStringListPair, String>(
+    StringToStringListPair::valuesCount,
+    StringToStringListPair::valuesPointer,
+    ::stringToPointer
 )
 
 internal fun StringPair(key: String, value: String): StringPair {

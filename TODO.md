@@ -22,7 +22,7 @@
 * Remove "be able to" prefixes from test descriptions
 * Refactor / rework code generation - it's a mess and needs tests
   * Use https://github.com/square/kotlinpoet/ to generate Kotlin code rather than current string concatenation approach?
-* Fix issue linking sample apps and tests for non-Mac targets from Mac hosts (eg. running `./gradlew samples:interactive-container:linkReleaseExecutableLinuxX64` on a Mac host)
+* Fix issue linking sample apps and tests for non-Mac Kotlin/Native targets from Mac hosts (eg. running `./gradlew samples:interactive-container:linkReleaseExecutableLinuxX64` on a Mac host)
   * Currently ignored through `isSameOperatingSystemAsHost` checks in `build.gradle.kts`
 
 # Issues blocked by upstream dependencies
@@ -57,8 +57,6 @@
       * Support for secrets - fail if attempted with legacy builder
       * Add support for warnings (added in BuildKit 0.10.0)
       * Upgrade to most recent version of BuildKit library (currently blocked due to version hell)
-* Containers
-  * Stream events (for waiting for health check)
 * Exec
   * Create
   * Run

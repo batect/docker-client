@@ -14,6 +14,8 @@
     limitations under the License.
 */
 
+@file:JvmName("JVMConversions")
+
 package batect.dockerclient
 
 import batect.dockerclient.native.BuildImageProgressUpdate
@@ -27,9 +29,12 @@ import batect.dockerclient.native.BuildImageProgressUpdate_StepStarting
 import batect.dockerclient.native.BuildImageRequest
 import batect.dockerclient.native.ClientConfiguration
 import batect.dockerclient.native.CreateContainerRequest
+import batect.dockerclient.native.StreamEventsRequest
 import batect.dockerclient.native.StringPair
+import batect.dockerclient.native.StringToStringListPair
 import batect.dockerclient.native.TLSConfiguration
 import batect.dockerclient.native.UploadToContainerRequest
+import batect.dockerclient.native.attributes
 import batect.dockerclient.native.bindMounts
 import batect.dockerclient.native.buildArgs
 import batect.dockerclient.native.capabilitiesToAdd
@@ -43,6 +48,7 @@ import batect.dockerclient.native.environmentVariables
 import batect.dockerclient.native.exposedPorts
 import batect.dockerclient.native.extraHosts
 import batect.dockerclient.native.files
+import batect.dockerclient.native.filters
 import batect.dockerclient.native.healthcheckCommand
 import batect.dockerclient.native.imageTags
 import batect.dockerclient.native.labels
@@ -52,6 +58,7 @@ import batect.dockerclient.native.nativeAPI
 import batect.dockerclient.native.networkAliases
 import batect.dockerclient.native.test
 import batect.dockerclient.native.tmpfsMounts
+import batect.dockerclient.native.values
 import jnr.ffi.Runtime
 import jnr.ffi.Struct
 import kotlinx.datetime.Instant
@@ -242,4 +249,36 @@ internal fun UploadToContainerRequest(items: Set<UploadItem>): UploadToContainer
     request.files = files
 
     return request
+}
+
+internal fun Event(native: batect.dockerclient.native.Event): Event = Event(
+    native.type.get(),
+    native.action.get(),
+    Actor(native.actor!!),
+    native.scope.get(),
+    fromEpochNanoseconds(native.timestamp.get())
+)
+
+internal fun Actor(native: batect.dockerclient.native.Actor): Actor = Actor(
+    native.id.get(),
+    native.attributes.associate { it.key.get() to it.value.get() }
+)
+
+internal fun StreamEventsRequest(since: Instant?, until: Instant?, filters: Map<String, Set<String>>): StreamEventsRequest {
+    val request = StreamEventsRequest(Runtime.getRuntime(nativeAPI))
+    request.sinceSeconds.set(since?.epochSeconds ?: 0)
+    request.sinceNanoseconds.set(since?.nanosecondsOfSecond?.toLong() ?: 0)
+    request.untilSeconds.set(until?.epochSeconds ?: 0)
+    request.untilNanoseconds.set(until?.nanosecondsOfSecond?.toLong() ?: 0)
+    request.filters = filters.map { StringToStringListPair(it.key, it.value) }
+
+    return request
+}
+
+internal fun StringToStringListPair(key: String, values: Set<String>): StringToStringListPair {
+    val pair = StringToStringListPair(Runtime.getRuntime(nativeAPI))
+    pair.key.set(key)
+    pair.values = values
+
+    return pair
 }

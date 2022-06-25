@@ -20,14 +20,11 @@ import batect.dockerclient.io.TextInput
 import batect.dockerclient.io.TextOutput
 import batect.dockerclient.native.BuildImageProgressCallback
 import batect.dockerclient.native.BuildImageProgressUpdate
-import batect.dockerclient.native.BuildImageRequest
-import batect.dockerclient.native.ClientConfiguration
-import batect.dockerclient.native.CreateContainerRequest
 import batect.dockerclient.native.DockerClientHandle
 import batect.dockerclient.native.Error
+import batect.dockerclient.native.EventCallback
 import batect.dockerclient.native.PullImageProgressCallback
 import batect.dockerclient.native.PullImageProgressUpdate
-import batect.dockerclient.native.UploadToContainerRequest
 import batect.dockerclient.native.nativeAPI
 import batect.dockerclient.native.volumes
 import jnr.ffi.Pointer
@@ -35,6 +32,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import kotlinx.datetime.Instant
 import kotlin.time.Duration
 
 internal actual class RealDockerClient actual constructor(configuration: DockerClientConfiguration) : DockerClient, AutoCloseable {
@@ -183,7 +181,7 @@ internal actual class RealDockerClient actual constructor(configuration: DockerC
             nativeAPI.PullImage(clientHandle, context.handle, name, callback, null)!!.use { ret ->
                 if (ret.error != null) {
                     if (ret.error!!.type.get() == "main.ProgressCallbackFailedError") {
-                        throw ImagePullFailedException("Image pull progress receiver threw an exception: $exceptionThrownInCallback", exceptionThrownInCallback)
+                        throw ImagePullFailedException("Image pull progress receiver threw an exception: $exceptionThrownInCallback", exceptionThrownInCallback, ret.error!!.type.get())
                     }
 
                     throw ImagePullFailedException(ret.error!!)
@@ -246,7 +244,8 @@ internal actual class RealDockerClient actual constructor(configuration: DockerC
                             if (ret.error!!.type.get() == "main.ProgressCallbackFailedError") {
                                 throw ImageBuildFailedException(
                                     "Image build progress receiver threw an exception: $exceptionThrownInCallback",
-                                    exceptionThrownInCallback
+                                    exceptionThrownInCallback,
+                                    ret.error!!.type.get()
                                 )
                             }
 
@@ -384,6 +383,43 @@ internal actual class RealDockerClient actual constructor(configuration: DockerC
         return launchWithGolangContext { context ->
             nativeAPI.UploadToContainer(clientHandle, context.handle, container.id, UploadToContainerRequest(items), destinationPath).ifFailed { error ->
                 throw ContainerUploadFailedException(error)
+            }
+        }
+    }
+
+    override suspend fun streamEvents(since: Instant?, until: Instant?, filters: Map<String, Set<String>>, onEventReceived: EventHandler) {
+        var exceptionThrownInCallback: Throwable? = null
+        val streamingAbortedException = Exception("Event handler aborted streaming.")
+
+        val callback = object : EventCallback {
+            override fun invoke(userData: Pointer?, eventPointer: Pointer?): Boolean {
+                try {
+                    val event = batect.dockerclient.native.Event(eventPointer!!)
+
+                    if (onEventReceived(Event(event)) == EventHandlerAction.Stop) {
+                        throw streamingAbortedException
+                    }
+
+                    return true
+                } catch (t: Throwable) {
+                    exceptionThrownInCallback = t
+
+                    return false
+                }
+            }
+        }
+
+        launchWithGolangContext { context ->
+            nativeAPI.StreamEvents(clientHandle, context.handle, StreamEventsRequest(since, until, filters), callback, null).ifFailed { error ->
+                if (error.type.get() != "main.EventCallbackFailedError") {
+                    throw StreamingEventsFailedException(error)
+                }
+
+                if (exceptionThrownInCallback != streamingAbortedException) {
+                    throw StreamingEventsFailedException("Event receiver threw an exception: $exceptionThrownInCallback", exceptionThrownInCallback, error.type.get())
+                } else {
+                    // Event receiver aborted streaming - do not propagate the exception.
+                }
             }
         }
     }

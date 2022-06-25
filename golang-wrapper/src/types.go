@@ -83,6 +83,11 @@ type InspectContainerReturn *C.InspectContainerReturn
 type UploadDirectory *C.UploadDirectory
 type UploadFile *C.UploadFile
 type UploadToContainerRequest *C.UploadToContainerRequest
+type StringToStringListPair *C.StringToStringListPair
+type StreamEventsRequest *C.StreamEventsRequest
+type Actor *C.Actor
+type Event *C.Event
+type EventCallback C.EventCallback
 
 func newError(
     Type string,
@@ -919,6 +924,83 @@ func newUploadToContainerRequest(
     return value
 }
 
+func newStringToStringListPair(
+    Key string,
+    Values []string,
+) StringToStringListPair {
+    value := C.AllocStringToStringListPair()
+    value.Key = C.CString(Key)
+
+    value.ValuesCount = C.uint64_t(len(Values))
+    value.Values = C.CreatestringArray(value.ValuesCount)
+
+    for i, v := range Values {
+        C.SetstringArrayElement(value.Values, C.uint64_t(i), C.CString(v))
+    }
+
+
+    return value
+}
+
+func newStreamEventsRequest(
+    SinceSeconds int64,
+    SinceNanoseconds int64,
+    UntilSeconds int64,
+    UntilNanoseconds int64,
+    Filters []StringToStringListPair,
+) StreamEventsRequest {
+    value := C.AllocStreamEventsRequest()
+    value.SinceSeconds = C.int64_t(SinceSeconds)
+    value.SinceNanoseconds = C.int64_t(SinceNanoseconds)
+    value.UntilSeconds = C.int64_t(UntilSeconds)
+    value.UntilNanoseconds = C.int64_t(UntilNanoseconds)
+
+    value.FiltersCount = C.uint64_t(len(Filters))
+    value.Filters = C.CreateStringToStringListPairArray(value.FiltersCount)
+
+    for i, v := range Filters {
+        C.SetStringToStringListPairArrayElement(value.Filters, C.uint64_t(i), v)
+    }
+
+
+    return value
+}
+
+func newActor(
+    ID string,
+    Attributes []StringPair,
+) Actor {
+    value := C.AllocActor()
+    value.ID = C.CString(ID)
+
+    value.AttributesCount = C.uint64_t(len(Attributes))
+    value.Attributes = C.CreateStringPairArray(value.AttributesCount)
+
+    for i, v := range Attributes {
+        C.SetStringPairArrayElement(value.Attributes, C.uint64_t(i), v)
+    }
+
+
+    return value
+}
+
+func newEvent(
+    Type string,
+    Action string,
+    Actor Actor,
+    Scope string,
+    Timestamp int64,
+) Event {
+    value := C.AllocEvent()
+    value.Type = C.CString(Type)
+    value.Action = C.CString(Action)
+    value.Actor = Actor
+    value.Scope = C.CString(Scope)
+    value.Timestamp = C.int64_t(Timestamp)
+
+    return value
+}
+
 func invokePullImageProgressCallback(method PullImageProgressCallback, userData unsafe.Pointer, progress PullImageProgressUpdate) bool {
     return bool(C.InvokePullImageProgressCallback(method, userData, progress))
 }
@@ -929,5 +1011,9 @@ func invokeBuildImageProgressCallback(method BuildImageProgressCallback, userDat
 
 func invokeReadyCallback(method ReadyCallback, userData unsafe.Pointer, ) bool {
     return bool(C.InvokeReadyCallback(method, userData, ))
+}
+
+func invokeEventCallback(method EventCallback, userData unsafe.Pointer, event Event) bool {
+    return bool(C.InvokeEventCallback(method, userData, event))
 }
 
