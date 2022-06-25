@@ -19,6 +19,7 @@ import (
 		#include "types.h"
 	*/
 	"C"
+	"errors"
 	"io"
 	"time"
 	"unsafe"
@@ -54,7 +55,7 @@ func StreamEvents(
 				return toError(err)
 			}
 		case err := <-errorsChan:
-			if err == io.EOF {
+			if errors.Is(err, io.EOF) {
 				return nil
 			}
 
@@ -64,8 +65,14 @@ func StreamEvents(
 }
 
 func notifyEvent(e events.Message, onEvent EventCallback, callbackUserData unsafe.Pointer) error {
-	actor := newActor(e.Actor.ID, toStringPairs(e.Actor.Attributes))
-	event := newEvent(e.Type, e.Action, actor, e.Scope, e.TimeNano)
+	event := newEvent(
+		e.Type,
+		e.Action,
+		newActor(e.Actor.ID, toStringPairs(e.Actor.Attributes)),
+		e.Scope,
+		e.TimeNano,
+	)
+
 	defer C.FreeEvent(event)
 
 	if !invokeEventCallback(onEvent, callbackUserData, event) {
