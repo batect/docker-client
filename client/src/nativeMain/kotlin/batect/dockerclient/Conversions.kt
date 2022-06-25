@@ -200,7 +200,7 @@ internal fun MemScope.allocStringPair(mount: TmpfsMount): StringPair = allocStri
 internal fun MemScope.allocStringPair(entry: Map.Entry<String, String>): StringPair = allocStringPair(entry.key, entry.value)
 
 internal fun MemScope.allocClientConfiguration(configuration: DockerClientConfiguration): ClientConfiguration {
-    return alloc {
+    return alloc<ClientConfiguration> {
         UseConfigurationFromEnvironment = configuration.useConfigurationFromEnvironment
         Host = configuration.host?.cstr?.ptr
         ConfigDirectoryPath = configuration.configDirectoryPath?.cstr?.ptr
@@ -219,7 +219,7 @@ internal fun MemScope.allocClientConfiguration(configuration: DockerClientConfig
 }
 
 internal fun MemScope.allocBuildImageRequest(spec: ImageBuildSpec): BuildImageRequest {
-    return alloc {
+    return alloc<BuildImageRequest> {
         ContextDirectory = spec.contextDirectory.toString().cstr.ptr
         PathToDockerfile = spec.pathToDockerfile.toString().cstr.ptr
         BuildArgs = allocArrayOfPointersTo(spec.buildArgs.map { allocStringPair(it) })
@@ -234,7 +234,7 @@ internal fun MemScope.allocBuildImageRequest(spec: ImageBuildSpec): BuildImageRe
 }
 
 internal fun MemScope.allocCreateContainerRequest(spec: ContainerCreationSpec): CreateContainerRequest {
-    return alloc {
+    return alloc<CreateContainerRequest> {
         ImageReference = spec.image.id.cstr.ptr
         Name = spec.name?.cstr?.ptr
         Command = allocArrayOfPointersTo(spec.command)
@@ -285,14 +285,14 @@ internal fun MemScope.allocCreateContainerRequest(spec: ContainerCreationSpec): 
 }
 
 internal fun MemScope.allocStringPair(key: String, value: String): StringPair {
-    return alloc {
+    return alloc<StringPair> {
         Key = key.cstr.ptr
         Value = value.cstr.ptr
     }
 }
 
 internal fun MemScope.allocDeviceMount(mount: DeviceMount): batect.dockerclient.native.DeviceMount {
-    return alloc {
+    return alloc<batect.dockerclient.native.DeviceMount> {
         LocalPath = mount.localPath.toString().cstr.ptr
         ContainerPath = mount.containerPath.cstr.ptr
         Permissions = mount.permissions.cstr.ptr
@@ -300,7 +300,7 @@ internal fun MemScope.allocDeviceMount(mount: DeviceMount): batect.dockerclient.
 }
 
 internal fun MemScope.allocExposedPort(port: ExposedPort): batect.dockerclient.native.ExposedPort {
-    return alloc {
+    return alloc<batect.dockerclient.native.ExposedPort> {
         LocalPort = port.localPort
         ContainerPort = port.containerPort
         Protocol = port.protocol.cstr.ptr
