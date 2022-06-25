@@ -151,7 +151,7 @@ class DockerClientEventStreamingSpec : ShouldSpec({
         }
     }
 
-    should("filter events") {
+    should("filter events").onlyIfDockerDaemonPresent {
         val startTime = Clock.System.now() - clockSkewFudgeFactor
         val volumeName = "test-volume-${Random.nextInt()}"
         val volume = client.createVolume(volumeName)
@@ -183,7 +183,7 @@ class DockerClientEventStreamingSpec : ShouldSpec({
         }
     }
 
-    should("gracefully handle a event processor that throws an exception") {
+    should("gracefully handle a event processor that throws an exception").onlyIfDockerDaemonPresent {
         val startTime = Clock.System.now() - clockSkewFudgeFactor
         val volumeName = "test-volume-${Random.nextInt()}"
         val volume = client.createVolume(volumeName)
