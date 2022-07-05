@@ -42,7 +42,7 @@ val targets = setOf(
     Target(OperatingSystem.Darwin, Architecture.Arm64),
     Target(OperatingSystem.Linux, Architecture.X64),
     Target(OperatingSystem.Linux, Architecture.Arm64),
-    Target(OperatingSystem.Windows, Architecture.X64),
+    Target(OperatingSystem.Windows, Architecture.X64)
 )
 
 val srcDir = projectDir.resolve("src")

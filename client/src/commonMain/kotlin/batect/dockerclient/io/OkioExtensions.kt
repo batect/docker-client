@@ -14,6 +14,8 @@
     limitations under the License.
 */
 
+@file:Suppress("ktlint:filename")
+
 package batect.dockerclient.io
 
 import okio.Buffer

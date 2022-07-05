@@ -85,7 +85,7 @@ class DockerClientLegacyImageBuildSpec : ShouldSpec({
 
             progressUpdatesReceived shouldStartWith listOf(
                 ImageBuildContextUploadProgress(2048),
-                StepStarting(1, "FROM alpine:3.14.2"),
+                StepStarting(1, "FROM alpine:3.14.2")
             )
 
             progressUpdatesReceived shouldEndWith listOf(
@@ -457,7 +457,7 @@ class DockerClientLegacyImageBuildSpec : ShouldSpec({
 
             progressUpdatesReceived.shouldContainAnyOf(
                 BuildFailed("manifest for batect/this-image-does-not-exist:1.0 not found: manifest unknown: manifest unknown"),
-                BuildFailed("pull access denied for batect/this-image-does-not-exist, repository does not exist or may require 'docker login': denied: requested access to the resource is denied"),
+                BuildFailed("pull access denied for batect/this-image-does-not-exist, repository does not exist or may require 'docker login': denied: requested access to the resource is denied")
             )
 
             progressUpdatesReceived.forNone {
@@ -624,7 +624,7 @@ class DockerClientLegacyImageBuildSpec : ShouldSpec({
 
                 progressUpdatesReceived shouldStartWith listOf(
                     ImageBuildContextUploadProgress(3072),
-                    StepStarting(1, "FROM mcr.microsoft.com/windows/nanoserver@sha256:4f06e1d8263b934d2e88dc1c6ff402f5b499c4d19ad6d0e2a5b9ee945f782928"),
+                    StepStarting(1, "FROM mcr.microsoft.com/windows/nanoserver@sha256:4f06e1d8263b934d2e88dc1c6ff402f5b499c4d19ad6d0e2a5b9ee945f782928")
                 )
 
                 progressUpdatesReceived shouldEndWith listOf(

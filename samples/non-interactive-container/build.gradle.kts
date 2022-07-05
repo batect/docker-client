@@ -65,7 +65,7 @@ kotlin {
         // The same issue applies to the client library itself as well.
         setOf(
             "linkDebugExecutable${target.name.capitalize()}",
-            "linkReleaseExecutable${target.name.capitalize()}",
+            "linkReleaseExecutable${target.name.capitalize()}"
         ).forEach { name ->
             tasks.named(name) {
                 onlyIf { target.konanTarget.isSameOperatingSystemAsHost }
