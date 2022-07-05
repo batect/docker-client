@@ -153,7 +153,6 @@ abstract class GenerateKotlinJVMTypes : DefaultTask() {
     }
 
     private fun convertFieldNameToKotlinConvention(fieldName: String): String {
-
         return when (val firstLowercaseLetter = fieldName.indexOfFirst { it.isLowerCase() }) {
             -1 -> fieldName.lowercase()
             1 -> fieldName[0].lowercase() + fieldName.substring(1)

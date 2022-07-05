@@ -834,7 +834,7 @@ class DockerClientContainerManagementSpec : ShouldSpec({
                         .withCommand("touch", "/files/some-file.txt")
                         .build(),
                     expectedOutput = "",
-                    expectedErrorOutput = "",
+                    expectedErrorOutput = ""
                 ),
                 TestScenario(
                     "mount a tmpfs filesystem into a container with options",
@@ -853,7 +853,7 @@ class DockerClientContainerManagementSpec : ShouldSpec({
                         .withCommand("cat", "/dev/my-other-null")
                         .build(),
                     expectedOutput = "",
-                    expectedErrorOutput = "",
+                    expectedErrorOutput = ""
                 ),
                 TestScenario(
                     "set the user and group for a container",
@@ -1011,7 +1011,7 @@ class DockerClientContainerManagementSpec : ShouldSpec({
                         .withEntrypoint("echo", "This is the overriding entrypoint")
                         .build(),
                     "This is the overriding entrypoint"
-                ),
+                )
             ).forEach { scenario ->
                 should("be able to ${scenario.description}") {
                     val container = client.createContainer(scenario.creationSpec)
