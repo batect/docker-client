@@ -5,9 +5,7 @@
   * Pulling an image
     * Make output from sample apps nicer / clearer
   * Building an image
-* License checking
-  * Gradle dependencies: Licensee
-  * Golang dependencies: https://github.com/google/go-licenses perhaps?
+* License checking for Golang dependencies: use https://github.com/google/go-licenses perhaps?
 * Test more environments:
   * Podman?
   * Colima?
@@ -24,6 +22,11 @@
   * Use https://github.com/square/kotlinpoet/ to generate Kotlin code rather than current string concatenation approach?
 * Fix issue linking sample apps and tests for non-Mac Kotlin/Native targets from Mac hosts (eg. running `./gradlew samples:interactive-container:linkReleaseExecutableLinuxX64` on a Mac host)
   * Currently ignored through `isSameOperatingSystemAsHost` checks in `build.gradle.kts`
+* Use Gradle's dependency infrastructure to download Golang and Zig compilers?
+  * Or something like https://docs.gradle.org/current/userguide/build_services.html perhaps?
+  * Or look at toolchains concept?
+* Use Gradle's project dependencies to refer to the Golang wrapper in the client project, rather than the current hack referencing Gradle tasks directly
+  * https://docs.gradle.org/current/userguide/declaring_dependencies_between_subprojects.html#sec:depending_on_output_of_another_project
 
 # Issues blocked by upstream dependencies
 
@@ -34,6 +37,7 @@
 * Restore AssertionMode to Error once https://github.com/kotest/kotest/issues/3022 is resolved
 * Move `nonMingwTest` tests back into `commonTest` once https://youtrack.jetbrains.com/issue/KTOR-4307 is resolved or there's an alternative Ktor engine available for Kotlin/Native on Windows.
 * Replace use of `shouldBe` in upload tests in `DockerClientContainerManagementSpec` with `shouldMatchJson` once https://github.com/kotest/kotest/pull/3021 is available
+* License checking with Licensee: blocked due to https://github.com/cashapp/licensee/issues/67 (see `license-check` branch)
 
 # APIs
 
@@ -59,4 +63,15 @@
       * Upgrade to most recent version of BuildKit library (currently blocked due to version hell)
 * Exec
   * Create
-  * Run
+  * Start
+  * Attach
+  * Inspect
+  * Run (combine start, attach and inspect to get exit code)
+  * Features:
+    * UID / GID
+    * TTY
+    * Attach stdin + stream input
+    * Attach stdout / stderr + stream output
+    * Environment variables
+    * Working directory
+    * Command
