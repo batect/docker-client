@@ -44,6 +44,7 @@ dependencies {
     implementation(libs.okio)
     implementation(libs.commons.compress)
     implementation(libs.xz)
+    implementation(libs.licensee)
 
     testImplementation(gradleTestKit())
     testImplementation(libs.kotest.assertions.core)
@@ -107,6 +108,11 @@ gradlePlugin {
         create("docker-client-golang-crosscompilation") {
             id = "batect.dockerclient.buildtools.golang.crosscompilation"
             implementationClass = "batect.dockerclient.buildtools.golang.crosscompilation.GolangCrossCompilationPlugin"
+        }
+
+        create("docker-client-licensecheck") {
+            id = "batect.dockerclient.buildtools.licensecheck"
+            implementationClass = "batect.dockerclient.buildtools.licensecheck.LicenseCheckPlugin"
         }
     }
 }

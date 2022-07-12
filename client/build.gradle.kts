@@ -38,6 +38,7 @@ plugins {
     signing
 
     id("batect.dockerclient.buildtools.formatting")
+    id("batect.dockerclient.buildtools.licensecheck")
 }
 
 repositories {
