@@ -1167,6 +1167,95 @@ bool InvokeEventCallback(EventCallback method, void* userData, Event* event) {
     return method(userData, event);
 }
 
+CreateExecRequest* AllocCreateExecRequest() {
+    CreateExecRequest* value = malloc(sizeof(CreateExecRequest));
+    value->ContainerID = NULL;
+    value->Command = NULL;
+    value->CommandCount = 0;
+
+    return value;
+}
+
+void FreeCreateExecRequest(CreateExecRequest* value) {
+    if (value == NULL) {
+        return;
+    }
+
+    free(value->ContainerID);
+    for (uint64_t i = 0; i < value->CommandCount; i++) {
+        free(value->Command[i]);
+    }
+
+    free(value->Command);
+    free(value);
+}
+
+ContainerExecReference* AllocContainerExecReference() {
+    ContainerExecReference* value = malloc(sizeof(ContainerExecReference));
+    value->ID = NULL;
+
+    return value;
+}
+
+void FreeContainerExecReference(ContainerExecReference* value) {
+    if (value == NULL) {
+        return;
+    }
+
+    free(value->ID);
+    free(value);
+}
+
+CreateExecReturn* AllocCreateExecReturn() {
+    CreateExecReturn* value = malloc(sizeof(CreateExecReturn));
+    value->Response = NULL;
+    value->Error = NULL;
+
+    return value;
+}
+
+void FreeCreateExecReturn(CreateExecReturn* value) {
+    if (value == NULL) {
+        return;
+    }
+
+    FreeContainerExecReference(value->Response);
+    FreeError(value->Error);
+    free(value);
+}
+
+InspectExecResult* AllocInspectExecResult() {
+    InspectExecResult* value = malloc(sizeof(InspectExecResult));
+
+    return value;
+}
+
+void FreeInspectExecResult(InspectExecResult* value) {
+    if (value == NULL) {
+        return;
+    }
+
+    free(value);
+}
+
+InspectExecReturn* AllocInspectExecReturn() {
+    InspectExecReturn* value = malloc(sizeof(InspectExecReturn));
+    value->Response = NULL;
+    value->Error = NULL;
+
+    return value;
+}
+
+void FreeInspectExecReturn(InspectExecReturn* value) {
+    if (value == NULL) {
+        return;
+    }
+
+    FreeInspectExecResult(value->Response);
+    FreeError(value->Error);
+    free(value);
+}
+
 VolumeReference** CreateVolumeReferenceArray(uint64_t size) {
     return malloc(size * sizeof(VolumeReference*));
 }

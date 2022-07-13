@@ -171,6 +171,12 @@ internal var StreamEventsRequest.filters by WriteOnlyList<StreamEventsRequest, S
     StreamEventsRequest::filtersPointer
 )
 
+internal var CreateExecRequest.command by WriteOnlyList<CreateExecRequest, String>(
+    CreateExecRequest::commandCount,
+    CreateExecRequest::commandPointer,
+    ::stringToPointer
+)
+
 internal var StringToStringListPair.values by WriteOnlyList<StringToStringListPair, String>(
     StringToStringListPair::valuesCount,
     StringToStringListPair::valuesPointer,

@@ -160,3 +160,21 @@ public expect class StreamingEventsFailedException(
     cause: Throwable? = null,
     golangErrorType: String? = null
 ) : DockerClientException
+
+public expect class ContainerExecCreationFailedException(
+    message: String,
+    cause: Throwable? = null,
+    golangErrorType: String? = null
+) : DockerClientException
+
+public expect class ContainerExecInspectionFailedException(
+    message: String,
+    cause: Throwable? = null,
+    golangErrorType: String? = null
+) : DockerClientException
+
+public expect class StartingContainerExecFailedException(
+    message: String,
+    cause: Throwable? = null,
+    golangErrorType: String? = null
+) : DockerClientException

@@ -20,6 +20,7 @@ import batect.dockerclient.io.TextInput
 import batect.dockerclient.io.TextOutput
 import batect.dockerclient.native.BuildImageProgressCallback
 import batect.dockerclient.native.BuildImageProgressUpdate
+import batect.dockerclient.native.CreateExecRequest
 import batect.dockerclient.native.DockerClientHandle
 import batect.dockerclient.native.Error
 import batect.dockerclient.native.EventCallback
@@ -419,6 +420,66 @@ internal actual class RealDockerClient actual constructor(configuration: DockerC
                     throw StreamingEventsFailedException("Event receiver threw an exception: $exceptionThrownInCallback", exceptionThrownInCallback, error.type.get())
                 } else {
                     // Event receiver aborted streaming - do not propagate the exception.
+                }
+            }
+        }
+    }
+
+    override suspend fun createExec(spec: ContainerExecSpec): ContainerExecReference {
+        return launchWithGolangContext { context ->
+            nativeAPI.CreateExec(clientHandle, context.handle, CreateExecRequest(spec))!!.use { ret ->
+                if (ret.error != null) {
+                    throw ContainerExecCreationFailedException(ret.error!!)
+                }
+
+                ContainerExecReference(ret.response!!.id.get())
+            }
+        }
+    }
+
+    override suspend fun startExecDetached(exec: ContainerExecReference, attachTTY: Boolean) {
+        launchWithGolangContext { context ->
+            nativeAPI.StartExecDetached(clientHandle, context.handle, exec.id, attachTTY).ifFailed { error ->
+                throw StartingContainerExecFailedException(error)
+            }
+        }
+    }
+
+    override suspend fun inspectExec(exec: ContainerExecReference): ContainerExecInspectionResult {
+        return launchWithGolangContext { context ->
+            nativeAPI.InspectExec(clientHandle, context.handle, exec.id)!!.use { ret ->
+                if (ret.error != null) {
+                    throw ContainerExecInspectionFailedException(ret.error!!)
+                }
+
+                ContainerExecInspectionResult(ret.response!!)
+            }
+        }
+    }
+
+    override suspend fun startAndAttachToExec(exec: ContainerExecReference, attachTTY: Boolean, stdout: TextOutput?, stderr: TextOutput?, stdin: TextInput?) {
+        stdout?.prepareStream().use { stdoutStream ->
+            stderr?.prepareStream().use { stderrStream ->
+                stdin?.prepareStream().use { stdinStream ->
+                    coroutineScope {
+                        launch(IODispatcher) { stdoutStream?.run() }
+                        launch(IODispatcher) { stderrStream?.run() }
+                        launch(IODispatcher) { stdinStream?.run() }
+
+                        launchWithGolangContext { context ->
+                            nativeAPI.StartAndAttachToExec(
+                                clientHandle,
+                                context.handle,
+                                exec.id,
+                                attachTTY,
+                                stdoutStream?.outputStreamHandle?.toLong() ?: 0,
+                                stderrStream?.outputStreamHandle?.toLong() ?: 0,
+                                stdinStream?.inputStreamHandle?.toLong() ?: 0
+                            ).ifFailed { error ->
+                                throw StartingContainerExecFailedException(error)
+                            }
+                        }
+                    }
                 }
             }
         }

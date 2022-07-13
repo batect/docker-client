@@ -27,6 +27,7 @@ import batect.dockerclient.native.BuildImageProgressUpdate_StepStarting
 import batect.dockerclient.native.BuildImageRequest
 import batect.dockerclient.native.ClientConfiguration
 import batect.dockerclient.native.CreateContainerRequest
+import batect.dockerclient.native.CreateExecRequest
 import batect.dockerclient.native.PullImageProgressDetail
 import batect.dockerclient.native.PullImageProgressUpdate
 import batect.dockerclient.native.StreamEventsRequest
@@ -353,3 +354,16 @@ internal fun MemScope.allocStreamEventsRequest(since: Instant?, until: Instant?,
     Filters = allocFilters(filters)
     FiltersCount = filters.size.toULong()
 }
+
+internal fun MemScope.allocCreateExecRequest(spec: ContainerExecSpec): CreateExecRequest = alloc<CreateExecRequest> {
+    ContainerID = spec.container.id.cstr.ptr
+    Command = allocArrayOfPointersTo(spec.command)
+    CommandCount = spec.command.size.toULong()
+    AttachStdout = spec.attachStdout
+    AttachStderr = spec.attachStderr
+}
+
+internal fun ContainerExecInspectionResult(native: batect.dockerclient.native.InspectExecResult): ContainerExecInspectionResult = ContainerExecInspectionResult(
+    if (native.Running) null else native.ExitCode,
+    native.Running
+)

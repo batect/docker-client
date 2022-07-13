@@ -892,3 +892,74 @@ internal interface EventCallback {
     @Delegate
     fun invoke(userData: Pointer?, eventPointer: Pointer?): Boolean
 }
+
+internal class CreateExecRequest(runtime: Runtime) : Struct(runtime), AutoCloseable {
+    constructor(pointer: jnr.ffi.Pointer) : this(pointer.runtime) {
+        this.useMemory(pointer)
+    }
+
+    val containerID = UTF8StringRef()
+    val commandCount = u_int64_t()
+    val commandPointer = Pointer()
+    val attachStdout = Boolean()
+    val attachStderr = Boolean()
+
+    override fun close() {
+        nativeAPI.FreeCreateExecRequest(this)
+    }
+}
+
+internal class ContainerExecReference(runtime: Runtime) : Struct(runtime), AutoCloseable {
+    constructor(pointer: jnr.ffi.Pointer) : this(pointer.runtime) {
+        this.useMemory(pointer)
+    }
+
+    val id = UTF8StringRef()
+
+    override fun close() {
+        nativeAPI.FreeContainerExecReference(this)
+    }
+}
+
+internal class CreateExecReturn(runtime: Runtime) : Struct(runtime), AutoCloseable {
+    constructor(pointer: jnr.ffi.Pointer) : this(pointer.runtime) {
+        this.useMemory(pointer)
+    }
+
+    val responsePointer = Pointer()
+    val response: ContainerExecReference? by lazy { if (responsePointer.intValue() == 0) null else ContainerExecReference(responsePointer.get()) }
+    val errorPointer = Pointer()
+    val error: Error? by lazy { if (errorPointer.intValue() == 0) null else Error(errorPointer.get()) }
+
+    override fun close() {
+        nativeAPI.FreeCreateExecReturn(this)
+    }
+}
+
+internal class InspectExecResult(runtime: Runtime) : Struct(runtime), AutoCloseable {
+    constructor(pointer: jnr.ffi.Pointer) : this(pointer.runtime) {
+        this.useMemory(pointer)
+    }
+
+    val exitCode = int64_t()
+    val running = Boolean()
+
+    override fun close() {
+        nativeAPI.FreeInspectExecResult(this)
+    }
+}
+
+internal class InspectExecReturn(runtime: Runtime) : Struct(runtime), AutoCloseable {
+    constructor(pointer: jnr.ffi.Pointer) : this(pointer.runtime) {
+        this.useMemory(pointer)
+    }
+
+    val responsePointer = Pointer()
+    val response: InspectExecResult? by lazy { if (responsePointer.intValue() == 0) null else InspectExecResult(responsePointer.get()) }
+    val errorPointer = Pointer()
+    val error: Error? by lazy { if (errorPointer.intValue() == 0) null else Error(errorPointer.get()) }
+
+    override fun close() {
+        nativeAPI.FreeInspectExecReturn(this)
+    }
+}

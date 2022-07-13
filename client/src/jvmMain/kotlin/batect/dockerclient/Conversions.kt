@@ -29,6 +29,7 @@ import batect.dockerclient.native.BuildImageProgressUpdate_StepStarting
 import batect.dockerclient.native.BuildImageRequest
 import batect.dockerclient.native.ClientConfiguration
 import batect.dockerclient.native.CreateContainerRequest
+import batect.dockerclient.native.CreateExecRequest
 import batect.dockerclient.native.StreamEventsRequest
 import batect.dockerclient.native.StringPair
 import batect.dockerclient.native.StringToStringListPair
@@ -274,6 +275,21 @@ internal fun StreamEventsRequest(since: Instant?, until: Instant?, filters: Map<
 
     return request
 }
+
+internal fun CreateExecRequest(jvm: ContainerExecSpec): CreateExecRequest {
+    val request = CreateExecRequest(Runtime.getRuntime(nativeAPI))
+    request.containerID.set(jvm.container.id)
+    request.command = jvm.command
+    request.attachStdout.set(jvm.attachStdout)
+    request.attachStderr.set(jvm.attachStderr)
+
+    return request
+}
+
+internal fun ContainerExecInspectionResult(native: batect.dockerclient.native.InspectExecResult): ContainerExecInspectionResult = ContainerExecInspectionResult(
+    if (native.running.get()) null else native.exitCode.get(),
+    native.running.get()
+)
 
 internal fun StringToStringListPair(key: String, values: Set<String>): StringToStringListPair {
     val pair = StringToStringListPair(Runtime.getRuntime(nativeAPI))

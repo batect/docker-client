@@ -86,6 +86,24 @@ public interface DockerClient : AutoCloseable {
      */
     public suspend fun waitForContainerToExit(container: ContainerReference, waitingNotification: ReadyNotification? = null): Long
 
+    public suspend fun createExec(spec: ContainerExecSpec): ContainerExecReference
+    public suspend fun startExecDetached(exec: ContainerExecReference, attachTTY: Boolean)
+    public suspend fun inspectExec(exec: ContainerExecReference): ContainerExecInspectionResult
+
+    /**
+     * Starts the provided exec instance and then streams input and output to and from it.
+     *
+     * If [stdin] is a [batect.dockerclient.io.SourceTextInput], the underlying source will **not** be closed when the exec instance exits. You must call [TextInput.abortRead] to
+     * cancel any pending read from [stdin] once the exec instance exits: this method does not exit until all streams have been exhausted or aborted.
+     *
+     * @param exec the exec instance to stream input and output to
+     * @param attachTTY if `true`, attach a TTY to the exec instance
+     * @param stdout the output stream to stream stdout to
+     * @param stderr the output stream to stream stderr to. Not used if [attachTTY] is `true`.
+     * @param stdin the input stream to stream stdin from. Only used if the exec instance is configured to have stdin attached with [ContainerExecSpec.Builder.withStdinAttached].
+     */
+    public suspend fun startAndAttachToExec(exec: ContainerExecReference, attachTTY: Boolean, stdout: TextOutput?, stderr: TextOutput?, stdin: TextInput?)
+
     public suspend fun streamEvents(since: Instant?, until: Instant?, filters: Map<String, Set<String>>, onEventReceived: EventHandler)
 
     public class Builder internal constructor(internal val factory: DockerClientFactory) {

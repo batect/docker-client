@@ -52,7 +52,7 @@
 * Check that Golang code can return an empty list (eg. listing all volumes returns no volumes)
 
 * Allow calling `ReadyNotification.waitForReady()` from multiple places (will currently only release one caller, not all)
-* Remove `with...` prefixes from ImageBuildSpec / ContainerCreationSpec?
+* Remove `with...` prefixes from ImageBuildSpec, ContainerCreationSpec and ContainerExecSpec?
 
 * Images
   * Build
@@ -63,15 +63,24 @@
       * Upgrade to most recent version of BuildKit library (currently blocked due to version hell)
 * Exec
   * Create
+    * Test scenario: container hasn't been started yet
+    * Test scenario: container has stopped
+    * Test scenario: invalid command
+    * Test scenario: no command (is this even valid?)
   * Start
   * Attach
   * Inspect
-  * Run (combine start, attach and inspect to get exit code)
+    * Test scenario: instance that hasn't been started yet
+    * Test scenario: instance that hasn't finished yet
   * Features:
     * UID / GID
+    * Privileged
     * TTY
+      * Monitor for terminal size changes
     * Attach stdin + stream input
     * Attach stdout / stderr + stream output
     * Environment variables
+      * Test scenario: not set on container
+      * Test scenario: override value set on container
     * Working directory
     * Command

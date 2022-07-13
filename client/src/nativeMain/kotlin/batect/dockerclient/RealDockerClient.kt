@@ -24,6 +24,7 @@ import batect.dockerclient.native.BuildImage
 import batect.dockerclient.native.BuildImageProgressUpdate
 import batect.dockerclient.native.CreateClient
 import batect.dockerclient.native.CreateContainer
+import batect.dockerclient.native.CreateExec
 import batect.dockerclient.native.CreateNetwork
 import batect.dockerclient.native.CreateVolume
 import batect.dockerclient.native.DeleteImage
@@ -35,13 +36,16 @@ import batect.dockerclient.native.GetDaemonVersionInformation
 import batect.dockerclient.native.GetImage
 import batect.dockerclient.native.GetNetworkByNameOrID
 import batect.dockerclient.native.InspectContainer
+import batect.dockerclient.native.InspectExec
 import batect.dockerclient.native.ListAllVolumes
 import batect.dockerclient.native.Ping
 import batect.dockerclient.native.PruneImageBuildCache
 import batect.dockerclient.native.PullImage
 import batect.dockerclient.native.PullImageProgressUpdate
 import batect.dockerclient.native.RemoveContainer
+import batect.dockerclient.native.StartAndAttachToExec
 import batect.dockerclient.native.StartContainer
+import batect.dockerclient.native.StartExecDetached
 import batect.dockerclient.native.StopContainer
 import batect.dockerclient.native.StreamEvents
 import batect.dockerclient.native.UploadToContainer
@@ -401,6 +405,76 @@ internal actual class RealDockerClient actual constructor(configuration: DockerC
             memScoped {
                 UploadToContainer(clientHandle, context.handle, container.id.cstr, allocUploadToContainerRequest(items).ptr, destinationPath.cstr).ifFailed { error ->
                     throw ContainerUploadFailedException(error.pointed)
+                }
+            }
+        }
+    }
+
+    override suspend fun createExec(spec: ContainerExecSpec): ContainerExecReference {
+        return launchWithGolangContext { context ->
+            memScoped {
+                CreateExec(clientHandle, context.handle, allocCreateExecRequest(spec).ptr)!!.use { ret ->
+                    if (ret.pointed.Error != null) {
+                        throw ContainerExecCreationFailedException(ret.pointed.Error!!.pointed)
+                    }
+
+                    ContainerExecReference(ret.pointed.Response!!.pointed.ID!!.toKString())
+                }
+            }
+        }
+    }
+
+    override suspend fun startExecDetached(exec: ContainerExecReference, attachTTY: Boolean) {
+        launchWithGolangContext { context ->
+            StartExecDetached(clientHandle, context.handle, exec.id.cstr, attachTTY).ifFailed { err ->
+                throw StartingContainerExecFailedException(err.pointed)
+            }
+        }
+    }
+
+    override suspend fun inspectExec(exec: ContainerExecReference): ContainerExecInspectionResult {
+        return launchWithGolangContext { context ->
+            memScoped {
+                InspectExec(clientHandle, context.handle, exec.id.cstr.ptr)!!.use { ret ->
+                    if (ret.pointed.Error != null) {
+                        throw ContainerExecInspectionFailedException(ret.pointed.Error!!.pointed)
+                    }
+
+                    ContainerExecInspectionResult(ret.pointed.Response!!.pointed)
+                }
+            }
+        }
+    }
+
+    override suspend fun startAndAttachToExec(
+        exec: ContainerExecReference,
+        attachTTY: Boolean,
+        stdout: TextOutput?,
+        stderr: TextOutput?,
+        stdin: TextInput?
+    ) {
+        stdout?.prepareStream().use { stdoutStream ->
+            stderr?.prepareStream().use { stderrStream ->
+                stdin?.prepareStream().use { stdinStream ->
+                    coroutineScope {
+                        launch(IODispatcher) { stdoutStream?.run() }
+                        launch(IODispatcher) { stderrStream?.run() }
+                        launch(IODispatcher) { stdinStream?.run() }
+
+                        launchWithGolangContext { context ->
+                            StartAndAttachToExec(
+                                clientHandle,
+                                context.handle,
+                                exec.id.cstr,
+                                attachTTY,
+                                stdoutStream?.outputStreamHandle ?: 0.toULong(),
+                                stderrStream?.outputStreamHandle ?: 0.toULong(),
+                                stdinStream?.inputStreamHandle ?: 0.toULong()
+                            ).ifFailed { error ->
+                                throw StartingContainerExecFailedException(error.pointed)
+                            }
+                        }
+                    }
                 }
             }
         }

@@ -19,12 +19,14 @@ package batect.dockerclient
 import batect.dockerclient.native.BuildImageReturn
 import batect.dockerclient.native.CreateClientReturn
 import batect.dockerclient.native.CreateContainerReturn
+import batect.dockerclient.native.CreateExecReturn
 import batect.dockerclient.native.CreateNetworkReturn
 import batect.dockerclient.native.CreateVolumeReturn
 import batect.dockerclient.native.Error
 import batect.dockerclient.native.FreeBuildImageReturn
 import batect.dockerclient.native.FreeCreateClientReturn
 import batect.dockerclient.native.FreeCreateContainerReturn
+import batect.dockerclient.native.FreeCreateExecReturn
 import batect.dockerclient.native.FreeCreateNetworkReturn
 import batect.dockerclient.native.FreeCreateVolumeReturn
 import batect.dockerclient.native.FreeError
@@ -32,6 +34,7 @@ import batect.dockerclient.native.FreeGetDaemonVersionInformationReturn
 import batect.dockerclient.native.FreeGetImageReturn
 import batect.dockerclient.native.FreeGetNetworkByNameOrIDReturn
 import batect.dockerclient.native.FreeInspectContainerReturn
+import batect.dockerclient.native.FreeInspectExecReturn
 import batect.dockerclient.native.FreeListAllVolumesReturn
 import batect.dockerclient.native.FreePingReturn
 import batect.dockerclient.native.FreePullImageReturn
@@ -40,6 +43,7 @@ import batect.dockerclient.native.GetDaemonVersionInformationReturn
 import batect.dockerclient.native.GetImageReturn
 import batect.dockerclient.native.GetNetworkByNameOrIDReturn
 import batect.dockerclient.native.InspectContainerReturn
+import batect.dockerclient.native.InspectExecReturn
 import batect.dockerclient.native.ListAllVolumesReturn
 import batect.dockerclient.native.PingReturn
 import batect.dockerclient.native.PullImageReturn
@@ -69,6 +73,8 @@ internal inline fun <R> CPointer<BuildImageReturn>.use(user: (CPointer<BuildImag
 internal inline fun <R> CPointer<CreateContainerReturn>.use(user: (CPointer<CreateContainerReturn>) -> R): R = use(::FreeCreateContainerReturn, user)
 internal inline fun <R> CPointer<WaitForContainerToExitReturn>.use(user: (CPointer<WaitForContainerToExitReturn>) -> R): R = use(::FreeWaitForContainerToExitReturn, user)
 internal inline fun <R> CPointer<InspectContainerReturn>.use(user: (CPointer<InspectContainerReturn>) -> R): R = use(::FreeInspectContainerReturn, user)
+internal inline fun <R> CPointer<CreateExecReturn>.use(user: (CPointer<CreateExecReturn>) -> R): R = use(::FreeCreateExecReturn, user)
+internal inline fun <R> CPointer<InspectExecReturn>.use(user: (CPointer<InspectExecReturn>) -> R): R = use(::FreeInspectExecReturn, user)
 internal inline fun <R> CPointer<Error>?.use(user: (CPointer<Error>?) -> R): R = use(::FreeError, user)
 
 internal inline fun CPointer<Error>?.ifFailed(onError: (CPointer<Error>) -> Unit) = use { error ->

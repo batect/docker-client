@@ -410,6 +410,33 @@ typedef struct {
 
 typedef bool (*EventCallback) (void*, Event*);
 
+typedef struct {
+    char* ContainerID;
+    uint64_t CommandCount;
+    char** Command;
+    bool AttachStdout;
+    bool AttachStderr;
+} CreateExecRequest;
+
+typedef struct {
+    char* ID;
+} ContainerExecReference;
+
+typedef struct {
+    ContainerExecReference* Response;
+    Error* Error;
+} CreateExecReturn;
+
+typedef struct {
+    int64_t ExitCode;
+    bool Running;
+} InspectExecResult;
+
+typedef struct {
+    InspectExecResult* Response;
+    Error* Error;
+} InspectExecReturn;
+
 EXPORTED_FUNCTION Error* AllocError();
 EXPORTED_FUNCTION void FreeError(Error* value);
 EXPORTED_FUNCTION TLSConfiguration* AllocTLSConfiguration();
@@ -522,6 +549,16 @@ EXPORTED_FUNCTION void FreeActor(Actor* value);
 EXPORTED_FUNCTION Event* AllocEvent();
 EXPORTED_FUNCTION void FreeEvent(Event* value);
 EXPORTED_FUNCTION bool InvokeEventCallback(EventCallback method, void* userData, Event* event);
+EXPORTED_FUNCTION CreateExecRequest* AllocCreateExecRequest();
+EXPORTED_FUNCTION void FreeCreateExecRequest(CreateExecRequest* value);
+EXPORTED_FUNCTION ContainerExecReference* AllocContainerExecReference();
+EXPORTED_FUNCTION void FreeContainerExecReference(ContainerExecReference* value);
+EXPORTED_FUNCTION CreateExecReturn* AllocCreateExecReturn();
+EXPORTED_FUNCTION void FreeCreateExecReturn(CreateExecReturn* value);
+EXPORTED_FUNCTION InspectExecResult* AllocInspectExecResult();
+EXPORTED_FUNCTION void FreeInspectExecResult(InspectExecResult* value);
+EXPORTED_FUNCTION InspectExecReturn* AllocInspectExecReturn();
+EXPORTED_FUNCTION void FreeInspectExecReturn(InspectExecReturn* value);
 EXPORTED_FUNCTION VolumeReference** CreateVolumeReferenceArray(uint64_t size);
 EXPORTED_FUNCTION void SetVolumeReferenceArrayElement(VolumeReference** array, uint64_t index, VolumeReference* value);
 EXPORTED_FUNCTION VolumeReference* GetVolumeReferenceArrayElement(VolumeReference** array, uint64_t index);

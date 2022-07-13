@@ -88,6 +88,11 @@ type StreamEventsRequest *C.StreamEventsRequest
 type Actor *C.Actor
 type Event *C.Event
 type EventCallback C.EventCallback
+type CreateExecRequest *C.CreateExecRequest
+type ContainerExecReference *C.ContainerExecReference
+type CreateExecReturn *C.CreateExecReturn
+type InspectExecResult *C.InspectExecResult
+type InspectExecReturn *C.InspectExecReturn
 
 func newError(
     Type string,
@@ -997,6 +1002,70 @@ func newEvent(
     value.Actor = Actor
     value.Scope = C.CString(Scope)
     value.Timestamp = C.int64_t(Timestamp)
+
+    return value
+}
+
+func newCreateExecRequest(
+    ContainerID string,
+    Command []string,
+    AttachStdout bool,
+    AttachStderr bool,
+) CreateExecRequest {
+    value := C.AllocCreateExecRequest()
+    value.ContainerID = C.CString(ContainerID)
+
+    value.CommandCount = C.uint64_t(len(Command))
+    value.Command = C.CreatestringArray(value.CommandCount)
+
+    for i, v := range Command {
+        C.SetstringArrayElement(value.Command, C.uint64_t(i), C.CString(v))
+    }
+
+    value.AttachStdout = C.bool(AttachStdout)
+    value.AttachStderr = C.bool(AttachStderr)
+
+    return value
+}
+
+func newContainerExecReference(
+    ID string,
+) ContainerExecReference {
+    value := C.AllocContainerExecReference()
+    value.ID = C.CString(ID)
+
+    return value
+}
+
+func newCreateExecReturn(
+    Response ContainerExecReference,
+    Error Error,
+) CreateExecReturn {
+    value := C.AllocCreateExecReturn()
+    value.Response = Response
+    value.Error = Error
+
+    return value
+}
+
+func newInspectExecResult(
+    ExitCode int64,
+    Running bool,
+) InspectExecResult {
+    value := C.AllocInspectExecResult()
+    value.ExitCode = C.int64_t(ExitCode)
+    value.Running = C.bool(Running)
+
+    return value
+}
+
+func newInspectExecReturn(
+    Response InspectExecResult,
+    Error Error,
+) InspectExecReturn {
+    value := C.AllocInspectExecReturn()
+    value.Response = Response
+    value.Error = Error
 
     return value
 }

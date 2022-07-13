@@ -616,3 +616,45 @@
   parameters:
     - name: event
       type: Event
+
+- name: CreateExecRequest
+  type: struct
+  fields:
+    - name: ContainerID
+      type: string
+    - name: Command
+      type: string[]
+    - name: AttachStdout
+      type: boolean
+    - name: AttachStderr
+      type: boolean
+
+- name: ContainerExecReference
+  type: struct
+  fields:
+    - name: ID
+      type: string
+
+- name: CreateExecReturn
+  type: struct
+  fields:
+    - name: Response
+      type: ContainerExecReference
+    - name: Error
+      type: Error
+
+- name: InspectExecResult
+  type: struct
+  fields:
+    - name: ExitCode
+      type: int64
+    - name: Running
+      type: boolean
+
+- name: InspectExecReturn
+  type: struct
+  fields:
+    - name: Response
+      type: InspectExecResult
+    - name: Error
+      type: Error
