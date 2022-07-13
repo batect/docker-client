@@ -26,7 +26,7 @@ kotlinx-serialization-json = { group = "org.jetbrains.kotlinx", name = "kotlinx-
 ktlint = { group = "com.pinterest", name = "ktlint", version.ref = "ktlint" }
 ktor-client = { group = "io.ktor", name = "ktor-client-core", version.ref = "ktor"}
 ktor-client-cio = { group = "io.ktor", name = "ktor-client-cio", version.ref = "ktor"}
-licensee = { group = "app.cash.licensee", name = "licensee-gradle-plugin", version = "1.4.1" }
+licensee = { group = "app.cash.licensee", name = "licensee-gradle-plugin", version = "1.5.0" }
 spotless = { group = "com.diffplug.spotless", name = "spotless-plugin-gradle", version.ref = "spotless" }
 xz = { group = "org.tukaani", name = "xz", version = "1.9" }
 
