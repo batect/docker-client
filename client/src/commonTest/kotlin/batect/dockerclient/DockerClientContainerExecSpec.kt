@@ -92,5 +92,38 @@ class DockerClientContainerExecSpec : ShouldSpec({
                 }
             }
         }
+
+        should("be able to inspect an exec instance that hasn't been started yet") {
+            withTestContainer { container ->
+                val spec = ContainerExecSpec.Builder(container)
+                    .withCommand("sh", "-c", "exit 123")
+                    .withStdoutAttached()
+                    .withStderrAttached()
+                    .build()
+
+                val exec = client.createExec(spec)
+
+                val result = client.inspectExec(exec)
+                result.running shouldBe false
+                result.exitCode shouldBe 0
+            }
+        }
+
+        should("be able to inspect an exec instance that hasn't finished yet") {
+            withTestContainer { container ->
+                val spec = ContainerExecSpec.Builder(container)
+                    .withCommand("sh", "-c", "sleep 10")
+                    .withStdoutAttached()
+                    .withStderrAttached()
+                    .build()
+
+                val exec = client.createExec(spec)
+                client.startExecDetached(exec, false)
+
+                val result = client.inspectExec(exec)
+                result.running shouldBe true
+                result.exitCode shouldBe null
+            }
+        }
     }
 })

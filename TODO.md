@@ -66,11 +66,6 @@
     * Test scenario: container has stopped
     * Test scenario: invalid command
     * Test scenario: no command (is this even valid?)
-  * Start
-  * Attach
-  * Inspect
-    * Test scenario: instance that hasn't been started yet
-    * Test scenario: instance that hasn't finished yet
   * Features:
     * UID / GID
     * Privileged
