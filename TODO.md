@@ -37,7 +37,6 @@
 * Restore AssertionMode to Error once https://github.com/kotest/kotest/issues/3022 is resolved
 * Move `nonMingwTest` tests back into `commonTest` once https://youtrack.jetbrains.com/issue/KTOR-4307 is resolved or there's an alternative Ktor engine available for Kotlin/Native on Windows.
 * Replace use of `shouldBe` in upload tests in `DockerClientContainerManagementSpec` with `shouldMatchJson` once https://github.com/kotest/kotest/pull/3021 is available
-* License checking with Licensee: blocked due to https://github.com/cashapp/licensee/issues/67 (see `license-check` branch)
 
 # APIs
 
