@@ -20,6 +20,7 @@ plugins {
     alias(libs.plugins.publish)
 
     id("batect.dockerclient.buildtools.formatting")
+    id("batect.dockerclient.buildtools.licensecheck")
 }
 
 repositories {
@@ -72,6 +73,10 @@ allprojects {
     afterEvaluate {
         if (!plugins.hasPlugin("batect.dockerclient.buildtools.formatting")) {
             throw RuntimeException("Formatting convention plugin not applied to $this")
+        }
+
+        if (!plugins.hasPlugin("batect.dockerclient.buildtools.licensecheck")) {
+            throw RuntimeException("License check plugin not applied to $this")
         }
     }
 }

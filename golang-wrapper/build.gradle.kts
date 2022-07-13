@@ -24,6 +24,7 @@ import java.nio.file.Files
 plugins {
     id("batect.dockerclient.buildtools.formatting")
     id("batect.dockerclient.buildtools.golang.crosscompilation")
+    id("batect.dockerclient.buildtools.licensecheck")
 }
 
 repositories {
