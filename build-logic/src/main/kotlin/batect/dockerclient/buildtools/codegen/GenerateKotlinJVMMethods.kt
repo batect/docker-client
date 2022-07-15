@@ -83,6 +83,7 @@ abstract class GenerateKotlinJVMMethods : DefaultTask() {
             val functionDeclarationLines = functionDeclarations
                 .lines()
                 .filterNot { it.isBlank() }
+                .filterNot { it.startsWith("//") }
 
             return functionDeclarationLines
                 .map { line -> parseFunctionDeclaration(line, types) }

@@ -24,11 +24,10 @@ import batect.dockerclient.use
 import kotlinx.cinterop.pointed
 import okio.Sink
 import okio.Source
-import okio.buffer
-import okio.use
 
 public actual sealed interface TextInput {
     public actual fun prepareStream(): PreparedInputStream
+    public actual fun abortRead()
 
     public actual companion object {
         public actual val StandardInput: TextInput = StandardTextInput(1u)
@@ -38,6 +37,10 @@ public actual sealed interface TextInput {
 public actual class SourceTextInput actual constructor(private val source: Source) : TextInput {
     override fun prepareStream(): PreparedInputStream {
         return Pipe(source)
+    }
+
+    override fun abortRead() {
+        source.close()
     }
 
     private class Pipe(private val source: Source) : PreparedInputStream {
@@ -61,9 +64,8 @@ public actual class SourceTextInput actual constructor(private val source: Sourc
         }
 
         override fun run() {
-            sink.buffer().use { buffer ->
-                buffer.writeAll(source)
-            }
+            source.streamTo(sink)
+            sink.close()
         }
 
         override fun close() {

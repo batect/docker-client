@@ -80,6 +80,19 @@ type ContainerLogConfig *C.ContainerLogConfig
 type ContainerHostConfig *C.ContainerHostConfig
 type ContainerInspectionResult *C.ContainerInspectionResult
 type InspectContainerReturn *C.InspectContainerReturn
+type UploadDirectory *C.UploadDirectory
+type UploadFile *C.UploadFile
+type UploadToContainerRequest *C.UploadToContainerRequest
+type StringToStringListPair *C.StringToStringListPair
+type StreamEventsRequest *C.StreamEventsRequest
+type Actor *C.Actor
+type Event *C.Event
+type EventCallback C.EventCallback
+type CreateExecRequest *C.CreateExecRequest
+type ContainerExecReference *C.ContainerExecReference
+type CreateExecReturn *C.CreateExecReturn
+type InspectExecResult *C.InspectExecResult
+type InspectExecReturn *C.InspectExecReturn
 
 func newError(
     Type string,
@@ -861,6 +874,202 @@ func newInspectContainerReturn(
     return value
 }
 
+func newUploadDirectory(
+    Path string,
+    Owner int32,
+    Group int32,
+) UploadDirectory {
+    value := C.AllocUploadDirectory()
+    value.Path = C.CString(Path)
+    value.Owner = C.int32_t(Owner)
+    value.Group = C.int32_t(Group)
+
+    return value
+}
+
+func newUploadFile(
+    Path string,
+    Owner int32,
+    Group int32,
+    Contents []byte,
+    ContentsSize int32,
+) UploadFile {
+    value := C.AllocUploadFile()
+    value.Path = C.CString(Path)
+    value.Owner = C.int32_t(Owner)
+    value.Group = C.int32_t(Group)
+    value.Contents = C.CBytes(Contents)
+    value.ContentsSize = C.int32_t(ContentsSize)
+
+    return value
+}
+
+func newUploadToContainerRequest(
+    Directories []UploadDirectory,
+    Files []UploadFile,
+) UploadToContainerRequest {
+    value := C.AllocUploadToContainerRequest()
+
+    value.DirectoriesCount = C.uint64_t(len(Directories))
+    value.Directories = C.CreateUploadDirectoryArray(value.DirectoriesCount)
+
+    for i, v := range Directories {
+        C.SetUploadDirectoryArrayElement(value.Directories, C.uint64_t(i), v)
+    }
+
+
+    value.FilesCount = C.uint64_t(len(Files))
+    value.Files = C.CreateUploadFileArray(value.FilesCount)
+
+    for i, v := range Files {
+        C.SetUploadFileArrayElement(value.Files, C.uint64_t(i), v)
+    }
+
+
+    return value
+}
+
+func newStringToStringListPair(
+    Key string,
+    Values []string,
+) StringToStringListPair {
+    value := C.AllocStringToStringListPair()
+    value.Key = C.CString(Key)
+
+    value.ValuesCount = C.uint64_t(len(Values))
+    value.Values = C.CreatestringArray(value.ValuesCount)
+
+    for i, v := range Values {
+        C.SetstringArrayElement(value.Values, C.uint64_t(i), C.CString(v))
+    }
+
+
+    return value
+}
+
+func newStreamEventsRequest(
+    SinceSeconds int64,
+    SinceNanoseconds int64,
+    UntilSeconds int64,
+    UntilNanoseconds int64,
+    Filters []StringToStringListPair,
+) StreamEventsRequest {
+    value := C.AllocStreamEventsRequest()
+    value.SinceSeconds = C.int64_t(SinceSeconds)
+    value.SinceNanoseconds = C.int64_t(SinceNanoseconds)
+    value.UntilSeconds = C.int64_t(UntilSeconds)
+    value.UntilNanoseconds = C.int64_t(UntilNanoseconds)
+
+    value.FiltersCount = C.uint64_t(len(Filters))
+    value.Filters = C.CreateStringToStringListPairArray(value.FiltersCount)
+
+    for i, v := range Filters {
+        C.SetStringToStringListPairArrayElement(value.Filters, C.uint64_t(i), v)
+    }
+
+
+    return value
+}
+
+func newActor(
+    ID string,
+    Attributes []StringPair,
+) Actor {
+    value := C.AllocActor()
+    value.ID = C.CString(ID)
+
+    value.AttributesCount = C.uint64_t(len(Attributes))
+    value.Attributes = C.CreateStringPairArray(value.AttributesCount)
+
+    for i, v := range Attributes {
+        C.SetStringPairArrayElement(value.Attributes, C.uint64_t(i), v)
+    }
+
+
+    return value
+}
+
+func newEvent(
+    Type string,
+    Action string,
+    Actor Actor,
+    Scope string,
+    Timestamp int64,
+) Event {
+    value := C.AllocEvent()
+    value.Type = C.CString(Type)
+    value.Action = C.CString(Action)
+    value.Actor = Actor
+    value.Scope = C.CString(Scope)
+    value.Timestamp = C.int64_t(Timestamp)
+
+    return value
+}
+
+func newCreateExecRequest(
+    ContainerID string,
+    Command []string,
+    AttachStdout bool,
+    AttachStderr bool,
+) CreateExecRequest {
+    value := C.AllocCreateExecRequest()
+    value.ContainerID = C.CString(ContainerID)
+
+    value.CommandCount = C.uint64_t(len(Command))
+    value.Command = C.CreatestringArray(value.CommandCount)
+
+    for i, v := range Command {
+        C.SetstringArrayElement(value.Command, C.uint64_t(i), C.CString(v))
+    }
+
+    value.AttachStdout = C.bool(AttachStdout)
+    value.AttachStderr = C.bool(AttachStderr)
+
+    return value
+}
+
+func newContainerExecReference(
+    ID string,
+) ContainerExecReference {
+    value := C.AllocContainerExecReference()
+    value.ID = C.CString(ID)
+
+    return value
+}
+
+func newCreateExecReturn(
+    Response ContainerExecReference,
+    Error Error,
+) CreateExecReturn {
+    value := C.AllocCreateExecReturn()
+    value.Response = Response
+    value.Error = Error
+
+    return value
+}
+
+func newInspectExecResult(
+    ExitCode int64,
+    Running bool,
+) InspectExecResult {
+    value := C.AllocInspectExecResult()
+    value.ExitCode = C.int64_t(ExitCode)
+    value.Running = C.bool(Running)
+
+    return value
+}
+
+func newInspectExecReturn(
+    Response InspectExecResult,
+    Error Error,
+) InspectExecReturn {
+    value := C.AllocInspectExecReturn()
+    value.Response = Response
+    value.Error = Error
+
+    return value
+}
+
 func invokePullImageProgressCallback(method PullImageProgressCallback, userData unsafe.Pointer, progress PullImageProgressUpdate) bool {
     return bool(C.InvokePullImageProgressCallback(method, userData, progress))
 }
@@ -871,5 +1080,9 @@ func invokeBuildImageProgressCallback(method BuildImageProgressCallback, userDat
 
 func invokeReadyCallback(method ReadyCallback, userData unsafe.Pointer, ) bool {
     return bool(C.InvokeReadyCallback(method, userData, ))
+}
+
+func invokeEventCallback(method EventCallback, userData unsafe.Pointer, event Event) bool {
+    return bool(C.InvokeEventCallback(method, userData, event))
 }
 

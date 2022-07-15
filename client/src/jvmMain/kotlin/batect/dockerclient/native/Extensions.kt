@@ -148,6 +148,41 @@ internal val ContainerHealthcheckConfig.test by ReadOnlyList(
     ::pointerToString
 )
 
+internal val Actor.attributes by ReadOnlyList(
+    Actor::attributesCount,
+    Actor::attributesPointer,
+    ::StringPair
+)
+
+internal var UploadToContainerRequest.directories by WriteOnlyList<UploadToContainerRequest, batect.dockerclient.UploadDirectory>(
+    UploadToContainerRequest::directoriesCount,
+    UploadToContainerRequest::directoriesPointer,
+    ::uploadDirectoryToNative
+)
+
+internal var UploadToContainerRequest.files by WriteOnlyList<UploadToContainerRequest, batect.dockerclient.UploadFile>(
+    UploadToContainerRequest::filesCount,
+    UploadToContainerRequest::filesPointer,
+    ::uploadFileToNative
+)
+
+internal var StreamEventsRequest.filters by WriteOnlyList<StreamEventsRequest, StringToStringListPair>(
+    StreamEventsRequest::filtersCount,
+    StreamEventsRequest::filtersPointer
+)
+
+internal var CreateExecRequest.command by WriteOnlyList<CreateExecRequest, String>(
+    CreateExecRequest::commandCount,
+    CreateExecRequest::commandPointer,
+    ::stringToPointer
+)
+
+internal var StringToStringListPair.values by WriteOnlyList<StringToStringListPair, String>(
+    StringToStringListPair::valuesCount,
+    StringToStringListPair::valuesPointer,
+    ::stringToPointer
+)
+
 internal fun StringPair(key: String, value: String): StringPair {
     val pair = StringPair(Runtime.getRuntime(nativeAPI))
     pair.key.set(key)
@@ -221,6 +256,31 @@ private fun exposedPortToNative(value: batect.dockerclient.ExposedPort, @Suppres
     port.protocol.set(value.protocol)
 
     return Struct.getMemory(port)
+}
+
+private fun uploadDirectoryToNative(value: batect.dockerclient.UploadDirectory, @Suppress("UNUSED_PARAMETER") memoryManager: MemoryManager): Pointer {
+    val runtime = Runtime.getRuntime(nativeAPI)
+    val directory = UploadDirectory(runtime)
+
+    directory.path.set(value.path)
+    directory.owner.set(value.owner)
+    directory.group.set(value.group)
+
+    return Struct.getMemory(directory)
+}
+
+private fun uploadFileToNative(value: batect.dockerclient.UploadFile, memoryManager: MemoryManager): Pointer {
+    val runtime = Runtime.getRuntime(nativeAPI)
+    val file = UploadFile(runtime)
+
+    file.path.set(value.path)
+    file.owner.set(value.owner)
+    file.group.set(value.group)
+    file.contents.set(memoryManager.allocateDirect(value.contents.size))
+    file.contents.get().put(0, value.contents, 0, value.contents.size)
+    file.contentsSize.set(value.contents.size)
+
+    return Struct.getMemory(file)
 }
 
 private class WriteOnlyList<T : Struct, E>(

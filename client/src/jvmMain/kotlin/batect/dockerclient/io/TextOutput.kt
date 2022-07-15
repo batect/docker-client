@@ -23,7 +23,6 @@ import batect.dockerclient.native.nativeAPI
 import jnr.posix.util.Platform
 import okio.Sink
 import okio.Source
-import okio.buffer
 
 public actual sealed interface TextOutput {
     public actual fun prepareStream(): PreparedOutputStream
@@ -60,7 +59,7 @@ public actual class SinkTextOutput actual constructor(public val sink: Sink) : T
         }
 
         override fun run() {
-            source.buffer().readAll(sink)
+            source.streamTo(sink)
         }
 
         override fun close() {

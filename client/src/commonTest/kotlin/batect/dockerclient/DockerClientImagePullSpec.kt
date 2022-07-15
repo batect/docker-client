@@ -155,7 +155,7 @@ class DockerClientImagePullSpec : ShouldSpec({
 
         progressUpdatesReceived shouldStartWith listOf(
             ImagePullProgressUpdate("Pulling from windows/nanoserver", null, image),
-            ImagePullProgressUpdate("Pulling fs layer", ImagePullProgressDetail(0, 0), layerId),
+            ImagePullProgressUpdate("Pulling fs layer", ImagePullProgressDetail(0, 0), layerId)
         )
 
         progressUpdatesReceived.forAtLeastOne {

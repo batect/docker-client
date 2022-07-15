@@ -1012,6 +1012,250 @@ void FreeInspectContainerReturn(InspectContainerReturn* value) {
     free(value);
 }
 
+UploadDirectory* AllocUploadDirectory() {
+    UploadDirectory* value = malloc(sizeof(UploadDirectory));
+    value->Path = NULL;
+
+    return value;
+}
+
+void FreeUploadDirectory(UploadDirectory* value) {
+    if (value == NULL) {
+        return;
+    }
+
+    free(value->Path);
+    free(value);
+}
+
+UploadFile* AllocUploadFile() {
+    UploadFile* value = malloc(sizeof(UploadFile));
+    value->Path = NULL;
+    value->Contents = NULL;
+
+    return value;
+}
+
+void FreeUploadFile(UploadFile* value) {
+    if (value == NULL) {
+        return;
+    }
+
+    free(value->Path);
+    free(value->Contents);
+    free(value);
+}
+
+UploadToContainerRequest* AllocUploadToContainerRequest() {
+    UploadToContainerRequest* value = malloc(sizeof(UploadToContainerRequest));
+    value->Directories = NULL;
+    value->Files = NULL;
+    value->DirectoriesCount = 0;
+    value->FilesCount = 0;
+
+    return value;
+}
+
+void FreeUploadToContainerRequest(UploadToContainerRequest* value) {
+    if (value == NULL) {
+        return;
+    }
+
+    for (uint64_t i = 0; i < value->DirectoriesCount; i++) {
+        FreeUploadDirectory(value->Directories[i]);
+    }
+
+    free(value->Directories);
+    for (uint64_t i = 0; i < value->FilesCount; i++) {
+        FreeUploadFile(value->Files[i]);
+    }
+
+    free(value->Files);
+    free(value);
+}
+
+StringToStringListPair* AllocStringToStringListPair() {
+    StringToStringListPair* value = malloc(sizeof(StringToStringListPair));
+    value->Key = NULL;
+    value->Values = NULL;
+    value->ValuesCount = 0;
+
+    return value;
+}
+
+void FreeStringToStringListPair(StringToStringListPair* value) {
+    if (value == NULL) {
+        return;
+    }
+
+    free(value->Key);
+    for (uint64_t i = 0; i < value->ValuesCount; i++) {
+        free(value->Values[i]);
+    }
+
+    free(value->Values);
+    free(value);
+}
+
+StreamEventsRequest* AllocStreamEventsRequest() {
+    StreamEventsRequest* value = malloc(sizeof(StreamEventsRequest));
+    value->Filters = NULL;
+    value->FiltersCount = 0;
+
+    return value;
+}
+
+void FreeStreamEventsRequest(StreamEventsRequest* value) {
+    if (value == NULL) {
+        return;
+    }
+
+    for (uint64_t i = 0; i < value->FiltersCount; i++) {
+        FreeStringToStringListPair(value->Filters[i]);
+    }
+
+    free(value->Filters);
+    free(value);
+}
+
+Actor* AllocActor() {
+    Actor* value = malloc(sizeof(Actor));
+    value->ID = NULL;
+    value->Attributes = NULL;
+    value->AttributesCount = 0;
+
+    return value;
+}
+
+void FreeActor(Actor* value) {
+    if (value == NULL) {
+        return;
+    }
+
+    free(value->ID);
+    for (uint64_t i = 0; i < value->AttributesCount; i++) {
+        FreeStringPair(value->Attributes[i]);
+    }
+
+    free(value->Attributes);
+    free(value);
+}
+
+Event* AllocEvent() {
+    Event* value = malloc(sizeof(Event));
+    value->Type = NULL;
+    value->Action = NULL;
+    value->Actor = NULL;
+    value->Scope = NULL;
+
+    return value;
+}
+
+void FreeEvent(Event* value) {
+    if (value == NULL) {
+        return;
+    }
+
+    free(value->Type);
+    free(value->Action);
+    FreeActor(value->Actor);
+    free(value->Scope);
+    free(value);
+}
+
+bool InvokeEventCallback(EventCallback method, void* userData, Event* event) {
+    return method(userData, event);
+}
+
+CreateExecRequest* AllocCreateExecRequest() {
+    CreateExecRequest* value = malloc(sizeof(CreateExecRequest));
+    value->ContainerID = NULL;
+    value->Command = NULL;
+    value->CommandCount = 0;
+
+    return value;
+}
+
+void FreeCreateExecRequest(CreateExecRequest* value) {
+    if (value == NULL) {
+        return;
+    }
+
+    free(value->ContainerID);
+    for (uint64_t i = 0; i < value->CommandCount; i++) {
+        free(value->Command[i]);
+    }
+
+    free(value->Command);
+    free(value);
+}
+
+ContainerExecReference* AllocContainerExecReference() {
+    ContainerExecReference* value = malloc(sizeof(ContainerExecReference));
+    value->ID = NULL;
+
+    return value;
+}
+
+void FreeContainerExecReference(ContainerExecReference* value) {
+    if (value == NULL) {
+        return;
+    }
+
+    free(value->ID);
+    free(value);
+}
+
+CreateExecReturn* AllocCreateExecReturn() {
+    CreateExecReturn* value = malloc(sizeof(CreateExecReturn));
+    value->Response = NULL;
+    value->Error = NULL;
+
+    return value;
+}
+
+void FreeCreateExecReturn(CreateExecReturn* value) {
+    if (value == NULL) {
+        return;
+    }
+
+    FreeContainerExecReference(value->Response);
+    FreeError(value->Error);
+    free(value);
+}
+
+InspectExecResult* AllocInspectExecResult() {
+    InspectExecResult* value = malloc(sizeof(InspectExecResult));
+
+    return value;
+}
+
+void FreeInspectExecResult(InspectExecResult* value) {
+    if (value == NULL) {
+        return;
+    }
+
+    free(value);
+}
+
+InspectExecReturn* AllocInspectExecReturn() {
+    InspectExecReturn* value = malloc(sizeof(InspectExecReturn));
+    value->Response = NULL;
+    value->Error = NULL;
+
+    return value;
+}
+
+void FreeInspectExecReturn(InspectExecReturn* value) {
+    if (value == NULL) {
+        return;
+    }
+
+    FreeInspectExecResult(value->Response);
+    FreeError(value->Error);
+    free(value);
+}
+
 VolumeReference** CreateVolumeReferenceArray(uint64_t size) {
     return malloc(size * sizeof(VolumeReference*));
 }
@@ -1081,5 +1325,41 @@ void SetContainerHealthLogEntryArrayElement(ContainerHealthLogEntry** array, uin
 }
 
 ContainerHealthLogEntry* GetContainerHealthLogEntryArrayElement(ContainerHealthLogEntry** array, uint64_t index) {
+    return array[index];
+}
+
+UploadDirectory** CreateUploadDirectoryArray(uint64_t size) {
+    return malloc(size * sizeof(UploadDirectory*));
+}
+
+void SetUploadDirectoryArrayElement(UploadDirectory** array, uint64_t index, UploadDirectory* value) {
+    array[index] = value;
+}
+
+UploadDirectory* GetUploadDirectoryArrayElement(UploadDirectory** array, uint64_t index) {
+    return array[index];
+}
+
+UploadFile** CreateUploadFileArray(uint64_t size) {
+    return malloc(size * sizeof(UploadFile*));
+}
+
+void SetUploadFileArrayElement(UploadFile** array, uint64_t index, UploadFile* value) {
+    array[index] = value;
+}
+
+UploadFile* GetUploadFileArrayElement(UploadFile** array, uint64_t index) {
+    return array[index];
+}
+
+StringToStringListPair** CreateStringToStringListPairArray(uint64_t size) {
+    return malloc(size * sizeof(StringToStringListPair*));
+}
+
+void SetStringToStringListPairArrayElement(StringToStringListPair** array, uint64_t index, StringToStringListPair* value) {
+    array[index] = value;
+}
+
+StringToStringListPair* GetStringToStringListPairArrayElement(StringToStringListPair** array, uint64_t index) {
     return array[index];
 }

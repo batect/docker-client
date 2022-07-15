@@ -35,11 +35,17 @@ internal interface API {
     fun AttachToContainerOutput(@In clientHandle: DockerClientHandle, @In contextHandle: ContextHandle, @In id: kotlin.String, @In stdoutStreamHandle: OutputStreamHandle, @In stderrStreamHandle: OutputStreamHandle, @In stdinStreamHandle: InputStreamHandle, @In onReady: ReadyCallback, @In callbackUserData: Pointer?): Error?
     fun WaitForContainerToExit(@In clientHandle: DockerClientHandle, @In contextHandle: ContextHandle, @In id: kotlin.String, @In onReady: ReadyCallback, @In callbackUserData: Pointer?): WaitForContainerToExitReturn?
     fun InspectContainer(@In clientHandle: DockerClientHandle, @In contextHandle: ContextHandle, @In idOrName: kotlin.String): InspectContainerReturn?
+    fun UploadToContainer(@In clientHandle: DockerClientHandle, @In contextHandle: ContextHandle, @In containerID: kotlin.String, @In request: UploadToContainerRequest, @In destinationPath: kotlin.String): Error?
     fun CreateContext(): ContextHandle
     fun CancelContext(@In contextHandle: ContextHandle)
     fun DestroyContext(@In contextHandle: ContextHandle): Error?
     fun Ping(@In clientHandle: DockerClientHandle, @In contextHandle: ContextHandle): PingReturn?
     fun GetDaemonVersionInformation(@In clientHandle: DockerClientHandle, @In contextHandle: ContextHandle): GetDaemonVersionInformationReturn?
+    fun StreamEvents(@In clientHandle: DockerClientHandle, @In contextHandle: ContextHandle, @In request: StreamEventsRequest, @In onEvent: EventCallback, @In callbackUserData: Pointer?): Error?
+    fun CreateExec(@In clientHandle: DockerClientHandle, @In contextHandle: ContextHandle, @In request: CreateExecRequest): CreateExecReturn?
+    fun StartExecDetached(@In clientHandle: DockerClientHandle, @In contextHandle: ContextHandle, @In id: kotlin.String, @In attachTTY: Boolean): Error?
+    fun InspectExec(@In clientHandle: DockerClientHandle, @In contextHandle: ContextHandle, @In id: kotlin.String): InspectExecReturn?
+    fun StartAndAttachToExec(@In clientHandle: DockerClientHandle, @In contextHandle: ContextHandle, @In id: kotlin.String, @In attachTTY: Boolean, @In stdoutStreamHandle: OutputStreamHandle, @In stderrStreamHandle: OutputStreamHandle, @In stdinStreamHandle: InputStreamHandle): Error?
     fun DeleteImage(@In clientHandle: DockerClientHandle, @In contextHandle: ContextHandle, @In ref: kotlin.String, @In force: Boolean): Error?
     fun GetImage(@In clientHandle: DockerClientHandle, @In contextHandle: ContextHandle, @In ref: kotlin.String): GetImageReturn?
     fun ValidateImageTag(@In tag: kotlin.String): Error?
@@ -151,4 +157,28 @@ internal interface API {
     fun AllocContainerInspectionResult(): ContainerInspectionResult?
     fun FreeInspectContainerReturn(@In value: InspectContainerReturn)
     fun AllocInspectContainerReturn(): InspectContainerReturn?
+    fun FreeUploadDirectory(@In value: UploadDirectory)
+    fun AllocUploadDirectory(): UploadDirectory?
+    fun FreeUploadFile(@In value: UploadFile)
+    fun AllocUploadFile(): UploadFile?
+    fun FreeUploadToContainerRequest(@In value: UploadToContainerRequest)
+    fun AllocUploadToContainerRequest(): UploadToContainerRequest?
+    fun FreeStringToStringListPair(@In value: StringToStringListPair)
+    fun AllocStringToStringListPair(): StringToStringListPair?
+    fun FreeStreamEventsRequest(@In value: StreamEventsRequest)
+    fun AllocStreamEventsRequest(): StreamEventsRequest?
+    fun FreeActor(@In value: Actor)
+    fun AllocActor(): Actor?
+    fun FreeEvent(@In value: Event)
+    fun AllocEvent(): Event?
+    fun FreeCreateExecRequest(@In value: CreateExecRequest)
+    fun AllocCreateExecRequest(): CreateExecRequest?
+    fun FreeContainerExecReference(@In value: ContainerExecReference)
+    fun AllocContainerExecReference(): ContainerExecReference?
+    fun FreeCreateExecReturn(@In value: CreateExecReturn)
+    fun AllocCreateExecReturn(): CreateExecReturn?
+    fun FreeInspectExecResult(@In value: InspectExecResult)
+    fun AllocInspectExecResult(): InspectExecResult?
+    fun FreeInspectExecReturn(@In value: InspectExecReturn)
+    fun AllocInspectExecReturn(): InspectExecReturn?
 }

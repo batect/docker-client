@@ -780,3 +780,186 @@ internal class InspectContainerReturn(runtime: Runtime) : Struct(runtime), AutoC
         nativeAPI.FreeInspectContainerReturn(this)
     }
 }
+
+internal class UploadDirectory(runtime: Runtime) : Struct(runtime), AutoCloseable {
+    constructor(pointer: jnr.ffi.Pointer) : this(pointer.runtime) {
+        this.useMemory(pointer)
+    }
+
+    val path = UTF8StringRef()
+    val owner = int32_t()
+    val group = int32_t()
+
+    override fun close() {
+        nativeAPI.FreeUploadDirectory(this)
+    }
+}
+
+internal class UploadFile(runtime: Runtime) : Struct(runtime), AutoCloseable {
+    constructor(pointer: jnr.ffi.Pointer) : this(pointer.runtime) {
+        this.useMemory(pointer)
+    }
+
+    val path = UTF8StringRef()
+    val owner = int32_t()
+    val group = int32_t()
+    val contents = Pointer()
+    val contentsSize = int32_t()
+
+    override fun close() {
+        nativeAPI.FreeUploadFile(this)
+    }
+}
+
+internal class UploadToContainerRequest(runtime: Runtime) : Struct(runtime), AutoCloseable {
+    constructor(pointer: jnr.ffi.Pointer) : this(pointer.runtime) {
+        this.useMemory(pointer)
+    }
+
+    val directoriesCount = u_int64_t()
+    val directoriesPointer = Pointer()
+    val filesCount = u_int64_t()
+    val filesPointer = Pointer()
+
+    override fun close() {
+        nativeAPI.FreeUploadToContainerRequest(this)
+    }
+}
+
+internal class StringToStringListPair(runtime: Runtime) : Struct(runtime), AutoCloseable {
+    constructor(pointer: jnr.ffi.Pointer) : this(pointer.runtime) {
+        this.useMemory(pointer)
+    }
+
+    val key = UTF8StringRef()
+    val valuesCount = u_int64_t()
+    val valuesPointer = Pointer()
+
+    override fun close() {
+        nativeAPI.FreeStringToStringListPair(this)
+    }
+}
+
+internal class StreamEventsRequest(runtime: Runtime) : Struct(runtime), AutoCloseable {
+    constructor(pointer: jnr.ffi.Pointer) : this(pointer.runtime) {
+        this.useMemory(pointer)
+    }
+
+    val sinceSeconds = int64_t()
+    val sinceNanoseconds = int64_t()
+    val untilSeconds = int64_t()
+    val untilNanoseconds = int64_t()
+    val filtersCount = u_int64_t()
+    val filtersPointer = Pointer()
+
+    override fun close() {
+        nativeAPI.FreeStreamEventsRequest(this)
+    }
+}
+
+internal class Actor(runtime: Runtime) : Struct(runtime), AutoCloseable {
+    constructor(pointer: jnr.ffi.Pointer) : this(pointer.runtime) {
+        this.useMemory(pointer)
+    }
+
+    val id = UTF8StringRef()
+    val attributesCount = u_int64_t()
+    val attributesPointer = Pointer()
+
+    override fun close() {
+        nativeAPI.FreeActor(this)
+    }
+}
+
+internal class Event(runtime: Runtime) : Struct(runtime), AutoCloseable {
+    constructor(pointer: jnr.ffi.Pointer) : this(pointer.runtime) {
+        this.useMemory(pointer)
+    }
+
+    val type = UTF8StringRef()
+    val action = UTF8StringRef()
+    val actorPointer = Pointer()
+    val actor: Actor? by lazy { if (actorPointer.intValue() == 0) null else Actor(actorPointer.get()) }
+    val scope = UTF8StringRef()
+    val timestamp = int64_t()
+
+    override fun close() {
+        nativeAPI.FreeEvent(this)
+    }
+}
+
+internal interface EventCallback {
+    @Delegate
+    fun invoke(userData: Pointer?, eventPointer: Pointer?): Boolean
+}
+
+internal class CreateExecRequest(runtime: Runtime) : Struct(runtime), AutoCloseable {
+    constructor(pointer: jnr.ffi.Pointer) : this(pointer.runtime) {
+        this.useMemory(pointer)
+    }
+
+    val containerID = UTF8StringRef()
+    val commandCount = u_int64_t()
+    val commandPointer = Pointer()
+    val attachStdout = Boolean()
+    val attachStderr = Boolean()
+
+    override fun close() {
+        nativeAPI.FreeCreateExecRequest(this)
+    }
+}
+
+internal class ContainerExecReference(runtime: Runtime) : Struct(runtime), AutoCloseable {
+    constructor(pointer: jnr.ffi.Pointer) : this(pointer.runtime) {
+        this.useMemory(pointer)
+    }
+
+    val id = UTF8StringRef()
+
+    override fun close() {
+        nativeAPI.FreeContainerExecReference(this)
+    }
+}
+
+internal class CreateExecReturn(runtime: Runtime) : Struct(runtime), AutoCloseable {
+    constructor(pointer: jnr.ffi.Pointer) : this(pointer.runtime) {
+        this.useMemory(pointer)
+    }
+
+    val responsePointer = Pointer()
+    val response: ContainerExecReference? by lazy { if (responsePointer.intValue() == 0) null else ContainerExecReference(responsePointer.get()) }
+    val errorPointer = Pointer()
+    val error: Error? by lazy { if (errorPointer.intValue() == 0) null else Error(errorPointer.get()) }
+
+    override fun close() {
+        nativeAPI.FreeCreateExecReturn(this)
+    }
+}
+
+internal class InspectExecResult(runtime: Runtime) : Struct(runtime), AutoCloseable {
+    constructor(pointer: jnr.ffi.Pointer) : this(pointer.runtime) {
+        this.useMemory(pointer)
+    }
+
+    val exitCode = int64_t()
+    val running = Boolean()
+
+    override fun close() {
+        nativeAPI.FreeInspectExecResult(this)
+    }
+}
+
+internal class InspectExecReturn(runtime: Runtime) : Struct(runtime), AutoCloseable {
+    constructor(pointer: jnr.ffi.Pointer) : this(pointer.runtime) {
+        this.useMemory(pointer)
+    }
+
+    val responsePointer = Pointer()
+    val response: InspectExecResult? by lazy { if (responsePointer.intValue() == 0) null else InspectExecResult(responsePointer.get()) }
+    val errorPointer = Pointer()
+    val error: Error? by lazy { if (errorPointer.intValue() == 0) null else Error(errorPointer.get()) }
+
+    override fun close() {
+        nativeAPI.FreeInspectExecReturn(this)
+    }
+}

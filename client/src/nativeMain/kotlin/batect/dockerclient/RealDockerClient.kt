@@ -22,18 +22,9 @@ import batect.dockerclient.io.TextOutput
 import batect.dockerclient.native.AttachToContainerOutput
 import batect.dockerclient.native.BuildImage
 import batect.dockerclient.native.BuildImageProgressUpdate
-import batect.dockerclient.native.BuildImageProgressUpdate_BuildFailed
-import batect.dockerclient.native.BuildImageProgressUpdate_ImageBuildContextUploadProgress
-import batect.dockerclient.native.BuildImageProgressUpdate_StepDownloadProgressUpdate
-import batect.dockerclient.native.BuildImageProgressUpdate_StepFinished
-import batect.dockerclient.native.BuildImageProgressUpdate_StepOutput
-import batect.dockerclient.native.BuildImageProgressUpdate_StepPullProgressUpdate
-import batect.dockerclient.native.BuildImageProgressUpdate_StepStarting
-import batect.dockerclient.native.BuildImageRequest
-import batect.dockerclient.native.ClientConfiguration
 import batect.dockerclient.native.CreateClient
 import batect.dockerclient.native.CreateContainer
-import batect.dockerclient.native.CreateContainerRequest
+import batect.dockerclient.native.CreateExec
 import batect.dockerclient.native.CreateNetwork
 import batect.dockerclient.native.CreateVolume
 import batect.dockerclient.native.DeleteImage
@@ -45,40 +36,29 @@ import batect.dockerclient.native.GetDaemonVersionInformation
 import batect.dockerclient.native.GetImage
 import batect.dockerclient.native.GetNetworkByNameOrID
 import batect.dockerclient.native.InspectContainer
+import batect.dockerclient.native.InspectExec
 import batect.dockerclient.native.ListAllVolumes
 import batect.dockerclient.native.Ping
 import batect.dockerclient.native.PruneImageBuildCache
 import batect.dockerclient.native.PullImage
-import batect.dockerclient.native.PullImageProgressDetail
 import batect.dockerclient.native.PullImageProgressUpdate
 import batect.dockerclient.native.RemoveContainer
+import batect.dockerclient.native.StartAndAttachToExec
 import batect.dockerclient.native.StartContainer
+import batect.dockerclient.native.StartExecDetached
 import batect.dockerclient.native.StopContainer
-import batect.dockerclient.native.StringPair
-import batect.dockerclient.native.TLSConfiguration
+import batect.dockerclient.native.StreamEvents
+import batect.dockerclient.native.UploadToContainer
 import batect.dockerclient.native.WaitForContainerToExit
-import kotlinx.cinterop.CFunction
-import kotlinx.cinterop.COpaquePointer
-import kotlinx.cinterop.CPointed
-import kotlinx.cinterop.CPointer
-import kotlinx.cinterop.CPointerVar
-import kotlinx.cinterop.MemScope
-import kotlinx.cinterop.StableRef
-import kotlinx.cinterop.alloc
-import kotlinx.cinterop.allocArrayOf
-import kotlinx.cinterop.asStableRef
 import kotlinx.cinterop.cstr
-import kotlinx.cinterop.get
 import kotlinx.cinterop.memScoped
 import kotlinx.cinterop.pointed
 import kotlinx.cinterop.ptr
-import kotlinx.cinterop.staticCFunction
 import kotlinx.cinterop.toKString
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.launch
 import kotlinx.datetime.Instant
 import kotlin.time.Duration
-import kotlin.time.Duration.Companion.nanoseconds
 
 internal actual class RealDockerClient actual constructor(configuration: DockerClientConfiguration) : DockerClient, AutoCloseable {
     // This property is internally visible so that tests can get this value to establish scenarios
@@ -97,26 +77,7 @@ internal actual class RealDockerClient actual constructor(configuration: DockerC
         }
     }
 
-    private fun MemScope.allocClientConfiguration(configuration: DockerClientConfiguration): ClientConfiguration {
-        return alloc {
-            UseConfigurationFromEnvironment = configuration.useConfigurationFromEnvironment
-            Host = configuration.host?.cstr?.ptr
-            ConfigDirectoryPath = configuration.configDirectoryPath?.cstr?.ptr
-
-            if (configuration.tls != null) {
-                TLS = alloc<TLSConfiguration> {
-                    CAFilePath = configuration.tls.caFilePath.cstr.ptr
-                    CertFilePath = configuration.tls.certFilePath.cstr.ptr
-                    KeyFilePath = configuration.tls.keyFilePath.cstr.ptr
-                    InsecureSkipVerify = configuration.tls.insecureSkipVerify
-                }.ptr
-            } else {
-                TLS = null
-            }
-        }
-    }
-
-    public override suspend fun ping(): PingResponse {
+    override suspend fun ping(): PingResponse {
         return launchWithGolangContext { context ->
             Ping(clientHandle, context.handle)!!.use { ret ->
                 if (ret.pointed.Error != null) {
@@ -135,7 +96,7 @@ internal actual class RealDockerClient actual constructor(configuration: DockerC
         }
     }
 
-    public override suspend fun getDaemonVersionInformation(): DaemonVersionInformation {
+    override suspend fun getDaemonVersionInformation(): DaemonVersionInformation {
         return launchWithGolangContext { context ->
             GetDaemonVersionInformation(clientHandle, context.handle)!!.use { ret ->
                 if (ret.pointed.Error != null) {
@@ -157,7 +118,7 @@ internal actual class RealDockerClient actual constructor(configuration: DockerC
         }
     }
 
-    public override suspend fun listAllVolumes(): Set<VolumeReference> {
+    override suspend fun listAllVolumes(): Set<VolumeReference> {
         return launchWithGolangContext { context ->
             ListAllVolumes(clientHandle, context.handle)!!.use { ret ->
                 if (ret.pointed.Error != null) {
@@ -169,7 +130,7 @@ internal actual class RealDockerClient actual constructor(configuration: DockerC
         }
     }
 
-    public override suspend fun createVolume(name: String): VolumeReference {
+    override suspend fun createVolume(name: String): VolumeReference {
         return launchWithGolangContext { context ->
             CreateVolume(clientHandle, context.handle, name.cstr)!!.use { ret ->
                 if (ret.pointed.Error != null) {
@@ -181,7 +142,7 @@ internal actual class RealDockerClient actual constructor(configuration: DockerC
         }
     }
 
-    public override suspend fun deleteVolume(volume: VolumeReference) {
+    override suspend fun deleteVolume(volume: VolumeReference) {
         return launchWithGolangContext { context ->
             DeleteVolume(clientHandle, context.handle, volume.name.cstr).ifFailed { error ->
                 throw VolumeDeletionFailedException(error.pointed)
@@ -189,7 +150,7 @@ internal actual class RealDockerClient actual constructor(configuration: DockerC
         }
     }
 
-    public override suspend fun createNetwork(name: String, driver: String): NetworkReference {
+    override suspend fun createNetwork(name: String, driver: String): NetworkReference {
         return launchWithGolangContext { context ->
             CreateNetwork(clientHandle, context.handle, name.cstr, driver.cstr)!!.use { ret ->
                 if (ret.pointed.Error != null) {
@@ -201,7 +162,7 @@ internal actual class RealDockerClient actual constructor(configuration: DockerC
         }
     }
 
-    public override suspend fun deleteNetwork(network: NetworkReference) {
+    override suspend fun deleteNetwork(network: NetworkReference) {
         return launchWithGolangContext { context ->
             DeleteNetwork(clientHandle, context.handle, network.id.cstr).ifFailed { error ->
                 throw NetworkDeletionFailedException(error.pointed)
@@ -209,7 +170,7 @@ internal actual class RealDockerClient actual constructor(configuration: DockerC
         }
     }
 
-    public override suspend fun getNetworkByNameOrID(searchFor: String): NetworkReference? {
+    override suspend fun getNetworkByNameOrID(searchFor: String): NetworkReference? {
         return launchWithGolangContext { context ->
             GetNetworkByNameOrID(clientHandle, context.handle, searchFor.cstr)!!.use { ret ->
                 if (ret.pointed.Error != null) {
@@ -225,7 +186,7 @@ internal actual class RealDockerClient actual constructor(configuration: DockerC
         }
     }
 
-    public override suspend fun pullImage(name: String, onProgressUpdate: ImagePullProgressReceiver): ImageReference {
+    override suspend fun pullImage(name: String, onProgressUpdate: ImagePullProgressReceiver): ImageReference {
         return launchWithGolangContext { context ->
             val callbackState = CallbackState<PullImageProgressUpdate> { progress ->
                 onProgressUpdate.invoke(ImagePullProgressUpdate(progress!!.pointed))
@@ -249,7 +210,7 @@ internal actual class RealDockerClient actual constructor(configuration: DockerC
         }
     }
 
-    public override suspend fun deleteImage(image: ImageReference, force: Boolean) {
+    override suspend fun deleteImage(image: ImageReference, force: Boolean) {
         launchWithGolangContext { context ->
             DeleteImage(clientHandle, context.handle, image.id.cstr, force).ifFailed { error ->
                 throw ImageDeletionFailedException(error.pointed)
@@ -257,7 +218,7 @@ internal actual class RealDockerClient actual constructor(configuration: DockerC
         }
     }
 
-    public override suspend fun getImage(name: String): ImageReference? {
+    override suspend fun getImage(name: String): ImageReference? {
         return launchWithGolangContext { context ->
             GetImage(clientHandle, context.handle, name.cstr)!!.use { ret ->
                 if (ret.pointed.Error != null) {
@@ -273,7 +234,7 @@ internal actual class RealDockerClient actual constructor(configuration: DockerC
         }
     }
 
-    public override suspend fun buildImage(spec: ImageBuildSpec, output: TextOutput, onProgressUpdate: ImageBuildProgressReceiver): ImageReference {
+    override suspend fun buildImage(spec: ImageBuildSpec, output: TextOutput, onProgressUpdate: ImageBuildProgressReceiver): ImageReference {
         output.prepareStream().use { stream ->
             val callbackState = CallbackState<BuildImageProgressUpdate> { progress ->
                 onProgressUpdate.invoke(ImageBuildProgressUpdate(progress!!.pointed))
@@ -316,22 +277,7 @@ internal actual class RealDockerClient actual constructor(configuration: DockerC
         }
     }
 
-    private fun MemScope.allocBuildImageRequest(spec: ImageBuildSpec): BuildImageRequest {
-        return alloc {
-            ContextDirectory = spec.contextDirectory.toString().cstr.ptr
-            PathToDockerfile = spec.pathToDockerfile.toString().cstr.ptr
-            BuildArgs = allocArrayOf(spec.buildArgs.map { allocStringPair(it).ptr })
-            BuildArgsCount = spec.buildArgs.size.toULong()
-            ImageTags = allocArrayOf(spec.imageTags.map { it.cstr.ptr })
-            ImageTagsCount = spec.imageTags.size.toULong()
-            AlwaysPullBaseImages = spec.alwaysPullBaseImages
-            NoCache = spec.noCache
-            TargetBuildStage = spec.targetBuildStage.cstr.ptr
-            BuilderVersion = spec.builderApiVersion?.cstr?.ptr
-        }
-    }
-
-    public override suspend fun pruneImageBuildCache() {
+    override suspend fun pruneImageBuildCache() {
         launchWithGolangContext { context ->
             PruneImageBuildCache(clientHandle, context.handle).ifFailed { error ->
                 throw ImageBuildCachePruneFailedException(error.pointed)
@@ -339,7 +285,7 @@ internal actual class RealDockerClient actual constructor(configuration: DockerC
         }
     }
 
-    public override suspend fun createContainer(spec: ContainerCreationSpec): ContainerReference {
+    override suspend fun createContainer(spec: ContainerCreationSpec): ContainerReference {
         spec.ensureValid()
 
         return launchWithGolangContext { context ->
@@ -355,84 +301,7 @@ internal actual class RealDockerClient actual constructor(configuration: DockerC
         }
     }
 
-    private fun MemScope.allocCreateContainerRequest(spec: ContainerCreationSpec): CreateContainerRequest {
-        return alloc {
-            ImageReference = spec.image.id.cstr.ptr
-            Name = spec.name?.cstr?.ptr
-            Command = allocArrayOf(spec.command.map { it.cstr.ptr })
-            CommandCount = spec.command.size.toULong()
-            Entrypoint = allocArrayOf(spec.entrypoint.map { it.cstr.ptr })
-            EntrypointCount = spec.entrypoint.size.toULong()
-            WorkingDirectory = spec.workingDirectory?.cstr?.ptr
-            Hostname = spec.hostname?.cstr?.ptr
-            ExtraHosts = allocArrayOf(spec.extraHostsFormattedForDocker.map { it.cstr.ptr })
-            ExtraHostsCount = spec.extraHostsFormattedForDocker.size.toULong()
-            EnvironmentVariables = allocArrayOf(spec.environmentVariablesFormattedForDocker.map { it.cstr.ptr })
-            EnvironmentVariablesCount = spec.environmentVariablesFormattedForDocker.size.toULong()
-            BindMounts = allocArrayOf(spec.bindMountsFormattedForDocker.map { it.cstr.ptr })
-            BindMountsCount = spec.bindMountsFormattedForDocker.size.toULong()
-            TmpfsMounts = allocArrayOf(spec.tmpfsMounts.map { allocStringPair(it).ptr })
-            TmpfsMountsCount = spec.tmpfsMounts.size.toULong()
-            DeviceMounts = allocArrayOf(spec.deviceMounts.map { allocDeviceMount(it).ptr })
-            DeviceMountsCount = spec.deviceMounts.size.toULong()
-            ExposedPorts = allocArrayOf(spec.exposedPorts.map { allocExposedPort(it).ptr })
-            ExposedPortsCount = spec.exposedPorts.size.toULong()
-            User = spec.userAndGroupFormattedForDocker?.cstr?.ptr
-            UseInitProcess = spec.useInitProcess
-            ShmSizeInBytes = spec.shmSizeInBytes ?: 0
-            AttachTTY = spec.attachTTY
-            Privileged = spec.privileged
-            CapabilitiesToAdd = allocArrayOf(spec.capabilitiesToAdd.map { it.name.cstr.ptr })
-            CapabilitiesToAddCount = spec.capabilitiesToAdd.size.toULong()
-            CapabilitiesToDrop = allocArrayOf(spec.capabilitiesToDrop.map { it.name.cstr.ptr })
-            CapabilitiesToDropCount = spec.capabilitiesToDrop.size.toULong()
-            NetworkReference = spec.network?.id?.cstr?.ptr
-            NetworkAliases = allocArrayOf(spec.networkAliases.map { it.cstr.ptr })
-            NetworkAliasesCount = spec.networkAliases.size.toULong()
-            LogDriver = spec.logDriver?.cstr?.ptr
-            LoggingOptions = allocArrayOf(spec.loggingOptions.map { allocStringPair(it).ptr })
-            LoggingOptionsCount = spec.loggingOptions.size.toULong()
-            HealthcheckCommand = allocArrayOf(spec.healthcheckCommand.map { it.cstr.ptr })
-            HealthcheckCommandCount = spec.healthcheckCommand.size.toULong()
-            HealthcheckInterval = spec.healthcheckInterval?.inWholeNanoseconds ?: 0
-            HealthcheckTimeout = spec.healthcheckTimeout?.inWholeNanoseconds ?: 0
-            HealthcheckStartPeriod = spec.healthcheckStartPeriod?.inWholeNanoseconds ?: 0
-            HealthcheckRetries = spec.healthcheckRetries?.toLong() ?: 0
-            Labels = allocArrayOf(spec.labels.map { allocStringPair(it.key, it.value).ptr })
-            LabelsCount = spec.labels.size.toULong()
-            AttachStdin = spec.attachStdin
-            StdinOnce = spec.stdinOnce
-            OpenStdin = spec.openStdin
-        }
-    }
-
-    private fun MemScope.allocStringPair(mount: TmpfsMount): StringPair = allocStringPair(mount.containerPath, mount.options)
-    private fun MemScope.allocStringPair(entry: Map.Entry<String, String>): StringPair = allocStringPair(entry.key, entry.value)
-
-    private fun MemScope.allocStringPair(key: String, value: String): StringPair {
-        return alloc {
-            Key = key.cstr.ptr
-            Value = value.cstr.ptr
-        }
-    }
-
-    private fun MemScope.allocDeviceMount(mount: DeviceMount): batect.dockerclient.native.DeviceMount {
-        return alloc {
-            LocalPath = mount.localPath.toString().cstr.ptr
-            ContainerPath = mount.containerPath.cstr.ptr
-            Permissions = mount.permissions.cstr.ptr
-        }
-    }
-
-    private fun MemScope.allocExposedPort(port: ExposedPort): batect.dockerclient.native.ExposedPort {
-        return alloc {
-            LocalPort = port.localPort
-            ContainerPort = port.containerPort
-            Protocol = port.protocol.cstr.ptr
-        }
-    }
-
-    public override suspend fun startContainer(container: ContainerReference) {
+    override suspend fun startContainer(container: ContainerReference) {
         launchWithGolangContext { context ->
             StartContainer(clientHandle, context.handle, container.id.cstr).ifFailed { error ->
                 throw ContainerStartFailedException(error.pointed)
@@ -440,7 +309,7 @@ internal actual class RealDockerClient actual constructor(configuration: DockerC
         }
     }
 
-    public override suspend fun stopContainer(container: ContainerReference, timeout: Duration) {
+    override suspend fun stopContainer(container: ContainerReference, timeout: Duration) {
         launchWithGolangContext { context ->
             StopContainer(clientHandle, context.handle, container.id.cstr, timeout.inWholeSeconds).ifFailed { error ->
                 throw ContainerStopFailedException(error.pointed)
@@ -531,184 +400,129 @@ internal actual class RealDockerClient actual constructor(configuration: DockerC
         }
     }
 
+    override suspend fun uploadToContainer(container: ContainerReference, items: Set<UploadItem>, destinationPath: String) {
+        return launchWithGolangContext { context ->
+            memScoped {
+                UploadToContainer(clientHandle, context.handle, container.id.cstr, allocUploadToContainerRequest(items).ptr, destinationPath.cstr).ifFailed { error ->
+                    throw ContainerUploadFailedException(error.pointed)
+                }
+            }
+        }
+    }
+
+    override suspend fun createExec(spec: ContainerExecSpec): ContainerExecReference {
+        return launchWithGolangContext { context ->
+            memScoped {
+                CreateExec(clientHandle, context.handle, allocCreateExecRequest(spec).ptr)!!.use { ret ->
+                    if (ret.pointed.Error != null) {
+                        throw ContainerExecCreationFailedException(ret.pointed.Error!!.pointed)
+                    }
+
+                    ContainerExecReference(ret.pointed.Response!!.pointed.ID!!.toKString())
+                }
+            }
+        }
+    }
+
+    override suspend fun startExecDetached(exec: ContainerExecReference, attachTTY: Boolean) {
+        launchWithGolangContext { context ->
+            StartExecDetached(clientHandle, context.handle, exec.id.cstr, attachTTY).ifFailed { err ->
+                throw StartingContainerExecFailedException(err.pointed)
+            }
+        }
+    }
+
+    override suspend fun inspectExec(exec: ContainerExecReference): ContainerExecInspectionResult {
+        return launchWithGolangContext { context ->
+            memScoped {
+                InspectExec(clientHandle, context.handle, exec.id.cstr.ptr)!!.use { ret ->
+                    if (ret.pointed.Error != null) {
+                        throw ContainerExecInspectionFailedException(ret.pointed.Error!!.pointed)
+                    }
+
+                    ContainerExecInspectionResult(ret.pointed.Response!!.pointed)
+                }
+            }
+        }
+    }
+
+    override suspend fun startAndAttachToExec(
+        exec: ContainerExecReference,
+        attachTTY: Boolean,
+        stdout: TextOutput?,
+        stderr: TextOutput?,
+        stdin: TextInput?
+    ) {
+        stdout?.prepareStream().use { stdoutStream ->
+            stderr?.prepareStream().use { stderrStream ->
+                stdin?.prepareStream().use { stdinStream ->
+                    coroutineScope {
+                        launch(IODispatcher) { stdoutStream?.run() }
+                        launch(IODispatcher) { stderrStream?.run() }
+                        launch(IODispatcher) { stdinStream?.run() }
+
+                        launchWithGolangContext { context ->
+                            StartAndAttachToExec(
+                                clientHandle,
+                                context.handle,
+                                exec.id.cstr,
+                                attachTTY,
+                                stdoutStream?.outputStreamHandle ?: 0.toULong(),
+                                stderrStream?.outputStreamHandle ?: 0.toULong(),
+                                stdinStream?.inputStreamHandle ?: 0.toULong()
+                            ).ifFailed { error ->
+                                throw StartingContainerExecFailedException(error.pointed)
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    override suspend fun streamEvents(since: Instant?, until: Instant?, filters: Map<String, Set<String>>, onEventReceived: EventHandler) {
+        launchWithGolangContext { context ->
+            val streamingAbortedException = Exception("Event handler aborted streaming.")
+
+            val callbackState = CallbackState<batect.dockerclient.native.Event> { event ->
+                if (onEventReceived.invoke(Event(event!!.pointed)) == EventHandlerAction.Stop) {
+                    throw streamingAbortedException
+                }
+            }
+
+            callbackState.use { callback, callbackUserData ->
+                memScoped {
+                    StreamEvents(
+                        clientHandle,
+                        context.handle,
+                        allocStreamEventsRequest(since, until, filters).ptr,
+                        callback,
+                        callbackUserData
+                    ).ifFailed { error ->
+                        val errorType = error.pointed.Type!!.toKString()
+
+                        if (errorType != "main.EventCallbackFailedError") {
+                            throw StreamingEventsFailedException(error.pointed)
+                        }
+
+                        if (callbackState.exceptionThrown != streamingAbortedException) {
+                            throw StreamingEventsFailedException(
+                                "Event receiver threw an exception: ${callbackState.exceptionThrown}",
+                                callbackState.exceptionThrown,
+                                errorType
+                            )
+                        } else {
+                            // Event receiver aborted streaming - do not propagate the exception.
+                        }
+                    }
+                }
+            }
+        }
+    }
+
     override fun close() {
         DisposeClient(clientHandle).ifFailed { error ->
             throw DockerClientException(error.pointed)
         }
-    }
-}
-
-private fun VolumeReference(native: batect.dockerclient.native.VolumeReference): VolumeReference =
-    VolumeReference(native.Name!!.toKString())
-
-private fun NetworkReference(native: batect.dockerclient.native.NetworkReference): NetworkReference =
-    NetworkReference(native.ID!!.toKString())
-
-private fun ImageReference(native: batect.dockerclient.native.ImageReference): ImageReference =
-    ImageReference(native.ID!!.toKString())
-
-private fun ImagePullProgressUpdate(native: PullImageProgressUpdate): ImagePullProgressUpdate =
-    ImagePullProgressUpdate(
-        native.Message!!.toKString(),
-        if (native.Detail == null) null else ImagePullProgressDetail(native.Detail!!.pointed),
-        native.ID!!.toKString()
-    )
-
-private fun ImagePullProgressDetail(native: PullImageProgressDetail): ImagePullProgressDetail =
-    ImagePullProgressDetail(native.Current, native.Total)
-
-private fun ImageBuildProgressUpdate(native: BuildImageProgressUpdate): ImageBuildProgressUpdate = when {
-    native.ImageBuildContextUploadProgress != null -> contextUploadProgress(native.ImageBuildContextUploadProgress!!.pointed)
-    native.StepStarting != null -> StepStarting(native.StepStarting!!.pointed)
-    native.StepOutput != null -> StepOutput(native.StepOutput!!.pointed)
-    native.StepPullProgressUpdate != null -> StepPullProgressUpdate(native.StepPullProgressUpdate!!.pointed)
-    native.StepDownloadProgressUpdate != null -> StepDownloadProgressUpdate(native.StepDownloadProgressUpdate!!.pointed)
-    native.StepFinished != null -> StepFinished(native.StepFinished!!.pointed)
-    native.BuildFailed != null -> BuildFailed(native.BuildFailed!!.pointed)
-    else -> throw RuntimeException("${BuildImageProgressUpdate::class.qualifiedName} did not contain an update")
-}
-
-private fun contextUploadProgress(native: BuildImageProgressUpdate_ImageBuildContextUploadProgress): ImageBuildProgressUpdate =
-    when (native.StepNumber) {
-        0L -> ImageBuildContextUploadProgress(native.BytesUploaded)
-        else -> StepContextUploadProgress(native.StepNumber, native.BytesUploaded)
-    }
-
-private fun StepStarting(native: BuildImageProgressUpdate_StepStarting): StepStarting =
-    StepStarting(
-        native.StepNumber,
-        native.StepName!!.toKString()
-    )
-
-private fun StepOutput(native: BuildImageProgressUpdate_StepOutput): StepOutput =
-    StepOutput(
-        native.StepNumber,
-        native.Output!!.toKString()
-    )
-
-private fun StepPullProgressUpdate(native: BuildImageProgressUpdate_StepPullProgressUpdate): StepPullProgressUpdate =
-    StepPullProgressUpdate(
-        native.StepNumber,
-        ImagePullProgressUpdate(native.PullProgress!!.pointed)
-    )
-
-private fun StepDownloadProgressUpdate(native: BuildImageProgressUpdate_StepDownloadProgressUpdate): StepDownloadProgressUpdate =
-    StepDownloadProgressUpdate(
-        native.StepNumber,
-        native.DownloadedBytes,
-        native.TotalBytes
-    )
-
-private fun StepFinished(native: BuildImageProgressUpdate_StepFinished): StepFinished =
-    StepFinished(native.StepNumber)
-
-private fun BuildFailed(native: BuildImageProgressUpdate_BuildFailed): BuildFailed =
-    BuildFailed(native.Message!!.toKString())
-
-private fun ContainerInspectionResult(native: batect.dockerclient.native.ContainerInspectionResult): ContainerInspectionResult = ContainerInspectionResult(
-    ContainerReference(native.ID!!.toKString()),
-    native.Name!!.toKString(),
-    ContainerHostConfig(native.HostConfig!!.pointed),
-    ContainerState(native.State!!.pointed),
-    ContainerConfig(native.Config!!.pointed)
-)
-
-private fun ContainerHostConfig(native: batect.dockerclient.native.ContainerHostConfig): ContainerHostConfig =
-    ContainerHostConfig(ContainerLogConfig(native.LogConfig!!.pointed))
-
-private fun ContainerLogConfig(native: batect.dockerclient.native.ContainerLogConfig): ContainerLogConfig =
-    ContainerLogConfig(
-        native.Type!!.toKString(),
-        fromArray(native.Config!!, native.ConfigCount) { it.Key!!.toKString() to it.Value!!.toKString() }.associate { it }
-    )
-
-private fun ContainerState(native: batect.dockerclient.native.ContainerState): ContainerState =
-    ContainerState(
-        if (native.Health == null) null else ContainerHealthState(native.Health!!.pointed)
-    )
-
-private fun ContainerHealthState(native: batect.dockerclient.native.ContainerHealthState): ContainerHealthState =
-    ContainerHealthState(
-        native.Status!!.toKString(),
-        fromArray(native.Log!!, native.LogCount) { ContainerHealthLogEntry(it) }
-    )
-
-private fun ContainerHealthLogEntry(native: batect.dockerclient.native.ContainerHealthLogEntry): ContainerHealthLogEntry =
-    ContainerHealthLogEntry(
-        Instant.fromEpochMilliseconds(native.Start),
-        Instant.fromEpochMilliseconds(native.End),
-        native.ExitCode,
-        native.Output!!.toKString()
-    )
-
-private fun ContainerConfig(native: batect.dockerclient.native.ContainerConfig): ContainerConfig =
-    ContainerConfig(
-        fromArray(native.Labels!!, native.LabelsCount) { it.Key!!.toKString() to it.Value!!.toKString() }.associate { it },
-        if (native.Healthcheck == null) null else ContainerHealthcheckConfig(native.Healthcheck!!.pointed)
-    )
-
-private fun ContainerHealthcheckConfig(native: batect.dockerclient.native.ContainerHealthcheckConfig): ContainerHealthcheckConfig =
-    ContainerHealthcheckConfig(
-        fromArray(native.Test!!, native.TestCount) { it.ptr.toKString() },
-        native.Interval.nanoseconds,
-        native.Timeout.nanoseconds,
-        native.StartPeriod.nanoseconds,
-        native.Retries.toInt()
-    )
-
-private inline fun <reified NativeType : CPointed, KotlinType> fromArray(
-    source: CPointer<CPointerVar<NativeType>>,
-    count: ULong,
-    creator: (NativeType) -> KotlinType
-): List<KotlinType> {
-    return (0.toULong().until(count))
-        .map { i -> creator(source[i.toLong()]!!.pointed) }
-}
-
-// What's this for?
-// Kotlin/Native does not handle exceptions that propagate out of Kotlin/Native well.
-// For example, if a C function invokes a Kotlin function, and that Kotlin function throws an exception,
-// the process crashes.
-// While we can make sure our own code invoked by C functions don't throw exceptions, we can't make the
-// same guarantee for functions provided by users of this library, such as progress reporting callback
-// functions.
-// This is a helper class that helps us capture exceptions and report them later on.
-private class CallbackState<ParameterType : CPointed>(private val callbackFunction: (CPointer<ParameterType>?) -> Unit) {
-    var exceptionThrown: Throwable? = null
-
-    fun <R> use(user: (CPointer<CFunction<(COpaquePointer?, CPointer<ParameterType>?) -> Boolean>>, COpaquePointer) -> R): R = StableRef.create(this).use { userDataRef ->
-        val callback = staticCFunction { userData: COpaquePointer?, param: CPointer<ParameterType>? ->
-            val callbackState = userData!!.asStableRef<CallbackState<ParameterType>>().get()
-
-            try {
-                callbackState.callbackFunction(param)
-                true
-            } catch (t: Throwable) {
-                callbackState.exceptionThrown = t
-                false
-            }
-        }
-
-        user(callback, userDataRef.asCPointer())
-    }
-}
-
-private class ReadyNotificationCallbackState(private val readyNotification: ReadyNotification?) {
-    var exceptionThrown: Throwable? = null
-
-    fun <R> use(user: (CPointer<CFunction<(COpaquePointer?) -> Boolean>>, COpaquePointer) -> R): R = StableRef.create(this).use { userDataRef ->
-        val callback = staticCFunction { userData: COpaquePointer? ->
-            val callbackState = userData!!.asStableRef<ReadyNotificationCallbackState>().get()
-
-            try {
-                callbackState.readyNotification?.markAsReady()
-                true
-            } catch (t: Throwable) {
-                callbackState.exceptionThrown = t
-                false
-            }
-        }
-
-        user(callback, userDataRef.asCPointer())
     }
 }

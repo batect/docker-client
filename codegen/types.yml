@@ -534,3 +534,127 @@
       type: ContainerInspectionResult
     - name: Error
       type: Error
+
+- name: UploadDirectory
+  type: struct
+  fields:
+    - name: Path
+      type: string
+    - name: Owner
+      type: int32
+    - name: Group
+      type: int32
+
+- name: UploadFile
+  type: struct
+  fields:
+    - name: Path
+      type: string
+    - name: Owner
+      type: int32
+    - name: Group
+      type: int32
+    - name: Contents
+      type: byteArray
+    - name: ContentsSize
+      type: int32
+
+- name: UploadToContainerRequest
+  type: struct
+  fields:
+    - name: Directories
+      type: UploadDirectory[]
+    - name: Files
+      type: UploadFile[]
+
+- name: StringToStringListPair
+  type: struct
+  fields:
+    - name: Key
+      type: string
+    - name: Values
+      type: string[]
+
+- name: StreamEventsRequest
+  type: struct
+  fields:
+    - name: SinceSeconds
+      type: int64
+    - name: SinceNanoseconds
+      type: int64
+    - name: UntilSeconds
+      type: int64
+    - name: UntilNanoseconds
+      type: int64
+    - name: Filters
+      type: StringToStringListPair[]
+
+- name: Actor
+  type: struct
+  fields:
+    - name: ID
+      type: string
+    - name: Attributes
+      type: StringPair[]
+
+- name: Event
+  type: struct
+  fields:
+    - name: Type
+      type: string
+    - name: Action
+      type: string
+    - name: Actor
+      type: Actor
+    - name: Scope
+      type: string
+    - name: Timestamp
+      type: int64
+
+- name: EventCallback
+  type: callback
+  parameters:
+    - name: event
+      type: Event
+
+- name: CreateExecRequest
+  type: struct
+  fields:
+    - name: ContainerID
+      type: string
+    - name: Command
+      type: string[]
+    - name: AttachStdout
+      type: boolean
+    - name: AttachStderr
+      type: boolean
+
+- name: ContainerExecReference
+  type: struct
+  fields:
+    - name: ID
+      type: string
+
+- name: CreateExecReturn
+  type: struct
+  fields:
+    - name: Response
+      type: ContainerExecReference
+    - name: Error
+      type: Error
+
+- name: InspectExecResult
+  type: struct
+  fields:
+    - name: ExitCode
+      type: int64
+    - name: Running
+      type: boolean
+
+- name: InspectExecReturn
+  type: struct
+  fields:
+    - name: Response
+      type: InspectExecResult
+    - name: Error
+      type: Error

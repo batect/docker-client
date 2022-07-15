@@ -32,7 +32,8 @@ func DeleteImage(clientHandle DockerClientHandle, contextHandle ContextHandle, r
 	ctx := contextHandle.Context()
 
 	opts := types.ImageRemoveOptions{
-		Force: bool(force),
+		Force:         bool(force),
+		PruneChildren: true,
 	}
 
 	_, err := docker.ImageRemove(ctx, C.GoString(ref), opts)

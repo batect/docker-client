@@ -38,6 +38,7 @@ plugins {
     signing
 
     id("batect.dockerclient.buildtools.formatting")
+    id("batect.dockerclient.buildtools.licensecheck")
 }
 
 repositories {
@@ -128,14 +129,26 @@ kotlin {
                 implementation(libs.kotest.assertions.json)
                 implementation(libs.kotest.framework.api)
                 implementation(libs.kotest.framework.engine)
+            }
+        }
+
+        // HACK
+        // These tests are here (instead of in commonTest) because of https://youtrack.jetbrains.com/issue/KTOR-4307.
+        // Once that issue is resolved (or an alternative client is available for Windows), we can move these tests back to the commonTest source set.
+        val nonMingwTest by creating {
+            dependsOn(commonTest)
+
+            dependencies {
                 implementation(libs.ktor.client)
+                implementation(libs.ktor.client.cio)
             }
         }
 
         val jvmTest by getting {
+            dependsOn(nonMingwTest)
+
             dependencies {
                 implementation(libs.kotest.runner.junit5)
-                implementation(libs.ktor.client.cio)
             }
         }
 
@@ -145,10 +158,7 @@ kotlin {
 
         val linuxTest by creating {
             dependsOn(nativeTest)
-
-            dependencies {
-                implementation(libs.ktor.client.cio)
-            }
+            dependsOn(nonMingwTest)
         }
 
         val linuxX64Test by getting {
@@ -157,10 +167,6 @@ kotlin {
 
         val mingwTest by creating {
             dependsOn(nativeTest)
-
-            dependencies {
-                implementation(libs.ktor.client.curl)
-            }
         }
 
         val mingwX64Test by getting {
@@ -169,10 +175,7 @@ kotlin {
 
         val macosTest by creating {
             dependsOn(nativeTest)
-
-            dependencies {
-                implementation(libs.ktor.client.cio)
-            }
+            dependsOn(nonMingwTest)
         }
 
         val macosX64Test by getting {
@@ -204,7 +207,7 @@ kotlin {
             "compileKotlin${target.name.capitalize()}",
             "compileTestKotlin${target.name.capitalize()}",
             "${target.name}MainKlibrary",
-            "${target.name}TestKlibrary",
+            "${target.name}TestKlibrary"
         ).forEach { taskName ->
             tasks.named(taskName) {
                 onlyIf { target.konanTarget.isSupportedOnThisMachine && (target.konanTarget.isSameOperatingSystemAsHost || runTargetsForOtherHosts) }
@@ -286,7 +289,7 @@ val kotestProperties = setOf(
 val testEnvironmentVariables = setOf(
     "DISABLE_DOCKER_DAEMON_TESTS",
     "DOCKER_CONTAINER_OPERATING_SYSTEM",
-    "DOCKER_CONNECTION_OVER_TCP",
+    "DOCKER_CONNECTION_OVER_TCP"
 ) + kotestProperties + kotestProperties.map { it.replace('.', '_') }
 
 tasks.named<Test>("jvmTest") {

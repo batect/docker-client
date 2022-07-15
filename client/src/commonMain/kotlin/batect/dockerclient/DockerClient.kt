@@ -21,9 +21,18 @@ import batect.dockerclient.io.TextOutput
 import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.launch
+import kotlinx.datetime.Instant
 import okio.Path
 import kotlin.time.Duration
 
+/**
+ * TODO: documentation
+ *
+ * Callbacks:
+ * Some methods take callback functions. These methods are not guaranteed to be called from any particular thread, but are
+ * guaranteed to only be called from one thread at a time.
+ *
+ */
 public interface DockerClient : AutoCloseable {
     public suspend fun ping(): PingResponse
     public suspend fun getDaemonVersionInformation(): DaemonVersionInformation
@@ -47,7 +56,26 @@ public interface DockerClient : AutoCloseable {
     public suspend fun startContainer(container: ContainerReference)
     public suspend fun stopContainer(container: ContainerReference, timeout: Duration)
     public suspend fun removeContainer(container: ContainerReference, force: Boolean = false, removeVolumes: Boolean = false)
+    public suspend fun uploadToContainer(container: ContainerReference, items: Set<UploadItem>, destinationPath: String)
+
+    /**
+     * Streams input and output to/from the provided container.
+     *
+     * If [stdin] is a [batect.dockerclient.io.SourceTextInput], the underlying source will **not** be closed when the container exits. You must call [TextInput.abortRead] to
+     * cancel any pending read from [stdin] once the container exits: this method does not exit until all streams have been exhausted or aborted.
+     *
+     * To capture all output from a container, call this method, wait for [attachedNotification] to be marked as ready, then call [startContainer].
+     *
+     * See also: [run], which handles these details for you.
+     *
+     * @param container the container to stream input and output to
+     * @param stdout the output stream to stream stdout to
+     * @param stderr the output stream to stream stderr to. Not used if the container is configured to use a TTY with [ContainerCreationSpec.Builder.withTTY].
+     * @param stdin the input stream to stream stdin from. Only used if the container is configured to have stdin attached with [ContainerCreationSpec.Builder.withStdinAttached].
+     * @param attachedNotification marked as read when streaming has been established
+     */
     public suspend fun attachToContainerIO(container: ContainerReference, stdout: TextOutput?, stderr: TextOutput?, stdin: TextInput?, attachedNotification: ReadyNotification? = null)
+
     public suspend fun inspectContainer(idOrName: String): ContainerInspectionResult
     public suspend fun inspectContainer(container: ContainerReference): ContainerInspectionResult = inspectContainer(container.id)
 
@@ -57,6 +85,26 @@ public interface DockerClient : AutoCloseable {
      * @return the container's exit code
      */
     public suspend fun waitForContainerToExit(container: ContainerReference, waitingNotification: ReadyNotification? = null): Long
+
+    public suspend fun createExec(spec: ContainerExecSpec): ContainerExecReference
+    public suspend fun startExecDetached(exec: ContainerExecReference, attachTTY: Boolean)
+    public suspend fun inspectExec(exec: ContainerExecReference): ContainerExecInspectionResult
+
+    /**
+     * Starts the provided exec instance and then streams input and output to and from it.
+     *
+     * If [stdin] is a [batect.dockerclient.io.SourceTextInput], the underlying source will **not** be closed when the exec instance exits. You must call [TextInput.abortRead] to
+     * cancel any pending read from [stdin] once the exec instance exits: this method does not exit until all streams have been exhausted or aborted.
+     *
+     * @param exec the exec instance to stream input and output to
+     * @param attachTTY if `true`, attach a TTY to the exec instance
+     * @param stdout the output stream to stream stdout to
+     * @param stderr the output stream to stream stderr to. Not used if [attachTTY] is `true`.
+     * @param stdin the input stream to stream stdin from. Only used if the exec instance is configured to have stdin attached with [ContainerExecSpec.Builder.withStdinAttached].
+     */
+    public suspend fun startAndAttachToExec(exec: ContainerExecReference, attachTTY: Boolean, stdout: TextOutput?, stderr: TextOutput?, stdin: TextInput?)
+
+    public suspend fun streamEvents(since: Instant?, until: Instant?, filters: Map<String, Set<String>>, onEventReceived: EventHandler)
 
     public class Builder internal constructor(internal val factory: DockerClientFactory) {
         public constructor() : this({ config -> RealDockerClient(config) })
@@ -167,6 +215,8 @@ internal typealias DockerClientFactory = (DockerClientConfiguration) -> DockerCl
  *
  * The container is not stopped or removed when it exits.
  *
+ * If [stdin] is a [batect.dockerclient.io.SourceTextInput], the underlying source will be closed when the container exits.
+ *
  * @param container the container to run
  * @param stdout the output stream to stream stdout to
  * @param stderr the output stream to stream stderr to. Not used if the container is configured to use a TTY with [ContainerCreationSpec.Builder.withTTY].
@@ -178,21 +228,25 @@ public suspend fun DockerClient.run(container: ContainerReference, stdout: TextO
         val listeningToOutput = ReadyNotification()
         val waitingForExitCode = ReadyNotification()
 
-        launch {
-            attachToContainerIO(container, stdout, stderr, stdin, listeningToOutput)
+        try {
+            launch {
+                attachToContainerIO(container, stdout, stderr, stdin, listeningToOutput)
+            }
+
+            val exitCodeSource = async {
+                waitForContainerToExit(container, waitingForExitCode)
+            }
+
+            launch {
+                listeningToOutput.waitForReady()
+                waitingForExitCode.waitForReady()
+
+                startContainer(container)
+            }
+
+            exitCodeSource.await()
+        } finally {
+            stdin?.abortRead()
         }
-
-        val exitCodeSource = async {
-            waitForContainerToExit(container, waitingForExitCode)
-        }
-
-        launch {
-            listeningToOutput.waitForReady()
-            waitingForExitCode.waitForReady()
-
-            startContainer(container)
-        }
-
-        exitCodeSource.await()
     }
 }

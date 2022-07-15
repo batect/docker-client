@@ -14,6 +14,8 @@
     limitations under the License.
 */
 
+@file:Suppress("ktlint:filename")
+
 package batect.dockerclient
 
 actual fun getEnvironmentVariable(name: String): String? = System.getenv(name)

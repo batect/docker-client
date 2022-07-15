@@ -60,28 +60,28 @@ jobs:
           fetch-depth: 0
 
       - name: Set up JDK
-        uses: actions/setup-java@v3.3.0
+        uses: actions/setup-java@v3.4.1
         with:
           java-version: 17.0.2+8
           distribution: temurin
 
       - name: Cache Golang packages
         id: cache-golang-packages
-        uses: actions/cache@v3.0.4
+        uses: actions/cache@v3.0.5
         with:
           path: ~/go
           key: go-packages-${{ runner.os }}-${{ hashFiles('golang-wrapper/src/go.*') }}
 
       - name: Cache Kotlin/Native dependencies
         id: cache-kotlin-native
-        uses: actions/cache@v3.0.4
+        uses: actions/cache@v3.0.5
         with:
           path: ~/.konan
           key: kotlin-native-${{ runner.os }}-${{ hashFiles('gradle/libs.versions.toml') }}
 
       - name: Cache tools
         id: cache-tools
-        uses: actions/cache@v3.0.4
+        uses: actions/cache@v3.0.5
         with:
           path: golang-wrapper/build/tools
           key: tools-${{ runner.os }}-${{ hashFiles('**/*.gradle.kts', 'buildSrc/src/**/*.kt') }}
@@ -101,11 +101,10 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         if: matrix.disableDockerDaemonTests != 1
 
-      # linkDebugTestMingwX64 and mingwX64Test are disabled until https://youtrack.jetbrains.com/issue/KTOR-4307 is resolved.
       - name: Build, test and package
-        uses: burrunan/gradle-cache-action@v1.10
+        uses: burrunan/gradle-cache-action@v1.12
         with:
-          arguments: client:check client:jvmJar --exclude-task linkDebugTestMingwX64 --exclude-task mingwX64Test --scan
+          arguments: client:check client:jvmJar --scan
         env:
           DISABLE_DOCKER_DAEMON_TESTS: ${{ matrix.disableDockerDaemonTests }}
           DOCKER_CONTAINER_OPERATING_SYSTEM: ${{ matrix.containerOperatingSystem }}
@@ -126,34 +125,34 @@ jobs:
           fetch-depth: 0
 
       - name: Set up JDK
-        uses: actions/setup-java@v3.3.0
+        uses: actions/setup-java@v3.4.1
         with:
           java-version: 17.0.2+8
           distribution: temurin
 
       - name: Cache Golang packages
         id: cache-golang-packages
-        uses: actions/cache@v3.0.4
+        uses: actions/cache@v3.0.5
         with:
           path: ~/go
           key: go-packages-${{ runner.os }}-${{ hashFiles('golang-wrapper/src/go.*') }}
 
       - name: Cache Kotlin/Native dependencies
         id: cache-kotlin-native
-        uses: actions/cache@v3.0.4
+        uses: actions/cache@v3.0.5
         with:
           path: ~/.konan
           key: kotlin-native-${{ runner.os }}-${{ hashFiles('gradle/libs.versions.toml') }}
 
       - name: Cache tools
         id: cache-tools
-        uses: actions/cache@v3.0.4
+        uses: actions/cache@v3.0.5
         with:
           path: golang-wrapper/build/tools
           key: tools-${{ runner.os }}-${{ hashFiles('**/*.gradle.kts', 'buildSrc/src/**/*.kt') }}
 
       - name: Build, test and package
-        uses: burrunan/gradle-cache-action@v1.10
+        uses: burrunan/gradle-cache-action@v1.12
         with:
           arguments: samples:check
 
@@ -167,34 +166,34 @@ jobs:
           fetch-depth: 0
 
       - name: Set up JDK
-        uses: actions/setup-java@v3.3.0
+        uses: actions/setup-java@v3.4.1
         with:
           java-version: 17.0.2+8
           distribution: temurin
 
       - name: Cache Golang packages
         id: cache-golang-packages
-        uses: actions/cache@v3.0.4
+        uses: actions/cache@v3.0.5
         with:
           path: ~/go
           key: go-lint-packages-${{ runner.os }}-${{ hashFiles('golang-wrapper/src/go.*') }}
 
       - name: Cache Kotlin/Native dependencies
         id: cache-kotlin-native
-        uses: actions/cache@v3.0.4
+        uses: actions/cache@v3.0.5
         with:
           path: ~/.konan
           key: kotlin-native-lint-${{ runner.os }}-${{ hashFiles('gradle/libs.versions.toml') }}
 
       - name: Cache tools
         id: cache-tools
-        uses: actions/cache@v3.0.4
+        uses: actions/cache@v3.0.5
         with:
           path: golang-wrapper/build/tools
           key: tools-${{ runner.os }}-${{ hashFiles('**/*.gradle.kts', 'buildSrc/src/**/*.kt') }}
 
       - name: Run linting
-        uses: burrunan/gradle-cache-action@v1.10
+        uses: burrunan/gradle-cache-action@v1.12
         with:
           arguments: golang-wrapper:check --scan
 
@@ -208,13 +207,13 @@ jobs:
           fetch-depth: 0
 
       - name: Set up JDK
-        uses: actions/setup-java@v3.3.0
+        uses: actions/setup-java@v3.4.1
         with:
           java-version: 17.0.2+8
           distribution: temurin
 
       - name: Run linting, tests and other checks
-        uses: burrunan/gradle-cache-action@v1.10
+        uses: burrunan/gradle-cache-action@v1.12
         with:
           arguments: :build-logic:check --scan
 
@@ -239,39 +238,39 @@ jobs:
           fetch-depth: 0
 
       - name: Set up JDK
-        uses: actions/setup-java@v3.3.0
+        uses: actions/setup-java@v3.4.1
         with:
           java-version: 17.0.2+8
           distribution: temurin
 
       - name: Cache Golang packages
         id: cache-golang-packages
-        uses: actions/cache@v3.0.4
+        uses: actions/cache@v3.0.5
         with:
           path: ~/go
           key: go-packages-${{ runner.os }}-${{ hashFiles('golang-wrapper/src/go.*') }}
 
       - name: Cache Kotlin/Native dependencies
         id: cache-kotlin-native
-        uses: actions/cache@v3.0.4
+        uses: actions/cache@v3.0.5
         with:
           path: ~/.konan
           key: kotlin-native-${{ runner.os }}-${{ hashFiles('gradle/libs.versions.toml') }}
 
       - name: Cache tools
         id: cache-tools
-        uses: actions/cache@v3.0.4
+        uses: actions/cache@v3.0.5
         with:
           path: golang-wrapper/build/tools
           key: tools-${{ runner.os }}-${{ hashFiles('**/*.gradle.kts', 'buildSrc/src/**/*.kt') }}
 
       - name: Check JAR contains native libraries for all operating systems
-        uses: burrunan/gradle-cache-action@v1.10
+        uses: burrunan/gradle-cache-action@v1.12
         with:
           arguments: client:checkJarContents --scan
 
       - name: Publish snapshot
-        uses: burrunan/gradle-cache-action@v1.10
+        uses: burrunan/gradle-cache-action@v1.12
         with:
           arguments: publishSnapshot --scan
         env:
@@ -282,7 +281,7 @@ jobs:
         if: github.repository == 'batect/docker-client' && github.ref == 'refs/heads/main' && github.event_name == 'push'
 
       - name: Publish release
-        uses: burrunan/gradle-cache-action@v1.10
+        uses: burrunan/gradle-cache-action@v1.12
         with:
           arguments: publishRelease --scan
         env:

@@ -126,7 +126,7 @@ class DockerClientBuildKitImageBuildSpec : ShouldSpec({
             progressUpdatesReceived shouldContainInOrder listOf(
                 StepStarting(dockerfileLoadStep.stepNumber, "[internal] load build definition from Dockerfile"),
                 StepContextUploadProgress(dockerfileLoadStep.stepNumber, 0),
-                StepFinished(dockerfileLoadStep.stepNumber),
+                StepFinished(dockerfileLoadStep.stepNumber)
             )
 
             progressUpdatesReceived.forAtLeastOne {
@@ -147,17 +147,17 @@ class DockerClientBuildKitImageBuildSpec : ShouldSpec({
                 StepStarting(dockerignoreLoadStep.stepNumber, "[internal] load .dockerignore"),
                 StepContextUploadProgress(dockerignoreLoadStep.stepNumber, 0),
                 StepContextUploadProgress(dockerignoreLoadStep.stepNumber, 2),
-                StepFinished(dockerignoreLoadStep.stepNumber),
+                StepFinished(dockerignoreLoadStep.stepNumber)
             )
 
             progressUpdatesReceived shouldContainInOrder listOf(
                 StepStarting(3, "[internal] load metadata for docker.io/library/alpine:3.14.2"),
-                StepFinished(3),
+                StepFinished(3)
             )
 
             progressUpdatesReceived shouldContainAnyOf setOf(
                 StepStarting(4, "[1/2] FROM docker.io/library/alpine:3.14.2"),
-                StepStarting(4, "[1/2] FROM docker.io/library/alpine:3.14.2@sha256:e1c082e3d3c45cccac829840a25941e679c25d438cc8412c2fa221cf1a824e6a"),
+                StepStarting(4, "[1/2] FROM docker.io/library/alpine:3.14.2@sha256:e1c082e3d3c45cccac829840a25941e679c25d438cc8412c2fa221cf1a824e6a")
             )
 
             progressUpdatesReceived shouldEndWith listOf(
@@ -565,7 +565,7 @@ class DockerClientBuildKitImageBuildSpec : ShouldSpec({
 
             progressUpdatesReceived shouldContainAnyOf setOf(
                 BuildFailed("executor failed running [/bin/sh -c echo \"This command has failed!\" && exit 1]: exit code: 1"),
-                BuildFailed("failed to solve with frontend dockerfile.v0: failed to build LLB: executor failed running [/bin/sh -c echo \"This command has failed!\" && exit 1]: runc did not terminate sucessfully"),
+                BuildFailed("failed to solve with frontend dockerfile.v0: failed to build LLB: executor failed running [/bin/sh -c echo \"This command has failed!\" && exit 1]: runc did not terminate sucessfully")
             )
 
             progressUpdatesReceived.forNone {

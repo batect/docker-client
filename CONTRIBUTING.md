@@ -22,3 +22,10 @@ Run a specific set of tests:
 
 Filter tests by setting the [`kotest_filter_specs` environment variable](https://kotest.io/docs/framework/conditional/conditional-tests-with-gradle.html#kotest-specific-test-filtering).
 For example: `kotest_filter_specs='*DockerClientContainerManagementSpec*' ./gradlew macosArm64Test`
+
+## Naming conventions
+
+* Structs passed into Golang methods should be named `<method name>Request`, eg. `CreateContainerRequest`
+* Structs returned from Golang methods should be named `<method name>Response`, and contain a result of type `<method name>Result` and an error of type `Error`
+
+  eg. `InspectExec` should return a `InspectExecResponse` with a result of type `InspectExecResult`

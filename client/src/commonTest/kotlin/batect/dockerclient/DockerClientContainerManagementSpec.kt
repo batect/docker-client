@@ -34,19 +34,20 @@ import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
 import io.kotest.matchers.string.shouldContain
 import io.kotest.matchers.string.shouldStartWith
-import io.ktor.client.HttpClient
-import io.ktor.client.request.get
-import io.ktor.http.HttpStatusCode
-import io.ktor.utils.io.core.use
 import kotlinx.coroutines.TimeoutCancellationException
 import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.sync.Semaphore
 import kotlinx.coroutines.withTimeout
 import kotlinx.datetime.Clock
 import okio.Buffer
 import okio.Path
 import okio.Path.Companion.toPath
+import okio.Sink
+import okio.Source
+import okio.Timeout
 import kotlin.random.Random
 import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Duration.Companion.seconds
@@ -137,6 +138,49 @@ class DockerClientContainerManagementSpec : ShouldSpec({
 
                     stdoutText shouldBe "Hello stdout\n"
                     stderrText shouldBe "Hello stderr\n"
+                } finally {
+                    client.removeContainer(container, force = true)
+                }
+            }
+
+            should("write container output to the provided output sink without any buffering") {
+                val spec = ContainerCreationSpec.Builder(image)
+                    .withCommand("sh", "-c", "for i in 1 2; do sleep 1; echo Line \$i; done")
+                    .build()
+
+                val container = client.createContainer(spec)
+
+                try {
+                    val stdout = object : Sink {
+                        val writesReceived = mutableListOf<String>()
+
+                        override fun timeout(): Timeout = Timeout.NONE
+                        override fun flush() {}
+                        override fun close() {}
+
+                        override fun write(source: Buffer, byteCount: Long) {
+                            writesReceived += source.readUtf8(byteCount)
+                        }
+                    }
+
+                    coroutineScope {
+                        val listeningToOutput = ReadyNotification()
+
+                        launch {
+                            client.attachToContainerIO(container, SinkTextOutput(stdout), null, null, listeningToOutput)
+                        }
+
+                        launch {
+                            listeningToOutput.waitForReady()
+                            client.startContainer(container)
+                        }
+                    }
+
+                    // If the output is streamed with any kind of buffering, it will be received by our test sink above as one write.
+                    stdout.writesReceived shouldBe listOf(
+                        "Line 1\n",
+                        "Line 2\n"
+                    )
                 } finally {
                     client.removeContainer(container, force = true)
                 }
@@ -315,57 +359,6 @@ class DockerClientContainerManagementSpec : ShouldSpec({
                     }
 
                     duration shouldBeLessThan 1.seconds
-                } finally {
-                    client.removeContainer(container, force = true)
-                }
-            }
-
-            should("be able to connect to a published port from a container with a corresponding EXPOSE instruction in the image") {
-                val httpServerImage = client.pullImage("nginx:1.21.6")
-
-                val spec = ContainerCreationSpec.Builder(httpServerImage)
-                    .withExposedPort(9000, 80) // Port 80 has a corresponding EXPOSE instruction in the nginx image referenced above.
-                    .build()
-
-                val container = client.createContainer(spec)
-
-                try {
-                    client.startContainer(container)
-
-                    eventually(3.seconds, 200.milliseconds) {
-                        withTimeout(200) {
-                            HttpClient().use { httpClient ->
-                                val response = httpClient.get("http://localhost:9000")
-                                response.status shouldBe HttpStatusCode.OK
-                            }
-                        }
-                    }
-                } finally {
-                    client.removeContainer(container, force = true)
-                }
-            }
-
-            should("be able to connect to a published port from a container without a corresponding EXPOSE instruction in the image") {
-                val imagePath = systemFileSystem.canonicalize("./src/commonTest/resources/images/http-server-without-expose".toPath())
-                val httpServerImage = client.buildImage(ImageBuildSpec.Builder(imagePath).build(), SinkTextOutput(Buffer()))
-
-                val spec = ContainerCreationSpec.Builder(httpServerImage)
-                    .withExposedPort(9000, 81) // Port 81 does not a corresponding EXPOSE instruction in the image built above.
-                    .build()
-
-                val container = client.createContainer(spec)
-
-                try {
-                    client.startContainer(container)
-
-                    eventually(3.seconds, 200.milliseconds) {
-                        withTimeout(200) {
-                            HttpClient().use { httpClient ->
-                                val response = httpClient.get("http://localhost:9000")
-                                response.status shouldBe HttpStatusCode.OK
-                            }
-                        }
-                    }
                 } finally {
                     client.removeContainer(container, force = true)
                 }
@@ -657,6 +650,63 @@ class DockerClientContainerManagementSpec : ShouldSpec({
                 }
             }
 
+            should("be able to stream input to a container without closing the input stream") {
+                val spec = ContainerCreationSpec.Builder(image)
+                    .withCommand("sh", "-c", "read input_received && echo \"Received input: '\$input_received'\" && exit 123")
+                    .withStdinAttached()
+                    .build()
+
+                val container = client.createContainer(spec)
+
+                try {
+                    val stdout = Buffer()
+                    val stderr = Buffer()
+                    val stdin = object : Source {
+                        private var haveSentOutput = false
+                        private var closedLatch = Semaphore(1, 1)
+
+                        override fun timeout(): Timeout = Timeout.NONE
+
+                        override fun read(sink: Buffer, byteCount: Long): Long {
+                            return when (haveSentOutput) {
+                                false -> readInput(sink, byteCount)
+                                true -> {
+                                    waitForClose()
+                                    return -1
+                                }
+                            }
+                        }
+
+                        private fun readInput(sink: Buffer, @Suppress("UNUSED_PARAMETER") byteCount: Long): Long {
+                            haveSentOutput = true
+
+                            val bytes = "Hello world!\n".encodeToByteArray()
+                            sink.write(bytes)
+
+                            return bytes.size.toLong()
+                        }
+
+                        private fun waitForClose() = runBlocking {
+                            closedLatch.acquire()
+                        }
+
+                        override fun close() {
+                            closedLatch.release()
+                        }
+                    }
+
+                    val exitCode = client.run(container, SinkTextOutput(stdout), SinkTextOutput(stderr), SourceTextInput(stdin))
+                    val stdoutText = stdout.readUtf8()
+                    val stderrText = stderr.readUtf8()
+
+                    exitCode shouldBe 123
+                    stdoutText shouldBe "Received input: 'Hello world!'\n"
+                    stderrText shouldBe ""
+                } finally {
+                    client.removeContainer(container, force = true)
+                }
+            }
+
             should("be able to use Kotlin timeouts to abort running a container while still receiving any output from before the timeout") {
                 val spec = ContainerCreationSpec.Builder(image)
                     .withCommand("sh", "-c", "echo 'Hello stdout' >/dev/stdout && echo 'Hello stderr' >/dev/stderr && sleep 5 && echo 'Stdout should never receive this' >/dev/stdout && echo 'Stderr should never receive this' >/dev/stderr")
@@ -784,7 +834,7 @@ class DockerClientContainerManagementSpec : ShouldSpec({
                         .withCommand("touch", "/files/some-file.txt")
                         .build(),
                     expectedOutput = "",
-                    expectedErrorOutput = "",
+                    expectedErrorOutput = ""
                 ),
                 TestScenario(
                     "mount a tmpfs filesystem into a container with options",
@@ -803,7 +853,7 @@ class DockerClientContainerManagementSpec : ShouldSpec({
                         .withCommand("cat", "/dev/my-other-null")
                         .build(),
                     expectedOutput = "",
-                    expectedErrorOutput = "",
+                    expectedErrorOutput = ""
                 ),
                 TestScenario(
                     "set the user and group for a container",
@@ -961,7 +1011,7 @@ class DockerClientContainerManagementSpec : ShouldSpec({
                         .withEntrypoint("echo", "This is the overriding entrypoint")
                         .build(),
                     "This is the overriding entrypoint"
-                ),
+                )
             ).forEach { scenario ->
                 should("be able to ${scenario.description}") {
                     val container = client.createContainer(scenario.creationSpec)
@@ -1200,6 +1250,258 @@ class DockerClientContainerManagementSpec : ShouldSpec({
                     }
                 } finally {
                     client.deleteNetwork(network)
+                }
+            }
+        }
+
+        context("uploading files and directories to a container") {
+            val uploadTargetImage = buildTestImage("upload-target")
+
+            should("upload a file to an existing directory") {
+                val spec = ContainerCreationSpec.Builder(uploadTargetImage)
+                    .withCommand("sh", "-c", "cat /existing-directory/new-file.txt && echo --DIVIDER-- && tree -Jug --noreport /existing-directory")
+                    .build()
+
+                val container = client.createContainer(spec)
+
+                try {
+                    client.uploadToContainer(
+                        container,
+                        setOf(UploadFile("new-file.txt", 1234, 5678, "This is the new file\n".encodeToByteArray())),
+                        "/existing-directory"
+                    )
+
+                    val stdout = Buffer()
+                    val stderr = Buffer()
+
+                    val exitCode = client.run(container, SinkTextOutput(stdout), SinkTextOutput(stderr), null)
+                    val stdoutText = stdout.readUtf8()
+                    val stderrText = stderr.readUtf8()
+
+                    stdoutText.substringBefore("--DIVIDER--\n") shouldBe "This is the new file\n"
+
+                    // FIXME: replace this with shouldMatchJson once https://github.com/kotest/kotest/pull/3021 is available.
+                    stdoutText.substringAfter("--DIVIDER--\n").trim() shouldBe
+                        """
+                        [
+                          {"type":"directory","name":"/existing-directory","user":"root","group":"root","contents":[
+                            {"type":"file","name":"existing-file.txt","user":"root","group":"root"},
+                            {"type":"file","name":"new-file.txt","user":"1234","group":"5678"}
+                          ]}
+
+                        ]
+                        """.trimIndent()
+
+                    stderrText.trim() shouldBe ""
+                    exitCode shouldBe 0
+                } finally {
+                    client.removeContainer(container, force = true)
+                }
+            }
+
+            should("upload a file over an existing file") {
+                val spec = ContainerCreationSpec.Builder(uploadTargetImage)
+                    .withCommand("sh", "-c", "cat /existing-directory/existing-file.txt && echo --DIVIDER-- && tree -Jug --noreport /existing-directory")
+                    .build()
+
+                val container = client.createContainer(spec)
+
+                try {
+                    client.uploadToContainer(
+                        container,
+                        setOf(UploadFile("existing-file.txt", 1234, 5678, "This is the new file\n".encodeToByteArray())),
+                        "/existing-directory"
+                    )
+
+                    val stdout = Buffer()
+                    val stderr = Buffer()
+
+                    val exitCode = client.run(container, SinkTextOutput(stdout), SinkTextOutput(stderr), null)
+                    val stdoutText = stdout.readUtf8()
+                    val stderrText = stderr.readUtf8()
+
+                    stdoutText.substringBefore("--DIVIDER--\n") shouldBe "This is the new file\n"
+
+                    // FIXME: replace this with shouldMatchJson once https://github.com/kotest/kotest/pull/3021 is available.
+                    stdoutText.substringAfter("--DIVIDER--\n").trim() shouldBe
+                        """
+                        [
+                          {"type":"directory","name":"/existing-directory","user":"root","group":"root","contents":[
+                            {"type":"file","name":"existing-file.txt","user":"1234","group":"5678"}
+                          ]}
+
+                        ]
+                        """.trimIndent()
+
+                    stderrText.trim() shouldBe ""
+                    exitCode shouldBe 0
+                } finally {
+                    client.removeContainer(container, force = true)
+                }
+            }
+
+            should("upload a directory to an existing directory") {
+                val spec = ContainerCreationSpec.Builder(uploadTargetImage)
+                    .withCommand("tree", "-Jug", "--noreport", "/existing-directory")
+                    .build()
+
+                val container = client.createContainer(spec)
+
+                try {
+                    client.uploadToContainer(
+                        container,
+                        setOf(UploadDirectory("new-directory", 1234, 5678)),
+                        "/existing-directory"
+                    )
+
+                    val stdout = Buffer()
+                    val stderr = Buffer()
+
+                    val exitCode = client.run(container, SinkTextOutput(stdout), SinkTextOutput(stderr), null)
+                    val stdoutText = stdout.readUtf8()
+                    val stderrText = stderr.readUtf8()
+
+                    // FIXME: replace this with shouldMatchJson once https://github.com/kotest/kotest/pull/3021 is available.
+                    stdoutText.trim() shouldBe
+                        """
+                        [
+                          {"type":"directory","name":"/existing-directory","user":"root","group":"root","contents":[
+                            {"type":"file","name":"existing-file.txt","user":"root","group":"root"},
+                            {"type":"directory","name":"new-directory","user":"1234","group":"5678"}
+                          ]}
+
+                        ]
+                        """.trimIndent()
+
+                    stderrText.trim() shouldBe ""
+                    exitCode shouldBe 0
+                } finally {
+                    client.removeContainer(container, force = true)
+                }
+            }
+
+            should("upload a directory over an existing directory, preserving its contents but applying new ownership information") {
+                val spec = ContainerCreationSpec.Builder(uploadTargetImage)
+                    .withCommand("tree", "-Jug", "--noreport", "/existing-directory")
+                    .build()
+
+                val container = client.createContainer(spec)
+
+                try {
+                    client.uploadToContainer(
+                        container,
+                        setOf(UploadDirectory("existing-directory", 1234, 5678)),
+                        "/"
+                    )
+
+                    val stdout = Buffer()
+                    val stderr = Buffer()
+
+                    val exitCode = client.run(container, SinkTextOutput(stdout), SinkTextOutput(stderr), null)
+                    val stdoutText = stdout.readUtf8()
+                    val stderrText = stderr.readUtf8()
+
+                    // FIXME: replace this with shouldMatchJson once https://github.com/kotest/kotest/pull/3021 is available.
+                    stdoutText.trim() shouldBe
+                        """
+                        [
+                          {"type":"directory","name":"/existing-directory","user":"1234","group":"5678","contents":[
+                            {"type":"file","name":"existing-file.txt","user":"root","group":"root"}
+                          ]}
+
+                        ]
+                        """.trimIndent()
+
+                    stderrText.trim() shouldBe ""
+                    exitCode shouldBe 0
+                } finally {
+                    client.removeContainer(container, force = true)
+                }
+            }
+
+            should("upload a directory and its contents") {
+                val spec = ContainerCreationSpec.Builder(uploadTargetImage)
+                    .withCommand("sh", "-c", "cat /existing-directory/new-directory/new-file.txt && echo --DIVIDER-- && tree -Jug --noreport /existing-directory/new-directory")
+                    .build()
+
+                val container = client.createContainer(spec)
+
+                try {
+                    client.uploadToContainer(
+                        container,
+                        setOf(
+                            UploadFile("new-directory/new-file.txt", 1234, 5678, "This is the new file\n".encodeToByteArray()),
+                            UploadDirectory("new-directory", 4321, 8765)
+                        ),
+                        "/existing-directory"
+                    )
+
+                    val stdout = Buffer()
+                    val stderr = Buffer()
+
+                    val exitCode = client.run(container, SinkTextOutput(stdout), SinkTextOutput(stderr), null)
+                    val stdoutText = stdout.readUtf8()
+                    val stderrText = stderr.readUtf8()
+
+                    stdoutText.substringBefore("--DIVIDER--\n") shouldBe "This is the new file\n"
+
+                    // FIXME: replace this with shouldMatchJson once https://github.com/kotest/kotest/pull/3021 is available.
+                    stdoutText.substringAfter("--DIVIDER--\n").trim() shouldBe
+                        """
+                        [
+                          {"type":"directory","name":"/existing-directory/new-directory","user":"4321","group":"8765","contents":[
+                            {"type":"file","name":"new-file.txt","user":"1234","group":"5678"}
+                          ]}
+
+                        ]
+                        """.trimIndent()
+
+                    stderrText.trim() shouldBe ""
+                    exitCode shouldBe 0
+                } finally {
+                    client.removeContainer(container, force = true)
+                }
+            }
+
+            should("throw an appropriate exception when attempting to upload a file to a non-existent target directory") {
+                val spec = ContainerCreationSpec.Builder(uploadTargetImage)
+                    .build()
+
+                val container = client.createContainer(spec)
+
+                try {
+                    val exception = shouldThrow<ContainerUploadFailedException> {
+                        client.uploadToContainer(
+                            container,
+                            setOf(UploadFile("new-file.txt", 1234, 5678, "This is the new file\n".encodeToByteArray())),
+                            "/does-not-exist"
+                        )
+                    }
+
+                    exception.message shouldBe "No such container:path: ${container.id}:/does-not-exist"
+                } finally {
+                    client.removeContainer(container, force = true)
+                }
+            }
+
+            should("throw an appropriate exception when attempting to upload a directory to a non-existent target directory") {
+                val spec = ContainerCreationSpec.Builder(uploadTargetImage)
+                    .build()
+
+                val container = client.createContainer(spec)
+
+                try {
+                    val exception = shouldThrow<ContainerUploadFailedException> {
+                        client.uploadToContainer(
+                            container,
+                            setOf(UploadDirectory("new-directory", 1234, 5678)),
+                            "/does-not-exist"
+                        )
+                    }
+
+                    exception.message shouldBe "No such container:path: ${container.id}:/does-not-exist"
+                } finally {
+                    client.removeContainer(container, force = true)
                 }
             }
         }
