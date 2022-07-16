@@ -419,6 +419,7 @@ typedef struct {
     bool AttachStdin;
     uint64_t EnvironmentVariablesCount;
     char** EnvironmentVariables;
+    char* WorkingDirectory;
 } CreateExecRequest;
 
 typedef struct {

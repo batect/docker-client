@@ -419,5 +419,30 @@ class DockerClientContainerExecSpec : ShouldSpec({
                 inspectionResult.exitCode shouldBe 0
             }
         }
+
+        should("be able to set the working directory for an exec instance") {
+            withRunningTestContainer { container ->
+                val spec = ContainerExecSpec.Builder(container)
+                    .withCommand("pwd")
+                    .withWorkingDirectory("/tmp")
+                    .withStdoutAttached()
+                    .withStderrAttached()
+                    .build()
+
+                val exec = client.createExec(spec)
+                val stdout = Buffer()
+                val stderr = Buffer()
+
+                client.startAndAttachToExec(exec, false, SinkTextOutput(stdout), SinkTextOutput(stderr), null)
+
+                val stdoutText = stdout.readUtf8()
+                val stderrText = stderr.readUtf8()
+                val inspectionResult = client.inspectExec(exec)
+
+                stdoutText shouldBe "/tmp\n"
+                stderrText shouldBe ""
+                inspectionResult.exitCode shouldBe 0
+            }
+        }
     }
 })

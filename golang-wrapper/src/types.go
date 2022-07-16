@@ -1013,6 +1013,7 @@ func newCreateExecRequest(
     AttachStderr bool,
     AttachStdin bool,
     EnvironmentVariables []string,
+    WorkingDirectory string,
 ) CreateExecRequest {
     value := C.AllocCreateExecRequest()
     value.ContainerID = C.CString(ContainerID)
@@ -1035,6 +1036,7 @@ func newCreateExecRequest(
         C.SetstringArrayElement(value.EnvironmentVariables, C.uint64_t(i), C.CString(v))
     }
 
+    value.WorkingDirectory = C.CString(WorkingDirectory)
 
     return value
 }

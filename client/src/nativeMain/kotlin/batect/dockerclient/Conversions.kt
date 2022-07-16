@@ -364,6 +364,7 @@ internal fun MemScope.allocCreateExecRequest(spec: ContainerExecSpec): CreateExe
     AttachStdin = spec.attachStdin
     EnvironmentVariables = allocArrayOfPointersTo(spec.environmentVariablesFormattedForDocker)
     EnvironmentVariablesCount = spec.environmentVariables.size.toULong()
+    WorkingDirectory = spec.workingDirectory?.cstr?.ptr
 }
 
 internal fun ContainerExecInspectionResult(native: batect.dockerclient.native.InspectExecResult): ContainerExecInspectionResult = ContainerExecInspectionResult(

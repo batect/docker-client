@@ -35,6 +35,7 @@ func CreateExec(clientHandle DockerClientHandle, contextHandle ContextHandle, re
 		AttachStdout: bool(request.AttachStdout),
 		AttachStderr: bool(request.AttachStderr),
 		AttachStdin:  bool(request.AttachStdin),
+		WorkingDir:   C.GoString(request.WorkingDirectory),
 	}
 
 	if request.CommandCount > 0 {

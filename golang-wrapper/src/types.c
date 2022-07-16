@@ -1172,6 +1172,7 @@ CreateExecRequest* AllocCreateExecRequest() {
     value->ContainerID = NULL;
     value->Command = NULL;
     value->EnvironmentVariables = NULL;
+    value->WorkingDirectory = NULL;
     value->CommandCount = 0;
     value->EnvironmentVariablesCount = 0;
 
@@ -1194,6 +1195,7 @@ void FreeCreateExecRequest(CreateExecRequest* value) {
     }
 
     free(value->EnvironmentVariables);
+    free(value->WorkingDirectory);
     free(value);
 }
 

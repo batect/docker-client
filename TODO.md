@@ -67,4 +67,3 @@
     * Privileged
     * TTY
       * Monitor for terminal size changes
-    * Working directory
