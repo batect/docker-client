@@ -52,6 +52,7 @@
 
 * Allow calling `ReadyNotification.waitForReady()` from multiple places (will currently only release one caller, not all)
 * Remove `with...` prefixes from ImageBuildSpec, ContainerCreationSpec and ContainerExecSpec?
+* Rename ImageBuildSpec, ContainerCreationSpec and ContainerExecSpec to something else to avoid confusion with 'spec' as it's used in test frameworks?
 
 * Images
   * Build
@@ -61,11 +62,6 @@
       * Add support for warnings (added in BuildKit 0.10.0)
       * Upgrade to most recent version of BuildKit library (currently blocked due to version hell)
 * Exec
-  * Create
-    * Test scenario: container hasn't been started yet
-    * Test scenario: container has stopped
-    * Test scenario: invalid command
-    * Test scenario: no command (is this even valid?)
   * Features:
     * UID / GID
     * Privileged

@@ -45,7 +45,7 @@ class DockerClientContainerExecSpec : ShouldSpec({
     context("when working with Linux containers").onlyIfDockerDaemonSupportsLinuxContainers {
         val image = client.pullImage("alpine:3.15.0")
 
-        suspend fun withTestContainer(user: suspend (ContainerReference) -> Unit) {
+        suspend fun withCreatedTestContainer(user: suspend (ContainerReference) -> Unit) {
             val spec = ContainerCreationSpec.Builder(image)
                 .withCommand("sh", "-c", "sleep 60")
                 .build()
@@ -53,8 +53,6 @@ class DockerClientContainerExecSpec : ShouldSpec({
             val container = client.createContainer(spec)
 
             try {
-                client.startContainer(container)
-
                 user(container)
             } finally {
                 client.stopContainer(container, 1.seconds)
@@ -62,8 +60,15 @@ class DockerClientContainerExecSpec : ShouldSpec({
             }
         }
 
+        suspend fun withRunningTestContainer(user: suspend (ContainerReference) -> Unit) {
+            withCreatedTestContainer { container ->
+                client.startContainer(container)
+                user(container)
+            }
+        }
+
         should("be able to create, run and stream output from a basic exec command") {
-            withTestContainer { container ->
+            withRunningTestContainer { container ->
                 val spec = ContainerExecSpec.Builder(container)
                     .withCommand("sh", "-c", "echo 'Hello stdout' >/dev/stdout; echo 'Hello stderr' >/dev/stderr; exit 123")
                     .withStdoutAttached()
@@ -87,7 +92,7 @@ class DockerClientContainerExecSpec : ShouldSpec({
         }
 
         should("be able to use Kotlin timeouts to abort streaming I/O from an exec instance, while still receiving any output from before the timeout") {
-            withTestContainer { container ->
+            withRunningTestContainer { container ->
                 val spec = ContainerExecSpec.Builder(container)
                     .withCommand(
                         "sh",
@@ -121,7 +126,7 @@ class DockerClientContainerExecSpec : ShouldSpec({
         }
 
         should("be able to write output to the provided output sink without any buffering") {
-            withTestContainer { container ->
+            withRunningTestContainer { container ->
                 val spec = ContainerExecSpec.Builder(container)
                     .withCommand("sh", "-c", "for i in 1 2; do sleep 1; echo Line \$i; done")
                     .withStdoutAttached()
@@ -151,7 +156,7 @@ class DockerClientContainerExecSpec : ShouldSpec({
         }
 
         should("be able to stream input to an exec instance") {
-            withTestContainer { container ->
+            withRunningTestContainer { container ->
                 val spec = ContainerExecSpec.Builder(container)
                     .withCommand("sh", "-c", "cat >/input.txt && echo \"Size of file: $(stat -c %s input.txt)\" && cat input.txt && exit 123")
                     .withStdoutAttached()
@@ -179,7 +184,7 @@ class DockerClientContainerExecSpec : ShouldSpec({
         }
 
         should("be able to stream input to an exec instance without closing the input stream") {
-            withTestContainer { container ->
+            withRunningTestContainer { container ->
                 val spec = ContainerExecSpec.Builder(container)
                     .withCommand("sh", "-c", "read input_received && echo \"Received input: '\$input_received'\" && exit 123")
                     .withStdoutAttached()
@@ -238,7 +243,7 @@ class DockerClientContainerExecSpec : ShouldSpec({
         }
 
         should("be able to reuse output streams") {
-            withTestContainer { container ->
+            withRunningTestContainer { container ->
                 suspend fun runExec(stdout: SinkTextOutput, stderr: SinkTextOutput, name: String) {
                     val spec = ContainerExecSpec.Builder(container)
                         .withCommand("sh", "-c", "echo 'Hello stdout from $name' >/dev/stdout && echo 'Hello stderr from $name' >/dev/stderr && exit 123")
@@ -270,7 +275,7 @@ class DockerClientContainerExecSpec : ShouldSpec({
         }
 
         should("be able to create and run a basic exec command without streaming I/O") {
-            withTestContainer { container ->
+            withRunningTestContainer { container ->
                 val spec = ContainerExecSpec.Builder(container)
                     .withCommand("sh", "-c", "exit 123")
                     .withStdoutAttached()
@@ -288,7 +293,7 @@ class DockerClientContainerExecSpec : ShouldSpec({
         }
 
         should("be able to inspect an exec instance that hasn't been started yet") {
-            withTestContainer { container ->
+            withRunningTestContainer { container ->
                 val spec = ContainerExecSpec.Builder(container)
                     .withCommand("sh", "-c", "exit 123")
                     .withStdoutAttached()
@@ -304,7 +309,7 @@ class DockerClientContainerExecSpec : ShouldSpec({
         }
 
         should("be able to inspect an exec instance that hasn't finished yet") {
-            withTestContainer { container ->
+            withRunningTestContainer { container ->
                 val spec = ContainerExecSpec.Builder(container)
                     .withCommand("sh", "-c", "sleep 10")
                     .withStdoutAttached()
@@ -317,6 +322,73 @@ class DockerClientContainerExecSpec : ShouldSpec({
                 val result = client.inspectExec(exec)
                 result.running shouldBe true
                 result.exitCode shouldBe null
+            }
+        }
+
+        should("throw an appropriate exception when attempting to create an exec instance for a container that hasn't been started") {
+            withCreatedTestContainer { container ->
+                val spec = ContainerExecSpec.Builder(container)
+                    .withCommand("sh", "-c", "echo 'Hello stdout' >/dev/stdout; echo 'Hello stderr' >/dev/stderr; exit 123")
+                    .withStdoutAttached()
+                    .withStderrAttached()
+                    .build()
+
+                val exception = shouldThrow<ContainerExecCreationFailedException> {
+                    client.createExec(spec)
+                }
+
+                exception.message shouldBe "Error response from daemon: Container ${container.id} is not running"
+            }
+        }
+
+        should("throw an appropriate exception when attempting to create an exec instance for a container that has been stopped") {
+            withCreatedTestContainer { container ->
+                client.stopContainer(container, 1.seconds)
+
+                val spec = ContainerExecSpec.Builder(container)
+                    .withCommand("sh", "-c", "echo 'Hello stdout' >/dev/stdout; echo 'Hello stderr' >/dev/stderr; exit 123")
+                    .withStdoutAttached()
+                    .withStderrAttached()
+                    .build()
+
+                val exception = shouldThrow<ContainerExecCreationFailedException> {
+                    client.createExec(spec)
+                }
+
+                exception.message shouldBe "Error response from daemon: Container ${container.id} is not running"
+            }
+        }
+
+        should("throw an appropriate exception when attempting to create an exec instance with no command") {
+            withRunningTestContainer { container ->
+                val spec = ContainerExecSpec.Builder(container)
+                    .withStdoutAttached()
+                    .withStderrAttached()
+                    .build()
+
+                val exception = shouldThrow<ContainerExecCreationFailedException> {
+                    client.createExec(spec)
+                }
+
+                exception.message shouldBe "Error response from daemon: No exec command specified"
+            }
+        }
+
+        should("throw an appropriate exception when attempting to create an exec instance with an invalid command") {
+            withRunningTestContainer { container ->
+                val spec = ContainerExecSpec.Builder(container)
+                    .withCommand("this-command-does-not-exist")
+                    .withStdoutAttached()
+                    .withStderrAttached()
+                    .build()
+
+                val exec = client.createExec(spec)
+
+                val exception = shouldThrow<StartingContainerExecFailedException> {
+                    client.startExecDetached(exec, false)
+                }
+
+                exception.message shouldBe "Error response from daemon: OCI runtime exec failed: exec failed: container_linux.go:380: starting container process caused: exec: \"this-command-does-not-exist\": executable file not found in \$PATH: unknown"
             }
         }
     }
