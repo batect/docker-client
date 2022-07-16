@@ -417,6 +417,8 @@ typedef struct {
     bool AttachStdout;
     bool AttachStderr;
     bool AttachStdin;
+    uint64_t EnvironmentVariablesCount;
+    char** EnvironmentVariables;
 } CreateExecRequest;
 
 typedef struct {

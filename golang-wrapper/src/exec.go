@@ -41,6 +41,10 @@ func CreateExec(clientHandle DockerClientHandle, contextHandle ContextHandle, re
 		config.Cmd = fromStringArray(request.Command, request.CommandCount)
 	}
 
+	if request.EnvironmentVariablesCount > 0 {
+		config.Env = fromStringArray(request.EnvironmentVariables, request.EnvironmentVariablesCount)
+	}
+
 	resp, err := docker.ContainerExecCreate(ctx, containerID, config)
 
 	if err != nil {

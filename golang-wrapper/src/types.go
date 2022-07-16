@@ -1012,6 +1012,7 @@ func newCreateExecRequest(
     AttachStdout bool,
     AttachStderr bool,
     AttachStdin bool,
+    EnvironmentVariables []string,
 ) CreateExecRequest {
     value := C.AllocCreateExecRequest()
     value.ContainerID = C.CString(ContainerID)
@@ -1026,6 +1027,14 @@ func newCreateExecRequest(
     value.AttachStdout = C.bool(AttachStdout)
     value.AttachStderr = C.bool(AttachStderr)
     value.AttachStdin = C.bool(AttachStdin)
+
+    value.EnvironmentVariablesCount = C.uint64_t(len(EnvironmentVariables))
+    value.EnvironmentVariables = C.CreatestringArray(value.EnvironmentVariablesCount)
+
+    for i, v := range EnvironmentVariables {
+        C.SetstringArrayElement(value.EnvironmentVariables, C.uint64_t(i), C.CString(v))
+    }
+
 
     return value
 }

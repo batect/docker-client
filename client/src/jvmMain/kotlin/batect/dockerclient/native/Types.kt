@@ -904,6 +904,8 @@ internal class CreateExecRequest(runtime: Runtime) : Struct(runtime), AutoClosea
     val attachStdout = Boolean()
     val attachStderr = Boolean()
     val attachStdin = Boolean()
+    val environmentVariablesCount = u_int64_t()
+    val environmentVariablesPointer = Pointer()
 
     override fun close() {
         nativeAPI.FreeCreateExecRequest(this)

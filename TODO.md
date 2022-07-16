@@ -67,8 +67,4 @@
     * Privileged
     * TTY
       * Monitor for terminal size changes
-    * Environment variables
-      * Test scenario: not set on container
-      * Test scenario: override value set on container
     * Working directory
-    * Command

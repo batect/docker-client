@@ -48,6 +48,8 @@ class DockerClientContainerExecSpec : ShouldSpec({
         suspend fun withCreatedTestContainer(user: suspend (ContainerReference) -> Unit) {
             val spec = ContainerCreationSpec.Builder(image)
                 .withCommand("sh", "-c", "sleep 60")
+                .withEnvironmentVariable("FIRST_VARIABLE", "first provided by container")
+                .withEnvironmentVariable("SECOND_VARIABLE", "second provided by container")
                 .build()
 
             val container = client.createContainer(spec)
@@ -389,6 +391,32 @@ class DockerClientContainerExecSpec : ShouldSpec({
                 }
 
                 exception.message shouldBe "Error response from daemon: OCI runtime exec failed: exec failed: container_linux.go:380: starting container process caused: exec: \"this-command-does-not-exist\": executable file not found in \$PATH: unknown"
+            }
+        }
+
+        should("be able to specify environment variables for an exec instance") {
+            withRunningTestContainer { container ->
+                val spec = ContainerExecSpec.Builder(container)
+                    .withCommand("sh", "-c", "echo \"First variable: \$FIRST_VARIABLE\" && echo \"Second variable: \$SECOND_VARIABLE\" && echo \"Third variable: \$THIRD_VARIABLE\"")
+                    .withStdoutAttached()
+                    .withStderrAttached()
+                    .withEnvironmentVariable("SECOND_VARIABLE", "second overridden by exec")
+                    .withEnvironmentVariable("THIRD_VARIABLE", "third provided by exec")
+                    .build()
+
+                val exec = client.createExec(spec)
+                val stdout = Buffer()
+                val stderr = Buffer()
+
+                client.startAndAttachToExec(exec, false, SinkTextOutput(stdout), SinkTextOutput(stderr), null)
+
+                val stdoutText = stdout.readUtf8()
+                val stderrText = stderr.readUtf8()
+                val inspectionResult = client.inspectExec(exec)
+
+                stdoutText shouldBe "First variable: first provided by container\nSecond variable: second overridden by exec\nThird variable: third provided by exec\n"
+                stderrText shouldBe ""
+                inspectionResult.exitCode shouldBe 0
             }
         }
     }

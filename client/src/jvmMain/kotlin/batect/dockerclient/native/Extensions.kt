@@ -177,6 +177,12 @@ internal var CreateExecRequest.command by WriteOnlyList<CreateExecRequest, Strin
     ::stringToPointer
 )
 
+internal var CreateExecRequest.environmentVariables by WriteOnlyList<CreateExecRequest, String>(
+    CreateExecRequest::environmentVariablesCount,
+    CreateExecRequest::environmentVariablesPointer,
+    ::stringToPointer
+)
+
 internal var StringToStringListPair.values by WriteOnlyList<StringToStringListPair, String>(
     StringToStringListPair::valuesCount,
     StringToStringListPair::valuesPointer,

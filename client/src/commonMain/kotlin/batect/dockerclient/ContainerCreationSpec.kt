@@ -59,6 +59,11 @@ public data class ContainerCreationSpec(
         }
     }
 
+    internal val environmentVariablesFormattedForDocker: List<String> = environmentVariables.map { "${it.key}=${it.value}" }
+    internal val extraHostsFormattedForDocker: List<String> = extraHosts.map { "${it.hostname}:${it.address}" }
+    internal val bindMountsFormattedForDocker: List<String> = bindMounts.map { it.formattedForDocker }
+    internal val userAndGroupFormattedForDocker: String? = if (userAndGroup == null) null else "${userAndGroup.uid}:${userAndGroup.gid}"
+
     public class Builder(image: ImageReference) {
         private var spec = ContainerCreationSpec(image)
 
@@ -282,11 +287,6 @@ public data class ContainerCreationSpec(
 
         public fun build(): ContainerCreationSpec = spec
     }
-
-    internal val environmentVariablesFormattedForDocker: List<String> = environmentVariables.map { "${it.key}=${it.value}" }
-    internal val extraHostsFormattedForDocker: List<String> = extraHosts.map { "${it.hostname}:${it.address}" }
-    internal val bindMountsFormattedForDocker: List<String> = bindMounts.map { it.formattedForDocker }
-    internal val userAndGroupFormattedForDocker: String? = if (userAndGroup == null) null else "${userAndGroup.uid}:${userAndGroup.gid}"
 }
 
 public data class ExtraHost(val hostname: String, val address: String)
