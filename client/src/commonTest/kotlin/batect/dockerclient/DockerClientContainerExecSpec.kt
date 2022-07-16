@@ -17,14 +17,19 @@
 package batect.dockerclient
 
 import batect.dockerclient.io.SinkTextOutput
+import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.assertions.timing.eventually
 import io.kotest.common.ExperimentalKotest
 import io.kotest.core.spec.style.ShouldSpec
+import io.kotest.matchers.comparables.shouldBeLessThan
 import io.kotest.matchers.shouldBe
+import kotlinx.coroutines.TimeoutCancellationException
+import kotlinx.coroutines.withTimeout
 import okio.Buffer
 import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Duration.Companion.seconds
 import kotlin.time.ExperimentalTime
+import kotlin.time.measureTime
 
 @ExperimentalTime
 @OptIn(ExperimentalKotest::class)
@@ -72,6 +77,40 @@ class DockerClientContainerExecSpec : ShouldSpec({
                 stdoutText shouldBe "Hello stdout\n"
                 stderrText shouldBe "Hello stderr\n"
                 inspectionResult.exitCode shouldBe 123
+            }
+        }
+
+        should("be able to use Kotlin timeouts to abort streaming I/O from an exec instance, while still receiving any output from before the timeout") {
+            withTestContainer { container ->
+                val spec = ContainerExecSpec.Builder(container)
+                    .withCommand(
+                        "sh",
+                        "-c",
+                        "echo 'Hello stdout' >/dev/stdout && echo 'Hello stderr' >/dev/stderr && sleep 5 && echo 'Stdout should never receive this' >/dev/stdout && echo 'Stderr should never receive this' >/dev/stderr"
+                    )
+                    .withStdoutAttached()
+                    .withStderrAttached()
+                    .build()
+
+                val exec = client.createExec(spec)
+                val stdout = Buffer()
+                val stderr = Buffer()
+
+                val duration = measureTime {
+                    shouldThrow<TimeoutCancellationException> {
+                        withTimeout(2.seconds) {
+                            client.startAndAttachToExec(exec, false, SinkTextOutput(stdout), SinkTextOutput(stderr), null)
+                        }
+                    }
+                }
+
+                val stdoutText = stdout.readUtf8()
+                val stderrText = stderr.readUtf8()
+
+                stdoutText shouldBe "Hello stdout\n"
+                stderrText shouldBe "Hello stderr\n"
+
+                duration shouldBeLessThan 5.seconds
             }
         }
 
