@@ -22,6 +22,7 @@ import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.assertions.timing.eventually
 import io.kotest.common.ExperimentalKotest
 import io.kotest.core.spec.style.ShouldSpec
+import io.kotest.matchers.collections.shouldBeOneOf
 import io.kotest.matchers.comparables.shouldBeLessThan
 import io.kotest.matchers.shouldBe
 import kotlinx.coroutines.TimeoutCancellationException
@@ -390,7 +391,10 @@ class DockerClientContainerExecSpec : ShouldSpec({
                     client.startExecDetached(exec, false)
                 }
 
-                exception.message shouldBe "Error response from daemon: OCI runtime exec failed: exec failed: container_linux.go:380: starting container process caused: exec: \"this-command-does-not-exist\": executable file not found in \$PATH: unknown"
+                exception.message shouldBeOneOf setOf(
+                    "Error response from daemon: OCI runtime exec failed: exec failed: container_linux.go:380: starting container process caused: exec: \"this-command-does-not-exist\": executable file not found in \$PATH: unknown",
+                    "Error response from daemon: OCI runtime exec failed: exec failed: unable to start container process: exec: \"this-command-does-not-exist\": executable file not found in \$PATH: unknown"
+                )
             }
         }
 
