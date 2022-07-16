@@ -71,8 +71,6 @@
     * Privileged
     * TTY
       * Monitor for terminal size changes
-    * Attach stdin + stream input
-    * Attach stdout / stderr + stream output
     * Environment variables
       * Test scenario: not set on container
       * Test scenario: override value set on container

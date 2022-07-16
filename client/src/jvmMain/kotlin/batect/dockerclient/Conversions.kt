@@ -282,6 +282,7 @@ internal fun CreateExecRequest(jvm: ContainerExecSpec): CreateExecRequest {
     request.command = jvm.command
     request.attachStdout.set(jvm.attachStdout)
     request.attachStderr.set(jvm.attachStderr)
+    request.attachStdin.set(jvm.attachStdin)
 
     return request
 }

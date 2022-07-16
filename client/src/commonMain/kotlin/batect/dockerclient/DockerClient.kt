@@ -93,8 +93,7 @@ public interface DockerClient : AutoCloseable {
     /**
      * Starts the provided exec instance and then streams input and output to and from it.
      *
-     * If [stdin] is a [batect.dockerclient.io.SourceTextInput], the underlying source will **not** be closed when the exec instance exits. You must call [TextInput.abortRead] to
-     * cancel any pending read from [stdin] once the exec instance exits: this method does not exit until all streams have been exhausted or aborted.
+     * If [stdin] is a [batect.dockerclient.io.SourceTextInput], the underlying source will be closed when the exec instance exits.
      *
      * @param exec the exec instance to stream input and output to
      * @param attachTTY if `true`, attach a TTY to the exec instance

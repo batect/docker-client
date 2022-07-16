@@ -462,16 +462,20 @@ internal actual class RealDockerClient actual constructor(configuration: DockerC
                         launch(IODispatcher) { stdinStream?.run() }
 
                         launchWithGolangContext { context ->
-                            StartAndAttachToExec(
-                                clientHandle,
-                                context.handle,
-                                exec.id.cstr,
-                                attachTTY,
-                                stdoutStream?.outputStreamHandle ?: 0.toULong(),
-                                stderrStream?.outputStreamHandle ?: 0.toULong(),
-                                stdinStream?.inputStreamHandle ?: 0.toULong()
-                            ).ifFailed { error ->
-                                throw StartingContainerExecFailedException(error.pointed)
+                            try {
+                                StartAndAttachToExec(
+                                    clientHandle,
+                                    context.handle,
+                                    exec.id.cstr,
+                                    attachTTY,
+                                    stdoutStream?.outputStreamHandle ?: 0.toULong(),
+                                    stderrStream?.outputStreamHandle ?: 0.toULong(),
+                                    stdinStream?.inputStreamHandle ?: 0.toULong()
+                                ).ifFailed { error ->
+                                    throw StartingContainerExecFailedException(error.pointed)
+                                }
+                            } finally {
+                                stdin?.abortRead()
                             }
                         }
                     }

@@ -628,6 +628,8 @@
       type: boolean
     - name: AttachStderr
       type: boolean
+    - name: AttachStdin
+      type: boolean
 
 - name: ContainerExecReference
   type: struct

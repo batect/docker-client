@@ -20,7 +20,8 @@ public data class ContainerExecSpec(
     val container: ContainerReference,
     val command: List<String> = emptyList(),
     val attachStdout: Boolean = false,
-    val attachStderr: Boolean = false
+    val attachStderr: Boolean = false,
+    val attachStdin: Boolean = false
 ) {
     public class Builder(container: ContainerReference) {
         private var spec = ContainerExecSpec(container)
@@ -41,6 +42,12 @@ public data class ContainerExecSpec(
 
         public fun withStderrAttached(): Builder {
             spec = spec.copy(attachStderr = true)
+
+            return this
+        }
+
+        public fun withStdinAttached(): Builder {
+            spec = spec.copy(attachStdin = true)
 
             return this
         }

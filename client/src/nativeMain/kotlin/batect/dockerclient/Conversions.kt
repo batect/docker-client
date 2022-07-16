@@ -361,6 +361,7 @@ internal fun MemScope.allocCreateExecRequest(spec: ContainerExecSpec): CreateExe
     CommandCount = spec.command.size.toULong()
     AttachStdout = spec.attachStdout
     AttachStderr = spec.attachStderr
+    AttachStdin = spec.attachStdin
 }
 
 internal fun ContainerExecInspectionResult(native: batect.dockerclient.native.InspectExecResult): ContainerExecInspectionResult = ContainerExecInspectionResult(

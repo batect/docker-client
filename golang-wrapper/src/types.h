@@ -416,6 +416,7 @@ typedef struct {
     char** Command;
     bool AttachStdout;
     bool AttachStderr;
+    bool AttachStdin;
 } CreateExecRequest;
 
 typedef struct {

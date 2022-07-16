@@ -1011,6 +1011,7 @@ func newCreateExecRequest(
     Command []string,
     AttachStdout bool,
     AttachStderr bool,
+    AttachStdin bool,
 ) CreateExecRequest {
     value := C.AllocCreateExecRequest()
     value.ContainerID = C.CString(ContainerID)
@@ -1024,6 +1025,7 @@ func newCreateExecRequest(
 
     value.AttachStdout = C.bool(AttachStdout)
     value.AttachStderr = C.bool(AttachStderr)
+    value.AttachStdin = C.bool(AttachStdin)
 
     return value
 }
