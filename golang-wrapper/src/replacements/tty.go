@@ -27,7 +27,7 @@ import (
 // github.com/docker/cli/cli/command/container/tty.go.
 
 // Based on "resizeTty" from github.com/docker/cli/cli/command/container/attach.go.
-func StartMonitoringTTYSize(ctx context.Context, docker *client.Client, stdoutStream *streams.Out, containerID string) {
+func StartMonitoringTTYSizeForContainer(ctx context.Context, docker *client.Client, stdoutStream *streams.Out, containerID string) {
 	height, width := stdoutStream.GetTtySize()
 	// To handle the case where a user repeatedly attaches/detaches without resizing their
 	// terminal, the only way to get the shell prompt to display for attaches 2+ is to artificially
@@ -38,6 +38,10 @@ func StartMonitoringTTYSize(ctx context.Context, docker *client.Client, stdoutSt
 	// After the above resizing occurs, the call to monitorTtySize below will handle resetting back
 	// to the actual size.
 	monitorTtySize(ctx, docker, stdoutStream, containerID, false)
+}
+
+func StartMonitoringTTYSizeForExec(ctx context.Context, docker *client.Client, stdoutStream *streams.Out, execID string) {
+	monitorTtySize(ctx, docker, stdoutStream, execID, true)
 }
 
 func initTtySize(ctx context.Context, docker *client.Client, stdoutStream *streams.Out, id string, isExec bool) {

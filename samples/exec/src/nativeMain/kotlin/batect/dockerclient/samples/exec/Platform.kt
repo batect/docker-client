@@ -14,16 +14,8 @@
     limitations under the License.
 */
 
-rootProject.name = "docker-client"
+@file:Suppress("ktlint:filename")
 
-plugins {
-    id("com.gradle.enterprise") version("3.10")
-}
+package batect.dockerclient.samples.exec
 
-includeBuild("build-logic")
-
-include("golang-wrapper")
-include("client")
-include("samples:exec")
-include("samples:interactive-container")
-include("samples:non-interactive-container")
+internal actual fun exitProcess(exitCode: Int): Nothing = kotlin.system.exitProcess(exitCode)

@@ -224,7 +224,7 @@ func AttachToContainerOutput(clientHandle DockerClientHandle, contextHandle Cont
 	}
 
 	if config.Config.Tty && stdoutStreamHandle.OutputStream().IsTerminal() {
-		replacements.StartMonitoringTTYSize(ctx, docker, stdoutStreamHandle.OutputStream(), containerID)
+		replacements.StartMonitoringTTYSizeForContainer(ctx, docker, stdoutStreamHandle.OutputStream(), containerID)
 	}
 
 	if err := streamer.Stream(ctx); err != nil {

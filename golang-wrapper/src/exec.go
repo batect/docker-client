@@ -102,7 +102,8 @@ func StartAndAttachToExec(clientHandle DockerClientHandle, contextHandle Context
 		Detach: false,
 	}
 
-	resp, err := docker.ContainerExecAttach(ctx, C.GoString(id), config)
+	execID := C.GoString(id)
+	resp, err := docker.ContainerExecAttach(ctx, execID, config)
 
 	if err != nil {
 		return toError(err)
@@ -127,6 +128,9 @@ func StartAndAttachToExec(clientHandle DockerClientHandle, contextHandle Context
 		streamer.InputStream = stdinStreamHandle.InputStream()
 	}
 
+	if bool(attachTTY) && stdoutStreamHandle.OutputStream().IsTerminal() {
+		replacements.StartMonitoringTTYSizeForExec(ctx, docker, stdoutStreamHandle.OutputStream(), execID)
+	}
 
 	if err := streamer.Stream(ctx); err != nil {
 		return toError(err)
