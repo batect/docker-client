@@ -78,7 +78,13 @@ public actual class SinkTextOutput actual constructor(public val sink: Sink) : T
     }
 }
 
-internal fun ULong.safeToInt() = if (this > Int.MAX_VALUE.toULong()) throw IllegalArgumentException("Value out of range") else this.toInt()
+internal fun ULong.safeToInt(): Int {
+    require(this <= Int.MAX_VALUE.toULong()) {
+        "Value out of range"
+    }
+
+    return this.toInt()
+}
 
 // These two functions are based on okio's implementations.
 internal fun errnoToIOException(errno: Int): IOException {

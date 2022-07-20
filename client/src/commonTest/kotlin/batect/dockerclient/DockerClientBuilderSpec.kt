@@ -216,7 +216,7 @@ class DockerClientBuilderSpec : ShouldSpec({
         exception.message shouldEndWith "${rootTestCertificatesDirectory.resolve("key-does-not-exist.pem")}: $operatingSystemFileNotFoundMessage"
     }
 
-    // TODO: these tests verify that the right thing is passed into the native library, but don't verify that the have the intended effect
+    // TODO: these tests verify that the right thing is passed into the native library, but don't verify that they have the intended effect
     // Need to cover:
     // - TLS
     // - host name

@@ -15,6 +15,7 @@
 */
 
 @file:JvmName("JVMConversions")
+@file:Suppress("FunctionName", "FunctionNaming")
 
 package batect.dockerclient
 
@@ -86,7 +87,7 @@ internal fun ImageBuildProgressUpdate(native: BuildImageProgressUpdate): ImageBu
     native.stepDownloadProgressUpdate != null -> StepDownloadProgressUpdate(native.stepDownloadProgressUpdate!!)
     native.stepFinished != null -> StepFinished(native.stepFinished!!)
     native.buildFailed != null -> BuildFailed(native.buildFailed!!)
-    else -> throw RuntimeException("${BuildImageProgressUpdate::class.qualifiedName} did not contain an update")
+    else -> throw DockerClientException("${BuildImageProgressUpdate::class.qualifiedName} did not contain an update")
 }
 
 internal fun contextUploadProgress(native: BuildImageProgressUpdate_ImageBuildContextUploadProgress): ImageBuildProgressUpdate =

@@ -20,7 +20,7 @@ public typealias ImageBuildProgressReceiver = (ImageBuildProgressUpdate) -> Unit
 
 public sealed class ImageBuildProgressUpdate
 
-public sealed class ImageBuildStepProgressUpdate() : ImageBuildProgressUpdate() {
+public sealed class ImageBuildStepProgressUpdate : ImageBuildProgressUpdate() {
     public abstract val stepNumber: Long
 }
 

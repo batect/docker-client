@@ -1,0 +1,33 @@
+coroutines:
+  active: true
+  GlobalCoroutineUsage:
+    active: true
+  SuspendFunWithFlowReturnType:
+    active: true
+
+complexity:
+  active: true
+  LargeClass:
+    active: false
+  TooManyFunctions:
+    active: false
+
+empty-blocks:
+  active: true
+  EmptyFunctionBlock:
+    active: true
+    ignoreOverridden: true
+
+exceptions:
+  active: true
+  TooGenericExceptionCaught:
+    active: false
+
+style:
+  active: true
+  ForbiddenComment:
+    active: false
+  MaxLineLength:
+    active: false
+  MagicNumber:
+    active: false

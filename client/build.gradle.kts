@@ -39,6 +39,7 @@ plugins {
 
     id("batect.dockerclient.buildtools.formatting")
     id("batect.dockerclient.buildtools.licensecheck")
+    alias(libs.plugins.detekt)
 }
 
 repositories {
@@ -404,7 +405,10 @@ val dependOnGeneratedCode = setOf(
     "compileKotlinJvm",
     "jvmSourcesJar",
     "sourcesJar",
-    "spotlessKotlin"
+    "spotlessKotlin",
+    "detekt",
+    "detektJvmMain",
+    "detektJvmTest"
 )
 
 dependOnGeneratedCode.forEach { task -> tasks.named(task) { dependsOn(generateJvm) } }
@@ -458,4 +462,10 @@ signing {
     useInMemoryPgpKeys(signingKey, signingPassword)
 
     sign(publishing.publications)
+}
+
+detekt {
+    source = files(kotlin.sourceSets.names.map { "src/$it/kotlin" })
+    buildUponDefaultConfig = true
+    config = files(rootProject.rootDir.resolve("config/detekt.yml").absolutePath)
 }

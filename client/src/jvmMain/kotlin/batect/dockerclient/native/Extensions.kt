@@ -14,6 +14,8 @@
     limitations under the License.
 */
 
+@file:Suppress("FunctionNaming")
+
 package batect.dockerclient.native
 
 import jnr.ffi.Pointer

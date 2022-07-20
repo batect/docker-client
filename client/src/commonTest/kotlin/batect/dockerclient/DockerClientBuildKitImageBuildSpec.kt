@@ -720,14 +720,7 @@ private fun String.findStepNumberForStep(step: String): Long {
     val match = this.lines()
         .firstNotNullOfOrNull { regex.matchEntire(it) }
 
-    if (match == null) {
-        throw RuntimeException("Could not find step '$step' in output: $this")
-    }
+    require(match != null) { "Could not find step '$step' in output: $this" }
 
     return match.groupValues[1].toLong()
 }
-
-private fun readFileContents(path: Path): String =
-    FileSystem.SYSTEM.read(path) {
-        return readUtf8()
-    }

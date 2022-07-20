@@ -78,7 +78,7 @@ internal fun ImageBuildProgressUpdate(native: BuildImageProgressUpdate): ImageBu
     native.StepDownloadProgressUpdate != null -> StepDownloadProgressUpdate(native.StepDownloadProgressUpdate!!.pointed)
     native.StepFinished != null -> StepFinished(native.StepFinished!!.pointed)
     native.BuildFailed != null -> BuildFailed(native.BuildFailed!!.pointed)
-    else -> throw RuntimeException("${BuildImageProgressUpdate::class.qualifiedName} did not contain an update")
+    else -> throw DockerClientException("${BuildImageProgressUpdate::class.qualifiedName} did not contain an update")
 }
 
 internal fun contextUploadProgress(native: BuildImageProgressUpdate_ImageBuildContextUploadProgress): ImageBuildProgressUpdate =

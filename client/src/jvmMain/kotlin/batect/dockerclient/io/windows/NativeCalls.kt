@@ -14,6 +14,8 @@
     limitations under the License.
 */
 
+@file:Suppress("MatchingDeclarationName")
+
 package batect.dockerclient.io.windows
 
 import jnr.constants.platform.windows.LastError
@@ -32,6 +34,7 @@ import jnr.posix.POSIXFactory
 import jnr.posix.WindowsLibC
 import java.nio.ByteBuffer
 
+@Suppress("FunctionName", "FunctionNaming")
 internal interface Win32 : WindowsLibC {
     @SaveError
     fun ReadFile(@In hFile: HANDLE, @Direct lpBuffer: Pointer, @In nNumberOfBytesToRead: Long, @Out lpNumberOfBytesRead: NativeLongByReference?, lpOverlapped: Pointer?): Boolean

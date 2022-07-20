@@ -55,6 +55,8 @@ abstract class GenerateKotlinJVMTypes : DefaultTask() {
         val builder = StringBuilder()
 
         builder.appendLine(kotlinFileHeader)
+        builder.appendLine("""@file:Suppress("ClassNaming", "ClassName", "FunctionNaming", "MaxLineLength")""")
+        builder.appendLine()
         builder.appendLine("package batect.dockerclient.native")
         builder.appendLine()
         builder.appendLine("import jnr.ffi.Pointer")

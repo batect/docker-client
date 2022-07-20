@@ -26,7 +26,6 @@ import okio.Path
 import kotlin.time.Duration
 
 /**
- * TODO: documentation
  *
  * Callbacks:
  * Some methods take callback functions. These methods are not guaranteed to be called from any particular thread, but are

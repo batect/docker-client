@@ -51,4 +51,10 @@ internal actual class PipeSource actual constructor(private val fd: FileDescript
     }
 }
 
-private fun Long.safeToInt() = if (this > Int.MAX_VALUE.toLong()) throw IllegalArgumentException("Value out of range") else this.toInt()
+private fun Long.safeToInt(): Int {
+    require(this <= Int.MAX_VALUE.toLong()) {
+        "Value out of range"
+    }
+
+    return this.toInt()
+}

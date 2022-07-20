@@ -32,6 +32,7 @@ spotless = { group = "com.diffplug.spotless", name = "spotless-plugin-gradle", v
 xz = { group = "org.tukaani", name = "xz", version = "1.9" }
 
 [plugins]
+detekt = { id = "io.gitlab.arturbosch.detekt", version = "1.21.0" }
 kotest-multiplatform = { id = "io.kotest.multiplatform", version.ref = "kotest-plugin" }
 kotlin-jvm = { id = "org.jetbrains.kotlin.jvm", version.ref = "kotlin" }
 kotlin-multiplatform = { id = "org.jetbrains.kotlin.multiplatform", version.ref = "kotlin" }
