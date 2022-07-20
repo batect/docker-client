@@ -37,6 +37,9 @@
 * Restore AssertionMode to Error once https://github.com/kotest/kotest/issues/3022 is resolved
 * Move `nonMingwTest` tests back into `commonTest` once https://youtrack.jetbrains.com/issue/KTOR-4307 is resolved or there's an alternative Ktor engine available for Kotlin/Native on Windows.
 * Replace use of `shouldBe` in upload tests in `DockerClientContainerManagementSpec` with `shouldMatchJson` once https://github.com/kotest/kotest/pull/3021 is available
+* Switch back to release version of Kotest once version 5.4.0 is released
+  * Remove `repositories` block in `build-logic/build.gradle.kts` and `client/build.gradle.kts`
+  * Remove `kotest` block in `client/build.gradle.kts`
 
 # APIs
 
@@ -52,6 +55,7 @@
 
 * Allow calling `ReadyNotification.waitForReady()` from multiple places (will currently only release one caller, not all)
 * Remove `with...` prefixes from ImageBuildSpec, ContainerCreationSpec and ContainerExecSpec?
+* Rename ImageBuildSpec, ContainerCreationSpec and ContainerExecSpec to something else to avoid confusion with 'spec' as it's used in test frameworks?
 
 * Images
   * Build
@@ -61,20 +65,8 @@
       * Add support for warnings (added in BuildKit 0.10.0)
       * Upgrade to most recent version of BuildKit library (currently blocked due to version hell)
 * Exec
-  * Create
-    * Test scenario: container hasn't been started yet
-    * Test scenario: container has stopped
-    * Test scenario: invalid command
-    * Test scenario: no command (is this even valid?)
   * Features:
     * UID / GID
     * Privileged
     * TTY
       * Monitor for terminal size changes
-    * Attach stdin + stream input
-    * Attach stdout / stderr + stream output
-    * Environment variables
-      * Test scenario: not set on container
-      * Test scenario: override value set on container
-    * Working directory
-    * Command

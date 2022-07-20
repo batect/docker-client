@@ -628,6 +628,12 @@
       type: boolean
     - name: AttachStderr
       type: boolean
+    - name: AttachStdin
+      type: boolean
+    - name: EnvironmentVariables
+      type: string[]
+    - name: WorkingDirectory
+      type: string
 
 - name: ContainerExecReference
   type: struct

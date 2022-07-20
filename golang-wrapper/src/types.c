@@ -1171,7 +1171,10 @@ CreateExecRequest* AllocCreateExecRequest() {
     CreateExecRequest* value = malloc(sizeof(CreateExecRequest));
     value->ContainerID = NULL;
     value->Command = NULL;
+    value->EnvironmentVariables = NULL;
+    value->WorkingDirectory = NULL;
     value->CommandCount = 0;
+    value->EnvironmentVariablesCount = 0;
 
     return value;
 }
@@ -1187,6 +1190,12 @@ void FreeCreateExecRequest(CreateExecRequest* value) {
     }
 
     free(value->Command);
+    for (uint64_t i = 0; i < value->EnvironmentVariablesCount; i++) {
+        free(value->EnvironmentVariables[i]);
+    }
+
+    free(value->EnvironmentVariables);
+    free(value->WorkingDirectory);
     free(value);
 }
 

@@ -20,8 +20,13 @@ public data class ContainerExecSpec(
     val container: ContainerReference,
     val command: List<String> = emptyList(),
     val attachStdout: Boolean = false,
-    val attachStderr: Boolean = false
+    val attachStderr: Boolean = false,
+    val attachStdin: Boolean = false,
+    val environmentVariables: Map<String, String> = emptyMap(),
+    val workingDirectory: String? = null
 ) {
+    internal val environmentVariablesFormattedForDocker: List<String> = environmentVariables.map { "${it.key}=${it.value}" }
+
     public class Builder(container: ContainerReference) {
         private var spec = ContainerExecSpec(container)
 
@@ -41,6 +46,27 @@ public data class ContainerExecSpec(
 
         public fun withStderrAttached(): Builder {
             spec = spec.copy(attachStderr = true)
+
+            return this
+        }
+
+        public fun withStdinAttached(): Builder {
+            spec = spec.copy(attachStdin = true)
+
+            return this
+        }
+
+        public fun withEnvironmentVariable(name: String, value: String): Builder = withEnvironmentVariables(mapOf(name to value))
+        public fun withEnvironmentVariables(vararg variables: Pair<String, String>): Builder = withEnvironmentVariables(mapOf(*variables))
+
+        public fun withEnvironmentVariables(variables: Map<String, String>): Builder {
+            spec = spec.copy(environmentVariables = spec.environmentVariables + variables)
+
+            return this
+        }
+
+        public fun withWorkingDirectory(directory: String): Builder {
+            spec = spec.copy(workingDirectory = directory)
 
             return this
         }
