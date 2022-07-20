@@ -1,8 +1,12 @@
-coroutines:
+comments:
   active: true
-  GlobalCoroutineUsage:
+  DeprecatedBlockTag:
     active: true
-  SuspendFunWithFlowReturnType:
+  EndOfSentenceFormat:
+    active: true
+  KDocReferencesNonPublicProperty:
+    active: true
+  OutdatedDocumentation:
     active: true
 
 complexity:
@@ -11,6 +15,13 @@ complexity:
     active: false
   TooManyFunctions:
     active: false
+
+coroutines:
+  active: true
+  GlobalCoroutineUsage:
+    active: true
+  SuspendFunWithFlowReturnType:
+    active: true
 
 empty-blocks:
   active: true
