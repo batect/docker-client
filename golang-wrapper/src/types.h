@@ -421,6 +421,7 @@ typedef struct {
     uint64_t EnvironmentVariablesCount;
     char** EnvironmentVariables;
     char* WorkingDirectory;
+    char* User;
 } CreateExecRequest;
 
 typedef struct {

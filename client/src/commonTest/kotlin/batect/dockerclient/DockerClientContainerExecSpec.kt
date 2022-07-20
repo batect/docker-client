@@ -591,5 +591,37 @@ class DockerClientContainerExecSpec : ShouldSpec({
                 }
             }
         }
+
+        should("be able to set the UID and GID of an exec instance") {
+            withRunningTestContainer { container ->
+                val spec = ContainerExecSpec.Builder(container)
+                    .withUserAndGroup(1234, 5678)
+                    .withCommand(
+                        "sh",
+                        "-c",
+                        """
+                            echo "UID: $(id -u)"
+                            echo "GID: $(id -g)"
+                        """.trimIndent()
+                    )
+                    .withStdoutAttached()
+                    .withStderrAttached()
+                    .build()
+
+                val exec = client.createExec(spec)
+                val stdout = Buffer()
+                val stderr = Buffer()
+
+                client.startAndAttachToExec(exec, false, SinkTextOutput(stdout), SinkTextOutput(stderr), null)
+
+                val stdoutText = stdout.readUtf8()
+                val stderrText = stderr.readUtf8()
+                val inspectionResult = client.inspectExec(exec)
+
+                stdoutText shouldBe "UID: 1234\nGID: 5678\n"
+                stderrText shouldBe ""
+                inspectionResult.exitCode shouldBe 0
+            }
+        }
     }
 })

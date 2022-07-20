@@ -24,9 +24,11 @@ public data class ContainerExecSpec(
     val attachStdin: Boolean = false,
     val attachTTY: Boolean = false,
     val environmentVariables: Map<String, String> = emptyMap(),
-    val workingDirectory: String? = null
+    val workingDirectory: String? = null,
+    val userAndGroup: UserAndGroup? = null
 ) {
     internal val environmentVariablesFormattedForDocker: List<String> = environmentVariables.map { "${it.key}=${it.value}" }
+    internal val userAndGroupFormattedForDocker: String? = if (userAndGroup == null) null else "${userAndGroup.uid}:${userAndGroup.gid}"
 
     public class Builder(container: ContainerReference) {
         private var spec = ContainerExecSpec(container)
@@ -74,6 +76,14 @@ public data class ContainerExecSpec(
 
         public fun withWorkingDirectory(directory: String): Builder {
             spec = spec.copy(workingDirectory = directory)
+
+            return this
+        }
+
+        public fun withUserAndGroup(uid: Int, gid: Int): Builder = withUserAndGroup(UserAndGroup(uid, gid))
+
+        public fun withUserAndGroup(userAndGroup: UserAndGroup): Builder {
+            spec = spec.copy(userAndGroup = userAndGroup)
 
             return this
         }

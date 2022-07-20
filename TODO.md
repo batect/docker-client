@@ -65,5 +65,4 @@
       * Upgrade to most recent version of BuildKit library (currently blocked due to version hell)
 * Exec
   * Features:
-    * UID / GID
     * Privileged

@@ -636,6 +636,8 @@
       type: string[]
     - name: WorkingDirectory
       type: string
+    - name: User
+      type: string
 
 - name: ContainerExecReference
   type: struct

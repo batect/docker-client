@@ -1015,6 +1015,7 @@ func newCreateExecRequest(
     AttachTTY bool,
     EnvironmentVariables []string,
     WorkingDirectory string,
+    User string,
 ) CreateExecRequest {
     value := C.AllocCreateExecRequest()
     value.ContainerID = C.CString(ContainerID)
@@ -1039,6 +1040,7 @@ func newCreateExecRequest(
     }
 
     value.WorkingDirectory = C.CString(WorkingDirectory)
+    value.User = C.CString(User)
 
     return value
 }
