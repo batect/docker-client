@@ -909,6 +909,7 @@ internal class CreateExecRequest(runtime: Runtime) : Struct(runtime), AutoClosea
     val environmentVariablesPointer = Pointer()
     val workingDirectory = UTF8StringRef()
     val user = UTF8StringRef()
+    val privileged = Boolean()
 
     override fun close() {
         nativeAPI.FreeCreateExecRequest(this)

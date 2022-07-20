@@ -638,6 +638,8 @@
       type: string
     - name: User
       type: string
+    - name: Privileged
+      type: boolean
 
 - name: ContainerExecReference
   type: struct

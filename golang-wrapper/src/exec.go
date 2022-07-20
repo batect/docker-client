@@ -38,6 +38,7 @@ func CreateExec(clientHandle DockerClientHandle, contextHandle ContextHandle, re
 		Tty:          bool(request.AttachTTY),
 		WorkingDir:   C.GoString(request.WorkingDirectory),
 		User:         C.GoString(request.User),
+		Privileged:   bool(request.Privileged),
 	}
 
 	if request.CommandCount > 0 {

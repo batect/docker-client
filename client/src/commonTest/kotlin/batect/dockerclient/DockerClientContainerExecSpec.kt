@@ -30,6 +30,7 @@ import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.sync.Semaphore
 import kotlinx.coroutines.withTimeout
 import okio.Buffer
+import okio.Path.Companion.toPath
 import okio.Sink
 import okio.Source
 import okio.Timeout
@@ -43,10 +44,18 @@ import kotlin.time.measureTime
 class DockerClientContainerExecSpec : ShouldSpec({
     val client = closeAfterTest(DockerClient.Builder().build())
 
-    context("when working with Linux containers").onlyIfDockerDaemonSupportsLinuxContainers {
-        val image = client.pullImage("alpine:3.15.0")
+    suspend fun buildTestImage(name: String): ImageReference {
+        val path = systemFileSystem.canonicalize("./src/commonTest/resources/images/$name".toPath())
+        val spec = ImageBuildSpec.Builder(path).build()
 
-        suspend fun withCreatedTestContainer(user: suspend (ContainerReference) -> Unit) {
+        return client.buildImage(spec, SinkTextOutput(Buffer()))
+    }
+
+    context("when working with Linux containers").onlyIfDockerDaemonSupportsLinuxContainers {
+        val defaultImage = client.pullImage("alpine:3.15.0")
+        val privilegesCheckImage = buildTestImage("privileges-check")
+
+        suspend fun withCreatedTestContainer(image: ImageReference = defaultImage, user: suspend (ContainerReference) -> Unit) {
             val spec = ContainerCreationSpec.Builder(image)
                 .withCommand("sh", "-c", "sleep 60")
                 .withEnvironmentVariable("FIRST_VARIABLE", "first provided by container")
@@ -63,8 +72,8 @@ class DockerClientContainerExecSpec : ShouldSpec({
             }
         }
 
-        suspend fun withRunningTestContainer(user: suspend (ContainerReference) -> Unit) {
-            withCreatedTestContainer { container ->
+        suspend fun withRunningTestContainer(image: ImageReference = defaultImage, user: suspend (ContainerReference) -> Unit) {
+            withCreatedTestContainer(image) { container ->
                 client.startContainer(container)
                 user(container)
             }
@@ -619,6 +628,31 @@ class DockerClientContainerExecSpec : ShouldSpec({
                 val inspectionResult = client.inspectExec(exec)
 
                 stdoutText shouldBe "UID: 1234\nGID: 5678\n"
+                stderrText shouldBe ""
+                inspectionResult.exitCode shouldBe 0
+            }
+        }
+
+        should("be able to run a privileged exec instance in an unprivileged container") {
+            withRunningTestContainer(privilegesCheckImage) { container ->
+                val spec = ContainerExecSpec.Builder(container)
+                    .withPrivileged()
+                    .withCommand("/test.sh")
+                    .withStdoutAttached()
+                    .withStderrAttached()
+                    .build()
+
+                val exec = client.createExec(spec)
+                val stdout = Buffer()
+                val stderr = Buffer()
+
+                client.startAndAttachToExec(exec, false, SinkTextOutput(stdout), SinkTextOutput(stderr), null)
+
+                val stdoutText = stdout.readUtf8()
+                val stderrText = stderr.readUtf8()
+                val inspectionResult = client.inspectExec(exec)
+
+                stdoutText shouldBe "Container has NET_ADMIN capability\nContainer has CHOWN capability\n"
                 stderrText shouldBe ""
                 inspectionResult.exitCode shouldBe 0
             }

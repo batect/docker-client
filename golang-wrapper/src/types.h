@@ -422,6 +422,7 @@ typedef struct {
     char** EnvironmentVariables;
     char* WorkingDirectory;
     char* User;
+    bool Privileged;
 } CreateExecRequest;
 
 typedef struct {

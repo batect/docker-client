@@ -25,7 +25,8 @@ public data class ContainerExecSpec(
     val attachTTY: Boolean = false,
     val environmentVariables: Map<String, String> = emptyMap(),
     val workingDirectory: String? = null,
-    val userAndGroup: UserAndGroup? = null
+    val userAndGroup: UserAndGroup? = null,
+    val privileged: Boolean = false
 ) {
     internal val environmentVariablesFormattedForDocker: List<String> = environmentVariables.map { "${it.key}=${it.value}" }
     internal val userAndGroupFormattedForDocker: String? = if (userAndGroup == null) null else "${userAndGroup.uid}:${userAndGroup.gid}"
@@ -84,6 +85,12 @@ public data class ContainerExecSpec(
 
         public fun withUserAndGroup(userAndGroup: UserAndGroup): Builder {
             spec = spec.copy(userAndGroup = userAndGroup)
+
+            return this
+        }
+
+        public fun withPrivileged(): Builder {
+            spec = spec.copy(privileged = true)
 
             return this
         }

@@ -63,6 +63,3 @@
       * Support for secrets - fail if attempted with legacy builder
       * Add support for warnings (added in BuildKit 0.10.0)
       * Upgrade to most recent version of BuildKit library (currently blocked due to version hell)
-* Exec
-  * Features:
-    * Privileged

@@ -1016,6 +1016,7 @@ func newCreateExecRequest(
     EnvironmentVariables []string,
     WorkingDirectory string,
     User string,
+    Privileged bool,
 ) CreateExecRequest {
     value := C.AllocCreateExecRequest()
     value.ContainerID = C.CString(ContainerID)
@@ -1041,6 +1042,7 @@ func newCreateExecRequest(
 
     value.WorkingDirectory = C.CString(WorkingDirectory)
     value.User = C.CString(User)
+    value.Privileged = C.bool(Privileged)
 
     return value
 }

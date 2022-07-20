@@ -951,6 +951,7 @@ class DockerClientContainerManagementSpec : ShouldSpec({
                 TestScenario(
                     "run an unprivileged container",
                     ContainerCreationSpec.Builder(privilegesCheckImage)
+                        .withCommand("/test.sh")
                         .build(),
                     """
                         Container does not have NET_ADMIN capability
@@ -960,6 +961,7 @@ class DockerClientContainerManagementSpec : ShouldSpec({
                 TestScenario(
                     "run a privileged container",
                     ContainerCreationSpec.Builder(privilegesCheckImage)
+                        .withCommand("/test.sh")
                         .withPrivileged()
                         .build(),
                     """
@@ -970,6 +972,7 @@ class DockerClientContainerManagementSpec : ShouldSpec({
                 TestScenario(
                     "run a container with additional capabilities",
                     ContainerCreationSpec.Builder(privilegesCheckImage)
+                        .withCommand("/test.sh")
                         .withCapabilityAdded(Capability.NET_ADMIN)
                         .build(),
                     """
@@ -980,6 +983,7 @@ class DockerClientContainerManagementSpec : ShouldSpec({
                 TestScenario(
                     "run a container with reduced capabilities",
                     ContainerCreationSpec.Builder(privilegesCheckImage)
+                        .withCommand("/test.sh")
                         .withCapabilityDropped(Capability.CHOWN)
                         .build(),
                     """
