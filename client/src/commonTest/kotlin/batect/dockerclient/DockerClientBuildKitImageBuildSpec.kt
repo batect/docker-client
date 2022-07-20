@@ -17,8 +17,8 @@
 package batect.dockerclient
 
 import batect.dockerclient.io.SinkTextOutput
-import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.assertions.json.shouldEqualJson
+import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.common.ExperimentalKotest
 import io.kotest.core.spec.style.ShouldSpec
 import io.kotest.inspectors.forAtLeastOne
