@@ -87,7 +87,7 @@ public interface DockerClient : AutoCloseable {
     public suspend fun waitForContainerToExit(container: ContainerReference, waitingNotification: ReadyNotification? = null): Long
 
     public suspend fun createExec(spec: ContainerExecSpec): ContainerExecReference
-    public suspend fun startExecDetached(exec: ContainerExecReference, attachTTY: Boolean)
+    public suspend fun startExecDetached(exec: ContainerExecReference)
     public suspend fun inspectExec(exec: ContainerExecReference): ContainerExecInspectionResult
 
     /**
@@ -96,7 +96,7 @@ public interface DockerClient : AutoCloseable {
      * If [stdin] is a [batect.dockerclient.io.SourceTextInput], the underlying source will be closed when the exec instance exits.
      *
      * @param exec the exec instance to stream input and output to
-     * @param attachTTY if `true`, attach a TTY to the exec instance
+     * @param attachTTY if `true`, attach a TTY to the exec instance. Has no effect if the exec instance does not have a TTY attached with [ContainerExecSpec.Builder.withTTYAttached].
      * @param stdout the output stream to stream stdout to
      * @param stderr the output stream to stream stderr to. Not used if [attachTTY] is `true`.
      * @param stdin the input stream to stream stdin from. Only used if the exec instance is configured to have stdin attached with [ContainerExecSpec.Builder.withStdinAttached].

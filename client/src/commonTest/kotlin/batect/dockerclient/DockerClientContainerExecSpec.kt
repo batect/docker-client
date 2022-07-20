@@ -286,7 +286,7 @@ class DockerClientContainerExecSpec : ShouldSpec({
                     .build()
 
                 val exec = client.createExec(spec)
-                client.startExecDetached(exec, false)
+                client.startExecDetached(exec)
 
                 eventually(5.seconds, poll = 100.milliseconds) {
                     val inspectionResult = client.inspectExec(exec)
@@ -320,7 +320,7 @@ class DockerClientContainerExecSpec : ShouldSpec({
                     .build()
 
                 val exec = client.createExec(spec)
-                client.startExecDetached(exec, false)
+                client.startExecDetached(exec)
 
                 val result = client.inspectExec(exec)
                 result.running shouldBe true
@@ -388,7 +388,7 @@ class DockerClientContainerExecSpec : ShouldSpec({
                 val exec = client.createExec(spec)
 
                 val exception = shouldThrow<StartingContainerExecFailedException> {
-                    client.startExecDetached(exec, false)
+                    client.startExecDetached(exec)
                 }
 
                 exception.message shouldBeIn setOf(
@@ -446,6 +446,149 @@ class DockerClientContainerExecSpec : ShouldSpec({
                 stdoutText shouldBe "/tmp\n"
                 stderrText shouldBe ""
                 inspectionResult.exitCode shouldBe 0
+            }
+        }
+
+        should("be able to attach a TTY to an exec instance") {
+            withRunningTestContainer { container ->
+                val spec = ContainerExecSpec.Builder(container)
+                    .withCommand(
+                        "sh",
+                        "-c",
+                        """
+                            if [ -t 0 ]; then
+                                echo 'Is a TTY'
+                            else
+                                echo 'Is not a TTY'
+                            fi
+
+                            echo "This is stdout" >/dev/stdout
+                            echo "This is stderr" >/dev/stderr
+                        """.trimIndent()
+                    )
+                    .withStdoutAttached()
+                    .withStderrAttached()
+                    .withTTYAttached()
+                    .build()
+
+                val exec = client.createExec(spec)
+                val stdout = Buffer()
+                val stderr = Buffer()
+
+                client.startAndAttachToExec(exec, true, SinkTextOutput(stdout), SinkTextOutput(stderr), null)
+
+                val stdoutText = stdout.readUtf8()
+                val stderrText = stderr.readUtf8()
+                val inspectionResult = client.inspectExec(exec)
+
+                stdoutText shouldBe "Is a TTY\r\nThis is stdout\r\nThis is stderr\r\n"
+                stderrText shouldBe ""
+                inspectionResult.exitCode shouldBe 0
+            }
+        }
+
+        should("be able to run an exec instance without a TTY attached") {
+            withRunningTestContainer { container ->
+                val spec = ContainerExecSpec.Builder(container)
+                    .withCommand(
+                        "sh",
+                        "-c",
+                        """
+                            if [ -t 0 ]; then
+                                echo 'Is a TTY'
+                            else
+                                echo 'Is not a TTY'
+                            fi
+
+                            echo "This is stdout" >/dev/stdout
+                            echo "This is stderr" >/dev/stderr
+                        """.trimIndent()
+                    )
+                    .withStdoutAttached()
+                    .withStderrAttached()
+                    .build()
+
+                val exec = client.createExec(spec)
+                val stdout = Buffer()
+                val stderr = Buffer()
+
+                client.startAndAttachToExec(exec, false, SinkTextOutput(stdout), SinkTextOutput(stderr), null)
+
+                val stdoutText = stdout.readUtf8()
+                val stderrText = stderr.readUtf8()
+                val inspectionResult = client.inspectExec(exec)
+
+                stdoutText.trim() shouldBe """
+                    Is not a TTY
+                    This is stdout
+                """.trimIndent()
+
+                stderrText shouldBe "This is stderr\n"
+
+                inspectionResult.exitCode shouldBe 0
+            }
+        }
+
+        should("be able to run an exec instance with a TTY attached without streaming I/O") {
+            withRunningTestContainer { container ->
+                val spec = ContainerExecSpec.Builder(container)
+                    .withCommand(
+                        "sh",
+                        "-c",
+                        """
+                            if [ -t 0 ]; then
+                                # Is a TTY
+                                exit 1
+                            else
+                                # Is not a TTY
+                                exit 2
+                            fi
+                        """.trimIndent()
+                    )
+                    .withStdoutAttached()
+                    .withStderrAttached()
+                    .withTTYAttached()
+                    .build()
+
+                val exec = client.createExec(spec)
+
+                client.startExecDetached(exec)
+
+                eventually(5.seconds, poll = 100.milliseconds) {
+                    val inspectionResult = client.inspectExec(exec)
+                    inspectionResult.exitCode shouldBe 1
+                }
+            }
+        }
+
+        should("be able to run an exec instance without a TTY attached without streaming I/O") {
+            withRunningTestContainer { container ->
+                val spec = ContainerExecSpec.Builder(container)
+                    .withCommand(
+                        "sh",
+                        "-c",
+                        """
+                            if [ -t 0 ]; then
+                                # Is a TTY
+                                exit 1
+                            else
+                                # Is not a TTY
+                                exit 2
+                            fi
+                        """.trimIndent()
+                    )
+                    .withStdoutAttached()
+                    .withStderrAttached()
+                    .build()
+
+                val exec = client.createExec(spec)
+
+                client.startExecDetached(exec)
+
+                eventually(5.seconds, poll = 100.milliseconds) {
+                    val inspectionResult = client.inspectExec(exec)
+                    inspectionResult.exitCode shouldBe 2
+                }
             }
         }
     }

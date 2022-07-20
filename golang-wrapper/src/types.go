@@ -1012,6 +1012,7 @@ func newCreateExecRequest(
     AttachStdout bool,
     AttachStderr bool,
     AttachStdin bool,
+    AttachTTY bool,
     EnvironmentVariables []string,
     WorkingDirectory string,
 ) CreateExecRequest {
@@ -1028,6 +1029,7 @@ func newCreateExecRequest(
     value.AttachStdout = C.bool(AttachStdout)
     value.AttachStderr = C.bool(AttachStderr)
     value.AttachStdin = C.bool(AttachStdin)
+    value.AttachTTY = C.bool(AttachTTY)
 
     value.EnvironmentVariablesCount = C.uint64_t(len(EnvironmentVariables))
     value.EnvironmentVariables = C.CreatestringArray(value.EnvironmentVariablesCount)

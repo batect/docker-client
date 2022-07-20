@@ -22,6 +22,7 @@ public data class ContainerExecSpec(
     val attachStdout: Boolean = false,
     val attachStderr: Boolean = false,
     val attachStdin: Boolean = false,
+    val attachTTY: Boolean = false,
     val environmentVariables: Map<String, String> = emptyMap(),
     val workingDirectory: String? = null
 ) {
@@ -52,6 +53,12 @@ public data class ContainerExecSpec(
 
         public fun withStdinAttached(): Builder {
             spec = spec.copy(attachStdin = true)
+
+            return this
+        }
+
+        public fun withTTYAttached(): Builder {
+            spec = spec.copy(attachTTY = true)
 
             return this
         }

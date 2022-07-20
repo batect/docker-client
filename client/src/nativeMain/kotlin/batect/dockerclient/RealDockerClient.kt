@@ -424,9 +424,9 @@ internal actual class RealDockerClient actual constructor(configuration: DockerC
         }
     }
 
-    override suspend fun startExecDetached(exec: ContainerExecReference, attachTTY: Boolean) {
+    override suspend fun startExecDetached(exec: ContainerExecReference) {
         launchWithGolangContext { context ->
-            StartExecDetached(clientHandle, context.handle, exec.id.cstr, attachTTY).ifFailed { err ->
+            StartExecDetached(clientHandle, context.handle, exec.id.cstr).ifFailed { err ->
                 throw StartingContainerExecFailedException(err.pointed)
             }
         }

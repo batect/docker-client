@@ -67,5 +67,4 @@
   * Features:
     * UID / GID
     * Privileged
-    * TTY
-      * Monitor for terminal size changes
+    * Monitor for terminal size changes

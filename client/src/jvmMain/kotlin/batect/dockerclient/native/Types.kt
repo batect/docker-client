@@ -904,6 +904,7 @@ internal class CreateExecRequest(runtime: Runtime) : Struct(runtime), AutoClosea
     val attachStdout = Boolean()
     val attachStderr = Boolean()
     val attachStdin = Boolean()
+    val attachTTY = Boolean()
     val environmentVariablesCount = u_int64_t()
     val environmentVariablesPointer = Pointer()
     val workingDirectory = UTF8StringRef()

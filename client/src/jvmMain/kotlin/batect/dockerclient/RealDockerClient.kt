@@ -20,7 +20,6 @@ import batect.dockerclient.io.TextInput
 import batect.dockerclient.io.TextOutput
 import batect.dockerclient.native.BuildImageProgressCallback
 import batect.dockerclient.native.BuildImageProgressUpdate
-import batect.dockerclient.native.CreateExecRequest
 import batect.dockerclient.native.DockerClientHandle
 import batect.dockerclient.native.Error
 import batect.dockerclient.native.EventCallback
@@ -437,9 +436,9 @@ internal actual class RealDockerClient actual constructor(configuration: DockerC
         }
     }
 
-    override suspend fun startExecDetached(exec: ContainerExecReference, attachTTY: Boolean) {
+    override suspend fun startExecDetached(exec: ContainerExecReference) {
         launchWithGolangContext { context ->
-            nativeAPI.StartExecDetached(clientHandle, context.handle, exec.id, attachTTY).ifFailed { error ->
+            nativeAPI.StartExecDetached(clientHandle, context.handle, exec.id).ifFailed { error ->
                 throw StartingContainerExecFailedException(error)
             }
         }

@@ -43,7 +43,7 @@ internal interface API {
     fun GetDaemonVersionInformation(@In clientHandle: DockerClientHandle, @In contextHandle: ContextHandle): GetDaemonVersionInformationReturn?
     fun StreamEvents(@In clientHandle: DockerClientHandle, @In contextHandle: ContextHandle, @In request: StreamEventsRequest, @In onEvent: EventCallback, @In callbackUserData: Pointer?): Error?
     fun CreateExec(@In clientHandle: DockerClientHandle, @In contextHandle: ContextHandle, @In request: CreateExecRequest): CreateExecReturn?
-    fun StartExecDetached(@In clientHandle: DockerClientHandle, @In contextHandle: ContextHandle, @In id: kotlin.String, @In attachTTY: Boolean): Error?
+    fun StartExecDetached(@In clientHandle: DockerClientHandle, @In contextHandle: ContextHandle, @In id: kotlin.String): Error?
     fun InspectExec(@In clientHandle: DockerClientHandle, @In contextHandle: ContextHandle, @In id: kotlin.String): InspectExecReturn?
     fun StartAndAttachToExec(@In clientHandle: DockerClientHandle, @In contextHandle: ContextHandle, @In id: kotlin.String, @In attachTTY: Boolean, @In stdoutStreamHandle: OutputStreamHandle, @In stderrStreamHandle: OutputStreamHandle, @In stdinStreamHandle: InputStreamHandle): Error?
     fun DeleteImage(@In clientHandle: DockerClientHandle, @In contextHandle: ContextHandle, @In ref: kotlin.String, @In force: Boolean): Error?

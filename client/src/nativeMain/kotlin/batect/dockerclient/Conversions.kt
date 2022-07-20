@@ -362,6 +362,7 @@ internal fun MemScope.allocCreateExecRequest(spec: ContainerExecSpec): CreateExe
     AttachStdout = spec.attachStdout
     AttachStderr = spec.attachStderr
     AttachStdin = spec.attachStdin
+    AttachTTY = spec.attachTTY
     EnvironmentVariables = allocArrayOfPointersTo(spec.environmentVariablesFormattedForDocker)
     EnvironmentVariablesCount = spec.environmentVariables.size.toULong()
     WorkingDirectory = spec.workingDirectory?.cstr?.ptr

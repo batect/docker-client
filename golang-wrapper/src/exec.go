@@ -35,6 +35,7 @@ func CreateExec(clientHandle DockerClientHandle, contextHandle ContextHandle, re
 		AttachStdout: bool(request.AttachStdout),
 		AttachStderr: bool(request.AttachStderr),
 		AttachStdin:  bool(request.AttachStdin),
+		Tty:          bool(request.AttachTTY),
 		WorkingDir:   C.GoString(request.WorkingDirectory),
 	}
 
@@ -56,12 +57,11 @@ func CreateExec(clientHandle DockerClientHandle, contextHandle ContextHandle, re
 }
 
 //export StartExecDetached
-func StartExecDetached(clientHandle DockerClientHandle, contextHandle ContextHandle, id *C.char, attachTTY C.bool) Error {
+func StartExecDetached(clientHandle DockerClientHandle, contextHandle ContextHandle, id *C.char) Error {
 	docker := clientHandle.DockerAPIClient()
 	ctx := contextHandle.Context()
 
 	config := types.ExecStartCheck{
-		Tty:    bool(attachTTY),
 		Detach: true,
 	}
 

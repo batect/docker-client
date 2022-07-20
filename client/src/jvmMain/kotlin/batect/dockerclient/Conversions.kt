@@ -283,6 +283,7 @@ internal fun CreateExecRequest(jvm: ContainerExecSpec): CreateExecRequest {
     request.attachStdout.set(jvm.attachStdout)
     request.attachStderr.set(jvm.attachStderr)
     request.attachStdin.set(jvm.attachStdin)
+    request.attachTTY.set(jvm.attachTTY)
     request.environmentVariables = jvm.environmentVariablesFormattedForDocker
     request.workingDirectory.set(jvm.workingDirectory)
 
