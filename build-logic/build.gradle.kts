@@ -28,6 +28,9 @@ plugins {
 
 repositories {
     mavenCentral()
+
+    // FIXME: remove this once we're using a non-snapshot version of Kotest
+    maven("https://oss.sonatype.org/content/repositories/snapshots")
 }
 
 dependencies {

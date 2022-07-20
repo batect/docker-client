@@ -43,6 +43,14 @@ plugins {
 
 repositories {
     mavenCentral()
+
+    // FIXME: remove this once we're using a non-snapshot version of Kotest
+    maven("https://oss.sonatype.org/content/repositories/snapshots")
+}
+
+// FIXME: remove this once we're using a non-snapshot version of Kotest
+kotest {
+    compilerPluginVersion.set("5.3.2")
 }
 
 evaluationDependsOn(":golang-wrapper")
