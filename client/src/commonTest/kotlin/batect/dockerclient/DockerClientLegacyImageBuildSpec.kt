@@ -17,6 +17,7 @@
 package batect.dockerclient
 
 import batect.dockerclient.io.SinkTextOutput
+import io.kotest.assertions.json.shouldMatchJson
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.common.ExperimentalKotest
 import io.kotest.core.spec.style.ShouldSpec
@@ -107,10 +108,15 @@ class DockerClientLegacyImageBuildSpec : ShouldSpec({
             client.buildImage(spec, SinkTextOutput(output))
 
             val outputText = output.readUtf8()
+            val directoryContents = outputText.substringAfter("Step 7/7 : RUN tree")
+                .lines()
+                .drop(2)
+                .joinToString("\n")
+                .substringBefore("Removing intermediate container")
 
-            outputText shouldContain """
+            directoryContents shouldMatchJson """
                 [
-                  {"type":"directory","name":"/files","contents":[
+                  {"type":"directory","name":"/files","user":"root","group":"root","size":4096,"contents":[
                     {"type":"file","name":"Dockerfile","user":"root","group":"root","size":179},
                     {"type":"file","name":"root-file.txt","user":"root","group":"root","size":25},
                     {"type":"directory","name":"subdir","user":"root","group":"root","size":4096,"contents":[
@@ -131,10 +137,15 @@ class DockerClientLegacyImageBuildSpec : ShouldSpec({
             client.buildImage(spec, SinkTextOutput(output))
 
             val outputText = output.readUtf8()
+            val directoryContents = outputText.substringAfter("Step 7/7 : RUN tree")
+                .lines()
+                .drop(2)
+                .joinToString("\n")
+                .substringBefore("Removing intermediate container")
 
-            outputText shouldContain """
+            directoryContents shouldMatchJson """
                 [
-                  {"type":"directory","name":"/files","contents":[
+                  {"type":"directory","name":"/files","user":"root","group":"root","size":4096,"contents":[
                     {"type":"file","name":"Dockerfile","user":"root","group":"root","size":179},
                     {"type":"file","name":"root-file.txt","user":"root","group":"root","size":25},
                     {"type":"directory","name":"subdir","user":"root","group":"root","size":4096,"contents":[

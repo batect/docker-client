@@ -17,6 +17,7 @@
 package batect.dockerclient
 
 import batect.dockerclient.io.SinkTextOutput
+import io.kotest.assertions.json.shouldEqualJson
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.common.ExperimentalKotest
 import io.kotest.core.spec.style.ShouldSpec
@@ -186,9 +187,9 @@ class DockerClientBuildKitImageBuildSpec : ShouldSpec({
                 .filter { it.startsWith("#$stepNumber ") && !it.startsWith("#$stepNumber [") && !it.startsWith("#$stepNumber DONE ") }
                 .joinToString("\n") { it.removePrefix("#$stepNumber ").substringAfter(' ') }
 
-            directoryListing shouldContain """
+            directoryListing shouldEqualJson """
                 [
-                  {"type":"directory","name":"/files","contents":[
+                  {"type":"directory","name":"/files","user":"root","group":"root","size":4096,"contents":[
                     {"type":"file","name":"Dockerfile","user":"root","group":"root","size":179},
                     {"type":"file","name":"root-file.txt","user":"root","group":"root","size":25},
                     {"type":"directory","name":"subdir","user":"root","group":"root","size":4096,"contents":[
@@ -215,9 +216,9 @@ class DockerClientBuildKitImageBuildSpec : ShouldSpec({
                 .filter { it.startsWith("#$stepNumber ") && !it.startsWith("#$stepNumber [") && !it.startsWith("#$stepNumber DONE ") }
                 .joinToString("\n") { it.removePrefix("#$stepNumber ").substringAfter(' ') }
 
-            directoryListing shouldContain """
+            directoryListing shouldEqualJson """
                 [
-                  {"type":"directory","name":"/files","contents":[
+                  {"type":"directory","name":"/files","user":"root","group":"root","size":4096,"contents":[
                     {"type":"file","name":"Dockerfile","user":"root","group":"root","size":179},
                     {"type":"file","name":"root-file.txt","user":"root","group":"root","size":25},
                     {"type":"directory","name":"subdir","user":"root","group":"root","size":4096,"contents":[
