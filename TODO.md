@@ -36,7 +36,6 @@
 * Remove `IODispatcher` / `Dispatchers.kt` once https://github.com/Kotlin/kotlinx.coroutines/issues/3205 is resolved
 * Restore AssertionMode to Error once https://github.com/kotest/kotest/issues/3022 is resolved
 * Move `nonMingwTest` tests back into `commonTest` once https://youtrack.jetbrains.com/issue/KTOR-4307 is resolved or there's an alternative Ktor engine available for Kotlin/Native on Windows.
-* Replace use of `shouldBe` in upload tests in `DockerClientContainerManagementSpec` with `shouldMatchJson` once https://github.com/kotest/kotest/pull/3021 is available
 * Switch back to release version of Kotest once version 5.4.0 is released
   * Remove `repositories` block in `build-logic/build.gradle.kts` and `client/build.gradle.kts`
   * Remove `kotest` block in `client/build.gradle.kts`

@@ -19,6 +19,7 @@ package batect.dockerclient
 import batect.dockerclient.io.SinkTextOutput
 import batect.dockerclient.io.SourceTextInput
 import io.kotest.assertions.asClue
+import io.kotest.assertions.json.shouldEqualJson
 import io.kotest.assertions.throwables.shouldNotThrowAny
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.assertions.timing.eventually
@@ -1280,15 +1281,15 @@ class DockerClientContainerManagementSpec : ShouldSpec({
 
                     stdoutText.substringBefore("--DIVIDER--\n") shouldBe "This is the new file\n"
 
-                    // FIXME: replace this with shouldMatchJson once https://github.com/kotest/kotest/pull/3021 is available.
-                    stdoutText.substringAfter("--DIVIDER--\n").trim() shouldBe
+                    stdoutText.substringAfter("--DIVIDER--\n").trim() shouldEqualJson
                         """
                         [
-                          {"type":"directory","name":"/existing-directory","user":"root","group":"root","contents":[
-                            {"type":"file","name":"existing-file.txt","user":"root","group":"root"},
-                            {"type":"file","name":"new-file.txt","user":"1234","group":"5678"}
-                          ]}
-
+                          {"type":"directory","name":"/existing-directory","user":"root","group":"root","contents":
+                            [
+                              {"type":"file","name":"existing-file.txt","user":"root","group":"root"},
+                              {"type":"file","name":"new-file.txt","user":"1234","group":"5678"}
+                            ]
+                          }
                         ]
                         """.trimIndent()
 
@@ -1322,14 +1323,14 @@ class DockerClientContainerManagementSpec : ShouldSpec({
 
                     stdoutText.substringBefore("--DIVIDER--\n") shouldBe "This is the new file\n"
 
-                    // FIXME: replace this with shouldMatchJson once https://github.com/kotest/kotest/pull/3021 is available.
-                    stdoutText.substringAfter("--DIVIDER--\n").trim() shouldBe
+                    stdoutText.substringAfter("--DIVIDER--\n").trim() shouldEqualJson
                         """
                         [
-                          {"type":"directory","name":"/existing-directory","user":"root","group":"root","contents":[
-                            {"type":"file","name":"existing-file.txt","user":"1234","group":"5678"}
-                          ]}
-
+                          {"type":"directory","name":"/existing-directory","user":"root","group":"root","contents":
+                            [
+                              {"type":"file","name":"existing-file.txt","user":"1234","group":"5678"}
+                            ]
+                          }
                         ]
                         """.trimIndent()
 
@@ -1361,15 +1362,15 @@ class DockerClientContainerManagementSpec : ShouldSpec({
                     val stdoutText = stdout.readUtf8()
                     val stderrText = stderr.readUtf8()
 
-                    // FIXME: replace this with shouldMatchJson once https://github.com/kotest/kotest/pull/3021 is available.
-                    stdoutText.trim() shouldBe
+                    stdoutText.trim() shouldEqualJson
                         """
                         [
-                          {"type":"directory","name":"/existing-directory","user":"root","group":"root","contents":[
-                            {"type":"file","name":"existing-file.txt","user":"root","group":"root"},
-                            {"type":"directory","name":"new-directory","user":"1234","group":"5678"}
-                          ]}
-
+                          {"type":"directory","name":"/existing-directory","user":"root","group":"root","contents":
+                            [
+                              {"type":"file","name":"existing-file.txt","user":"root","group":"root"},
+                              {"type":"directory","name":"new-directory","user":"1234","group":"5678"}
+                            ]
+                          }
                         ]
                         """.trimIndent()
 
@@ -1401,14 +1402,14 @@ class DockerClientContainerManagementSpec : ShouldSpec({
                     val stdoutText = stdout.readUtf8()
                     val stderrText = stderr.readUtf8()
 
-                    // FIXME: replace this with shouldMatchJson once https://github.com/kotest/kotest/pull/3021 is available.
-                    stdoutText.trim() shouldBe
+                    stdoutText.trim() shouldEqualJson
                         """
                         [
-                          {"type":"directory","name":"/existing-directory","user":"1234","group":"5678","contents":[
-                            {"type":"file","name":"existing-file.txt","user":"root","group":"root"}
-                          ]}
-
+                          {"type":"directory","name":"/existing-directory","user":"1234","group":"5678","contents":
+                            [
+                              {"type":"file","name":"existing-file.txt","user":"root","group":"root"}
+                            ]
+                          }
                         ]
                         """.trimIndent()
 
@@ -1445,14 +1446,14 @@ class DockerClientContainerManagementSpec : ShouldSpec({
 
                     stdoutText.substringBefore("--DIVIDER--\n") shouldBe "This is the new file\n"
 
-                    // FIXME: replace this with shouldMatchJson once https://github.com/kotest/kotest/pull/3021 is available.
-                    stdoutText.substringAfter("--DIVIDER--\n").trim() shouldBe
+                    stdoutText.substringAfter("--DIVIDER--\n") shouldEqualJson
                         """
                         [
-                          {"type":"directory","name":"/existing-directory/new-directory","user":"4321","group":"8765","contents":[
-                            {"type":"file","name":"new-file.txt","user":"1234","group":"5678"}
-                          ]}
-
+                          {"type":"directory","name":"/existing-directory/new-directory","user":"4321","group":"8765","contents":
+                            [
+                              {"type":"file","name":"new-file.txt","user":"1234","group":"5678"}
+                            ]
+                          }
                         ]
                         """.trimIndent()
 

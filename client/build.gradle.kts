@@ -134,6 +134,7 @@ kotlin {
         val commonTest by getting {
             dependencies {
                 implementation(libs.kotest.assertions.core)
+                implementation(libs.kotest.assertions.json)
                 implementation(libs.kotest.framework.api)
                 implementation(libs.kotest.framework.engine)
             }
