@@ -25,6 +25,7 @@ public actual open class DockerClientException actual constructor(
     public actual val golangErrorType: String?
 ) : RuntimeException(message, cause) {
     internal constructor(error: Error) : this(error.cleanErrorMessage, null, golangErrorType = error.Type!!.toKString())
+    internal constructor(message: String) : this(message, null, null)
 }
 
 public actual class PingFailedException actual constructor(
