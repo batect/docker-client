@@ -17,6 +17,7 @@
   * Enforce this with Detekt (https://detekt.dev/docs/rules/comments#undocumentedpublicfunction, https://detekt.dev/docs/rules/comments#undocumentedpublicproperty)
 * Set up Dokka
   * Publish docs somewhere? GitHub Pages perhaps?
+    * Limit this to only run from `main`
 * Run tests with memory leak detector - eg. valgrind
 * Linter to catch when memory is not freed (eg. Golang code allocates struct that is used as callback parameter)
 * Remove "be able to" prefixes from test descriptions
