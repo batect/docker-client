@@ -25,6 +25,8 @@ public actual open class DockerClientException actual constructor(
     public actual val golangErrorType: String?
 ) : RuntimeException(message, cause) {
     internal constructor(error: Error) : this(error.cleanErrorMessage, null, golangErrorType = error.Type!!.toKString())
+
+    // FIXME: this is a workaround for https://youtrack.jetbrains.com/issue/KT-52193/Native-Unable-to-call-primary-constructor-with-default-values-in-an-actual-class-without-passing-the-values-in-nativeMain-source
     internal constructor(message: String) : this(message, null, null)
 }
 
