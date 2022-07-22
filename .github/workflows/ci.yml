@@ -288,6 +288,8 @@ jobs:
           path: client/build/dokka/html
 
   publish:
+    name: "Publish"
+    runs-on: macos-11
     if: github.repository == 'batect/docker-client' && (github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/')) && github.event_name == 'push'
 
     needs:
@@ -301,8 +303,9 @@ jobs:
     env:
       SONATYPE_USERNAME: batect-docker-client-github-actions
 
-    name: "Publish"
-    runs-on: macos-11
+    permissions:
+      id-token: write
+
     steps:
       - name: Check out code
         uses: actions/checkout@v3.0.2
