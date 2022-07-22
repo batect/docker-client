@@ -305,6 +305,7 @@ jobs:
 
     permissions:
       id-token: write
+      pages: write
 
     steps:
       - name: Check out code
