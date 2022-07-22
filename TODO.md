@@ -58,7 +58,6 @@
 
 * Check that Golang code can return an empty list (eg. listing all volumes returns no volumes)
 
-* Allow calling `ReadyNotification.waitForReady()` from multiple places (will currently only release one caller, not all)
 * Remove `with...` prefixes from ImageBuildSpec, ContainerCreationSpec and ContainerExecSpec?
 * Rename ImageBuildSpec, ContainerCreationSpec and ContainerExecSpec to something else to avoid confusion with 'spec' as it's used in test frameworks?
 

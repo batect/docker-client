@@ -16,15 +16,41 @@
 
 package batect.dockerclient
 
+import kotlinx.atomicfu.atomic
 import kotlinx.coroutines.sync.Semaphore
 
 /**
- * Used to signal callers when operations have finished initialising.
+ * Used to signal when an operation has finished initialising.
+ *
+ * Important: only one caller can wait on a [ReadyNotification].
+ *
+ * Important: a single instance should only be used once, for one operation.
  *
  */
 public class ReadyNotification {
     private val semaphore = Semaphore(1, 1)
+    private val haveAlreadyMarkedAsReady = atomic<Boolean>(false)
+    private val haveAlreadyWaited = atomic<Boolean>(false)
 
-    public fun markAsReady(): Unit = semaphore.release()
-    public suspend fun waitForReady(): Unit = semaphore.acquire()
+    /**
+     * Signal that the operation has finished initialising.
+     */
+    public fun markAsReady() {
+        if (!haveAlreadyMarkedAsReady.compareAndSet(false, true)) {
+            throw UnsupportedOperationException("ReadyNotification has already been marked as ready.")
+        }
+
+        semaphore.release()
+    }
+
+    /**
+     * Block until the operation finishes initialising.
+     */
+    public suspend fun waitForReady() {
+        if (!haveAlreadyWaited.compareAndSet(false, true)) {
+            throw UnsupportedOperationException("Cannot wait on a ReadyNotification multiple times.")
+        }
+
+        semaphore.acquire()
+    }
 }

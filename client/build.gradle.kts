@@ -43,6 +43,7 @@ plugins {
 
     id("batect.dockerclient.buildtools.formatting")
     id("batect.dockerclient.buildtools.licensecheck")
+    alias(libs.plugins.atomicfu)
     alias(libs.plugins.detekt)
     alias(libs.plugins.dokka)
 }
@@ -93,6 +94,7 @@ kotlin {
         val commonMain by getting {
             dependencies {
                 implementation(libs.okio)
+                implementation(libs.kotlinx.atomicfu)
                 implementation(libs.kotlinx.coroutines.core)
                 implementation(libs.kotlinx.datetime)
             }
