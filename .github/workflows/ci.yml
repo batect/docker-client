@@ -296,7 +296,7 @@ jobs:
       - check-wrapper
       - check-build-logic
       - check-samples
-      - build-documentation
+      - build-docs
 
     env:
       SONATYPE_USERNAME: batect-docker-client-github-actions
