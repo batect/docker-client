@@ -16,8 +16,6 @@
 * KDoc comments for public API
   * Enforce this with Detekt (https://detekt.dev/docs/rules/comments#undocumentedpublicfunction, https://detekt.dev/docs/rules/comments#undocumentedpublicproperty)
 * Set up Dokka
-  * Check that KDoc comments on `expect` declarations are shown on `actual` implementations
-    * If these are required on `actual` implementations, remove `@Suppress("UndocumentedPublicClass")` etc. and create a tool to keep `expect` and `actual` documentation in sync
   * Publish docs somewhere? GitHub Pages perhaps?
 * Run tests with memory leak detector - eg. valgrind
 * Linter to catch when memory is not freed (eg. Golang code allocates struct that is used as callback parameter)

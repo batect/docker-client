@@ -23,6 +23,9 @@ import batect.dockerclient.buildtools.kotlin.isSameOperatingSystemAsHost
 import batect.dockerclient.buildtools.kotlin.isSupportedOnThisMachine
 import org.gradle.api.tasks.testing.logging.TestExceptionFormat
 import org.gradle.api.tasks.testing.logging.TestLogEvent
+import org.jetbrains.dokka.base.DokkaBase
+import org.jetbrains.dokka.base.DokkaBaseConfiguration
+import org.jetbrains.dokka.gradle.DokkaTask
 import org.jetbrains.kotlin.gradle.dsl.ExplicitApiMode
 import org.jetbrains.kotlin.gradle.plugin.KotlinTarget
 import org.jetbrains.kotlin.gradle.plugin.mpp.KotlinNativeCompilation
@@ -30,6 +33,7 @@ import org.jetbrains.kotlin.gradle.plugin.mpp.KotlinNativeTarget
 import org.jetbrains.kotlin.gradle.targets.native.tasks.KotlinNativeHostTest
 import org.jetbrains.kotlin.konan.target.Family
 import org.jetbrains.kotlin.konan.target.KonanTarget
+import java.net.URL
 
 plugins {
     alias(libs.plugins.kotlin.multiplatform)
@@ -40,6 +44,13 @@ plugins {
     id("batect.dockerclient.buildtools.formatting")
     id("batect.dockerclient.buildtools.licensecheck")
     alias(libs.plugins.detekt)
+    alias(libs.plugins.dokka)
+}
+
+buildscript {
+    dependencies {
+        classpath(libs.dokka.base)
+    }
 }
 
 repositories {
@@ -468,4 +479,30 @@ detekt {
     source = files(kotlin.sourceSets.names.map { "src/$it/kotlin" })
     buildUponDefaultConfig = true
     config = files(rootProject.rootDir.resolve("config/detekt.yml").absolutePath)
+}
+
+tasks.named<DokkaTask>("dokkaHtml") {
+    moduleName.set("docker-client")
+
+    pluginConfiguration<DokkaBase, DokkaBaseConfiguration> {
+        footerMessage = " " // HACK: setting this to an empty string causes Dokka to use its default message
+    }
+
+    dokkaSourceSets {
+        configureEach {
+            val sourceSet = this
+
+            reportUndocumented.set(true)
+
+            val sourceDirectory = file("src/${sourceSet.name}/kotlin")
+
+            if (sourceDirectory.exists()) {
+                sourceLink {
+                    localDirectory.set(sourceDirectory)
+                    remoteUrl.set(URL("https://github.com/batect/docker-client/blob/main/client/src/${sourceSet.name}/kotlin"))
+                    remoteLineSuffix.set("#L")
+                }
+            }
+        }
+    }
 }

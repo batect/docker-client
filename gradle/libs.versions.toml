@@ -1,4 +1,5 @@
 [versions]
+dokka = "1.7.10"
 kotest = "5.4.0.1052-SNAPSHOT"
 kotest-plugin = "5.3.2" # The Kotest plugin is updated on a different cadence to the main framework.
 kotlin = "1.6.21"
@@ -9,6 +10,7 @@ spotless = "6.8.0"
 
 [libraries]
 commons-compress = { group = "org.apache.commons", name = "commons-compress", version = "1.21" }
+dokka-base = { group = "org.jetbrains.dokka", name = "dokka-base", version.ref = "dokka" }
 gradle-download-plugin = { group = "de.undercouch", name = "gradle-download-task", version = "5.1.0" }
 jnr-ffi = { group = "com.github.jnr", name = "jnr-ffi", version = "2.2.12" }
 jnr-posix = { group = "com.github.jnr", name = "jnr-posix", version = "3.1.15" }
@@ -33,6 +35,7 @@ xz = { group = "org.tukaani", name = "xz", version = "1.9" }
 
 [plugins]
 detekt = { id = "io.gitlab.arturbosch.detekt", version = "1.21.0" }
+dokka = { id = "org.jetbrains.dokka", version.ref = "dokka" }
 kotest-multiplatform = { id = "io.kotest.multiplatform", version.ref = "kotest-plugin" }
 kotlin-jvm = { id = "org.jetbrains.kotlin.jvm", version.ref = "kotlin" }
 kotlin-multiplatform = { id = "org.jetbrains.kotlin.multiplatform", version.ref = "kotlin" }
