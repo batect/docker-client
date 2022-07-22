@@ -49,7 +49,7 @@ class ReadyNotificationSpec : ShouldSpec({
             }
 
             waitDuration shouldBeGreaterThan 50.milliseconds
-            waitDuration shouldBeLessThan 150.milliseconds
+            waitDuration shouldBeLessThan 350.milliseconds
         }
     }
 
