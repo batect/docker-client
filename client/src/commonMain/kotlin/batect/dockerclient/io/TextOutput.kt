@@ -19,6 +19,9 @@ package batect.dockerclient.io
 import batect.dockerclient.AutoCloseable
 import okio.Sink
 
+/**
+ * A destination for text output from containers and image build processes.
+ */
 public expect sealed interface TextOutput {
     public fun prepareStream(): PreparedOutputStream
 
@@ -28,6 +31,9 @@ public expect sealed interface TextOutput {
     }
 }
 
+/**
+ * A stream ready to send output to a [TextOutput].
+ */
 public interface PreparedOutputStream : AutoCloseable {
     public val outputStreamHandle: ULong
     public fun run()
@@ -49,4 +55,7 @@ internal class StandardTextOutput(val wellKnownOutputStreamHandle: ULong) : Text
     }
 }
 
+/**
+ * A [TextOutput] that sends output to the provided [Sink].
+ */
 public expect class SinkTextOutput(sink: Sink) : TextOutput

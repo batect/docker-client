@@ -16,6 +16,9 @@
 
 package batect.dockerclient
 
+/**
+ * Available image builder versions.
+ */
 public enum class BuilderVersion {
     Legacy,
     BuildKit;

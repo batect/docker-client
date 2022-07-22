@@ -16,6 +16,11 @@
 
 package batect.dockerclient
 
+/**
+ * An object that contains resources such as operating system handles that must be explicitly cleaned up.
+ *
+ * @see [use]
+ */
 public expect interface AutoCloseable {
     public fun close()
 }

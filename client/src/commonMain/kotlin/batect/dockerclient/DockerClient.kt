@@ -26,6 +26,7 @@ import okio.Path
 import kotlin.time.Duration
 
 /**
+ * A client for the Docker API.
  *
  * Callbacks:
  * Some methods take callback functions. These methods are not guaranteed to be called from any particular thread, but are
@@ -104,6 +105,9 @@ public interface DockerClient : AutoCloseable {
 
     public suspend fun streamEvents(since: Instant?, until: Instant?, filters: Map<String, Set<String>>, onEventReceived: EventHandler)
 
+    /**
+     * Use to create an instance of a [DockerClient] connected to a Docker daemon.
+     */
     public class Builder internal constructor(internal val factory: DockerClientFactory) {
         public constructor() : this({ config -> RealDockerClient(config) })
 

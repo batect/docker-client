@@ -16,6 +16,12 @@
 
 package batect.dockerclient
 
+/**
+ * A reference to a Docker network.
+ *
+ * @see [DockerClient.createNetwork]
+ * @see [DockerClient.getNetworkByNameOrID]
+ */
 public data class NetworkReference(val id: String)
 
 /**

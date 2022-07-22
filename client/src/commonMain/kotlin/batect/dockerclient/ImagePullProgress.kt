@@ -18,13 +18,27 @@ package batect.dockerclient
 
 public typealias ImagePullProgressReceiver = (ImagePullProgressUpdate) -> Unit
 
+/**
+ * Contains a snapshot of the progress of either an entire image pull request or a sub-operation of an image pull request.
+ */
 public data class ImagePullProgressUpdate(
     val message: String,
     val detail: ImagePullProgressDetail?,
     val id: String
 )
 
+/**
+ * Contains details of an operation performed as part of an image pull request.
+ *
+ * @see [ImagePullProgressUpdate]
+ */
 public data class ImagePullProgressDetail(
+    /**
+     * The current number of bytes completed (downloaded, extracted etc.).
+     */
     val current: Long,
+    /**
+     * The total number of bytes in this operation.
+     */
     val total: Long
 )

@@ -16,4 +16,9 @@
 
 package batect.dockerclient
 
+/**
+ * A reference to a Docker container.
+ *
+ * @see [DockerClient.createContainer]
+ */
 public data class ContainerReference(val id: String)

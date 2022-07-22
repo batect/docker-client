@@ -19,6 +19,11 @@ package batect.dockerclient
 import okio.Path
 import kotlin.time.Duration
 
+/**
+ * A specification for a container.
+ *
+ * @see [DockerClient.createContainer]
+ */
 public data class ContainerCreationSpec(
     val image: ImageReference,
     val name: String? = null,
@@ -64,6 +69,11 @@ public data class ContainerCreationSpec(
     internal val bindMountsFormattedForDocker: List<String> = bindMounts.map { it.formattedForDocker }
     internal val userAndGroupFormattedForDocker: String? = if (userAndGroup == null) null else "${userAndGroup.uid}:${userAndGroup.gid}"
 
+    /**
+     * Builder to create an instance of a [ContainerCreationSpec] for use with [DockerClient.createContainer].
+     *
+     * @see [DockerClient.createContainer]
+     */
     public class Builder(image: ImageReference) {
         private var spec = ContainerCreationSpec(image)
 
@@ -289,8 +299,19 @@ public data class ContainerCreationSpec(
     }
 }
 
+/**
+ * An additional hostname / address pair added to a container's `/etc/hosts` file.
+ *
+ * @see [ContainerCreationSpec.Builder.withExtraHost]
+ */
 public data class ExtraHost(val hostname: String, val address: String)
 
+/**
+ * Base class for bind mounts into containers.
+ *
+ * @see [HostMount]
+ * @see [VolumeMount]
+ */
 public sealed class BindMount(private val source: String) {
     public abstract val containerPath: String
     public abstract val options: String?
@@ -299,21 +320,53 @@ public sealed class BindMount(private val source: String) {
         get() = if (options == null) "$source:$containerPath" else "$source:$containerPath:$options"
 }
 
+/**
+ * A [BindMount] representing a local path mounted into a container.
+ *
+ * @see [ContainerCreationSpec.Builder.withHostMount]
+ */
 public data class HostMount(val localPath: Path, override val containerPath: String, override val options: String? = null) : BindMount(localPath.toString())
+
+/**
+ * A [BindMount] representing a volume mounted into a container.
+ *
+ * @see [ContainerCreationSpec.Builder.withVolumeMount]
+ */
 public data class VolumeMount(val volume: VolumeReference, override val containerPath: String, override val options: String? = null) : BindMount(volume.name)
 
+/**
+ * A tmpfs filesystem mounted into a container.
+ *
+ * @see [ContainerCreationSpec.Builder.withTmpfsMount]
+ */
 public data class TmpfsMount(val containerPath: String, val options: String)
 
+/**
+ * A local device mounted into a container.
+ *
+ * @see [ContainerCreationSpec.Builder.withDeviceMount]
+ */
 public data class DeviceMount(val localPath: Path, val containerPath: String, val permissions: String = defaultPermissions) {
     public companion object {
         public const val defaultPermissions: String = "rwm"
     }
 }
 
+/**
+ * A port exposed from a container to the host.
+ *
+ * @see [ContainerCreationSpec.Builder.withExposedPort]
+ */
 public data class ExposedPort(val localPort: Long, val containerPort: Long, val protocol: String = defaultProtocol) {
     public companion object {
         public const val defaultProtocol: String = "tcp"
     }
 }
 
+/**
+ * A Unix user and group used to run the container or exec instance.
+ *
+ * @see [ContainerCreationSpec.Builder.withUserAndGroup]
+ * @see [ContainerExecSpec.Builder.withUserAndGroup]
+ */
 public data class UserAndGroup(val uid: Int, val gid: Int)

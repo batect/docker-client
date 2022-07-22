@@ -16,6 +16,11 @@
 
 package batect.dockerclient
 
+/**
+ * Contains a snapshot of version information for a Docker daemon.
+ *
+ * @see [DockerClient.getDaemonVersionInformation]
+ */
 public data class DaemonVersionInformation(
     val version: String,
     val apiVersion: String,

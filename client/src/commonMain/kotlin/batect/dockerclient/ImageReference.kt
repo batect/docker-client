@@ -16,4 +16,10 @@
 
 package batect.dockerclient
 
+/**
+ * A reference to a Docker image.
+ *
+ * @see [DockerClient.buildImage]
+ * @see [DockerClient.pullImage]
+ */
 public data class ImageReference(val id: String)

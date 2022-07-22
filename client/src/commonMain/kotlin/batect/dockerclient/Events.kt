@@ -18,6 +18,11 @@ package batect.dockerclient
 
 import kotlinx.datetime.Instant
 
+/**
+ * An event that has occurred.
+ *
+ * @see [DockerClient.streamEvents]
+ */
 public data class Event(
     val type: String,
     val action: String,
@@ -26,11 +31,22 @@ public data class Event(
     val timestamp: Instant
 )
 
+/**
+ * Contains details of the actor related to a given [Event].
+ *
+ * @see [Event]
+ * @see [DockerClient.streamEvents]
+ */
 public data class Actor(
     val id: String,
     val attributes: Map<String, String>
 )
 
+/**
+ * Returned from an [EventHandler] to indicate whether the handler would like to continue receiving further events.
+ *
+ * @see [DockerClient.streamEvents]
+ */
 public enum class EventHandlerAction {
     ContinueStreaming,
     Stop

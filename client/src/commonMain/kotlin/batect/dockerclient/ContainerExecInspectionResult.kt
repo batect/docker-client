@@ -16,6 +16,11 @@
 
 package batect.dockerclient
 
+/**
+ * Contains a snapshot of state information for an exec instance.
+ *
+ * @see [DockerClient.inspectExec]
+ */
 public data class ContainerExecInspectionResult(
     val exitCode: Long?,
     val running: Boolean

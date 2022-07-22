@@ -8,6 +8,10 @@ comments:
     active: true
   OutdatedDocumentation:
     active: true
+  UndocumentedPublicClass:
+    active: true
+    excludes:
+      - "**/*Test/**"
 
 complexity:
   active: true

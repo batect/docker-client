@@ -16,4 +16,10 @@
 
 package batect.dockerclient
 
+/**
+ * A reference to a Docker volume.
+ *
+ * @see [DockerClient.createVolume]
+ * @see [DockerClient.listAllVolumes]
+ */
 public data class VolumeReference(val name: String)

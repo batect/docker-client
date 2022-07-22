@@ -30,6 +30,11 @@ internal data class DockerClientTLSConfiguration(
     val insecureSkipVerify: Boolean = false
 )
 
+/**
+ * TLS verification modes for connecting to a Docker daemon.
+ *
+ * @see [DockerClient.Builder.withTLSConfiguration]
+ */
 public enum class TLSVerification {
     Enabled,
     InsecureDisabled

@@ -16,4 +16,9 @@
 
 package batect.dockerclient
 
+/**
+ * A reference to an exec instance used to execute a command in a running container.
+ *
+ * @see [DockerClient.createExec]
+ */
 public data class ContainerExecReference(val id: String)

@@ -16,6 +16,11 @@
 
 package batect.dockerclient
 
+/**
+ * A specification for a container exec instance.
+ *
+ * @see [DockerClient.createExec]
+ */
 public data class ContainerExecSpec(
     val container: ContainerReference,
     val command: List<String> = emptyList(),
@@ -31,6 +36,11 @@ public data class ContainerExecSpec(
     internal val environmentVariablesFormattedForDocker: List<String> = environmentVariables.map { "${it.key}=${it.value}" }
     internal val userAndGroupFormattedForDocker: String? = if (userAndGroup == null) null else "${userAndGroup.uid}:${userAndGroup.gid}"
 
+    /**
+     * Builder to create an instance of a [ContainerExecSpec] for use with [DockerClient.createExec].
+     *
+     * @see [DockerClient.createExec]
+     */
     public class Builder(container: ContainerReference) {
         private var spec = ContainerExecSpec(container)
 

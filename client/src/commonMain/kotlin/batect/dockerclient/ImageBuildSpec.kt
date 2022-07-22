@@ -18,6 +18,11 @@ package batect.dockerclient
 
 import okio.Path
 
+/**
+ * A specification for an image build operation.
+ *
+ * @see [DockerClient.buildImage]
+ */
 public data class ImageBuildSpec(
     val contextDirectory: Path,
     val pathToDockerfile: Path,
@@ -28,6 +33,11 @@ public data class ImageBuildSpec(
     val targetBuildStage: String = "",
     val builder: BuilderVersion? = null
 ) {
+    /**
+     * Builder to create an instance of an [ImageBuildSpec] for use with [DockerClient.buildImage].
+     *
+     * @see [DockerClient.buildImage]
+     */
     public class Builder(contextDirectory: Path) {
         private var spec = ImageBuildSpec(contextDirectory, contextDirectory.resolve("Dockerfile"))
 

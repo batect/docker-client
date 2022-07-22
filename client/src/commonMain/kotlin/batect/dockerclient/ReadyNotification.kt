@@ -18,6 +18,10 @@ package batect.dockerclient
 
 import kotlinx.coroutines.sync.Semaphore
 
+/**
+ * Used to signal callers when operations have finished initialising.
+ *
+ */
 public class ReadyNotification {
     private val semaphore = Semaphore(1, 1)
 

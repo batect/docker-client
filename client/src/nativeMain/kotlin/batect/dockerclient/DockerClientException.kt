@@ -14,6 +14,8 @@
     limitations under the License.
 */
 
+@file:Suppress("UndocumentedPublicClass")
+
 package batect.dockerclient
 
 import batect.dockerclient.native.Error

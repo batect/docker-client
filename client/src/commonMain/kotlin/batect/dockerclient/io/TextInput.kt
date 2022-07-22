@@ -19,6 +19,9 @@ package batect.dockerclient.io
 import batect.dockerclient.AutoCloseable
 import okio.Source
 
+/**
+ * A source of text input for containers.
+ */
 public expect sealed interface TextInput {
     public fun prepareStream(): PreparedInputStream
     public fun abortRead()
@@ -28,6 +31,9 @@ public expect sealed interface TextInput {
     }
 }
 
+/**
+ * A stream ready to receive input from a [TextInput].
+ */
 public interface PreparedInputStream : AutoCloseable {
     public val inputStreamHandle: ULong
     public fun run()
@@ -53,4 +59,7 @@ internal class StandardTextInput(val wellKnownInputStreamHandle: ULong) : TextIn
     }
 }
 
+/**
+ * A [TextInput] that reads input from the provided [Source].
+ */
 public expect class SourceTextInput(source: Source) : TextInput

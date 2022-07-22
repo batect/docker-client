@@ -25,6 +25,7 @@ import kotlinx.cinterop.pointed
 import okio.Sink
 import okio.Source
 
+@Suppress("UndocumentedPublicClass")
 public actual sealed interface TextInput {
     public actual fun prepareStream(): PreparedInputStream
     public actual fun abortRead()
@@ -34,6 +35,7 @@ public actual sealed interface TextInput {
     }
 }
 
+@Suppress("UndocumentedPublicClass")
 public actual class SourceTextInput actual constructor(private val source: Source) : TextInput {
     override fun prepareStream(): PreparedInputStream {
         return Pipe(source)

@@ -16,6 +16,11 @@
 
 package batect.dockerclient
 
+/**
+ * A response to a ping request to a Docker daemon.
+ *
+ * @see [DockerClient.ping]
+ */
 public data class PingResponse(
     val apiVersion: String,
     val osType: String,

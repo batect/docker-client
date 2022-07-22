@@ -30,6 +30,7 @@ import okio.IOException
 import okio.Sink
 import platform.posix.strerror
 
+@Suppress("UndocumentedPublicClass")
 public actual sealed interface TextOutput {
     public actual fun prepareStream(): PreparedOutputStream
 
@@ -39,6 +40,7 @@ public actual sealed interface TextOutput {
     }
 }
 
+@Suppress("UndocumentedPublicClass")
 public actual class SinkTextOutput actual constructor(public val sink: Sink) : TextOutput {
     override fun prepareStream(): PreparedOutputStream {
         return Pipe(sink)

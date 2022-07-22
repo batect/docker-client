@@ -16,6 +16,7 @@
 
 package batect.dockerclient
 
+@Suppress("UndocumentedPublicClass")
 public actual interface AutoCloseable {
     public actual fun close()
 }

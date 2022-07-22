@@ -19,6 +19,11 @@ package batect.dockerclient
 import kotlinx.datetime.Instant
 import kotlin.time.Duration
 
+/**
+ * Contains a snapshot of configuration and state information for a created container.
+ *
+ * @see [DockerClient.inspectContainer]
+ */
 public data class ContainerInspectionResult(
     val reference: ContainerReference,
     val name: String,
@@ -27,24 +32,54 @@ public data class ContainerInspectionResult(
     val config: ContainerConfig
 )
 
+/**
+ * Contains host configuration for a container.
+ *
+ * @see [ContainerInspectionResult]
+ * @see [DockerClient.inspectContainer]
+ */
 public data class ContainerHostConfig(
     val logConfig: ContainerLogConfig
 )
 
+/**
+ * Contains log configuration for a container.
+ *
+ * @see [ContainerInspectionResult]
+ * @see [DockerClient.inspectContainer]
+ */
 public data class ContainerLogConfig(
     val type: String,
     val config: Map<String, String>
 )
 
+/**
+ * Contains a snapshot of state information for a container.
+ *
+ * @see [ContainerInspectionResult]
+ * @see [DockerClient.inspectContainer]
+ */
 public data class ContainerState(
     val health: ContainerHealthState?
 )
 
+/**
+ * Contains a snapshot of health information for a container.
+ *
+ * @see [ContainerInspectionResult]
+ * @see [DockerClient.inspectContainer]
+ */
 public data class ContainerHealthState(
     val status: String,
     val log: List<ContainerHealthLogEntry>
 )
 
+/**
+ * Contains details of a single health check attempt for a container.
+ *
+ * @see [ContainerInspectionResult]
+ * @see [DockerClient.inspectContainer]
+ */
 public data class ContainerHealthLogEntry(
     val start: Instant,
     val end: Instant,
@@ -52,11 +87,23 @@ public data class ContainerHealthLogEntry(
     val output: String
 )
 
+/**
+ * Contains configuration for a container.
+ *
+ * @see [ContainerInspectionResult]
+ * @see [DockerClient.inspectContainer]
+ */
 public data class ContainerConfig(
     val labels: Map<String, String>,
     val healthcheck: ContainerHealthcheckConfig?
 )
 
+/**
+ * Contains healthcheck configuration for a container.
+ *
+ * @see [ContainerInspectionResult]
+ * @see [DockerClient.inspectContainer]
+ */
 public data class ContainerHealthcheckConfig(
     val test: List<String>,
     val interval: Duration?,

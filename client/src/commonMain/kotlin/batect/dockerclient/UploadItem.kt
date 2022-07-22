@@ -16,14 +16,29 @@
 
 package batect.dockerclient
 
+/**
+ * Base class for files and directories to be uploaded to a container.
+ *
+ * @see [DockerClient.uploadToContainer]
+ */
 public sealed interface UploadItem
 
+/**
+ * A directory to be uploaded to a container.
+ *
+ * @see [DockerClient.uploadToContainer]
+ */
 public data class UploadDirectory(
     val path: String,
     val owner: Int,
     val group: Int
 ) : UploadItem
 
+/**
+ * A file to be uploaded to a container.
+ *
+ * @see [DockerClient.uploadToContainer]
+ */
 public data class UploadFile(
     val path: String,
     val owner: Int,

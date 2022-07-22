@@ -24,6 +24,7 @@ import jnr.posix.util.Platform
 import okio.Sink
 import okio.Source
 
+@Suppress("UndocumentedPublicClass")
 public actual sealed interface TextOutput {
     public actual fun prepareStream(): PreparedOutputStream
 
@@ -33,6 +34,7 @@ public actual sealed interface TextOutput {
     }
 }
 
+@Suppress("UndocumentedPublicClass")
 public actual class SinkTextOutput actual constructor(public val sink: Sink) : TextOutput {
     override fun prepareStream(): PreparedOutputStream {
         return Pipe(sink)
