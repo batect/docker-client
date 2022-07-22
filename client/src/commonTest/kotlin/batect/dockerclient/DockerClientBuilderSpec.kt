@@ -215,10 +215,4 @@ class DockerClientBuilderSpec : ShouldSpec({
         exception.message shouldStartWith "failed to create TLS config: Could not load X509 key pair"
         exception.message shouldEndWith "${rootTestCertificatesDirectory.resolve("key-does-not-exist.pem")}: $operatingSystemFileNotFoundMessage"
     }
-
-    // TODO: these tests verify that the right thing is passed into the native library, but don't verify that they have the intended effect
-    // Need to cover:
-    // - TLS
-    // - host name
-    // - configuration directory
 })

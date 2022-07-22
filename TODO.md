@@ -10,7 +10,6 @@
   * Podman?
   * Colima?
 * Bump minimum Docker client version to something more recent?
-* Migrate integration tests from main Batect codebase
 * Remove "work in progress" tag from repo description
 * Contributor guide
 * KDoc comments for public API
@@ -49,22 +48,17 @@
 # APIs
 
 * Client configuration
-  * Add tests to verify that client configuration is actually applied - see TODO in DockerClientBuilderSpec
-  * Throw exceptions early (eg. if files provided don't exist)
   * Support for Docker CLI config contexts
     * Rework configuration API:
       * add method to get CLI context by name
       * allow consumer to either: pass returned context settings, modify and pass context settings, provide their own settings or use defaults
-
-* Check that Golang code can return an empty list (eg. listing all volumes returns no volumes)
-
-* Remove `with...` prefixes from ImageBuildSpec, ContainerCreationSpec and ContainerExecSpec?
-* Rename ImageBuildSpec, ContainerCreationSpec and ContainerExecSpec to something else to avoid confusion with 'spec' as it's used in test frameworks?
 
 * Images
   * Build
     * BuildKit
       * Support for SSH passthrough - fail if attempted with legacy builder
       * Support for secrets - fail if attempted with legacy builder
+        * Files
+        * Environment variables
       * Add support for warnings (added in BuildKit 0.10.0)
       * Upgrade to most recent version of BuildKit library (currently blocked due to version hell)
