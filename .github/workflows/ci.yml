@@ -287,8 +287,8 @@ jobs:
         with:
           path: client/build/dokka/html
 
-  publish:
-    name: "Publish"
+  publish-libs:
+    name: "Publish libraries"
     runs-on: macos-11
     if: github.repository == 'batect/docker-client' && (github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/')) && github.event_name == 'push'
 
@@ -302,10 +302,6 @@ jobs:
 
     env:
       SONATYPE_USERNAME: batect-docker-client-github-actions
-
-    permissions:
-      id-token: write
-      pages: write
 
     steps:
       - name: Check out code
@@ -367,6 +363,24 @@ jobs:
           ORG_GRADLE_PROJECT_signingPassword: ${{ secrets.GPG_KEY_PASSPHRASE }}
         if: github.repository == 'batect/docker-client' && startsWith(github.ref, 'refs/tags/') && github.event_name == 'push'
 
-      - name: Publish documentation to GitHub Pages
-        uses: actions/deploy-pages@v1.0.6
-        # TODO: if: github.repository == 'batect/docker-client' && startsWith(github.ref, 'refs/tags/') && github.event_name == 'push'
+  publish-docs:
+    name: "Publish documentation"
+    runs-on: ubuntu-20.04
+    if: github.repository == 'batect/docker-client' && (github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/')) && github.event_name == 'push'
+
+    needs:
+      # TODO: - validate-gradle-wrapper
+      # TODO: - build-and-test-library
+      # TODO: - check-wrapper
+      # TODO: - check-build-logic
+      # TODO: - check-samples
+      - build-docs
+
+    permissions:
+      id-token: write
+      pages: write
+
+    steps:
+    - name: Publish documentation to GitHub Pages
+      uses: actions/deploy-pages@v1.0.6
+      # TODO: if: github.repository == 'batect/docker-client' && startsWith(github.ref, 'refs/tags/') && github.event_name == 'push'
