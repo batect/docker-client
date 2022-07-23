@@ -280,7 +280,7 @@ jobs:
       - name: Build documentation
         uses: burrunan/gradle-cache-action@v1.12
         with:
-          arguments: dokkaHtml
+          arguments: dokkaHtml --scan
 
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v0.1.0
