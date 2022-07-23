@@ -1,25 +1,21 @@
 # Project setup
 
 * Demo / sample project
-  * Add snippets to readme
   * Pulling an image
     * Make output from sample apps nicer / clearer
   * Building an image
+    * Add to readme
 * License checking for Golang dependencies: use https://github.com/google/go-licenses perhaps?
 * Test more environments:
   * Podman?
   * Colima?
-* Bump minimum Docker client version to something more recent?
 * Remove "work in progress" tag from repo description
 * Contributor guide
 * KDoc comments for public API
   * Enforce this with Detekt (https://detekt.dev/docs/rules/comments#undocumentedpublicfunction, https://detekt.dev/docs/rules/comments#undocumentedpublicproperty)
-* Set up Dokka
-  * Publish docs somewhere? GitHub Pages perhaps?
-    * Limit this to only run from `main`
 * Run tests with memory leak detector - eg. valgrind
 * Linter to catch when memory is not freed (eg. Golang code allocates struct that is used as callback parameter)
-* Remove "be able to" prefixes from test descriptions
+* Remove "be able to" prefixes from test descriptions?
 * Refactor / rework code generation - it's a mess and needs tests
   * Use https://github.com/square/kotlinpoet/ to generate Kotlin code rather than current string concatenation approach?
 * Fix issue linking sample apps and tests for non-Mac Kotlin/Native targets from Mac hosts (eg. running `./gradlew samples:interactive-container:linkReleaseExecutableLinuxX64` on a Mac host)
@@ -49,6 +45,7 @@
 
 * Client configuration
   * Support for Docker CLI config contexts
+    * See github.com/docker/cli: cli/command/cli.go Initialize()
     * Rework configuration API:
       * add method to get CLI context by name
       * allow consumer to either: pass returned context settings, modify and pass context settings, provide their own settings or use defaults

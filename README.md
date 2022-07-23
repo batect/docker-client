@@ -15,7 +15,7 @@ If you require an API not provided here, please [open a new issue](https://githu
 
 ## How to use
 
-### Gradle reference
+### Referencing in Gradle
 
 Using the Kotlin Gradle DSL:
 
@@ -28,6 +28,45 @@ dependencies {
 Check the [releases page](https://github.com/batect/docker-client/releases/latest) for the latest release information,
 and the [Maven Central page](https://search.maven.org/artifact/dev.batect.docker/client) for examples of how
 to reference the library in other build systems.
+
+### Usage samples
+
+Full sample projects demonstrating how to use this library are available in the [`samples`](./samples) directory.
+
+#### Create a client
+
+```kotlin
+val client = DockerClient.Builder().build()
+```
+
+#### Pull an image
+
+```kotlin
+val image = client.pullImage("ubuntu:22.04")
+```
+
+#### Run a container
+
+```kotlin
+val containerSpec = ContainerCreationSpec.Builder(image)
+    .withTTY()
+    .withStdinAttached()
+    .build()
+
+val container = client.createContainer(containerSpec)
+
+try {
+    val exitCode = client.run(container, TextOutput.StandardOutput, TextOutput.StandardError, TextInput.StandardInput)
+
+    println("Container exited with code $exitCode.")
+} finally {
+    client.removeContainer(container, force = true)
+}
+```
+
+### Documentation
+
+Dokka documentation for the latest version of the library is available at https://batect.github.io/docker-client/.
 
 ## Requirements
 

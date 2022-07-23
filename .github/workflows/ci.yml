@@ -366,14 +366,14 @@ jobs:
   publish-docs:
     name: "Publish documentation"
     runs-on: ubuntu-20.04
-    if: github.repository == 'batect/docker-client' && (github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/')) && github.event_name == 'push'
+    if: github.repository == 'batect/docker-client' && startsWith(github.ref, 'refs/tags/') && github.event_name == 'push'
 
     needs:
-      # TODO: - validate-gradle-wrapper
-      # TODO: - build-and-test-library
-      # TODO: - check-wrapper
-      # TODO: - check-build-logic
-      # TODO: - check-samples
+      - validate-gradle-wrapper
+      - build-and-test-library
+      - check-wrapper
+      - check-build-logic
+      - check-samples
       - build-docs
 
     permissions:
@@ -388,4 +388,3 @@ jobs:
     - name: Publish documentation to GitHub Pages
       id: publish
       uses: actions/deploy-pages@v1.0.6
-      # TODO: if: github.repository == 'batect/docker-client' && startsWith(github.ref, 'refs/tags/') && github.event_name == 'push'
