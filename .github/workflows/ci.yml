@@ -380,7 +380,12 @@ jobs:
       id-token: write
       pages: write
 
+    environment:
+      name: github-pages
+      url: ${{ steps.publish.outputs.page_url }}
+
     steps:
     - name: Publish documentation to GitHub Pages
+      id: publish
       uses: actions/deploy-pages@v1.0.6
       # TODO: if: github.repository == 'batect/docker-client' && startsWith(github.ref, 'refs/tags/') && github.event_name == 'push'
