@@ -63,7 +63,7 @@ repositories {
 
 // FIXME: remove this once we're using a non-snapshot version of Kotest
 kotest {
-    compilerPluginVersion.set("5.3.2")
+    compilerPluginVersion.set(libs.kotest.framework.engine.get().versionConstraint.requiredVersion)
 }
 
 evaluationDependsOn(":golang-wrapper")
