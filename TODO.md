@@ -36,9 +36,6 @@
 * Remove `IODispatcher` / `Dispatchers.kt` once https://github.com/Kotlin/kotlinx.coroutines/issues/3205 is resolved
 * Restore AssertionMode to Error once https://github.com/kotest/kotest/issues/3022 is resolved
 * Move `nonMingwTest` tests back into `commonTest` once https://youtrack.jetbrains.com/issue/KTOR-4307 is resolved or there's an alternative Ktor engine available for Kotlin/Native on Windows.
-* Switch back to release version of Kotest once version 5.4.0 is released
-  * Remove `repositories` block in `build-logic/build.gradle.kts` and `client/build.gradle.kts`
-  * Remove `kotest` block in `client/build.gradle.kts`
 * Remove unnecessary extra constructor for DockerClientException in `nativeMain` source set once https://youtrack.jetbrains.com/issue/KT-52193/Native-Unable-to-call-primary-constructor-with-default-values-in-an-actual-class-without-passing-the-values-in-nativeMain-source is fixed
 
 # APIs
