@@ -24,6 +24,7 @@
   * Or something like https://docs.gradle.org/current/userguide/build_services.html perhaps?
   * Or look at toolchains concept?
   * How does the Kotlin/Native compiler get downloaded? Looks like this uses Gradle's dependency tooling in 1.7+
+  * https://docs.gradle.org/current/userguide/artifact_transforms.html
 * Use Gradle's project dependencies to refer to the Golang wrapper in the client project, rather than the current hack referencing Gradle tasks directly
   * https://docs.gradle.org/current/userguide/declaring_dependencies_between_subprojects.html#sec:depending_on_output_of_another_project
 * Confirm if it's possible to debug Golang code when running K/N executable (blocked until Kotlin 1.7 upgrade is done)
