@@ -739,6 +739,44 @@ class DockerClientContainerManagementSpec : ShouldSpec({
                 }
             }
 
+            should("be able to receive a notification when the container has started") {
+                val spec = ContainerCreationSpec.Builder(image)
+                    .withCommand("sh", "-c", "echo Hello world! && exit 123")
+                    .withStdinAttached()
+                    .build()
+
+                val container = client.createContainer(spec)
+
+                try {
+                    val stdout = Buffer()
+                    val stderr = Buffer()
+                    val startedNotification = ReadyNotification()
+                    var sawStartedNotification = false
+
+                    coroutineScope {
+                        launch {
+                            startedNotification.waitForReady()
+                            sawStartedNotification = true
+                        }
+
+                        launch {
+                            val exitCode = client.run(container, SinkTextOutput(stdout), SinkTextOutput(stderr), null, startedNotification)
+
+                            exitCode shouldBe 123
+                        }
+                    }
+
+                    val stdoutText = stdout.readUtf8()
+                    val stderrText = stderr.readUtf8()
+
+                    stdoutText shouldBe "Hello world!\n"
+                    stderrText shouldBe ""
+                    sawStartedNotification shouldBe true
+                } finally {
+                    client.removeContainer(container, force = true)
+                }
+            }
+
             data class TestScenario(
                 val description: String,
                 val creationSpec: ContainerCreationSpec,

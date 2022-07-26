@@ -72,7 +72,7 @@ public interface DockerClient : AutoCloseable {
      * @param stdout the output stream to stream stdout to
      * @param stderr the output stream to stream stderr to. Not used if the container is configured to use a TTY with [ContainerCreationSpec.Builder.withTTY].
      * @param stdin the input stream to stream stdin from. Only used if the container is configured to have stdin attached with [ContainerCreationSpec.Builder.withStdinAttached].
-     * @param attachedNotification marked as read when streaming has been established
+     * @param attachedNotification marked as ready when streaming has been established
      */
     public suspend fun attachToContainerIO(container: ContainerReference, stdout: TextOutput?, stderr: TextOutput?, stdin: TextInput?, attachedNotification: ReadyNotification? = null)
 
@@ -223,9 +223,10 @@ internal typealias DockerClientFactory = (DockerClientConfiguration) -> DockerCl
  * @param stdout the output stream to stream stdout to
  * @param stderr the output stream to stream stderr to. Not used if the container is configured to use a TTY with [ContainerCreationSpec.Builder.withTTY].
  * @param stdin the input stream to stream stdin from. Only used if the container is configured to have stdin attached with [ContainerCreationSpec.Builder.withStdinAttached].
+ * @param startedNotification marked as ready once the container has started
  * @return the exit code from the container
  */
-public suspend fun DockerClient.run(container: ContainerReference, stdout: TextOutput?, stderr: TextOutput?, stdin: TextInput?): Long {
+public suspend fun DockerClient.run(container: ContainerReference, stdout: TextOutput?, stderr: TextOutput?, stdin: TextInput?, startedNotification: ReadyNotification? = null): Long {
     return coroutineScope {
         val listeningToOutput = ReadyNotification()
         val waitingForExitCode = ReadyNotification()
@@ -244,6 +245,8 @@ public suspend fun DockerClient.run(container: ContainerReference, stdout: TextO
                 waitingForExitCode.waitForReady()
 
                 startContainer(container)
+
+                startedNotification?.markAsReady()
             }
 
             exitCodeSource.await()
