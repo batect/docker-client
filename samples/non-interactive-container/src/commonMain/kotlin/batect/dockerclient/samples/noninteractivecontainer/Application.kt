@@ -23,7 +23,6 @@ import batect.dockerclient.DockerClient
 import batect.dockerclient.ImageReference
 import batect.dockerclient.io.SinkTextOutput
 import batect.dockerclient.io.TextOutput
-import batect.dockerclient.run
 import kotlinx.coroutines.runBlocking
 import okio.use
 

@@ -106,6 +106,50 @@ public interface DockerClient : AutoCloseable {
     public suspend fun streamEvents(since: Instant?, until: Instant?, filters: Map<String, Set<String>>, onEventReceived: EventHandler)
 
     /**
+     * Runs the provided container until it exits, streaming output to the provided output streams.
+     *
+     * The container is not stopped or removed when it exits.
+     *
+     * If [stdin] is a [batect.dockerclient.io.SourceTextInput], the underlying source will be closed when the container exits.
+     *
+     * @param container the container to run
+     * @param stdout the output stream to stream stdout to
+     * @param stderr the output stream to stream stderr to. Not used if the container is configured to use a TTY with [ContainerCreationSpec.Builder.withTTY].
+     * @param stdin the input stream to stream stdin from. Only used if the container is configured to have stdin attached with [ContainerCreationSpec.Builder.withStdinAttached].
+     * @param startedNotification marked as ready once the container has started
+     * @return the exit code from the container
+     */
+    public suspend fun run(container: ContainerReference, stdout: TextOutput?, stderr: TextOutput?, stdin: TextInput?, startedNotification: ReadyNotification? = null): Long {
+        return coroutineScope {
+            val listeningToOutput = ReadyNotification()
+            val waitingForExitCode = ReadyNotification()
+
+            try {
+                launch {
+                    attachToContainerIO(container, stdout, stderr, stdin, listeningToOutput)
+                }
+
+                val exitCodeSource = async {
+                    waitForContainerToExit(container, waitingForExitCode)
+                }
+
+                launch {
+                    listeningToOutput.waitForReady()
+                    waitingForExitCode.waitForReady()
+
+                    startContainer(container)
+
+                    startedNotification?.markAsReady()
+                }
+
+                exitCodeSource.await()
+            } finally {
+                stdin?.abortRead()
+            }
+        }
+    }
+
+    /**
      * Use to create an instance of a [DockerClient] connected to a Docker daemon.
      */
     public class Builder internal constructor(internal val factory: DockerClientFactory) {
@@ -211,47 +255,3 @@ public interface DockerClient : AutoCloseable {
 internal expect class RealDockerClient(configuration: DockerClientConfiguration) : DockerClient, AutoCloseable
 
 internal typealias DockerClientFactory = (DockerClientConfiguration) -> DockerClient
-
-/**
- * Runs the provided container until it exits, streaming output to the provided output streams.
- *
- * The container is not stopped or removed when it exits.
- *
- * If [stdin] is a [batect.dockerclient.io.SourceTextInput], the underlying source will be closed when the container exits.
- *
- * @param container the container to run
- * @param stdout the output stream to stream stdout to
- * @param stderr the output stream to stream stderr to. Not used if the container is configured to use a TTY with [ContainerCreationSpec.Builder.withTTY].
- * @param stdin the input stream to stream stdin from. Only used if the container is configured to have stdin attached with [ContainerCreationSpec.Builder.withStdinAttached].
- * @param startedNotification marked as ready once the container has started
- * @return the exit code from the container
- */
-public suspend fun DockerClient.run(container: ContainerReference, stdout: TextOutput?, stderr: TextOutput?, stdin: TextInput?, startedNotification: ReadyNotification? = null): Long {
-    return coroutineScope {
-        val listeningToOutput = ReadyNotification()
-        val waitingForExitCode = ReadyNotification()
-
-        try {
-            launch {
-                attachToContainerIO(container, stdout, stderr, stdin, listeningToOutput)
-            }
-
-            val exitCodeSource = async {
-                waitForContainerToExit(container, waitingForExitCode)
-            }
-
-            launch {
-                listeningToOutput.waitForReady()
-                waitingForExitCode.waitForReady()
-
-                startContainer(container)
-
-                startedNotification?.markAsReady()
-            }
-
-            exitCodeSource.await()
-        } finally {
-            stdin?.abortRead()
-        }
-    }
-}
