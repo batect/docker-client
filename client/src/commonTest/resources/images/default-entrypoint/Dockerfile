@@ -1,3 +1,3 @@
-FROM alpine:3.16.0
+FROM alpine:3.16.1
 
 ENTRYPOINT ["echo", "This is the default entrypoint"]
