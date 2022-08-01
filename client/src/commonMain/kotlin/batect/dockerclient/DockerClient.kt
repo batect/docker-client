@@ -64,6 +64,9 @@ public interface DockerClient : AutoCloseable {
      * If [stdin] is a [batect.dockerclient.io.SourceTextInput], the underlying source will **not** be closed when the container exits. You must call [TextInput.abortRead] to
      * cancel any pending read from [stdin] once the container exits: this method does not exit until all streams have been exhausted or aborted.
      *
+     * If [stdout] and [stderr] refer to the same [batect.dockerclient.io.SinkTextOutput], the underlying [okio.Sink] must be thread-safe, as it may receive writes from
+     * multiple threads.
+     *
      * To capture all output from a container, call this method, wait for [attachedNotification] to be marked as ready, then call [startContainer].
      *
      * See also: [run], which handles these details for you.
@@ -95,6 +98,9 @@ public interface DockerClient : AutoCloseable {
      *
      * If [stdin] is a [batect.dockerclient.io.SourceTextInput], the underlying source will be closed when the exec instance exits.
      *
+     * If [stdout] and [stderr] refer to the same [batect.dockerclient.io.SinkTextOutput], the underlying [okio.Sink] must be thread-safe, as it may receive writes from
+     * multiple threads.
+     *
      * @param exec the exec instance to stream input and output to
      * @param attachTTY if `true`, attach a TTY to the exec instance. Has no effect if the exec instance does not have a TTY attached with [ContainerExecSpec.Builder.withTTYAttached].
      * @param stdout the output stream to stream stdout to
@@ -111,6 +117,9 @@ public interface DockerClient : AutoCloseable {
      * The container is not stopped or removed when it exits.
      *
      * If [stdin] is a [batect.dockerclient.io.SourceTextInput], the underlying source will be closed when the container exits.
+     *
+     * If [stdout] and [stderr] refer to the same [batect.dockerclient.io.SinkTextOutput], the underlying [okio.Sink] must be thread-safe, as it may receive writes from
+     * multiple threads.
      *
      * @param container the container to run
      * @param stdout the output stream to stream stdout to
