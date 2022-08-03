@@ -219,9 +219,9 @@ func (h DockerClientHandle) DefaultBuilderVersion(ctx context.Context) (types.Bu
 
 		if buildkitEnabled {
 			return types.BuilderBuildKit, nil
-		} else {
-			return types.BuilderV1, nil
 		}
+
+		return types.BuilderV1, nil
 	}
 
 	info, err := h.ServerInfo(ctx)

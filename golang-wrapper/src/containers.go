@@ -170,7 +170,16 @@ func RemoveContainer(clientHandle DockerClientHandle, contextHandle ContextHandl
 
 //export AttachToContainerOutput
 //nolint:funlen
-func AttachToContainerOutput(clientHandle DockerClientHandle, contextHandle ContextHandle, id *C.char, stdoutStreamHandle OutputStreamHandle, stderrStreamHandle OutputStreamHandle, stdinStreamHandle InputStreamHandle, onReady ReadyCallback, callbackUserData unsafe.Pointer) Error {
+func AttachToContainerOutput(
+	clientHandle DockerClientHandle,
+	contextHandle ContextHandle,
+	id *C.char,
+	stdoutStreamHandle OutputStreamHandle,
+	stderrStreamHandle OutputStreamHandle,
+	stdinStreamHandle InputStreamHandle,
+	onReady ReadyCallback,
+	callbackUserData unsafe.Pointer,
+) Error {
 	defer stdoutStreamHandle.Close()
 	defer stderrStreamHandle.Close()
 	// We don't need to close stdinStreamHandle - the Kotlin code should do that when there is no more input to stream.
@@ -235,7 +244,13 @@ func AttachToContainerOutput(clientHandle DockerClientHandle, contextHandle Cont
 }
 
 //export WaitForContainerToExit
-func WaitForContainerToExit(clientHandle DockerClientHandle, contextHandle ContextHandle, id *C.char, onReady ReadyCallback, callbackUserData unsafe.Pointer) WaitForContainerToExitReturn {
+func WaitForContainerToExit(
+	clientHandle DockerClientHandle,
+	contextHandle ContextHandle,
+	id *C.char,
+	onReady ReadyCallback,
+	callbackUserData unsafe.Pointer,
+) WaitForContainerToExitReturn {
 	docker := clientHandle.DockerAPIClient()
 	ctx := contextHandle.Context()
 
