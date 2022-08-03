@@ -91,7 +91,15 @@ func InspectExec(clientHandle DockerClientHandle, contextHandle ContextHandle, i
 }
 
 //export StartAndAttachToExec
-func StartAndAttachToExec(clientHandle DockerClientHandle, contextHandle ContextHandle, id *C.char, attachTTY C.bool, stdoutStreamHandle OutputStreamHandle, stderrStreamHandle OutputStreamHandle, stdinStreamHandle InputStreamHandle) Error {
+func StartAndAttachToExec(
+	clientHandle DockerClientHandle,
+	contextHandle ContextHandle,
+	id *C.char,
+	attachTTY C.bool,
+	stdoutStreamHandle OutputStreamHandle,
+	stderrStreamHandle OutputStreamHandle,
+	stdinStreamHandle InputStreamHandle,
+) Error {
 	defer stdoutStreamHandle.Close()
 	defer stderrStreamHandle.Close()
 	// We don't need to close stdinStreamHandle - the Kotlin code should do that when there is no more input to stream.

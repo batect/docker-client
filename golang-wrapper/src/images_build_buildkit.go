@@ -50,8 +50,8 @@ import (
 var errDockerAuthProviderDoesNotSupportLogging = errors.New("DockerAuthProvider does not support logging")
 
 func buildImageWithBuildKitBuilder(
-	clientHandle DockerClientHandle,
 	ctx context.Context,
+	clientHandle DockerClientHandle,
 	request *imageBuildRequest,
 	outputStreamHandle OutputStreamHandle,
 	onProgressUpdate BuildImageProgressCallback,
@@ -174,7 +174,12 @@ func runSession(ctx context.Context, sess *session.Session, docker *client.Clien
 	return sess.Run(ctx, dialSession)
 }
 
-func createBuildKitImageBuildOptions(docker *client.Client, sess *session.Session, configFile *configfile.ConfigFile, request *imageBuildRequest) types.ImageBuildOptions {
+func createBuildKitImageBuildOptions(
+	docker *client.Client,
+	sess *session.Session,
+	configFile *configfile.ConfigFile,
+	request *imageBuildRequest,
+) types.ImageBuildOptions {
 	dockerfileName := filepath.Base(request.PathToDockerfile)
 
 	opts := createImageBuildOptions(docker, configFile, dockerfileName, request)
@@ -187,7 +192,14 @@ func createBuildKitImageBuildOptions(docker *client.Client, sess *session.Sessio
 	return opts
 }
 
-func runBuild(ctx context.Context, eg *errgroup.Group, docker *client.Client, opts types.ImageBuildOptions, tracer *buildKitBuildTracer, outputStreamHandle OutputStreamHandle) (string, error) {
+func runBuild(
+	ctx context.Context,
+	eg *errgroup.Group,
+	docker *client.Client,
+	opts types.ImageBuildOptions,
+	tracer *buildKitBuildTracer,
+	outputStreamHandle OutputStreamHandle,
+) (string, error) {
 	response, err := docker.ImageBuild(ctx, nil, opts)
 
 	if err != nil {
@@ -283,7 +295,12 @@ type buildKitBuildTracer struct {
 	completedVertices          map[digest.Digest]interface{}
 }
 
-func newBuildKitBuildTracer(outputStreamHandle OutputStreamHandle, eg *errgroup.Group, onProgressUpdate BuildImageProgressCallback, onProgressUpdateUserData unsafe.Pointer) *buildKitBuildTracer {
+func newBuildKitBuildTracer(
+	outputStreamHandle OutputStreamHandle,
+	eg *errgroup.Group,
+	onProgressUpdate BuildImageProgressCallback,
+	onProgressUpdateUserData unsafe.Pointer,
+) *buildKitBuildTracer {
 	return &buildKitBuildTracer{
 		displayCh:                  make(chan *buildkitclient.SolveStatus),
 		eg:                         eg,
@@ -296,7 +313,9 @@ func newBuildKitBuildTracer(outputStreamHandle OutputStreamHandle, eg *errgroup.
 
 func (t *buildKitBuildTracer) Start() {
 	t.eg.Go(func() error {
-		//nolint:contextcheck // We deliberately don't use the build operation's context as the context below - otherwise, error messages might not be printed after the context is cancelled.
+		// We deliberately don't use the build operation's context as the context below -
+		// otherwise, error messages might not be printed after the context is cancelled.
+		//nolint:contextcheck
 		return t.run()
 	})
 }
@@ -517,7 +536,12 @@ func (t *buildKitBuildTracer) sendProgressUpdateNotifications(resp controlapi.St
 	return nil
 }
 
-func (t *buildKitBuildTracer) sendVertexNotifications(v *controlapi.Vertex, resp controlapi.StatusResponse, processedStatuses map[*controlapi.VertexStatus]interface{}, processedLogs map[*controlapi.VertexLog]interface{}) error {
+func (t *buildKitBuildTracer) sendVertexNotifications(
+	v *controlapi.Vertex,
+	resp controlapi.StatusResponse,
+	processedStatuses map[*controlapi.VertexStatus]interface{},
+	processedLogs map[*controlapi.VertexLog]interface{},
+) error {
 	if !t.haveSeenVertex(v) && v.Started != nil {
 		t.allocateStepNumber(v)
 

@@ -32,7 +32,14 @@ import (
 )
 
 //export BuildImage
-func BuildImage(clientHandle DockerClientHandle, contextHandle ContextHandle, request *C.BuildImageRequest, outputStreamHandle OutputStreamHandle, onProgressUpdate BuildImageProgressCallback, callbackUserData unsafe.Pointer) BuildImageReturn {
+func BuildImage(
+	clientHandle DockerClientHandle,
+	contextHandle ContextHandle,
+	request *C.BuildImageRequest,
+	outputStreamHandle OutputStreamHandle,
+	onProgressUpdate BuildImageProgressCallback,
+	callbackUserData unsafe.Pointer,
+) BuildImageReturn {
 	defer outputStreamHandle.Close()
 
 	ctx := contextHandle.Context()
@@ -50,10 +57,10 @@ func BuildImage(clientHandle DockerClientHandle, contextHandle ContextHandle, re
 
 	switch builderVersion {
 	case string(types.BuilderV1):
-		return buildImageWithLegacyBuilder(clientHandle, ctx, fromCBuildImageRequest(request), outputStreamHandle, onProgressUpdate, callbackUserData)
+		return buildImageWithLegacyBuilder(ctx, clientHandle, fromCBuildImageRequest(request), outputStreamHandle, onProgressUpdate, callbackUserData)
 
 	case string(types.BuilderBuildKit):
-		return buildImageWithBuildKitBuilder(clientHandle, ctx, fromCBuildImageRequest(request), outputStreamHandle, onProgressUpdate, callbackUserData)
+		return buildImageWithBuildKitBuilder(ctx, clientHandle, fromCBuildImageRequest(request), outputStreamHandle, onProgressUpdate, callbackUserData)
 
 	default:
 		return newBuildImageReturn(nil, toError(InvalidBuilderVersionError{builderVersion}))

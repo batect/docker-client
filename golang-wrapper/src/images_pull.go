@@ -39,7 +39,13 @@ import (
 )
 
 //export PullImage
-func PullImage(clientHandle DockerClientHandle, contextHandle ContextHandle, ref *C.char, onProgressUpdate PullImageProgressCallback, callbackUserData unsafe.Pointer) PullImageReturn {
+func PullImage(
+	clientHandle DockerClientHandle,
+	contextHandle ContextHandle,
+	ref *C.char,
+	onProgressUpdate PullImageProgressCallback,
+	callbackUserData unsafe.Pointer,
+) PullImageReturn {
 	docker := clientHandle.DockerAPIClient()
 	ctx := contextHandle.Context()
 
@@ -109,7 +115,14 @@ func electAuthServerForOfficialIndex(ctx context.Context, clientHandle DockerCli
 	return info.IndexServerAddress
 }
 
-func processPullResponse(ctx context.Context, docker *client.Client, responseBody io.ReadCloser, originalReference reference.Named, onProgressUpdate PullImageProgressCallback, callbackUserData unsafe.Pointer) PullImageReturn {
+func processPullResponse(
+	ctx context.Context,
+	docker *client.Client,
+	responseBody io.ReadCloser,
+	originalReference reference.Named,
+	onProgressUpdate PullImageProgressCallback,
+	callbackUserData unsafe.Pointer,
+) PullImageReturn {
 	pulledDigest := ""
 
 	err := parsePullResponseBody(responseBody, func(message jsonmessage.JSONMessage) error {

@@ -46,7 +46,15 @@ var removingIntermediateContainerLineRegex = regexp.MustCompile(`^Removing inter
 var buildStepFinishedLineRegex = regexp.MustCompile(`^ ---> [0-9a-f]{12}\n$`)
 var buildSuccessfullyFinishedLineRegex = regexp.MustCompile(`^Successfully built [0-9a-f]{12}\n$`)
 
-func buildImageWithLegacyBuilder(clientHandle DockerClientHandle, ctx context.Context, request *imageBuildRequest, outputStreamHandle OutputStreamHandle, onProgressUpdate BuildImageProgressCallback, callbackUserData unsafe.Pointer) BuildImageReturn {
+//nolint:funlen
+func buildImageWithLegacyBuilder(
+	ctx context.Context,
+	clientHandle DockerClientHandle,
+	request *imageBuildRequest,
+	outputStreamHandle OutputStreamHandle,
+	onProgressUpdate BuildImageProgressCallback,
+	callbackUserData unsafe.Pointer,
+) BuildImageReturn {
 	docker := clientHandle.DockerAPIClient()
 	configFile := clientHandle.ClientConfigFile()
 	contextDir := request.ContextDirectory
