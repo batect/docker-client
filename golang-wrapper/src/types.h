@@ -362,12 +362,14 @@ typedef struct {
     char* Path;
     int32_t Owner;
     int32_t Group;
+    int32_t Mode;
 } UploadDirectory;
 
 typedef struct {
     char* Path;
     int32_t Owner;
     int32_t Group;
+    int32_t Mode;
     void* Contents;
     int32_t ContentsSize;
 } UploadFile;

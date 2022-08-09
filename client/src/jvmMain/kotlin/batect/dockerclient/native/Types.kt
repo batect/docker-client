@@ -791,6 +791,7 @@ internal class UploadDirectory(runtime: Runtime) : Struct(runtime), AutoCloseabl
     val path = UTF8StringRef()
     val owner = int32_t()
     val group = int32_t()
+    val mode = int32_t()
 
     override fun close() {
         nativeAPI.FreeUploadDirectory(this)
@@ -805,6 +806,7 @@ internal class UploadFile(runtime: Runtime) : Struct(runtime), AutoCloseable {
     val path = UTF8StringRef()
     val owner = int32_t()
     val group = int32_t()
+    val mode = int32_t()
     val contents = Pointer()
     val contentsSize = int32_t()
 

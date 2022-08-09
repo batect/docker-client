@@ -1302,7 +1302,7 @@ class DockerClientContainerManagementSpec : ShouldSpec({
 
             should("upload a file to an existing directory") {
                 val spec = ContainerCreationSpec.Builder(uploadTargetImage)
-                    .withCommand("sh", "-c", "cat /existing-directory/new-file.txt && echo --DIVIDER-- && tree -Jug --noreport /existing-directory")
+                    .withCommand("sh", "-c", "cat /existing-directory/new-file.txt && echo --DIVIDER-- && tree -Jugp --noreport /existing-directory")
                     .build()
 
                 val container = client.createContainer(spec)
@@ -1310,7 +1310,7 @@ class DockerClientContainerManagementSpec : ShouldSpec({
                 try {
                     client.uploadToContainer(
                         container,
-                        setOf(UploadFile("new-file.txt", 1234, 5678, "This is the new file\n".encodeToByteArray())),
+                        setOf(UploadFile("new-file.txt", 1234, 5678, "0641".toInt(8), "This is the new file\n".encodeToByteArray())),
                         "/existing-directory"
                     )
 
@@ -1326,10 +1326,30 @@ class DockerClientContainerManagementSpec : ShouldSpec({
                     stdoutText.substringAfter("--DIVIDER--\n").trim() shouldEqualJson
                         """
                         [
-                          {"type":"directory","name":"/existing-directory","user":"root","group":"root","contents":
-                            [
-                              {"type":"file","name":"existing-file.txt","user":"root","group":"root"},
-                              {"type":"file","name":"new-file.txt","user":"1234","group":"5678"}
+                          {
+                            "type": "directory",
+                            "name": "/existing-directory",
+                            "user": "root",
+                            "group": "root",
+                            "mode": "0755",
+                            "prot": "drwxr-xr-x",
+                            "contents": [
+                              {
+                                "type": "file",
+                                "name": "existing-file.txt",
+                                "user": "root",
+                                "group": "root",
+                                "mode": "0644",
+                                "prot": "-rw-r--r--"
+                              },
+                              {
+                                "type": "file",
+                                "name": "new-file.txt",
+                                "user": "1234",
+                                "group": "5678",
+                                "mode": "0641",
+                                "prot": "-rw-r----x"
+                              }
                             ]
                           }
                         ]
@@ -1352,7 +1372,7 @@ class DockerClientContainerManagementSpec : ShouldSpec({
                 try {
                     client.uploadToContainer(
                         container,
-                        setOf(UploadFile("existing-file.txt", 1234, 5678, "This is the new file\n".encodeToByteArray())),
+                        setOf(UploadFile("existing-file.txt", 1234, 5678, "0644".toInt(8), "This is the new file\n".encodeToByteArray())),
                         "/existing-directory"
                     )
 
@@ -1383,9 +1403,10 @@ class DockerClientContainerManagementSpec : ShouldSpec({
                 }
             }
 
-            should("upload a directory to an existing directory") {
+            should("upload a file when the container is configured to run as a user other than root") {
                 val spec = ContainerCreationSpec.Builder(uploadTargetImage)
-                    .withCommand("tree", "-Jug", "--noreport", "/existing-directory")
+                    .withUserAndGroup(1234, 5678)
+                    .withCommand("sh", "-c", "cat /existing-directory/existing-file.txt && echo --DIVIDER-- && tree -Jug --noreport /existing-directory")
                     .build()
 
                 val container = client.createContainer(spec)
@@ -1393,7 +1414,49 @@ class DockerClientContainerManagementSpec : ShouldSpec({
                 try {
                     client.uploadToContainer(
                         container,
-                        setOf(UploadDirectory("new-directory", 1234, 5678)),
+                        setOf(UploadFile("existing-file.txt", 1234, 5678, "644".toInt(8), "This is the new file\n".encodeToByteArray())),
+                        "/existing-directory"
+                    )
+
+                    val stdout = Buffer()
+                    val stderr = Buffer()
+
+                    val exitCode = client.run(container, SinkTextOutput(stdout), SinkTextOutput(stderr), null)
+                    val stdoutText = stdout.readUtf8()
+                    val stderrText = stderr.readUtf8()
+
+                    stderrText.trim() shouldBe ""
+
+                    stdoutText.substringBefore("--DIVIDER--\n") shouldBe "This is the new file\n"
+
+                    stdoutText.substringAfter("--DIVIDER--\n").trim() shouldEqualJson
+                        """
+                        [
+                          {"type":"directory","name":"/existing-directory","user":"root","group":"root","contents":
+                            [
+                              {"type":"file","name":"existing-file.txt","user":"1234","group":"5678"}
+                            ]
+                          }
+                        ]
+                        """.trimIndent()
+
+                    exitCode shouldBe 0
+                } finally {
+                    client.removeContainer(container, force = true)
+                }
+            }
+
+            should("upload a directory to an existing directory") {
+                val spec = ContainerCreationSpec.Builder(uploadTargetImage)
+                    .withCommand("tree", "-Jugp", "--noreport", "/existing-directory")
+                    .build()
+
+                val container = client.createContainer(spec)
+
+                try {
+                    client.uploadToContainer(
+                        container,
+                        setOf(UploadDirectory("new-directory", 1234, 5678, "0751".toInt(8))),
                         "/existing-directory"
                     )
 
@@ -1407,10 +1470,30 @@ class DockerClientContainerManagementSpec : ShouldSpec({
                     stdoutText.trim() shouldEqualJson
                         """
                         [
-                          {"type":"directory","name":"/existing-directory","user":"root","group":"root","contents":
-                            [
-                              {"type":"file","name":"existing-file.txt","user":"root","group":"root"},
-                              {"type":"directory","name":"new-directory","user":"1234","group":"5678"}
+                          {
+                            "type": "directory",
+                            "name": "/existing-directory",
+                            "user": "root",
+                            "group": "root",
+                            "mode": "0755",
+                            "prot": "drwxr-xr-x",
+                            "contents": [
+                              {
+                                "type": "file",
+                                "name": "existing-file.txt",
+                                "user": "root",
+                                "group": "root",
+                                "mode": "0644",
+                                "prot": "-rw-r--r--"
+                              },
+                              {
+                                "type": "directory",
+                                "name": "new-directory",
+                                "user": "1234",
+                                "group": "5678",
+                                "mode": "0751",
+                                "prot": "drwxr-x--x"
+                              }
                             ]
                           }
                         ]
@@ -1433,7 +1516,7 @@ class DockerClientContainerManagementSpec : ShouldSpec({
                 try {
                     client.uploadToContainer(
                         container,
-                        setOf(UploadDirectory("existing-directory", 1234, 5678)),
+                        setOf(UploadDirectory("existing-directory", 1234, 5678, "0755".toInt(8))),
                         "/"
                     )
 
@@ -1473,8 +1556,8 @@ class DockerClientContainerManagementSpec : ShouldSpec({
                     client.uploadToContainer(
                         container,
                         setOf(
-                            UploadFile("new-directory/new-file.txt", 1234, 5678, "This is the new file\n".encodeToByteArray()),
-                            UploadDirectory("new-directory", 4321, 8765)
+                            UploadFile("new-directory/new-file.txt", 1234, 5678, "0644".toInt(8), "This is the new file\n".encodeToByteArray()),
+                            UploadDirectory("new-directory", 4321, 8765, "0755".toInt(8))
                         ),
                         "/existing-directory"
                     )
@@ -1516,7 +1599,7 @@ class DockerClientContainerManagementSpec : ShouldSpec({
                     val exception = shouldThrow<ContainerUploadFailedException> {
                         client.uploadToContainer(
                             container,
-                            setOf(UploadFile("new-file.txt", 1234, 5678, "This is the new file\n".encodeToByteArray())),
+                            setOf(UploadFile("new-file.txt", 1234, 5678, "0644".toInt(8), "This is the new file\n".encodeToByteArray())),
                             "/does-not-exist"
                         )
                     }
@@ -1537,7 +1620,7 @@ class DockerClientContainerManagementSpec : ShouldSpec({
                     val exception = shouldThrow<ContainerUploadFailedException> {
                         client.uploadToContainer(
                             container,
-                            setOf(UploadDirectory("new-directory", 1234, 5678)),
+                            setOf(UploadDirectory("new-directory", 1234, 5678, "0755".toInt(8))),
                             "/does-not-exist"
                         )
                     }

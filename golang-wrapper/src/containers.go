@@ -331,6 +331,7 @@ func UploadToContainer(clientHandle DockerClientHandle, contextHandle ContextHan
 			Name:     C.GoString(dir.Path) + "/",
 			Uid:      int(dir.Owner),
 			Gid:      int(dir.Group),
+			Mode:     int64(dir.Mode),
 		}
 
 		if err := writer.WriteHeader(h); err != nil {
@@ -347,6 +348,7 @@ func UploadToContainer(clientHandle DockerClientHandle, contextHandle ContextHan
 			Size:     int64(file.ContentsSize),
 			Uid:      int(file.Owner),
 			Gid:      int(file.Group),
+			Mode:     int64(file.Mode),
 		}
 
 		if err := writer.WriteHeader(h); err != nil {
@@ -366,7 +368,6 @@ func UploadToContainer(clientHandle DockerClientHandle, contextHandle ContextHan
 
 	opts := types.CopyToContainerOptions{
 		AllowOverwriteDirWithFile: false,
-		CopyUIDGID:                true,
 	}
 
 	if err := docker.CopyToContainer(ctx, C.GoString(containerID), C.GoString(destinationPath), &buf, opts); err != nil {

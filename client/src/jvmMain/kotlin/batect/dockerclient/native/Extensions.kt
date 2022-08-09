@@ -273,6 +273,7 @@ private fun uploadDirectoryToNative(value: batect.dockerclient.UploadDirectory, 
     directory.path.set(value.path)
     directory.owner.set(value.owner)
     directory.group.set(value.group)
+    directory.mode.set(value.mode)
 
     return Struct.getMemory(directory)
 }
@@ -284,6 +285,7 @@ private fun uploadFileToNative(value: batect.dockerclient.UploadFile, memoryMana
     file.path.set(value.path)
     file.owner.set(value.owner)
     file.group.set(value.group)
+    file.mode.set(value.mode)
     file.contents.set(memoryManager.allocateDirect(value.contents.size))
     file.contents.get().put(0, value.contents, 0, value.contents.size)
     file.contentsSize.set(value.contents.size)

@@ -878,11 +878,13 @@ func newUploadDirectory(
     Path string,
     Owner int32,
     Group int32,
+    Mode int32,
 ) UploadDirectory {
     value := C.AllocUploadDirectory()
     value.Path = C.CString(Path)
     value.Owner = C.int32_t(Owner)
     value.Group = C.int32_t(Group)
+    value.Mode = C.int32_t(Mode)
 
     return value
 }
@@ -891,6 +893,7 @@ func newUploadFile(
     Path string,
     Owner int32,
     Group int32,
+    Mode int32,
     Contents []byte,
     ContentsSize int32,
 ) UploadFile {
@@ -898,6 +901,7 @@ func newUploadFile(
     value.Path = C.CString(Path)
     value.Owner = C.int32_t(Owner)
     value.Group = C.int32_t(Group)
+    value.Mode = C.int32_t(Mode)
     value.Contents = C.CBytes(Contents)
     value.ContentsSize = C.int32_t(ContentsSize)
 

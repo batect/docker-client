@@ -325,6 +325,7 @@ internal fun MemScope.allocUploadDirectory(directory: UploadDirectory): batect.d
         Path = directory.path.cstr.ptr
         Owner = directory.owner
         Group = directory.group
+        Mode = directory.mode
     }
 }
 
@@ -333,6 +334,7 @@ internal fun MemScope.allocUploadFile(file: UploadFile): batect.dockerclient.nat
         Path = file.path.cstr.ptr
         Owner = file.owner
         Group = file.group
+        Mode = file.mode
         Contents = file.contents.toCValues().ptr
         ContentsSize = file.contents.size
     }

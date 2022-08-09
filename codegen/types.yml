@@ -544,6 +544,8 @@
       type: int32
     - name: Group
       type: int32
+    - name: Mode
+      type: int32
 
 - name: UploadFile
   type: struct
@@ -553,6 +555,8 @@
     - name: Owner
       type: int32
     - name: Group
+      type: int32
+    - name: Mode
       type: int32
     - name: Contents
       type: byteArray

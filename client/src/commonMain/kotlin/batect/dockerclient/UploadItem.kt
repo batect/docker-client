@@ -31,7 +31,8 @@ public sealed interface UploadItem
 public data class UploadDirectory(
     val path: String,
     val owner: Int,
-    val group: Int
+    val group: Int,
+    val mode: Int
 ) : UploadItem
 
 /**
@@ -43,6 +44,7 @@ public data class UploadFile(
     val path: String,
     val owner: Int,
     val group: Int,
+    val mode: Int,
     val contents: ByteArray // FIXME: loading this as a byte array isn't suitable for large files, as we'll load the entire file into memory
 ) : UploadItem {
     override fun equals(other: Any?): Boolean {
