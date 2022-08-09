@@ -44,4 +44,26 @@ public data class UploadFile(
     val owner: Int,
     val group: Int,
     val contents: ByteArray // FIXME: loading this as a byte array isn't suitable for large files, as we'll load the entire file into memory
-) : UploadItem
+) : UploadItem {
+    override fun equals(other: Any?): Boolean {
+        if (this === other) return true
+        if (other == null || this::class != other::class) return false
+
+        other as UploadFile
+
+        if (path != other.path) return false
+        if (owner != other.owner) return false
+        if (group != other.group) return false
+        if (!contents.contentEquals(other.contents)) return false
+
+        return true
+    }
+
+    override fun hashCode(): Int {
+        var result = path.hashCode()
+        result = 31 * result + owner
+        result = 31 * result + group
+        result = 31 * result + contents.contentHashCode()
+        return result
+    }
+}
