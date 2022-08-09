@@ -26,6 +26,7 @@ import io.kotest.matchers.shouldBe
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withTimeout
 import kotlinx.datetime.Clock
+import kotlinx.datetime.Instant
 import kotlin.random.Random
 import kotlin.time.Duration.Companion.seconds
 
@@ -157,6 +158,7 @@ class DockerClientEventStreamingSpec : ShouldSpec({
         val volume = client.createVolume(volumeName)
         client.deleteVolume(volume)
         val endTime = Clock.System.now() + clockSkewFudgeFactor
+
         val filters = mapOf(
             "volume" to setOf(volumeName),
             "event" to setOf("destroy")
@@ -174,6 +176,52 @@ class DockerClientEventStreamingSpec : ShouldSpec({
         events shouldHaveSize 1
 
         events[0].asClue {
+            it.type shouldBe "volume"
+            it.action shouldBe "destroy"
+            it.scope shouldBe "local"
+            it.timestamp shouldBeGreaterThan startTime
+            it.timestamp shouldBeLessThan endTime
+            it.actor shouldBe Actor(volumeName, mapOf("driver" to "local"))
+        }
+    }
+
+    should("be able to get all events ever recorded, including those generated while streaming events").onlyIfDockerDaemonPresent {
+        val startTime = Clock.System.now() - clockSkewFudgeFactor
+        val volumeName = "test-volume-${Random.nextInt()}"
+        val volume = client.createVolume(volumeName)
+        val filters = mapOf("volume" to setOf(volumeName))
+        val events = mutableListOf<Event>()
+
+        withTimeout(5.seconds) {
+            client.streamEvents(Instant.fromEpochMilliseconds(0), null, filters) { event ->
+                events.add(event)
+
+                if (events.size <= 1) {
+                    runBlocking {
+                        client.deleteVolume(volume)
+                    }
+
+                    EventHandlerAction.ContinueStreaming
+                } else {
+                    EventHandlerAction.Stop
+                }
+            }
+        }
+
+        val endTime = Clock.System.now() + clockSkewFudgeFactor
+
+        events shouldHaveSize 2
+
+        events[0].asClue {
+            it.type shouldBe "volume"
+            it.action shouldBe "create"
+            it.scope shouldBe "local"
+            it.timestamp shouldBeGreaterThan startTime
+            it.timestamp shouldBeLessThan endTime
+            it.actor shouldBe Actor(volumeName, mapOf("driver" to "local"))
+        }
+
+        events[1].asClue {
             it.type shouldBe "volume"
             it.action shouldBe "destroy"
             it.scope shouldBe "local"

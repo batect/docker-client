@@ -347,8 +347,10 @@ internal fun MemScope.allocStringToStringListPair(key: String, values: Set<Strin
 }
 
 internal fun MemScope.allocStreamEventsRequest(since: Instant?, until: Instant?, filters: Map<String, Set<String>>): StreamEventsRequest = alloc<StreamEventsRequest> {
+    HaveSinceFilter = since != null
     SinceSeconds = since?.epochSeconds ?: 0
     SinceNanoseconds = since?.nanosecondsOfSecond?.toLong() ?: 0
+    HaveUntilFilter = until != null
     UntilSeconds = until?.epochSeconds ?: 0
     UntilNanoseconds = until?.nanosecondsOfSecond?.toLong() ?: 0
     Filters = allocFilters(filters)

@@ -578,10 +578,14 @@
 - name: StreamEventsRequest
   type: struct
   fields:
+    - name: HaveSinceFilter
+      type: boolean
     - name: SinceSeconds
       type: int64
     - name: SinceNanoseconds
       type: int64
+    - name: HaveUntilFilter
+      type: boolean
     - name: UntilSeconds
       type: int64
     - name: UntilNanoseconds

@@ -847,8 +847,10 @@ internal class StreamEventsRequest(runtime: Runtime) : Struct(runtime), AutoClos
         this.useMemory(pointer)
     }
 
+    val haveSinceFilter = Boolean()
     val sinceSeconds = int64_t()
     val sinceNanoseconds = int64_t()
+    val haveUntilFilter = Boolean()
     val untilSeconds = int64_t()
     val untilNanoseconds = int64_t()
     val filtersCount = u_int64_t()

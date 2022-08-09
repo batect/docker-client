@@ -41,9 +41,15 @@ func StreamEvents(
 	ctx := contextHandle.Context()
 
 	opts := types.EventsOptions{
-		Since:   time.Unix(int64(request.SinceSeconds), int64(request.SinceNanoseconds)).Format(time.RFC3339Nano),
-		Until:   time.Unix(int64(request.UntilSeconds), int64(request.UntilNanoseconds)).Format(time.RFC3339Nano),
 		Filters: toFilterArgs(request.Filters, request.FiltersCount),
+	}
+
+	if request.HaveSinceFilter {
+		opts.Since = time.Unix(int64(request.SinceSeconds), int64(request.SinceNanoseconds)).Format(time.RFC3339Nano)
+	}
+
+	if request.HaveUntilFilter {
+		opts.Until = time.Unix(int64(request.UntilSeconds), int64(request.UntilNanoseconds)).Format(time.RFC3339Nano)
 	}
 
 	eventsChan, errorsChan := docker.Events(ctx, opts)

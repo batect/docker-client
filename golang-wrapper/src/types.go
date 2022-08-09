@@ -948,15 +948,19 @@ func newStringToStringListPair(
 }
 
 func newStreamEventsRequest(
+    HaveSinceFilter bool,
     SinceSeconds int64,
     SinceNanoseconds int64,
+    HaveUntilFilter bool,
     UntilSeconds int64,
     UntilNanoseconds int64,
     Filters []StringToStringListPair,
 ) StreamEventsRequest {
     value := C.AllocStreamEventsRequest()
+    value.HaveSinceFilter = C.bool(HaveSinceFilter)
     value.SinceSeconds = C.int64_t(SinceSeconds)
     value.SinceNanoseconds = C.int64_t(SinceNanoseconds)
+    value.HaveUntilFilter = C.bool(HaveUntilFilter)
     value.UntilSeconds = C.int64_t(UntilSeconds)
     value.UntilNanoseconds = C.int64_t(UntilNanoseconds)
 

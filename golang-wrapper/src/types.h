@@ -386,8 +386,10 @@ typedef struct {
 } StringToStringListPair;
 
 typedef struct {
+    bool HaveSinceFilter;
     int64_t SinceSeconds;
     int64_t SinceNanoseconds;
+    bool HaveUntilFilter;
     int64_t UntilSeconds;
     int64_t UntilNanoseconds;
     uint64_t FiltersCount;

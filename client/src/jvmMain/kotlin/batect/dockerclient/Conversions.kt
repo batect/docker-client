@@ -268,8 +268,10 @@ internal fun Actor(native: batect.dockerclient.native.Actor): Actor = Actor(
 
 internal fun StreamEventsRequest(since: Instant?, until: Instant?, filters: Map<String, Set<String>>): StreamEventsRequest {
     val request = StreamEventsRequest(Runtime.getRuntime(nativeAPI))
+    request.haveSinceFilter.set(since != null)
     request.sinceSeconds.set(since?.epochSeconds ?: 0)
     request.sinceNanoseconds.set(since?.nanosecondsOfSecond?.toLong() ?: 0)
+    request.haveUntilFilter.set(until != null)
     request.untilSeconds.set(until?.epochSeconds ?: 0)
     request.untilNanoseconds.set(until?.nanosecondsOfSecond?.toLong() ?: 0)
     request.filters = filters.map { StringToStringListPair(it.key, it.value) }
