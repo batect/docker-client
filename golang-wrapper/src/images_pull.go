@@ -185,11 +185,11 @@ func parsePullResponseBody(body io.ReadCloser, callback func(message jsonmessage
 		}
 
 		if message.Error != nil {
-			return errors.New(message.Error.Message) // nolint:goerr113
+			return errors.New(message.Error.Message) //nolint:goerr113
 		}
 
 		if message.ErrorMessage != "" {
-			return errors.New(message.ErrorMessage) // nolint:goerr113
+			return errors.New(message.ErrorMessage) //nolint:goerr113
 		}
 
 		if err := callback(message); err != nil {

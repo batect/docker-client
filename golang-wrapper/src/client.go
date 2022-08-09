@@ -67,7 +67,7 @@ func CreateClient(cfg *C.ClientConfiguration) CreateClientReturn {
 		configDir = C.GoString(cfg.ConfigDirectoryPath)
 
 		if !directoryExists(configDir) {
-			// nolint:goerr113
+			//nolint:goerr113
 			return newCreateClientReturn(0, toError(fmt.Errorf("configuration directory '%s' does not exist or is not a directory", configDir)))
 		}
 	}
