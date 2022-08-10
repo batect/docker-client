@@ -72,7 +72,7 @@ abstract class GolangLint @Inject constructor(private val execActionFactory: Exe
             executablePath.get().toString(),
             "run",
             "--timeout",
-            "2m"
+            "5m"
         )
 
         action.execute().assertNormalExitValue()
