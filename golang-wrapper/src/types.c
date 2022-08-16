@@ -77,6 +77,24 @@ void FreeClientConfiguration(ClientConfiguration* value) {
     free(value);
 }
 
+LoadClientConfigurationFromCLIContextReturn* AllocLoadClientConfigurationFromCLIContextReturn() {
+    LoadClientConfigurationFromCLIContextReturn* value = malloc(sizeof(LoadClientConfigurationFromCLIContextReturn));
+    value->Configuration = NULL;
+    value->Error = NULL;
+
+    return value;
+}
+
+void FreeLoadClientConfigurationFromCLIContextReturn(LoadClientConfigurationFromCLIContextReturn* value) {
+    if (value == NULL) {
+        return;
+    }
+
+    FreeClientConfiguration(value->Configuration);
+    FreeError(value->Error);
+    free(value);
+}
+
 CreateClientReturn* AllocCreateClientReturn() {
     CreateClientReturn* value = malloc(sizeof(CreateClientReturn));
     value->Error = NULL;

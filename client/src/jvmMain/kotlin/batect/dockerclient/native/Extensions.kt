@@ -335,3 +335,9 @@ private fun Pointer.ensureDirectlyAllocated(memoryManager: MemoryManager): Point
 
     return newPointer
 }
+
+internal fun Error?.ifFailed(handler: (Error) -> Unit) {
+    if (this != null) {
+        handler(this)
+    }
+}

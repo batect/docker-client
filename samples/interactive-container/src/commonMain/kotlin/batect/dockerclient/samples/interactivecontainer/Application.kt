@@ -26,7 +26,7 @@ import batect.dockerclient.io.TextOutput
 import kotlinx.coroutines.runBlocking
 
 fun main() = runBlocking {
-    val client = DockerClient.Builder().build()
+    val client = DockerClient.create()
     val image = pullImage(client)
     runContainer(client, image)
 }

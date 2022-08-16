@@ -25,7 +25,7 @@ import kotlin.random.Random
 import kotlin.random.nextULong
 
 class DockerClientVolumeManagementSpec : ShouldSpec({
-    val client = closeAfterTest(DockerClient.Builder().build())
+    val client = closeAfterTest(DockerClient.create())
 
     should("be able to create, list and delete volumes").onlyIfDockerDaemonPresent {
         val volumeName = "docker-client-test-volume-${Random.nextULong()}"

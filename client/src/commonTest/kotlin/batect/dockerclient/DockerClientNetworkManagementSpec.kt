@@ -23,7 +23,7 @@ import kotlin.random.Random
 import kotlin.random.nextULong
 
 class DockerClientNetworkManagementSpec : ShouldSpec({
-    val client = closeAfterTest(DockerClient.Builder().build())
+    val client = closeAfterTest(DockerClient.create())
     val networkDriver = when (testEnvironmentContainerOperatingSystem) {
         ContainerOperatingSystem.Linux -> NetworkDrivers.bridge
         ContainerOperatingSystem.Windows -> NetworkDrivers.nat

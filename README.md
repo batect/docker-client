@@ -36,7 +36,7 @@ Full sample projects demonstrating how to use this library are available in the 
 #### Create a client
 
 ```kotlin
-val client = DockerClient.Builder().build()
+val client = DockerClient.create()
 ```
 
 #### Pull an image

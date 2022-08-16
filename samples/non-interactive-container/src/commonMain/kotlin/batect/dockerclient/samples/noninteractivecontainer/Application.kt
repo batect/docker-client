@@ -27,7 +27,7 @@ import kotlinx.coroutines.runBlocking
 import okio.use
 
 fun main() = runBlocking {
-    val client = DockerClient.Builder().build()
+    val client = DockerClient.create()
     val image = pullImage(client)
     runContainer(client, image)
 }

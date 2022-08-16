@@ -35,7 +35,7 @@ import kotlin.time.measureTime
 
 @ExperimentalTime
 class DockerClientImagePullSpec : ShouldSpec({
-    val client = closeAfterTest(DockerClient.Builder().build())
+    val client = closeAfterTest(DockerClient.create())
 
     val defaultLinuxTestImage = "gcr.io/distroless/static@sha256:aadea1b1f16af043a34491eec481d0132479382096ea34f608087b4bef3634be"
     val defaultWindowsTestImage = "mcr.microsoft.com/windows/nanoserver@sha256:4f06e1d8263b934d2e88dc1c6ff402f5b499c4d19ad6d0e2a5b9ee945f782928" // This is nanoserver:1809

@@ -60,8 +60,6 @@ internal suspend fun TestWithConfigBuilder.onlyIfNotConnectingToDaemonOverTCP(te
 
 expect val testEnvironmentOperatingSystem: OperatingSystem
 
-expect fun getEnvironmentVariable(name: String): String?
-
 enum class ContainerOperatingSystem {
     Linux,
     Windows

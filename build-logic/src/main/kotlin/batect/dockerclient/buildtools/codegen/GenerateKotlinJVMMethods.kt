@@ -229,7 +229,7 @@ abstract class GenerateKotlinJVMMethods : DefaultTask() {
 
                 if (returnType != null) {
                     builder.append(": ")
-                    builder.append(returnType.yamlName)
+                    builder.append(returnType.jvmParameterName)
 
                     if (returnType.isPointer) {
                         builder.append("?")

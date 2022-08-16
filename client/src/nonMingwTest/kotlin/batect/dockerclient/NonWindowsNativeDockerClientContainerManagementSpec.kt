@@ -36,7 +36,7 @@ import kotlin.time.Duration.Companion.seconds
 // Once that issue is resolved (or an alternative client is available for Windows), we can move these tests back to that class.
 @OptIn(ExperimentalKotest::class)
 class NonWindowsNativeDockerClientContainerManagementSpec : ShouldSpec({
-    val client = closeAfterTest(DockerClient.Builder().build())
+    val client = closeAfterTest(DockerClient.create())
 
     context("when working with Linux containers").onlyIfDockerDaemonSupportsLinuxContainers {
         should("be able to connect to a published port from a container with a corresponding EXPOSE instruction in the image") {

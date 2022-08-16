@@ -26,7 +26,7 @@ import okio.Path.Companion.toPath
 
 class DockerClientImageBuildSpec : ShouldSpec({
     val rootTestImagesDirectory: Path = FileSystem.SYSTEM.canonicalize("./src/commonTest/resources/images".toPath())
-    val client = closeAfterTest(DockerClient.Builder().build())
+    val client = closeAfterTest(DockerClient.create())
 
     context("when no particular image builder is specified") {
         should("be able to build a basic Linux container image").onlyIfDockerDaemonSupportsLinuxContainers {

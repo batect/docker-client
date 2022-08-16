@@ -23,7 +23,7 @@ import io.kotest.matchers.shouldBe
 import io.kotest.matchers.string.shouldMatch
 
 class DockerClientDaemonInformationSpec : ShouldSpec({
-    val client = closeAfterTest(DockerClient.Builder().build())
+    val client = closeAfterTest(DockerClient.create())
 
     should("be able to ping the daemon").onlyIfDockerDaemonPresent {
         val response = client.ping()

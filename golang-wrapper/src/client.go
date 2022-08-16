@@ -106,10 +106,6 @@ func optsForClient(cfg *C.ClientConfiguration) []client.Opt {
 		client.WithAPIVersionNegotiation(),
 	}
 
-	if cfg.UseConfigurationFromEnvironment {
-		opts = append(opts, client.FromEnv)
-	}
-
 	if cfg.Host != nil {
 		opts = append(opts, client.WithHost(C.GoString(cfg.Host)))
 	}

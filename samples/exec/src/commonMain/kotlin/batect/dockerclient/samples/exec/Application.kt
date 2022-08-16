@@ -31,7 +31,7 @@ fun main(args: Array<String>) = runBlocking {
         exitProcess(1)
     }
 
-    val client = DockerClient.Builder().build()
+    val client = DockerClient.create()
     val containerID = args[0]
     val container = ContainerReference(containerID)
 

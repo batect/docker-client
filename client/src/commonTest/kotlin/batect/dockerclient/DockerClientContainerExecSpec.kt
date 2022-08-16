@@ -42,7 +42,7 @@ import kotlin.time.measureTime
 @ExperimentalTime
 @OptIn(ExperimentalKotest::class)
 class DockerClientContainerExecSpec : ShouldSpec({
-    val client = closeAfterTest(DockerClient.Builder().build())
+    val client = closeAfterTest(DockerClient.create())
 
     suspend fun buildTestImage(name: String): ImageReference {
         val path = systemFileSystem.canonicalize("./src/commonTest/resources/images/$name".toPath())

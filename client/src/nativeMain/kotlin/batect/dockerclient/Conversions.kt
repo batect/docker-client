@@ -49,7 +49,23 @@ import kotlinx.cinterop.ptr
 import kotlinx.cinterop.toCValues
 import kotlinx.cinterop.toKString
 import kotlinx.datetime.Instant
+import okio.Path.Companion.toPath
 import kotlin.time.Duration.Companion.nanoseconds
+
+internal fun DockerClientConfiguration(native: batect.dockerclient.native.ClientConfiguration): DockerClientConfiguration =
+    DockerClientConfiguration(
+        native.Host!!.toKString(),
+        if (native.TLS == null) null else DockerClientTLSConfiguration(native.TLS!!.pointed),
+        native.ConfigDirectoryPath!!.toKString().toPath()
+    )
+
+internal fun DockerClientTLSConfiguration(native: TLSConfiguration): DockerClientTLSConfiguration =
+    DockerClientTLSConfiguration(
+        native.CAFilePath!!.toKString().toPath(),
+        native.CertFilePath!!.toKString().toPath(),
+        native.KeyFilePath!!.toKString().toPath(),
+        TLSVerification.fromInsecureSkipVerify(native.InsecureSkipVerify)
+    )
 
 internal fun VolumeReference(native: batect.dockerclient.native.VolumeReference): VolumeReference =
     VolumeReference(native.Name!!.toKString())
@@ -202,20 +218,22 @@ internal fun MemScope.allocStringPair(entry: Map.Entry<String, String>): StringP
 
 internal fun MemScope.allocClientConfiguration(configuration: DockerClientConfiguration): ClientConfiguration {
     return alloc<ClientConfiguration> {
-        UseConfigurationFromEnvironment = configuration.useConfigurationFromEnvironment
         Host = configuration.host?.cstr?.ptr
-        ConfigDirectoryPath = configuration.configDirectoryPath?.cstr?.ptr
-
-        if (configuration.tls != null) {
-            TLS = alloc<TLSConfiguration> {
-                CAFilePath = configuration.tls.caFilePath.cstr.ptr
-                CertFilePath = configuration.tls.certFilePath.cstr.ptr
-                KeyFilePath = configuration.tls.keyFilePath.cstr.ptr
-                InsecureSkipVerify = configuration.tls.insecureSkipVerify
-            }.ptr
+        ConfigDirectoryPath = configuration.configurationDirectory?.toString()?.cstr?.ptr
+        TLS = if (configuration.tls != null) {
+            allocTLSConfiguration(configuration.tls).ptr
         } else {
-            TLS = null
+            null
         }
+    }
+}
+
+internal fun MemScope.allocTLSConfiguration(configuration: DockerClientTLSConfiguration): TLSConfiguration {
+    return alloc<TLSConfiguration> {
+        CAFilePath = configuration.caFilePath.toString().cstr.ptr
+        CertFilePath = configuration.certFilePath.toString().cstr.ptr
+        KeyFilePath = configuration.keyFilePath.toString().cstr.ptr
+        InsecureSkipVerify = configuration.daemonIdentityVerification.insecureSkipVerify
     }
 }
 

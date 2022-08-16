@@ -64,7 +64,23 @@ import batect.dockerclient.native.values
 import jnr.ffi.Runtime
 import jnr.ffi.Struct
 import kotlinx.datetime.Instant
+import okio.Path.Companion.toPath
 import kotlin.time.Duration.Companion.nanoseconds
+
+internal fun DockerClientConfiguration(native: ClientConfiguration): DockerClientConfiguration =
+    DockerClientConfiguration(
+        native.host.get(),
+        if (native.tls == null) null else DockerClientTLSConfiguration(native.tls!!),
+        native.configDirectoryPath.get().toPath()
+    )
+
+internal fun DockerClientTLSConfiguration(native: TLSConfiguration): DockerClientTLSConfiguration =
+    DockerClientTLSConfiguration(
+        native.caFilePath.get().toPath(),
+        native.certFilePath.get().toPath(),
+        native.keyFilePath.get().toPath(),
+        TLSVerification.fromInsecureSkipVerify(native.insecureSkipVerify.get())
+    )
 
 internal fun VolumeReference(native: batect.dockerclient.native.VolumeReference): VolumeReference = VolumeReference(native.name.get())
 internal fun NetworkReference(native: batect.dockerclient.native.NetworkReference): NetworkReference = NetworkReference(native.id.get())
@@ -116,9 +132,8 @@ internal fun BuildFailed(native: BuildImageProgressUpdate_BuildFailed): BuildFai
 
 internal fun ClientConfiguration(jvm: DockerClientConfiguration): ClientConfiguration {
     val config = ClientConfiguration(Runtime.getRuntime(nativeAPI))
-    config.useConfigurationFromEnvironment.set(jvm.useConfigurationFromEnvironment)
     config.host.set(jvm.host)
-    config.configDirectoryPath.set(jvm.configDirectoryPath)
+    config.configDirectoryPath.set(jvm.configurationDirectory?.toString())
 
     if (jvm.tls != null) {
         config.tlsPointer.set(Struct.getMemory(TLSConfiguration(jvm.tls)))
@@ -131,10 +146,10 @@ internal fun ClientConfiguration(jvm: DockerClientConfiguration): ClientConfigur
 
 internal fun TLSConfiguration(jvm: DockerClientTLSConfiguration): TLSConfiguration {
     val tls = TLSConfiguration(Runtime.getRuntime(nativeAPI))
-    tls.caFilePath.set(jvm.caFilePath)
-    tls.certFilePath.set(jvm.certFilePath)
-    tls.keyFilePath.set(jvm.keyFilePath)
-    tls.insecureSkipVerify.set(jvm.insecureSkipVerify)
+    tls.caFilePath.set(jvm.caFilePath.toString())
+    tls.certFilePath.set(jvm.certFilePath.toString())
+    tls.keyFilePath.set(jvm.keyFilePath.toString())
+    tls.insecureSkipVerify.set(jvm.daemonIdentityVerification.insecureSkipVerify)
 
     return tls
 }

@@ -30,6 +30,7 @@ internal interface API {
     fun CreateClient(@In cfg: ClientConfiguration): CreateClientReturn?
     fun DisposeClient(@In clientHandle: DockerClientHandle): Error?
     fun SetClientProxySettingsForTest(@In clientHandle: DockerClientHandle)
+    fun LoadClientConfigurationFromCLIContext(@In contextName: kotlin.String, @In configDir: kotlin.String): LoadClientConfigurationFromCLIContextReturn?
     fun CreateContainer(@In clientHandle: DockerClientHandle, @In contextHandle: ContextHandle, @In request: CreateContainerRequest): CreateContainerReturn?
     fun StartContainer(@In clientHandle: DockerClientHandle, @In contextHandle: ContextHandle, @In id: kotlin.String): Error?
     fun StopContainer(@In clientHandle: DockerClientHandle, @In contextHandle: ContextHandle, @In id: kotlin.String, @In timeoutSeconds: Long): Error?
@@ -62,6 +63,9 @@ internal interface API {
     fun CreateNetwork(@In clientHandle: DockerClientHandle, @In contextHandle: ContextHandle, @In name: kotlin.String, @In driver: kotlin.String): CreateNetworkReturn?
     fun DeleteNetwork(@In clientHandle: DockerClientHandle, @In contextHandle: ContextHandle, @In id: kotlin.String): Error?
     fun GetNetworkByNameOrID(@In clientHandle: DockerClientHandle, @In contextHandle: ContextHandle, @In searchFor: kotlin.String): GetNetworkByNameOrIDReturn?
+    fun GetEnvironmentVariable(@In name: kotlin.String): kotlin.String?
+    fun UnsetEnvironmentVariable(@In name: kotlin.String): Error?
+    fun SetEnvironmentVariable(@In name: kotlin.String, @In value: kotlin.String): Error?
     fun CreateVolume(@In clientHandle: DockerClientHandle, @In contextHandle: ContextHandle, @In name: kotlin.String): CreateVolumeReturn?
     fun DeleteVolume(@In clientHandle: DockerClientHandle, @In contextHandle: ContextHandle, @In name: kotlin.String): Error?
     fun ListAllVolumes(@In clientHandle: DockerClientHandle, @In contextHandle: ContextHandle): ListAllVolumesReturn?
@@ -71,6 +75,8 @@ internal interface API {
     fun AllocTLSConfiguration(): TLSConfiguration?
     fun FreeClientConfiguration(@In value: ClientConfiguration)
     fun AllocClientConfiguration(): ClientConfiguration?
+    fun FreeLoadClientConfigurationFromCLIContextReturn(@In value: LoadClientConfigurationFromCLIContextReturn)
+    fun AllocLoadClientConfigurationFromCLIContextReturn(): LoadClientConfigurationFromCLIContextReturn?
     fun FreeCreateClientReturn(@In value: CreateClientReturn)
     fun AllocCreateClientReturn(): CreateClientReturn?
     fun FreeCreateOutputPipeReturn(@In value: CreateOutputPipeReturn)

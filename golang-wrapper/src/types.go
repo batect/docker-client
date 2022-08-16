@@ -33,6 +33,7 @@ type ContextHandle C.ContextHandle
 type Error *C.Error
 type TLSConfiguration *C.TLSConfiguration
 type ClientConfiguration *C.ClientConfiguration
+type LoadClientConfigurationFromCLIContextReturn *C.LoadClientConfigurationFromCLIContextReturn
 type CreateClientReturn *C.CreateClientReturn
 type CreateOutputPipeReturn *C.CreateOutputPipeReturn
 type CreateInputPipeReturn *C.CreateInputPipeReturn
@@ -121,16 +122,25 @@ func newTLSConfiguration(
 }
 
 func newClientConfiguration(
-    UseConfigurationFromEnvironment bool,
     Host string,
     TLS TLSConfiguration,
     ConfigDirectoryPath string,
 ) ClientConfiguration {
     value := C.AllocClientConfiguration()
-    value.UseConfigurationFromEnvironment = C.bool(UseConfigurationFromEnvironment)
     value.Host = C.CString(Host)
     value.TLS = TLS
     value.ConfigDirectoryPath = C.CString(ConfigDirectoryPath)
+
+    return value
+}
+
+func newLoadClientConfigurationFromCLIContextReturn(
+    Configuration ClientConfiguration,
+    Error Error,
+) LoadClientConfigurationFromCLIContextReturn {
+    value := C.AllocLoadClientConfigurationFromCLIContextReturn()
+    value.Configuration = Configuration
+    value.Error = Error
 
     return value
 }

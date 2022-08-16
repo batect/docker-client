@@ -21,10 +21,10 @@ import batect.dockerclient.io.TextOutput
 import batect.dockerclient.native.BuildImageProgressCallback
 import batect.dockerclient.native.BuildImageProgressUpdate
 import batect.dockerclient.native.DockerClientHandle
-import batect.dockerclient.native.Error
 import batect.dockerclient.native.EventCallback
 import batect.dockerclient.native.PullImageProgressCallback
 import batect.dockerclient.native.PullImageProgressUpdate
+import batect.dockerclient.native.ifFailed
 import batect.dockerclient.native.nativeAPI
 import batect.dockerclient.native.volumes
 import jnr.ffi.Pointer
@@ -506,11 +506,5 @@ internal actual class RealDockerClient actual constructor(configuration: DockerC
                 return false
             }
         }
-    }
-}
-
-private fun Error?.ifFailed(handler: (Error) -> Unit) {
-    if (this != null) {
-        handler(this)
     }
 }

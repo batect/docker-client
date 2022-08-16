@@ -51,11 +51,15 @@ typedef struct {
 } TLSConfiguration;
 
 typedef struct {
-    bool UseConfigurationFromEnvironment;
     char* Host;
     TLSConfiguration* TLS;
     char* ConfigDirectoryPath;
 } ClientConfiguration;
+
+typedef struct {
+    ClientConfiguration* Configuration;
+    Error* Error;
+} LoadClientConfigurationFromCLIContextReturn;
 
 typedef struct {
     DockerClientHandle Client;
@@ -454,6 +458,8 @@ EXPORTED_FUNCTION TLSConfiguration* AllocTLSConfiguration();
 EXPORTED_FUNCTION void FreeTLSConfiguration(TLSConfiguration* value);
 EXPORTED_FUNCTION ClientConfiguration* AllocClientConfiguration();
 EXPORTED_FUNCTION void FreeClientConfiguration(ClientConfiguration* value);
+EXPORTED_FUNCTION LoadClientConfigurationFromCLIContextReturn* AllocLoadClientConfigurationFromCLIContextReturn();
+EXPORTED_FUNCTION void FreeLoadClientConfigurationFromCLIContextReturn(LoadClientConfigurationFromCLIContextReturn* value);
 EXPORTED_FUNCTION CreateClientReturn* AllocCreateClientReturn();
 EXPORTED_FUNCTION void FreeCreateClientReturn(CreateClientReturn* value);
 EXPORTED_FUNCTION CreateOutputPipeReturn* AllocCreateOutputPipeReturn();

@@ -50,7 +50,7 @@ import kotlin.time.measureTime
 @OptIn(ExperimentalKotest::class)
 class DockerClientBuildKitImageBuildSpec : ShouldSpec({
     val rootTestImagesDirectory: Path = FileSystem.SYSTEM.canonicalize("./src/commonTest/resources/images".toPath())
-    val client = closeAfterTest(DockerClient.Builder().build())
+    val client = closeAfterTest(DockerClient.create())
 
     context("when working with Linux container images").onlyIfDockerDaemonSupportsLinuxContainers {
         should("be able to build a basic Linux container image") {

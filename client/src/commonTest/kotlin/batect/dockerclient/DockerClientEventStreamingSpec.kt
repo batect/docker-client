@@ -31,7 +31,7 @@ import kotlin.random.Random
 import kotlin.time.Duration.Companion.seconds
 
 class DockerClientEventStreamingSpec : ShouldSpec({
-    val client = closeAfterTest(DockerClient.Builder().build())
+    val client = closeAfterTest(DockerClient.create())
     val clockSkewFudgeFactor = 2.seconds
 
     should("retrieve events within the requested window that occurred before streaming events started").onlyIfDockerDaemonPresent {

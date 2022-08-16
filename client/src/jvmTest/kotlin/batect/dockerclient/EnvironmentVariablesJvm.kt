@@ -18,37 +18,25 @@
 
 package batect.dockerclient
 
-import batect.dockerclient.native.GetEnvironmentVariable
-import batect.dockerclient.native.SetEnvironmentVariable
-import batect.dockerclient.native.UnsetEnvironmentVariable
-import kotlinx.cinterop.ByteVar
-import kotlinx.cinterop.CPointer
-import kotlinx.cinterop.cstr
-import kotlinx.cinterop.pointed
-import kotlinx.cinterop.toKString
-import platform.posix.free
-import platform.posix.getenv
+import batect.dockerclient.native.ifFailed
+import batect.dockerclient.native.nativeAPI
 
-actual fun getEnvironmentVariable(name: String): String? = getenv(name)?.toKString()
+actual fun getEnvironmentVariable(name: String): String? = System.getenv(name)
 
 actual fun getEnvironmentVariableAccordingToGolang(name: String): String? {
-    GetEnvironmentVariable(name.cstr).use { value ->
-        return value?.toKString()
-    }
+    return nativeAPI.GetEnvironmentVariable(name)
 }
 
 actual fun unsetEnvironmentVariableForGolang(name: String) {
-    UnsetEnvironmentVariable(name.cstr).ifFailed { err ->
-        val message = err.pointed.Message!!.toKString()
+    nativeAPI.UnsetEnvironmentVariable(name).ifFailed { err ->
+        val message = err.message.get()
         throw RuntimeException("Unsetting environment variable $name failed: $message")
     }
 }
 
 actual fun setEnvironmentVariableForGolang(name: String, value: String) {
-    SetEnvironmentVariable(name.cstr, value.cstr).ifFailed { err ->
-        val message = err.pointed.Message!!.toKString()
+    nativeAPI.SetEnvironmentVariable(name, value).ifFailed { err ->
+        val message = err.message.get()
         throw RuntimeException("Setting environment variable $name failed: $message")
     }
 }
-
-internal inline fun <R> CPointer<ByteVar>?.use(user: (CPointer<ByteVar>?) -> R): R = use(::free, user)

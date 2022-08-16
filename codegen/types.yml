@@ -51,14 +51,20 @@
 - name: ClientConfiguration
   type: struct
   fields:
-    - name: UseConfigurationFromEnvironment
-      type: boolean
     - name: Host
       type: string
     - name: TLS
       type: TLSConfiguration
     - name: ConfigDirectoryPath
       type: string
+
+- name: LoadClientConfigurationFromCLIContextReturn
+  type: struct
+  fields:
+    - name: Configuration
+      type: ClientConfiguration
+    - name: Error
+      type: Error
 
 - name: CreateClientReturn
   type: struct

@@ -70,7 +70,6 @@ internal class ClientConfiguration(runtime: Runtime) : Struct(runtime), AutoClos
         this.useMemory(pointer)
     }
 
-    val useConfigurationFromEnvironment = Boolean()
     val host = UTF8StringRef()
     val tlsPointer = Pointer()
     val tls: TLSConfiguration? by lazy { if (tlsPointer.intValue() == 0) null else TLSConfiguration(tlsPointer.get()) }
@@ -78,6 +77,21 @@ internal class ClientConfiguration(runtime: Runtime) : Struct(runtime), AutoClos
 
     override fun close() {
         nativeAPI.FreeClientConfiguration(this)
+    }
+}
+
+internal class LoadClientConfigurationFromCLIContextReturn(runtime: Runtime) : Struct(runtime), AutoCloseable {
+    constructor(pointer: jnr.ffi.Pointer) : this(pointer.runtime) {
+        this.useMemory(pointer)
+    }
+
+    val configurationPointer = Pointer()
+    val configuration: ClientConfiguration? by lazy { if (configurationPointer.intValue() == 0) null else ClientConfiguration(configurationPointer.get()) }
+    val errorPointer = Pointer()
+    val error: Error? by lazy { if (errorPointer.intValue() == 0) null else Error(errorPointer.get()) }
+
+    override fun close() {
+        nativeAPI.FreeLoadClientConfigurationFromCLIContextReturn(this)
     }
 }
 
