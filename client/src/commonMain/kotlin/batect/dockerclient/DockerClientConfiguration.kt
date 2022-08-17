@@ -16,6 +16,7 @@
 
 package batect.dockerclient
 
+import okio.FileSystem
 import okio.Path
 
 /**
@@ -27,19 +28,32 @@ import okio.Path
 public data class DockerClientConfiguration(
     val host: String? = null,
     val tls: DockerClientTLSConfiguration? = null,
+    val daemonIdentityVerification: TLSVerification = TLSVerification.Enabled,
     val configurationDirectory: Path? = null
 ) {
     public companion object {
         /**
+         * Retrieve the currently selected Docker CLI context name.
+         *
+         * This mirrors the behaviour of the Docker CLI, and takes into consideration
+         * Docker-related environment variables such as `DOCKER_HOST` and `DOCKER_CONTEXT`,
+         * as well as the Docker CLI context selected with `docker context use`.
+         */
+        public fun getActiveCLIContext(dockerConfigurationDirectory: Path? = null): String = determineActiveCLIContext(dockerConfigurationDirectory)
+
+        /**
          * Retrieve the default Docker daemon connection settings.
          *
          * The settings returned from this method take into consideration any Docker-related
-         * environment variables such as `DOCKER_HOST`.
+         * environment variables such as `DOCKER_HOST`, as well as the active Docker CLI context, if any.
          */
-        public fun default(): DockerClientConfiguration = fromCLIContext("default")
+        public fun default(): DockerClientConfiguration = fromCLIContext(getActiveCLIContext())
 
         /**
          * Retrieve the Docker daemon connection settings used by the given Docker CLI context.
+         *
+         * Note that the `default` Docker CLI context is not static: it reflects the default settings for
+         * the host operating system and the effects of environment variables such as `DOCKER_HOST` and `DOCKER_TLS`.
          *
          * @param name the Docker CLI context name
          * @param dockerConfigurationDirectory the path to the Docker CLI's configuration files, or pass `null` to use the default (usually `~/.docker`)
@@ -73,22 +87,25 @@ public data class DockerClientConfiguration(
          * @param caFilePath path to a file containing certificate authority certificates
          * @param certFilePath path to a file containing certificate to present to the Docker daemon
          * @param keyFilePath path to a file containing the private key for the certificate in [certFilePath]
-         * @param daemonIdentityVerification whether or not to validate the server's identity against the provided certificates
          */
         public fun withTLSConfiguration(
             caFilePath: Path,
             certFilePath: Path,
-            keyFilePath: Path,
-            daemonIdentityVerification: TLSVerification = TLSVerification.Enabled
+            keyFilePath: Path
         ): Builder {
             configuration = configuration.copy(
                 tls = DockerClientTLSConfiguration(
-                    caFilePath,
-                    certFilePath,
-                    keyFilePath,
-                    daemonIdentityVerification
+                    systemFileSystem.readAllBytes(caFilePath),
+                    systemFileSystem.readAllBytes(certFilePath),
+                    systemFileSystem.readAllBytes(keyFilePath)
                 )
             )
+
+            return this
+        }
+
+        public fun withDaemonIdentityVerificationDisabled(): Builder {
+            configuration = configuration.copy(daemonIdentityVerification = TLSVerification.InsecureDisabled)
 
             return this
         }
@@ -115,11 +132,30 @@ public data class DockerClientConfiguration(
  * @see [DockerClientConfiguration.Builder.withTLSConfiguration]
  */
 public data class DockerClientTLSConfiguration(
-    val caFilePath: Path,
-    val certFilePath: Path,
-    val keyFilePath: Path,
-    val daemonIdentityVerification: TLSVerification = TLSVerification.Enabled
-)
+    val caFile: ByteArray,
+    val certFile: ByteArray,
+    val keyFile: ByteArray
+) {
+    override fun equals(other: Any?): Boolean {
+        if (this === other) return true
+        if (other == null || this::class != other::class) return false
+
+        other as DockerClientTLSConfiguration
+
+        if (!caFile.contentEquals(other.caFile)) return false
+        if (!certFile.contentEquals(other.certFile)) return false
+        if (!keyFile.contentEquals(other.keyFile)) return false
+
+        return true
+    }
+
+    override fun hashCode(): Int {
+        var result = caFile.contentHashCode()
+        result = 31 * result + certFile.contentHashCode()
+        result = 31 * result + keyFile.contentHashCode()
+        return result
+    }
+}
 
 /**
  * TLS verification modes for connecting to a Docker daemon.
@@ -139,3 +175,8 @@ public enum class TLSVerification(internal val insecureSkipVerify: Boolean) {
 }
 
 internal expect fun loadConfigurationFromCLIContext(name: String, dockerConfigurationDirectory: Path?): DockerClientConfiguration
+internal expect fun determineActiveCLIContext(dockerConfigurationDirectory: Path?): String
+
+internal fun FileSystem.readAllBytes(path: Path): ByteArray {
+    return this.read(path) { readByteArray() }
+}

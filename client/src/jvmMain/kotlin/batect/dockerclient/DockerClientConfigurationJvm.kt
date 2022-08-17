@@ -30,3 +30,13 @@ internal actual fun loadConfigurationFromCLIContext(name: String, dockerConfigur
         return DockerClientConfiguration(ret.configuration!!)
     }
 }
+
+internal actual fun determineActiveCLIContext(dockerConfigurationDirectory: Path?): String {
+    nativeAPI.DetermineActiveCLIContext(dockerConfigurationDirectory?.toString() ?: "")!!.use { ret ->
+        if (ret.error != null) {
+            throw DockerClientException(ret.error!!)
+        }
+
+        return ret.contextName.get()
+    }
+}

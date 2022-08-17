@@ -18,9 +18,11 @@
 
 package batect.dockerclient
 
+import batect.dockerclient.native.DetermineActiveCLIContext
 import batect.dockerclient.native.LoadClientConfigurationFromCLIContext
 import kotlinx.cinterop.cstr
 import kotlinx.cinterop.pointed
+import kotlinx.cinterop.toKString
 import okio.Path
 
 internal actual fun loadConfigurationFromCLIContext(name: String, dockerConfigurationDirectory: Path?): DockerClientConfiguration {
@@ -30,5 +32,15 @@ internal actual fun loadConfigurationFromCLIContext(name: String, dockerConfigur
         }
 
         return DockerClientConfiguration(ret.pointed.Configuration!!.pointed)
+    }
+}
+
+internal actual fun determineActiveCLIContext(dockerConfigurationDirectory: Path?): String {
+    DetermineActiveCLIContext(dockerConfigurationDirectory?.toString()?.cstr)!!.use { ret ->
+        if (ret.pointed.Error != null) {
+            throw DockerClientException(ret.pointed.Error!!.pointed)
+        }
+
+        return ret.pointed.ContextName!!.toKString()
     }
 }

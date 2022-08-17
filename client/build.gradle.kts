@@ -354,6 +354,10 @@ tasks.withType<AbstractTestTask>().configureEach {
     // are executed in different environments that Gradle isn't aware of.
     inputs.property("test_environment_description", System.getenv("TEST_ENVIRONMENT_DESCRIPTION") ?: "")
 
+    // Disabled until https://github.com/gradle/gradle/issues/21547 is fixed
+    reports.junitXml.required.set(false)
+    reports.html.required.set(false)
+
     testLogging {
         showExceptions = true
         showStandardStreams = true

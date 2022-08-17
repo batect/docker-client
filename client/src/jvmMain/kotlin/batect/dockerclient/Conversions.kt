@@ -71,16 +71,25 @@ internal fun DockerClientConfiguration(native: ClientConfiguration): DockerClien
     DockerClientConfiguration(
         native.host.get(),
         if (native.tls == null) null else DockerClientTLSConfiguration(native.tls!!),
+        TLSVerification.fromInsecureSkipVerify(native.insecureSkipVerify.get()),
         native.configDirectoryPath.get().toPath()
     )
 
-internal fun DockerClientTLSConfiguration(native: TLSConfiguration): DockerClientTLSConfiguration =
-    DockerClientTLSConfiguration(
-        native.caFilePath.get().toPath(),
-        native.certFilePath.get().toPath(),
-        native.keyFilePath.get().toPath(),
-        TLSVerification.fromInsecureSkipVerify(native.insecureSkipVerify.get())
-    )
+internal fun DockerClientTLSConfiguration(native: TLSConfiguration): DockerClientTLSConfiguration {
+    val caFileSize = native.caFileSize.get().toInt()
+    val caFile = ByteArray(caFileSize)
+    native.caFile.get().get(0, caFile, 0, caFileSize)
+
+    val certFileSize = native.certFileSize.get().toInt()
+    val certFile = ByteArray(certFileSize)
+    native.certFile.get().get(0, certFile, 0, certFileSize)
+
+    val keyFileSize = native.keyFileSize.get().toInt()
+    val keyFile = ByteArray(keyFileSize)
+    native.keyFile.get().get(0, keyFile, 0, keyFileSize)
+
+    return DockerClientTLSConfiguration(caFile, certFile, keyFile)
+}
 
 internal fun VolumeReference(native: batect.dockerclient.native.VolumeReference): VolumeReference = VolumeReference(native.name.get())
 internal fun NetworkReference(native: batect.dockerclient.native.NetworkReference): NetworkReference = NetworkReference(native.id.get())
@@ -134,6 +143,7 @@ internal fun ClientConfiguration(jvm: DockerClientConfiguration): ClientConfigur
     val config = ClientConfiguration(Runtime.getRuntime(nativeAPI))
     config.host.set(jvm.host)
     config.configDirectoryPath.set(jvm.configurationDirectory?.toString())
+    config.insecureSkipVerify.set(jvm.daemonIdentityVerification.insecureSkipVerify)
 
     if (jvm.tls != null) {
         config.tlsPointer.set(Struct.getMemory(TLSConfiguration(jvm.tls)))
@@ -145,11 +155,21 @@ internal fun ClientConfiguration(jvm: DockerClientConfiguration): ClientConfigur
 }
 
 internal fun TLSConfiguration(jvm: DockerClientTLSConfiguration): TLSConfiguration {
-    val tls = TLSConfiguration(Runtime.getRuntime(nativeAPI))
-    tls.caFilePath.set(jvm.caFilePath.toString())
-    tls.certFilePath.set(jvm.certFilePath.toString())
-    tls.keyFilePath.set(jvm.keyFilePath.toString())
-    tls.insecureSkipVerify.set(jvm.daemonIdentityVerification.insecureSkipVerify)
+    val runtime = Runtime.getRuntime(nativeAPI)
+    val memoryManager = runtime.memoryManager
+    val tls = TLSConfiguration(runtime)
+
+    tls.caFile.set(memoryManager.allocateDirect(jvm.caFile.size))
+    tls.caFile.get().put(0, jvm.caFile, 0, jvm.caFile.size)
+    tls.caFileSize.set(jvm.caFile.size)
+
+    tls.certFile.set(memoryManager.allocateDirect(jvm.certFile.size))
+    tls.certFile.get().put(0, jvm.certFile, 0, jvm.certFile.size)
+    tls.certFileSize.set(jvm.certFile.size)
+
+    tls.keyFile.set(memoryManager.allocateDirect(jvm.keyFile.size))
+    tls.keyFile.get().put(0, jvm.keyFile, 0, jvm.keyFile.size)
+    tls.keyFileSize.set(jvm.keyFile.size)
 
     return tls
 }

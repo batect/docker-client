@@ -33,3 +33,18 @@ internal inline fun <R> withoutEnvironmentVariable(name: String, block: () -> R)
         }
     }
 }
+
+internal inline fun <R> withEnvironmentVariable(name: String, value: String, block: () -> R): R {
+    val originalValue = getEnvironmentVariableAccordingToGolang(name)
+    setEnvironmentVariableForGolang(name, value)
+
+    try {
+        return block()
+    } finally {
+        if (originalValue != null) {
+            setEnvironmentVariableForGolang(name, originalValue)
+        } else {
+            unsetEnvironmentVariableForGolang(name)
+        }
+    }
+}

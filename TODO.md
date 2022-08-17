@@ -38,6 +38,7 @@
 * Restore AssertionMode to Error once https://github.com/kotest/kotest/issues/3022 is resolved
 * Move `nonMingwTest` tests back into `commonTest` once https://youtrack.jetbrains.com/issue/KTOR-4307 is resolved or there's an alternative Ktor engine available for Kotlin/Native on Windows.
 * Remove unnecessary extra constructor for DockerClientException in `nativeMain` source set once https://youtrack.jetbrains.com/issue/KT-52193/Native-Unable-to-call-primary-constructor-with-default-values-in-an-actual-class-without-passing-the-values-in-nativeMain-source is fixed
+* Re-enable generating HTML and XML test reports in `build.gradle.kts` once https://github.com/gradle/gradle/issues/21547 is fixed
 
 # APIs
 

@@ -1,0 +1,1 @@
+{"Name":"tls","Metadata":{},"Endpoints":{"docker":{"Host":"tcp://myserver:2376","SkipTLSVerify":false}}}

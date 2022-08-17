@@ -22,6 +22,7 @@ import batect.dockerclient.native.CreateContainerReturn
 import batect.dockerclient.native.CreateExecReturn
 import batect.dockerclient.native.CreateNetworkReturn
 import batect.dockerclient.native.CreateVolumeReturn
+import batect.dockerclient.native.DetermineActiveCLIContextReturn
 import batect.dockerclient.native.Error
 import batect.dockerclient.native.FreeBuildImageReturn
 import batect.dockerclient.native.FreeCreateClientReturn
@@ -29,6 +30,7 @@ import batect.dockerclient.native.FreeCreateContainerReturn
 import batect.dockerclient.native.FreeCreateExecReturn
 import batect.dockerclient.native.FreeCreateNetworkReturn
 import batect.dockerclient.native.FreeCreateVolumeReturn
+import batect.dockerclient.native.FreeDetermineActiveCLIContextReturn
 import batect.dockerclient.native.FreeError
 import batect.dockerclient.native.FreeGetDaemonVersionInformationReturn
 import batect.dockerclient.native.FreeGetImageReturn
@@ -63,6 +65,7 @@ internal inline fun <T : Any?, R> T.use(dispose: (T) -> Unit, user: (T) -> R): R
 
 internal inline fun <T : Any, R> StableRef<T>.use(user: (StableRef<T>) -> R): R = use(StableRef<T>::dispose, user)
 internal inline fun <R> CPointer<LoadClientConfigurationFromCLIContextReturn>.use(user: (CPointer<LoadClientConfigurationFromCLIContextReturn>) -> R): R = use(::FreeLoadClientConfigurationFromCLIContextReturn, user)
+internal inline fun <R> CPointer<DetermineActiveCLIContextReturn>.use(user: (CPointer<DetermineActiveCLIContextReturn>) -> R): R = use(::FreeDetermineActiveCLIContextReturn, user)
 internal inline fun <R> CPointer<CreateClientReturn>.use(user: (CPointer<CreateClientReturn>) -> R): R = use(::FreeCreateClientReturn, user)
 internal inline fun <R> CPointer<PingReturn>.use(user: (CPointer<PingReturn>) -> R): R = use(::FreePingReturn, user)
 internal inline fun <R> CPointer<GetDaemonVersionInformationReturn>.use(user: (CPointer<GetDaemonVersionInformationReturn>) -> R): R = use(::FreeGetDaemonVersionInformationReturn, user)

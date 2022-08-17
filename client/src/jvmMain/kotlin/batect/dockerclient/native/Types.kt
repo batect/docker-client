@@ -55,10 +55,12 @@ internal class TLSConfiguration(runtime: Runtime) : Struct(runtime), AutoCloseab
         this.useMemory(pointer)
     }
 
-    val caFilePath = UTF8StringRef()
-    val certFilePath = UTF8StringRef()
-    val keyFilePath = UTF8StringRef()
-    val insecureSkipVerify = Boolean()
+    val caFile = Pointer()
+    val caFileSize = int32_t()
+    val certFile = Pointer()
+    val certFileSize = int32_t()
+    val keyFile = Pointer()
+    val keyFileSize = int32_t()
 
     override fun close() {
         nativeAPI.FreeTLSConfiguration(this)
@@ -73,10 +75,25 @@ internal class ClientConfiguration(runtime: Runtime) : Struct(runtime), AutoClos
     val host = UTF8StringRef()
     val tlsPointer = Pointer()
     val tls: TLSConfiguration? by lazy { if (tlsPointer.intValue() == 0) null else TLSConfiguration(tlsPointer.get()) }
+    val insecureSkipVerify = Boolean()
     val configDirectoryPath = UTF8StringRef()
 
     override fun close() {
         nativeAPI.FreeClientConfiguration(this)
+    }
+}
+
+internal class DetermineActiveCLIContextReturn(runtime: Runtime) : Struct(runtime), AutoCloseable {
+    constructor(pointer: jnr.ffi.Pointer) : this(pointer.runtime) {
+        this.useMemory(pointer)
+    }
+
+    val contextName = UTF8StringRef()
+    val errorPointer = Pointer()
+    val error: Error? by lazy { if (errorPointer.intValue() == 0) null else Error(errorPointer.get()) }
+
+    override fun close() {
+        nativeAPI.FreeDetermineActiveCLIContextReturn(this)
     }
 }
 

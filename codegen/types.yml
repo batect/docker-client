@@ -39,14 +39,18 @@
 - name: TLSConfiguration
   type: struct
   fields:
-    - name: CAFilePath
-      type: string
-    - name: CertFilePath
-      type: string
-    - name: KeyFilePath
-      type: string
-    - name: InsecureSkipVerify
-      type: boolean
+    - name: CAFile
+      type: byteArray
+    - name: CAFileSize
+      type: int32
+    - name: CertFile
+      type: byteArray
+    - name: CertFileSize
+      type: int32
+    - name: KeyFile
+      type: byteArray
+    - name: KeyFileSize
+      type: int32
 
 - name: ClientConfiguration
   type: struct
@@ -55,8 +59,18 @@
       type: string
     - name: TLS
       type: TLSConfiguration
+    - name: InsecureSkipVerify
+      type: boolean
     - name: ConfigDirectoryPath
       type: string
+
+- name: DetermineActiveCLIContextReturn
+  type: struct
+  fields:
+    - name: ContextName
+      type: string
+    - name: Error
+      type: Error
 
 - name: LoadClientConfigurationFromCLIContextReturn
   type: struct

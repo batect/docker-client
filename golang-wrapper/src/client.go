@@ -20,6 +20,9 @@ import (
 	*/
 	"C"
 	"context"
+	"crypto/tls"
+	"crypto/x509"
+	"encoding/pem"
 	"fmt"
 	"net"
 	"net/http"
@@ -32,11 +35,11 @@ import (
 	"github.com/docker/cli/cli/config"
 	"github.com/docker/cli/cli/config/configfile"
 	"github.com/docker/cli/cli/config/credentials"
+	"github.com/docker/cli/cli/connhelper"
 	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/client"
-	"github.com/pkg/errors"
-
 	"github.com/docker/go-connections/tlsconfig"
+	"github.com/pkg/errors"
 )
 
 //nolint:gochecknoglobals
@@ -55,12 +58,6 @@ type activeClient struct {
 
 //export CreateClient
 func CreateClient(cfg *C.ClientConfiguration) CreateClientReturn {
-	c, err := client.NewClientWithOpts(optsForClient(cfg)...)
-
-	if err != nil {
-		return newCreateClientReturn(0, toError(err))
-	}
-
 	configDir := config.Dir()
 
 	if cfg.ConfigDirectoryPath != nil {
@@ -73,6 +70,18 @@ func CreateClient(cfg *C.ClientConfiguration) CreateClientReturn {
 	}
 
 	configFile, err := loadConfigFile(configDir)
+
+	if err != nil {
+		return newCreateClientReturn(0, toError(err))
+	}
+
+	opts, err := optsForClient(cfg, configFile)
+
+	if err != nil {
+		return newCreateClientReturn(0, toError(err))
+	}
+
+	c, err := client.NewClientWithOpts(opts...)
 
 	if err != nil {
 		return newCreateClientReturn(0, toError(err))
@@ -101,45 +110,103 @@ func CreateClient(cfg *C.ClientConfiguration) CreateClientReturn {
 	return newCreateClientReturn(clientIndex, nil)
 }
 
-func optsForClient(cfg *C.ClientConfiguration) []client.Opt {
+// This is based on newAPIClientFromEndpoint from github.com/docker/cli's cli/command/cli.go.
+func optsForClient(cfg *C.ClientConfiguration, configFile *configfile.ConfigFile) ([]client.Opt, error) {
 	opts := []client.Opt{
 		client.WithAPIVersionNegotiation(),
+		client.WithHTTPHeaders(configFile.HTTPHeaders),
 	}
 
-	if cfg.Host != nil {
-		opts = append(opts, client.WithHost(C.GoString(cfg.Host)))
+	host := C.GoString(cfg.Host)
+	helper, err := connhelper.GetConnectionHelper(host)
+
+	if err != nil {
+		return nil, err
 	}
 
-	if cfg.TLS != nil {
-		opts = append(opts, withTLSClientConfig(
-			C.GoString(cfg.TLS.CAFilePath),
-			C.GoString(cfg.TLS.CertFilePath),
-			C.GoString(cfg.TLS.KeyFilePath),
-			bool(cfg.TLS.InsecureSkipVerify),
-		))
-	}
-
-	return opts
-}
-
-// The Docker client library does not expose a version of WithTLSClientConfig that allows us to set
-// InsecureSkipVerify. So this is a mish-mash of that function and cli/context/docker.withHTTPConfig()
-func withTLSClientConfig(caCertPath, certPath, keyPath string, insecureSkipVerify bool) client.Opt {
-	return func(c *client.Client) error {
-		opts := tlsconfig.Options{
-			CAFile:             caCertPath,
-			CertFile:           certPath,
-			KeyFile:            keyPath,
-			ExclusiveRootPools: true,
-			InsecureSkipVerify: insecureSkipVerify,
+	if helper != nil {
+		// The Docker CLI ignores TLS options if there's a connection helper, so so do we.
+		// (connection helpers seem to only be used if a SSH connection is being made)
+		httpClient := &http.Client{
+			Transport: &http.Transport{
+				DialContext: helper.Dialer,
+			},
 		}
 
-		tlsConfig, err := tlsconfig.Client(opts)
+		opts = append(opts,
+			client.WithHTTPClient(httpClient),
+			client.WithHost(helper.Host),
+			client.WithDialContext(helper.Dialer),
+		)
+	} else {
+		tlsConfig, err := tlsConfigFromConfiguration(cfg.TLS, bool(cfg.InsecureSkipVerify))
 
 		if err != nil {
-			return fmt.Errorf("failed to create TLS config: %w", err)
+			return nil, err
 		}
 
+		opts = append(opts,
+			withHTTPClient(tlsConfig),
+			client.WithHost(host),
+		)
+	}
+
+	return opts, nil
+}
+
+// This is based on Endpoint.tlsConfig from github.com/docker/cli's cli/context/docker/load.go.
+func tlsConfigFromConfiguration(cfg *C.TLSConfiguration, insecureSkipVerify bool) (*tls.Config, error) {
+	if cfg == nil && !insecureSkipVerify {
+		//nolint:nilnil
+		return nil, nil
+	}
+
+	var opts []func(*tls.Config)
+
+	if cfg != nil && cfg.CAFileSize != 0 {
+		certPool := x509.NewCertPool()
+		caFileBytes := C.GoBytes(cfg.CAFile, cfg.CAFileSize)
+
+		if !certPool.AppendCertsFromPEM(caFileBytes) {
+			return nil, errors.New("failed to retrieve context tls info: ca.pem seems invalid")
+		}
+
+		opts = append(opts, func(cfg *tls.Config) {
+			cfg.RootCAs = certPool
+		})
+	}
+
+	if cfg != nil && cfg.KeyFileSize != 0 && cfg.CertFileSize != 0 {
+		keyBytes := C.GoBytes(cfg.KeyFile, cfg.KeyFileSize)
+		certBytes := C.GoBytes(cfg.CertFile, cfg.CertFileSize)
+		pemBlock, _ := pem.Decode(keyBytes)
+
+		if pemBlock == nil {
+			return nil, errors.New("no valid private key found")
+		}
+
+		x509cert, err := tls.X509KeyPair(certBytes, keyBytes)
+
+		if err != nil {
+			return nil, errors.Wrap(err, "failed to retrieve context tls info")
+		}
+
+		opts = append(opts, func(cfg *tls.Config) {
+			cfg.Certificates = []tls.Certificate{x509cert}
+		})
+	}
+
+	if insecureSkipVerify {
+		opts = append(opts, func(cfg *tls.Config) {
+			cfg.InsecureSkipVerify = true
+		})
+	}
+
+	return tlsconfig.ClientDefault(opts...), nil
+}
+
+func withHTTPClient(tlsConfig *tls.Config) client.Opt {
+	return func(c *client.Client) error {
 		httpClient := &http.Client{
 			Transport: &http.Transport{
 				TLSClientConfig: tlsConfig,

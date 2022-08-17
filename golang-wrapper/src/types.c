@@ -39,9 +39,9 @@ void FreeError(Error* value) {
 
 TLSConfiguration* AllocTLSConfiguration() {
     TLSConfiguration* value = malloc(sizeof(TLSConfiguration));
-    value->CAFilePath = NULL;
-    value->CertFilePath = NULL;
-    value->KeyFilePath = NULL;
+    value->CAFile = NULL;
+    value->CertFile = NULL;
+    value->KeyFile = NULL;
 
     return value;
 }
@@ -51,9 +51,9 @@ void FreeTLSConfiguration(TLSConfiguration* value) {
         return;
     }
 
-    free(value->CAFilePath);
-    free(value->CertFilePath);
-    free(value->KeyFilePath);
+    free(value->CAFile);
+    free(value->CertFile);
+    free(value->KeyFile);
     free(value);
 }
 
@@ -74,6 +74,24 @@ void FreeClientConfiguration(ClientConfiguration* value) {
     free(value->Host);
     FreeTLSConfiguration(value->TLS);
     free(value->ConfigDirectoryPath);
+    free(value);
+}
+
+DetermineActiveCLIContextReturn* AllocDetermineActiveCLIContextReturn() {
+    DetermineActiveCLIContextReturn* value = malloc(sizeof(DetermineActiveCLIContextReturn));
+    value->ContextName = NULL;
+    value->Error = NULL;
+
+    return value;
+}
+
+void FreeDetermineActiveCLIContextReturn(DetermineActiveCLIContextReturn* value) {
+    if (value == NULL) {
+        return;
+    }
+
+    free(value->ContextName);
+    FreeError(value->Error);
     free(value);
 }
 

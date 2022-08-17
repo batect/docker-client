@@ -33,6 +33,7 @@ type ContextHandle C.ContextHandle
 type Error *C.Error
 type TLSConfiguration *C.TLSConfiguration
 type ClientConfiguration *C.ClientConfiguration
+type DetermineActiveCLIContextReturn *C.DetermineActiveCLIContextReturn
 type LoadClientConfigurationFromCLIContextReturn *C.LoadClientConfigurationFromCLIContextReturn
 type CreateClientReturn *C.CreateClientReturn
 type CreateOutputPipeReturn *C.CreateOutputPipeReturn
@@ -107,16 +108,20 @@ func newError(
 }
 
 func newTLSConfiguration(
-    CAFilePath string,
-    CertFilePath string,
-    KeyFilePath string,
-    InsecureSkipVerify bool,
+    CAFile []byte,
+    CAFileSize int32,
+    CertFile []byte,
+    CertFileSize int32,
+    KeyFile []byte,
+    KeyFileSize int32,
 ) TLSConfiguration {
     value := C.AllocTLSConfiguration()
-    value.CAFilePath = C.CString(CAFilePath)
-    value.CertFilePath = C.CString(CertFilePath)
-    value.KeyFilePath = C.CString(KeyFilePath)
-    value.InsecureSkipVerify = C.bool(InsecureSkipVerify)
+    value.CAFile = C.CBytes(CAFile)
+    value.CAFileSize = C.int32_t(CAFileSize)
+    value.CertFile = C.CBytes(CertFile)
+    value.CertFileSize = C.int32_t(CertFileSize)
+    value.KeyFile = C.CBytes(KeyFile)
+    value.KeyFileSize = C.int32_t(KeyFileSize)
 
     return value
 }
@@ -124,12 +129,25 @@ func newTLSConfiguration(
 func newClientConfiguration(
     Host string,
     TLS TLSConfiguration,
+    InsecureSkipVerify bool,
     ConfigDirectoryPath string,
 ) ClientConfiguration {
     value := C.AllocClientConfiguration()
     value.Host = C.CString(Host)
     value.TLS = TLS
+    value.InsecureSkipVerify = C.bool(InsecureSkipVerify)
     value.ConfigDirectoryPath = C.CString(ConfigDirectoryPath)
+
+    return value
+}
+
+func newDetermineActiveCLIContextReturn(
+    ContextName string,
+    Error Error,
+) DetermineActiveCLIContextReturn {
+    value := C.AllocDetermineActiveCLIContextReturn()
+    value.ContextName = C.CString(ContextName)
+    value.Error = Error
 
     return value
 }

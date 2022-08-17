@@ -44,17 +44,25 @@ typedef struct {
 } Error;
 
 typedef struct {
-    char* CAFilePath;
-    char* CertFilePath;
-    char* KeyFilePath;
-    bool InsecureSkipVerify;
+    void* CAFile;
+    int32_t CAFileSize;
+    void* CertFile;
+    int32_t CertFileSize;
+    void* KeyFile;
+    int32_t KeyFileSize;
 } TLSConfiguration;
 
 typedef struct {
     char* Host;
     TLSConfiguration* TLS;
+    bool InsecureSkipVerify;
     char* ConfigDirectoryPath;
 } ClientConfiguration;
+
+typedef struct {
+    char* ContextName;
+    Error* Error;
+} DetermineActiveCLIContextReturn;
 
 typedef struct {
     ClientConfiguration* Configuration;
@@ -458,6 +466,8 @@ EXPORTED_FUNCTION TLSConfiguration* AllocTLSConfiguration();
 EXPORTED_FUNCTION void FreeTLSConfiguration(TLSConfiguration* value);
 EXPORTED_FUNCTION ClientConfiguration* AllocClientConfiguration();
 EXPORTED_FUNCTION void FreeClientConfiguration(ClientConfiguration* value);
+EXPORTED_FUNCTION DetermineActiveCLIContextReturn* AllocDetermineActiveCLIContextReturn();
+EXPORTED_FUNCTION void FreeDetermineActiveCLIContextReturn(DetermineActiveCLIContextReturn* value);
 EXPORTED_FUNCTION LoadClientConfigurationFromCLIContextReturn* AllocLoadClientConfigurationFromCLIContextReturn();
 EXPORTED_FUNCTION void FreeLoadClientConfigurationFromCLIContextReturn(LoadClientConfigurationFromCLIContextReturn* value);
 EXPORTED_FUNCTION CreateClientReturn* AllocCreateClientReturn();

@@ -46,6 +46,7 @@ import kotlinx.cinterop.cstr
 import kotlinx.cinterop.get
 import kotlinx.cinterop.pointed
 import kotlinx.cinterop.ptr
+import kotlinx.cinterop.readBytes
 import kotlinx.cinterop.toCValues
 import kotlinx.cinterop.toKString
 import kotlinx.datetime.Instant
@@ -56,15 +57,15 @@ internal fun DockerClientConfiguration(native: batect.dockerclient.native.Client
     DockerClientConfiguration(
         native.Host!!.toKString(),
         if (native.TLS == null) null else DockerClientTLSConfiguration(native.TLS!!.pointed),
+        TLSVerification.fromInsecureSkipVerify(native.InsecureSkipVerify),
         native.ConfigDirectoryPath!!.toKString().toPath()
     )
 
 internal fun DockerClientTLSConfiguration(native: TLSConfiguration): DockerClientTLSConfiguration =
     DockerClientTLSConfiguration(
-        native.CAFilePath!!.toKString().toPath(),
-        native.CertFilePath!!.toKString().toPath(),
-        native.KeyFilePath!!.toKString().toPath(),
-        TLSVerification.fromInsecureSkipVerify(native.InsecureSkipVerify)
+        native.CAFile!!.readBytes(native.CAFileSize),
+        native.CertFile!!.readBytes(native.CertFileSize),
+        native.KeyFile!!.readBytes(native.KeyFileSize)
     )
 
 internal fun VolumeReference(native: batect.dockerclient.native.VolumeReference): VolumeReference =
@@ -220,6 +221,8 @@ internal fun MemScope.allocClientConfiguration(configuration: DockerClientConfig
     return alloc<ClientConfiguration> {
         Host = configuration.host?.cstr?.ptr
         ConfigDirectoryPath = configuration.configurationDirectory?.toString()?.cstr?.ptr
+        InsecureSkipVerify = configuration.daemonIdentityVerification.insecureSkipVerify
+
         TLS = if (configuration.tls != null) {
             allocTLSConfiguration(configuration.tls).ptr
         } else {
@@ -230,10 +233,12 @@ internal fun MemScope.allocClientConfiguration(configuration: DockerClientConfig
 
 internal fun MemScope.allocTLSConfiguration(configuration: DockerClientTLSConfiguration): TLSConfiguration {
     return alloc<TLSConfiguration> {
-        CAFilePath = configuration.caFilePath.toString().cstr.ptr
-        CertFilePath = configuration.certFilePath.toString().cstr.ptr
-        KeyFilePath = configuration.keyFilePath.toString().cstr.ptr
-        InsecureSkipVerify = configuration.daemonIdentityVerification.insecureSkipVerify
+        CAFile = configuration.caFile.toCValues().ptr
+        CAFileSize = configuration.caFile.size
+        CertFile = configuration.certFile.toCValues().ptr
+        CertFileSize = configuration.certFile.size
+        KeyFile = configuration.keyFile.toCValues().ptr
+        KeyFileSize = configuration.keyFile.size
     }
 }
 

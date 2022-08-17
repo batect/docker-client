@@ -16,6 +16,7 @@ package main
 
 import "C"
 import (
+	"fmt"
 	"os"
 	"path/filepath"
 
@@ -32,21 +33,40 @@ import (
 
 //export LoadClientConfigurationFromCLIContext
 func LoadClientConfigurationFromCLIContext(contextName *C.char, configDir *C.char) LoadClientConfigurationFromCLIContextReturn {
-	baseConfigDir := C.GoString(configDir)
-
-	if baseConfigDir == "" {
-		baseConfigDir = config.Dir()
-	}
-
+	baseConfigDir := resolveBaseConfigDir(configDir)
 	contextStore := createContextStore(baseConfigDir)
 	endpoint, err := loadEndpointForContext(C.GoString(contextName), contextStore)
 
 	if err != nil {
 		return newLoadClientConfigurationFromCLIContextReturn(nil, toError(err))
 	}
-	cfg := newClientConfiguration(endpoint.Host, nil, baseConfigDir)
+
+	var tls TLSConfiguration
+
+	if endpoint.TLSData != nil {
+		tls = newTLSConfiguration(
+			endpoint.TLSData.CA,
+			int32(len(endpoint.TLSData.CA)),
+			endpoint.TLSData.Cert,
+			int32(len(endpoint.TLSData.Cert)),
+			endpoint.TLSData.Key,
+			int32(len(endpoint.TLSData.Key)),
+		)
+	}
+
+	cfg := newClientConfiguration(endpoint.Host, tls, endpoint.SkipTLSVerify, baseConfigDir)
 
 	return newLoadClientConfigurationFromCLIContextReturn(cfg, nil)
+}
+
+func resolveBaseConfigDir(configDir *C.char) string {
+	baseConfigDir := C.GoString(configDir)
+
+	if baseConfigDir == "" {
+		baseConfigDir = config.Dir()
+	}
+
+	return baseConfigDir
 }
 
 // This is based on github.com/docker/cli's Initialize in cli/command/cli.go.
@@ -126,8 +146,13 @@ func resolveDefaultDockerEndpoint(baseConfigDir string) (docker.Endpoint, error)
 
 func getDefaultServerHost(defaultToTLS bool) (string, error) {
 	host := os.Getenv("DOCKER_HOST")
+	parsed, err := opts.ParseHost(defaultToTLS, host)
 
-	return opts.ParseHost(defaultToTLS, host)
+	if err != nil {
+		return "", fmt.Errorf("value '%s' for DOCKER_HOST environment variable is invalid: %w", host, err)
+	}
+
+	return parsed, nil
 }
 
 // This is based on github.com/docker/cli's SetDefaultOptions in cli/flags/common.go.
@@ -181,4 +206,30 @@ func loadEndpointForContext(contextName string, store *command.ContextStoreWithD
 	endpoint, err := docker.WithTLSData(store, contextName, endpointMetadata)
 
 	return &endpoint, err
+}
+
+// This is based on github.com/docker/cli's resolveContextName in cli/flags/common.go.
+//
+//export DetermineActiveCLIContext
+func DetermineActiveCLIContext(configDir *C.char) DetermineActiveCLIContextReturn {
+	if _, present := os.LookupEnv("DOCKER_HOST"); present {
+		return newDetermineActiveCLIContextReturn(command.DefaultContextName, nil)
+	}
+
+	if ctxName, present := os.LookupEnv("DOCKER_CONTEXT"); present {
+		return newDetermineActiveCLIContextReturn(ctxName, nil)
+	}
+
+	baseConfigDir := resolveBaseConfigDir(configDir)
+	cfg, err := loadConfigFile(baseConfigDir)
+
+	if err != nil {
+		return newDetermineActiveCLIContextReturn("", toError(err))
+	}
+
+	if cfg.CurrentContext != "" {
+		return newDetermineActiveCLIContextReturn(cfg.CurrentContext, nil)
+	}
+
+	return newDetermineActiveCLIContextReturn(command.DefaultContextName, nil)
 }
