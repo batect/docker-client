@@ -219,7 +219,7 @@ internal fun MemScope.allocStringPair(entry: Map.Entry<String, String>): StringP
 
 internal fun MemScope.allocClientConfiguration(configuration: DockerClientConfiguration): ClientConfiguration {
     return alloc<ClientConfiguration> {
-        Host = configuration.host?.cstr?.ptr
+        Host = configuration.host.cstr.ptr
         ConfigDirectoryPath = configuration.configurationDirectory?.toString()?.cstr?.ptr
         InsecureSkipVerify = configuration.daemonIdentityVerification.insecureSkipVerify
 

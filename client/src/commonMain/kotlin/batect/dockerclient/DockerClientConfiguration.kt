@@ -26,7 +26,7 @@ import okio.Path
  * @see [DockerClient.create]
  */
 public data class DockerClientConfiguration(
-    val host: String? = null,
+    val host: String,
     val tls: DockerClientTLSConfiguration? = null,
     val daemonIdentityVerification: TLSVerification = TLSVerification.Enabled,
     val configurationDirectory: Path? = null
@@ -56,21 +56,11 @@ public data class DockerClientConfiguration(
     /**
      * Use to create an instance of [DockerClientConfiguration] to connect to a Docker daemon.
      *
+     * @param host host name to use, in `proto://name` format.
      * @see [DockerClient.create]
      */
-    public class Builder {
-        private var configuration = DockerClientConfiguration()
-
-        /**
-         * Configures the Docker client to use the provided host name.
-         *
-         * @param host host name to use, in `proto://name` format.
-         */
-        public fun withHost(host: String): Builder {
-            configuration = configuration.copy(host = host)
-
-            return this
-        }
+    public class Builder(host: String) {
+        private var configuration = DockerClientConfiguration(host)
 
         /**
          * Configures the Docker client to use TLS when connecting to the Docker daemon, and sets the
