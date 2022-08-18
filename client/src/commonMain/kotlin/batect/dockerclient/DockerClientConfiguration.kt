@@ -16,6 +16,7 @@
 
 package batect.dockerclient
 
+import okio.FileNotFoundException
 import okio.FileSystem
 import okio.Path
 
@@ -77,13 +78,21 @@ public data class DockerClientConfiguration(
         ): Builder {
             configuration = configuration.copy(
                 tls = DockerClientTLSConfiguration(
-                    systemFileSystem.readAllBytes(caFilePath),
-                    systemFileSystem.readAllBytes(certFilePath),
-                    systemFileSystem.readAllBytes(keyFilePath)
+                    readAllBytes(caFilePath, "CA certificate"),
+                    readAllBytes(certFilePath, "Client certificate"),
+                    readAllBytes(keyFilePath, "Client key")
                 )
             )
 
             return this
+        }
+
+        private fun readAllBytes(path: Path, description: String): ByteArray {
+            try {
+                return systemFileSystem.readAllBytes(path)
+            } catch (e: FileNotFoundException) {
+                throw DockerClientException("$description file '$path' does not exist.", e)
+            }
         }
 
         public fun withDaemonIdentityVerificationDisabled(): Builder {
