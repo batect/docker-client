@@ -207,6 +207,10 @@ func tlsConfigFromConfiguration(cfg *C.TLSConfiguration, insecureSkipVerify bool
 
 func withHTTPClient(tlsConfig *tls.Config) client.Opt {
 	return func(c *client.Client) error {
+		if tlsConfig == nil {
+			return nil
+		}
+
 		httpClient := &http.Client{
 			Transport: &http.Transport{
 				TLSClientConfig: tlsConfig,
