@@ -33,7 +33,7 @@ type ContextHandle C.ContextHandle
 type Error *C.Error
 type TLSConfiguration *C.TLSConfiguration
 type ClientConfiguration *C.ClientConfiguration
-type DetermineActiveCLIContextReturn *C.DetermineActiveCLIContextReturn
+type DetermineCLIContextReturn *C.DetermineCLIContextReturn
 type LoadClientConfigurationFromCLIContextReturn *C.LoadClientConfigurationFromCLIContextReturn
 type CreateClientReturn *C.CreateClientReturn
 type CreateOutputPipeReturn *C.CreateOutputPipeReturn
@@ -141,11 +141,11 @@ func newClientConfiguration(
     return value
 }
 
-func newDetermineActiveCLIContextReturn(
+func newDetermineCLIContextReturn(
     ContextName string,
     Error Error,
-) DetermineActiveCLIContextReturn {
-    value := C.AllocDetermineActiveCLIContextReturn()
+) DetermineCLIContextReturn {
+    value := C.AllocDetermineCLIContextReturn()
     value.ContextName = C.CString(ContextName)
     value.Error = Error
 

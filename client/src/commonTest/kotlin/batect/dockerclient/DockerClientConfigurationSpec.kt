@@ -28,7 +28,7 @@ class DockerClientConfigurationSpec : ShouldSpec({
         context("getting the default context") {
             context("when no Docker-related environment variables are set") {
                 val configuration = withNoDockerEnvironmentVariables {
-                    DockerClientConfiguration.fromCLIContext("default")
+                    DockerClientConfiguration.fromCLIContext(DockerCLIContext.default)
                 }
 
                 should("return the default Docker endpoint for the operating system") {
@@ -52,7 +52,7 @@ class DockerClientConfigurationSpec : ShouldSpec({
             context("when the DOCKER_HOST environment variable is set") {
                 val configuration = withNoDockerEnvironmentVariables {
                     withEnvironmentVariable("DOCKER_HOST", "tcp://host:1234/docker.sock") {
-                        DockerClientConfiguration.fromCLIContext("default")
+                        DockerClientConfiguration.fromCLIContext(DockerCLIContext.default)
                     }
                 }
 
@@ -74,7 +74,7 @@ class DockerClientConfigurationSpec : ShouldSpec({
                     val exception = shouldThrow<DockerClientException> {
                         withNoDockerEnvironmentVariables {
                             withEnvironmentVariable("DOCKER_HOST", "nonsense://host/docker.sock") {
-                                DockerClientConfiguration.fromCLIContext("default")
+                                DockerClientConfiguration.fromCLIContext(DockerCLIContext.default)
                             }
                         }
                     }
@@ -89,7 +89,7 @@ class DockerClientConfigurationSpec : ShouldSpec({
             val dockerConfigurationDirectory = testConfigurationDirectories / "with-context-metadata"
 
             context("when the context does not have TLS enabled") {
-                val configuration = DockerClientConfiguration.fromCLIContext("no-tls", dockerConfigurationDirectory = dockerConfigurationDirectory)
+                val configuration = DockerClientConfiguration.fromCLIContext(DockerCLIContext("no-tls"), dockerConfigurationDirectory = dockerConfigurationDirectory)
 
                 should("return the configured Docker endpoint") {
                     configuration.host shouldBe "unix:///Users/theuser/some/docker.sock"
@@ -105,7 +105,7 @@ class DockerClientConfigurationSpec : ShouldSpec({
             }
 
             context("when the context does have TLS enabled") {
-                val configuration = DockerClientConfiguration.fromCLIContext("tls", dockerConfigurationDirectory = dockerConfigurationDirectory)
+                val configuration = DockerClientConfiguration.fromCLIContext(DockerCLIContext("tls"), dockerConfigurationDirectory = dockerConfigurationDirectory)
 
                 should("return the configured Docker endpoint") {
                     configuration.host shouldBe "tcp://myserver:2376"
@@ -133,86 +133,10 @@ class DockerClientConfigurationSpec : ShouldSpec({
 
         context("attempting to retrieve a context that does not exist") {
             should("throw an appropriate exception") {
-                val exception = shouldThrow<DockerClientException> { DockerClientConfiguration.fromCLIContext("this-context-does-not-exist") }
+                val exception = shouldThrow<DockerClientException> { DockerClientConfiguration.fromCLIContext(DockerCLIContext("this-context-does-not-exist")) }
 
                 exception.message shouldBe """context "this-context-does-not-exist" does not exist"""
             }
         }
     }
-
-    context("getting the active CLI context") {
-        context("given there is a context selected in the Docker CLI's configuration file") {
-            val dockerConfigurationDirectory = testConfigurationDirectories / "with-active-context"
-
-            context("when both the DOCKER_HOST and DOCKER_CONTEXT environment variables are set") {
-                val activeCLIContext = withNoDockerEnvironmentVariables {
-                    withEnvironmentVariable("DOCKER_HOST", "proto://host/docker.sock") {
-                        withEnvironmentVariable("DOCKER_CONTEXT", "my-environment-context") {
-                            DockerClientConfiguration.getActiveCLIContext(dockerConfigurationDirectory)
-                        }
-                    }
-                }
-
-                should("return the 'default' context to use the DOCKER_HOST environment variable") {
-                    activeCLIContext shouldBe "default"
-                }
-            }
-
-            context("when only the DOCKER_HOST environment variable is set") {
-                val activeCLIContext = withNoDockerEnvironmentVariables {
-                    withEnvironmentVariable("DOCKER_HOST", "proto://host/docker.sock") {
-                        DockerClientConfiguration.getActiveCLIContext(dockerConfigurationDirectory)
-                    }
-                }
-
-                should("return the 'default' context to use the DOCKER_HOST environment variable") {
-                    activeCLIContext shouldBe "default"
-                }
-            }
-
-            context("when only the DOCKER_CONTEXT environment variable is set") {
-                val activeCLIContext = withNoDockerEnvironmentVariables {
-                    withEnvironmentVariable("DOCKER_CONTEXT", "my-environment-context") {
-                        DockerClientConfiguration.getActiveCLIContext(dockerConfigurationDirectory)
-                    }
-                }
-
-                should("return the context from the DOCKER_CONTEXT environment variable") {
-                    activeCLIContext shouldBe "my-environment-context"
-                }
-            }
-
-            context("when neither environment variable is set") {
-                val activeCLIContext = withNoDockerEnvironmentVariables {
-                    DockerClientConfiguration.getActiveCLIContext(dockerConfigurationDirectory)
-                }
-
-                should("return the selected context from the configuration file") {
-                    activeCLIContext shouldBe "my-configured-context"
-                }
-            }
-        }
-
-        context("given there is not a context selected in the Docker CLI's configuration file") {
-            val dockerConfigurationDirectory = testConfigurationDirectories / "without-active-context"
-
-            context("when neither environment variable is set") {
-                val activeCLIContext = withNoDockerEnvironmentVariables {
-                    DockerClientConfiguration.getActiveCLIContext(dockerConfigurationDirectory)
-                }
-
-                should("return the 'default' context") {
-                    activeCLIContext shouldBe "default"
-                }
-            }
-        }
-    }
 })
-
-private fun <R> withNoDockerEnvironmentVariables(block: () -> R): R {
-    withoutEnvironmentVariable("DOCKER_HOST") {
-        withoutEnvironmentVariable("DOCKER_CONTEXT") {
-            return block()
-        }
-    }
-}

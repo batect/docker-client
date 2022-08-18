@@ -33,21 +33,12 @@ public data class DockerClientConfiguration(
 ) {
     public companion object {
         /**
-         * Retrieve the currently selected Docker CLI context name.
-         *
-         * This mirrors the behaviour of the Docker CLI, and takes into consideration
-         * Docker-related environment variables such as `DOCKER_HOST` and `DOCKER_CONTEXT`,
-         * as well as the Docker CLI context selected with `docker context use`.
-         */
-        public fun getActiveCLIContext(dockerConfigurationDirectory: Path? = null): String = determineActiveCLIContext(dockerConfigurationDirectory)
-
-        /**
          * Retrieve the default Docker daemon connection settings.
          *
          * The settings returned from this method take into consideration any Docker-related
-         * environment variables such as `DOCKER_HOST`, as well as the active Docker CLI context, if any.
+         * environment variables such as `DOCKER_HOST` and `DOCKER_CONTEXT`, as well as the active Docker CLI context, if any.
          */
-        public fun default(): DockerClientConfiguration = fromCLIContext(getActiveCLIContext())
+        public fun default(): DockerClientConfiguration = fromCLIContext(DockerCLIContext.getActiveCLIContext())
 
         /**
          * Retrieve the Docker daemon connection settings used by the given Docker CLI context.
@@ -58,7 +49,8 @@ public data class DockerClientConfiguration(
          * @param name the Docker CLI context name
          * @param dockerConfigurationDirectory the path to the Docker CLI's configuration files, or pass `null` to use the default (usually `~/.docker`)
          */
-        public fun fromCLIContext(name: String, dockerConfigurationDirectory: Path? = null): DockerClientConfiguration = loadConfigurationFromCLIContext(name, dockerConfigurationDirectory)
+        public fun fromCLIContext(context: DockerCLIContext, dockerConfigurationDirectory: Path? = null): DockerClientConfiguration =
+            loadConfigurationFromCLIContext(context.name, dockerConfigurationDirectory)
     }
 
     /**
@@ -175,7 +167,6 @@ public enum class TLSVerification(internal val insecureSkipVerify: Boolean) {
 }
 
 internal expect fun loadConfigurationFromCLIContext(name: String, dockerConfigurationDirectory: Path?): DockerClientConfiguration
-internal expect fun determineActiveCLIContext(dockerConfigurationDirectory: Path?): String
 
 internal fun FileSystem.readAllBytes(path: Path): ByteArray {
     return this.read(path) { readByteArray() }

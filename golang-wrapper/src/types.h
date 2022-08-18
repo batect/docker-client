@@ -62,7 +62,7 @@ typedef struct {
 typedef struct {
     char* ContextName;
     Error* Error;
-} DetermineActiveCLIContextReturn;
+} DetermineCLIContextReturn;
 
 typedef struct {
     ClientConfiguration* Configuration;
@@ -466,8 +466,8 @@ EXPORTED_FUNCTION TLSConfiguration* AllocTLSConfiguration();
 EXPORTED_FUNCTION void FreeTLSConfiguration(TLSConfiguration* value);
 EXPORTED_FUNCTION ClientConfiguration* AllocClientConfiguration();
 EXPORTED_FUNCTION void FreeClientConfiguration(ClientConfiguration* value);
-EXPORTED_FUNCTION DetermineActiveCLIContextReturn* AllocDetermineActiveCLIContextReturn();
-EXPORTED_FUNCTION void FreeDetermineActiveCLIContextReturn(DetermineActiveCLIContextReturn* value);
+EXPORTED_FUNCTION DetermineCLIContextReturn* AllocDetermineCLIContextReturn();
+EXPORTED_FUNCTION void FreeDetermineCLIContextReturn(DetermineCLIContextReturn* value);
 EXPORTED_FUNCTION LoadClientConfigurationFromCLIContextReturn* AllocLoadClientConfigurationFromCLIContextReturn();
 EXPORTED_FUNCTION void FreeLoadClientConfigurationFromCLIContextReturn(LoadClientConfigurationFromCLIContextReturn* value);
 EXPORTED_FUNCTION CreateClientReturn* AllocCreateClientReturn();

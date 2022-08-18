@@ -211,25 +211,30 @@ func loadEndpointForContext(contextName string, store *command.ContextStoreWithD
 // This is based on github.com/docker/cli's resolveContextName in cli/flags/common.go.
 //
 //export DetermineActiveCLIContext
-func DetermineActiveCLIContext(configDir *C.char) DetermineActiveCLIContextReturn {
+func DetermineActiveCLIContext(configDir *C.char) DetermineCLIContextReturn {
 	if _, present := os.LookupEnv("DOCKER_HOST"); present {
-		return newDetermineActiveCLIContextReturn(command.DefaultContextName, nil)
+		return newDetermineCLIContextReturn(command.DefaultContextName, nil)
 	}
 
 	if ctxName, present := os.LookupEnv("DOCKER_CONTEXT"); present {
-		return newDetermineActiveCLIContextReturn(ctxName, nil)
+		return newDetermineCLIContextReturn(ctxName, nil)
 	}
 
+	return DetermineSelectedCLIContext(configDir)
+}
+
+//export DetermineSelectedCLIContext
+func DetermineSelectedCLIContext(configDir *C.char) DetermineCLIContextReturn {
 	baseConfigDir := resolveBaseConfigDir(configDir)
 	cfg, err := loadConfigFile(baseConfigDir)
 
 	if err != nil {
-		return newDetermineActiveCLIContextReturn("", toError(err))
+		return newDetermineCLIContextReturn("", toError(err))
 	}
 
 	if cfg.CurrentContext != "" {
-		return newDetermineActiveCLIContextReturn(cfg.CurrentContext, nil)
+		return newDetermineCLIContextReturn(cfg.CurrentContext, nil)
 	}
 
-	return newDetermineActiveCLIContextReturn(command.DefaultContextName, nil)
+	return newDetermineCLIContextReturn(command.DefaultContextName, nil)
 }

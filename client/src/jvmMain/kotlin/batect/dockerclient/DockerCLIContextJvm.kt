@@ -14,19 +14,27 @@
     limitations under the License.
 */
 
-@file:Suppress("ktlint:filename")
-
 package batect.dockerclient
 
 import batect.dockerclient.native.nativeAPI
 import okio.Path
 
-internal actual fun loadConfigurationFromCLIContext(name: String, dockerConfigurationDirectory: Path?): DockerClientConfiguration {
-    nativeAPI.LoadClientConfigurationFromCLIContext(name, dockerConfigurationDirectory?.toString() ?: "")!!.use { ret ->
+internal actual fun determineActiveCLIContext(dockerConfigurationDirectory: Path?): String {
+    nativeAPI.DetermineActiveCLIContext(dockerConfigurationDirectory?.toString() ?: "")!!.use { ret ->
         if (ret.error != null) {
             throw DockerClientException(ret.error!!)
         }
 
-        return DockerClientConfiguration(ret.configuration!!)
+        return ret.contextName.get()
+    }
+}
+
+internal actual fun determineSelectedCLIContext(dockerConfigurationDirectory: Path?): String {
+    nativeAPI.DetermineSelectedCLIContext(dockerConfigurationDirectory?.toString() ?: "")!!.use { ret ->
+        if (ret.error != null) {
+            throw DockerClientException(ret.error!!)
+        }
+
+        return ret.contextName.get()
     }
 }

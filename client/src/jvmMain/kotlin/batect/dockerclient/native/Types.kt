@@ -83,7 +83,7 @@ internal class ClientConfiguration(runtime: Runtime) : Struct(runtime), AutoClos
     }
 }
 
-internal class DetermineActiveCLIContextReturn(runtime: Runtime) : Struct(runtime), AutoCloseable {
+internal class DetermineCLIContextReturn(runtime: Runtime) : Struct(runtime), AutoCloseable {
     constructor(pointer: jnr.ffi.Pointer) : this(pointer.runtime) {
         this.useMemory(pointer)
     }
@@ -93,7 +93,7 @@ internal class DetermineActiveCLIContextReturn(runtime: Runtime) : Struct(runtim
     val error: Error? by lazy { if (errorPointer.intValue() == 0) null else Error(errorPointer.get()) }
 
     override fun close() {
-        nativeAPI.FreeDetermineActiveCLIContextReturn(this)
+        nativeAPI.FreeDetermineCLIContextReturn(this)
     }
 }
 

@@ -64,7 +64,7 @@
     - name: ConfigDirectoryPath
       type: string
 
-- name: DetermineActiveCLIContextReturn
+- name: DetermineCLIContextReturn
   type: struct
   fields:
     - name: ContextName

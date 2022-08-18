@@ -77,15 +77,15 @@ void FreeClientConfiguration(ClientConfiguration* value) {
     free(value);
 }
 
-DetermineActiveCLIContextReturn* AllocDetermineActiveCLIContextReturn() {
-    DetermineActiveCLIContextReturn* value = malloc(sizeof(DetermineActiveCLIContextReturn));
+DetermineCLIContextReturn* AllocDetermineCLIContextReturn() {
+    DetermineCLIContextReturn* value = malloc(sizeof(DetermineCLIContextReturn));
     value->ContextName = NULL;
     value->Error = NULL;
 
     return value;
 }
 
-void FreeDetermineActiveCLIContextReturn(DetermineActiveCLIContextReturn* value) {
+void FreeDetermineCLIContextReturn(DetermineCLIContextReturn* value) {
     if (value == NULL) {
         return;
     }

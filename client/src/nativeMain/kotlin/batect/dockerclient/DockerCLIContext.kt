@@ -14,21 +14,31 @@
     limitations under the License.
 */
 
-@file:Suppress("ktlint:filename")
-
 package batect.dockerclient
 
-import batect.dockerclient.native.LoadClientConfigurationFromCLIContext
+import batect.dockerclient.native.DetermineActiveCLIContext
+import batect.dockerclient.native.DetermineSelectedCLIContext
 import kotlinx.cinterop.cstr
 import kotlinx.cinterop.pointed
+import kotlinx.cinterop.toKString
 import okio.Path
 
-internal actual fun loadConfigurationFromCLIContext(name: String, dockerConfigurationDirectory: Path?): DockerClientConfiguration {
-    LoadClientConfigurationFromCLIContext(name.cstr, dockerConfigurationDirectory?.toString()?.cstr)!!.use { ret ->
+internal actual fun determineActiveCLIContext(dockerConfigurationDirectory: Path?): String {
+    DetermineActiveCLIContext(dockerConfigurationDirectory?.toString()?.cstr)!!.use { ret ->
         if (ret.pointed.Error != null) {
             throw DockerClientException(ret.pointed.Error!!.pointed)
         }
 
-        return DockerClientConfiguration(ret.pointed.Configuration!!.pointed)
+        return ret.pointed.ContextName!!.toKString()
+    }
+}
+
+internal actual fun determineSelectedCLIContext(dockerConfigurationDirectory: Path?): String {
+    DetermineSelectedCLIContext(dockerConfigurationDirectory?.toString()?.cstr)!!.use { ret ->
+        if (ret.pointed.Error != null) {
+            throw DockerClientException(ret.pointed.Error!!.pointed)
+        }
+
+        return ret.pointed.ContextName!!.toKString()
     }
 }

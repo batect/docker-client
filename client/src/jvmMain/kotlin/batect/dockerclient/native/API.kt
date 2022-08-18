@@ -31,7 +31,8 @@ internal interface API {
     fun DisposeClient(@In clientHandle: DockerClientHandle): Error?
     fun SetClientProxySettingsForTest(@In clientHandle: DockerClientHandle)
     fun LoadClientConfigurationFromCLIContext(@In contextName: kotlin.String, @In configDir: kotlin.String): LoadClientConfigurationFromCLIContextReturn?
-    fun DetermineActiveCLIContext(@In configDir: kotlin.String): DetermineActiveCLIContextReturn?
+    fun DetermineActiveCLIContext(@In configDir: kotlin.String): DetermineCLIContextReturn?
+    fun DetermineSelectedCLIContext(@In configDir: kotlin.String): DetermineCLIContextReturn?
     fun CreateContainer(@In clientHandle: DockerClientHandle, @In contextHandle: ContextHandle, @In request: CreateContainerRequest): CreateContainerReturn?
     fun StartContainer(@In clientHandle: DockerClientHandle, @In contextHandle: ContextHandle, @In id: kotlin.String): Error?
     fun StopContainer(@In clientHandle: DockerClientHandle, @In contextHandle: ContextHandle, @In id: kotlin.String, @In timeoutSeconds: Long): Error?
@@ -76,8 +77,8 @@ internal interface API {
     fun AllocTLSConfiguration(): TLSConfiguration?
     fun FreeClientConfiguration(@In value: ClientConfiguration)
     fun AllocClientConfiguration(): ClientConfiguration?
-    fun FreeDetermineActiveCLIContextReturn(@In value: DetermineActiveCLIContextReturn)
-    fun AllocDetermineActiveCLIContextReturn(): DetermineActiveCLIContextReturn?
+    fun FreeDetermineCLIContextReturn(@In value: DetermineCLIContextReturn)
+    fun AllocDetermineCLIContextReturn(): DetermineCLIContextReturn?
     fun FreeLoadClientConfigurationFromCLIContextReturn(@In value: LoadClientConfigurationFromCLIContextReturn)
     fun AllocLoadClientConfigurationFromCLIContextReturn(): LoadClientConfigurationFromCLIContextReturn?
     fun FreeCreateClientReturn(@In value: CreateClientReturn)
