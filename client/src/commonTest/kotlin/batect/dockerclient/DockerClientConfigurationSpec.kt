@@ -41,7 +41,7 @@ class DockerClientConfigurationSpec : ShouldSpec({
                 }
 
                 should("return the default Docker CLI configuration directory") {
-                    configuration.configurationDirectory shouldBe userHomeDirectory / ".docker"
+                    configuration.configurationDirectory shouldBe null
                 }
 
                 should("disable TLS") {
@@ -65,7 +65,7 @@ class DockerClientConfigurationSpec : ShouldSpec({
                 }
 
                 should("return the default Docker CLI configuration directory") {
-                    configuration.configurationDirectory shouldBe userHomeDirectory / ".docker"
+                    configuration.configurationDirectory shouldBe null
                 }
 
                 should("disable TLS") {

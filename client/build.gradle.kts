@@ -170,12 +170,8 @@ kotlin {
             dependsOn(commonTest)
         }
 
-        val posixTest by creating {
-            dependsOn(nativeTest)
-        }
-
         val linuxTest by creating {
-            dependsOn(posixTest)
+            dependsOn(nativeTest)
             dependsOn(nonMingwTest)
         }
 
@@ -192,7 +188,7 @@ kotlin {
         }
 
         val macosTest by creating {
-            dependsOn(posixTest)
+            dependsOn(nativeTest)
             dependsOn(nonMingwTest)
         }
 

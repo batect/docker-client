@@ -53,13 +53,16 @@ import kotlinx.datetime.Instant
 import okio.Path.Companion.toPath
 import kotlin.time.Duration.Companion.nanoseconds
 
-internal fun DockerClientConfiguration(native: batect.dockerclient.native.ClientConfiguration): DockerClientConfiguration =
-    DockerClientConfiguration(
+internal fun DockerClientConfiguration(native: batect.dockerclient.native.ClientConfiguration): DockerClientConfiguration {
+    val configDirectory = native.ConfigDirectoryPath!!.toKString()
+
+    return DockerClientConfiguration(
         native.Host!!.toKString(),
         if (native.TLS == null) null else DockerClientTLSConfiguration(native.TLS!!.pointed),
         TLSVerification.fromInsecureSkipVerify(native.InsecureSkipVerify),
-        native.ConfigDirectoryPath!!.toKString().toPath()
+        if (configDirectory == "") null else configDirectory.toPath()
     )
+}
 
 internal fun DockerClientTLSConfiguration(native: TLSConfiguration): DockerClientTLSConfiguration =
     DockerClientTLSConfiguration(

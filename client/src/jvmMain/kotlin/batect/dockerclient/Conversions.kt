@@ -67,13 +67,16 @@ import kotlinx.datetime.Instant
 import okio.Path.Companion.toPath
 import kotlin.time.Duration.Companion.nanoseconds
 
-internal fun DockerClientConfiguration(native: ClientConfiguration): DockerClientConfiguration =
-    DockerClientConfiguration(
+internal fun DockerClientConfiguration(native: ClientConfiguration): DockerClientConfiguration {
+    val configDirectory = native.configDirectoryPath.get()
+
+    return DockerClientConfiguration(
         native.host.get(),
         if (native.tls == null) null else DockerClientTLSConfiguration(native.tls!!),
         TLSVerification.fromInsecureSkipVerify(native.insecureSkipVerify.get()),
-        native.configDirectoryPath.get().toPath()
+        if (configDirectory == "") null else configDirectory.toPath()
     )
+}
 
 internal fun DockerClientTLSConfiguration(native: TLSConfiguration): DockerClientTLSConfiguration {
     val caFileSize = native.caFileSize.get().toInt()

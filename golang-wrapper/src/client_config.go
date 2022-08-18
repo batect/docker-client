@@ -54,7 +54,7 @@ func LoadClientConfigurationFromCLIContext(contextName *C.char, configDir *C.cha
 		)
 	}
 
-	cfg := newClientConfiguration(endpoint.Host, tls, endpoint.SkipTLSVerify, baseConfigDir)
+	cfg := newClientConfiguration(endpoint.Host, tls, endpoint.SkipTLSVerify, C.GoString(configDir))
 
 	return newLoadClientConfigurationFromCLIContextReturn(cfg, nil)
 }
