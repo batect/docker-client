@@ -355,6 +355,7 @@ tasks.withType<AbstractTestTask>().configureEach {
     inputs.property("test_environment_description", System.getenv("TEST_ENVIRONMENT_DESCRIPTION") ?: "")
 
     // Disabled until https://github.com/gradle/gradle/issues/21547 is fixed
+    // See also: kotlin.tests.individualTaskReports in gradle.properties
     reports.junitXml.required.set(false)
     reports.html.required.set(false)
 
