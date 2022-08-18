@@ -66,17 +66,19 @@ class DockerClientConfigurationBuilderSpec : ShouldSpec({
 
     should("configure the client with the given configuration directory") {
         val config = DockerClientConfiguration.Builder("tcp://host")
-            .withConfigurationDirectory(".".toPath())
+            .withConfigurationDirectory("some-config-dir".toPath())
             .build()
 
-        config.configurationDirectory shouldBe "."
+        config.configurationDirectory shouldBe "some-config-dir".toPath()
     }
 
     should("throw an exception if the provided config directory does not exist") {
         val exception = shouldThrow<DockerClientException> {
-            DockerClientConfiguration.Builder("tcp://host")
+            val config = DockerClientConfiguration.Builder("tcp://host")
                 .withConfigurationDirectory("thisdirectorydoesnotexist".toPath())
                 .build()
+
+            DockerClient.create(config)
         }
 
         exception.message shouldBe "configuration directory 'thisdirectorydoesnotexist' does not exist or is not a directory"
