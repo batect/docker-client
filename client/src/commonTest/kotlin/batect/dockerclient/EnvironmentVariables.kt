@@ -62,3 +62,5 @@ internal fun <R> withNoDockerEnvironmentVariables(block: () -> R): R {
         }
     }
 }
+
+internal class EnvironmentVariableException(message: String) : RuntimeException(message)

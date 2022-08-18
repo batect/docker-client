@@ -40,14 +40,14 @@ actual fun getEnvironmentVariableAccordingToGolang(name: String): String? {
 actual fun unsetEnvironmentVariableForGolang(name: String) {
     UnsetEnvironmentVariable(name.cstr).ifFailed { err ->
         val message = err.pointed.Message!!.toKString()
-        throw RuntimeException("Unsetting environment variable $name failed: $message")
+        throw EnvironmentVariableException("Unsetting environment variable $name failed: $message")
     }
 }
 
 actual fun setEnvironmentVariableForGolang(name: String, value: String) {
     SetEnvironmentVariable(name.cstr, value.cstr).ifFailed { err ->
         val message = err.pointed.Message!!.toKString()
-        throw RuntimeException("Setting environment variable $name failed: $message")
+        throw EnvironmentVariableException("Setting environment variable $name failed: $message")
     }
 }
 

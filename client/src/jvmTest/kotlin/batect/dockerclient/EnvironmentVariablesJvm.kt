@@ -30,13 +30,13 @@ actual fun getEnvironmentVariableAccordingToGolang(name: String): String? {
 actual fun unsetEnvironmentVariableForGolang(name: String) {
     nativeAPI.UnsetEnvironmentVariable(name).ifFailed { err ->
         val message = err.message.get()
-        throw RuntimeException("Unsetting environment variable $name failed: $message")
+        throw EnvironmentVariableException("Unsetting environment variable $name failed: $message")
     }
 }
 
 actual fun setEnvironmentVariableForGolang(name: String, value: String) {
     nativeAPI.SetEnvironmentVariable(name, value).ifFailed { err ->
         val message = err.message.get()
-        throw RuntimeException("Setting environment variable $name failed: $message")
+        throw EnvironmentVariableException("Setting environment variable $name failed: $message")
     }
 }
