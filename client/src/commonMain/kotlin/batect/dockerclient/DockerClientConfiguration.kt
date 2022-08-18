@@ -46,7 +46,7 @@ public data class DockerClientConfiguration(
          * Note that the `default` Docker CLI context is not static: it reflects the default settings for
          * the host operating system and the effects of environment variables such as `DOCKER_HOST` and `DOCKER_TLS`.
          *
-         * @param name the Docker CLI context name
+         * @param context the Docker CLI context
          * @param dockerConfigurationDirectory the path to the Docker CLI's configuration files, or pass `null` to use the default (usually `~/.docker`)
          */
         public fun fromCLIContext(context: DockerCLIContext, dockerConfigurationDirectory: Path? = null): DockerClientConfiguration =
