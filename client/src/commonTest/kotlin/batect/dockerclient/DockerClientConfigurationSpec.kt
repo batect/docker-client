@@ -131,7 +131,12 @@ class DockerClientConfigurationSpec : ShouldSpec({
 
                             val caFile = tlsDirectory / "ca.pem"
 
-                            exception.message shouldBe "could not load TLS data for context 'default': open $caFile: no such file or directory"
+                            val operatingSystemFileNotFoundMessage = when (testEnvironmentOperatingSystem) {
+                                OperatingSystem.Windows -> "The system cannot find the file specified."
+                                OperatingSystem.Linux, OperatingSystem.MacOS -> "no such file or directory"
+                            }
+
+                            exception.message shouldBe "could not load TLS data for context 'default': open $caFile: $operatingSystemFileNotFoundMessage"
                         }
                     }
 
