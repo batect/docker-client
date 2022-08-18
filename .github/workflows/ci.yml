@@ -108,7 +108,8 @@ jobs:
       - name: Build, test and package
         uses: burrunan/gradle-cache-action@v1.12
         with:
-          arguments: client:check client:jvmJar --scan
+          # client:allTests is disabled until https://github.com/gradle/gradle/issues/21547 is fixed
+          arguments: client:check client:jvmJar --scan --exclude-task client:allTests
         env:
           DISABLE_DOCKER_DAEMON_TESTS: ${{ matrix.disableDockerDaemonTests }}
           DOCKER_CONTAINER_OPERATING_SYSTEM: ${{ matrix.containerOperatingSystem }}
