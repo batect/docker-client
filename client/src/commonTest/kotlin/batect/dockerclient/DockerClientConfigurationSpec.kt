@@ -47,6 +47,10 @@ class DockerClientConfigurationSpec : ShouldSpec({
                 should("disable TLS") {
                     configuration.tls shouldBe null
                 }
+
+                should("enable daemon identity verification") {
+                    configuration.daemonIdentityVerification shouldBe TLSVerification.Enabled
+                }
             }
 
             context("when the DOCKER_HOST environment variable is set") {
@@ -67,6 +71,10 @@ class DockerClientConfigurationSpec : ShouldSpec({
                 should("disable TLS") {
                     configuration.tls shouldBe null
                 }
+
+                should("enable daemon identity verification") {
+                    configuration.daemonIdentityVerification shouldBe TLSVerification.Enabled
+                }
             }
 
             context("when the DOCKER_HOST environment variable is set to an invalid value") {
@@ -83,6 +91,145 @@ class DockerClientConfigurationSpec : ShouldSpec({
                 }
             }
 
+            context("when the DOCKER_TLS_VERIFY environment variable is set") {
+                context("when the DOCKER_CERT_PATH environment variable is set") {
+                    context("and the provided directory has a full set of certificates and keys") {
+                        val tlsDirectory = testConfigurationDirectories / "tls"
+
+                        val configuration = withNoDockerEnvironmentVariables {
+                            withEnvironmentVariable("DOCKER_TLS_VERIFY", "1") {
+                                withEnvironmentVariable("DOCKER_CERT_PATH", tlsDirectory.toString()) {
+                                    DockerClientConfiguration.fromCLIContext(DockerCLIContext.default)
+                                }
+                            }
+                        }
+
+                        should("load TLS certificates and keys from the provided certificates directory") {
+                            configuration.tls shouldBe DockerClientTLSConfiguration(
+                                systemFileSystem.readAllBytes(tlsDirectory / "ca.pem"),
+                                systemFileSystem.readAllBytes(tlsDirectory / "cert.pem"),
+                                systemFileSystem.readAllBytes(tlsDirectory / "key.pem")
+                            )
+                        }
+
+                        should("enable daemon identity verification") {
+                            configuration.daemonIdentityVerification shouldBe TLSVerification.Enabled
+                        }
+                    }
+
+                    context("and the provided directory is missing the CA certificate") {
+                        val tlsDirectory = testConfigurationDirectories / "tls-without-ca"
+
+                        should("throw an appropriate exception") {
+                            val exception = shouldThrow<DockerClientException> {
+                                withEnvironmentVariable("DOCKER_TLS_VERIFY", "1") {
+                                    withEnvironmentVariable("DOCKER_CERT_PATH", tlsDirectory.toString()) {
+                                        DockerClientConfiguration.fromCLIContext(DockerCLIContext.default)
+                                    }
+                                }
+                            }
+
+                            val caFile = tlsDirectory / "ca.pem"
+
+                            exception.message shouldBe "could not load TLS data for context 'default': open $caFile: no such file or directory"
+                        }
+                    }
+
+                    context("and the provided directory is missing the client certificate") {
+                        val tlsDirectory = testConfigurationDirectories / "tls-without-cert"
+
+                        val configuration = withNoDockerEnvironmentVariables {
+                            withEnvironmentVariable("DOCKER_TLS_VERIFY", "1") {
+                                withEnvironmentVariable("DOCKER_CERT_PATH", tlsDirectory.toString()) {
+                                    DockerClientConfiguration.fromCLIContext(DockerCLIContext.default)
+                                }
+                            }
+                        }
+
+                        should("load TLS certificates and keys from the provided certificates directory, omitting the client certificate") {
+                            configuration.tls shouldBe DockerClientTLSConfiguration(
+                                systemFileSystem.readAllBytes(tlsDirectory / "ca.pem"),
+                                byteArrayOf(),
+                                systemFileSystem.readAllBytes(tlsDirectory / "key.pem")
+                            )
+                        }
+
+                        should("enable daemon identity verification") {
+                            configuration.daemonIdentityVerification shouldBe TLSVerification.Enabled
+                        }
+                    }
+
+                    context("and the provided directory is missing the client key") {
+                        val tlsDirectory = testConfigurationDirectories / "tls-without-key"
+
+                        val configuration = withNoDockerEnvironmentVariables {
+                            withEnvironmentVariable("DOCKER_TLS_VERIFY", "1") {
+                                withEnvironmentVariable("DOCKER_CERT_PATH", tlsDirectory.toString()) {
+                                    DockerClientConfiguration.fromCLIContext(DockerCLIContext.default)
+                                }
+                            }
+                        }
+
+                        should("load TLS certificates and keys from the provided certificates directory, omitting the client key") {
+                            configuration.tls shouldBe DockerClientTLSConfiguration(
+                                systemFileSystem.readAllBytes(tlsDirectory / "ca.pem"),
+                                systemFileSystem.readAllBytes(tlsDirectory / "cert.pem"),
+                                byteArrayOf()
+                            )
+                        }
+
+                        should("enable daemon identity verification") {
+                            configuration.daemonIdentityVerification shouldBe TLSVerification.Enabled
+                        }
+                    }
+                }
+
+                context("when the DOCKER_CERT_PATH environment variable is not set") {
+                    val tlsDirectory = testConfigurationDirectories / "tls"
+
+                    val configuration = withNoDockerEnvironmentVariables {
+                        withEnvironmentVariable("DOCKER_TLS_VERIFY", "1") {
+                            DockerClientConfiguration.fromCLIContext(DockerCLIContext.default, tlsDirectory)
+                        }
+                    }
+
+                    should("load TLS certificates and keys from the CLI configuration directory") {
+                        configuration.tls shouldBe DockerClientTLSConfiguration(
+                            systemFileSystem.readAllBytes(tlsDirectory / "ca.pem"),
+                            systemFileSystem.readAllBytes(tlsDirectory / "cert.pem"),
+                            systemFileSystem.readAllBytes(tlsDirectory / "key.pem")
+                        )
+                    }
+
+                    should("enable daemon identity verification") {
+                        configuration.daemonIdentityVerification shouldBe TLSVerification.Enabled
+                    }
+                }
+            }
+
+            context("when the DOCKER_TLS environment variable is set and the DOCKER_TLS_VERIFY environment variable is not set") {
+                val tlsDirectory = testConfigurationDirectories / "tls"
+
+                val configuration = withNoDockerEnvironmentVariables {
+                    withEnvironmentVariable("DOCKER_TLS", "1") {
+                        withEnvironmentVariable("DOCKER_CERT_PATH", tlsDirectory.toString()) {
+                            DockerClientConfiguration.fromCLIContext(DockerCLIContext.default)
+                        }
+                    }
+                }
+
+                should("load TLS certificates and keys") {
+                    configuration.tls shouldBe DockerClientTLSConfiguration(
+                        systemFileSystem.readAllBytes(tlsDirectory / "ca.pem"),
+                        systemFileSystem.readAllBytes(tlsDirectory / "cert.pem"),
+                        systemFileSystem.readAllBytes(tlsDirectory / "key.pem")
+                    )
+                }
+
+                should("disable daemon identity verification") {
+                    configuration.daemonIdentityVerification shouldBe TLSVerification.InsecureDisabled
+                }
+            }
         }
 
         context("getting a non-default context") {

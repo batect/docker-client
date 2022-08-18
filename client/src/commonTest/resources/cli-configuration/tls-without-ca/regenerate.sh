@@ -26,5 +26,7 @@ echo "Cleaning up..."
 rm -rf "$CERTS_DIR"/*.csr
 rm -rf "$CERTS_DIR"/*.cnf
 rm -rf "$CERTS_DIR"/*.srl
+rm -rf "$CERTS_DIR"/ca.pem
+rm -rf "$CERTS_DIR"/ca-key.pem
 
 echo "Done."

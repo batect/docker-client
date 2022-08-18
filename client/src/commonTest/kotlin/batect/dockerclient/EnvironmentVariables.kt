@@ -52,7 +52,13 @@ internal inline fun <R> withEnvironmentVariable(name: String, value: String, blo
 internal fun <R> withNoDockerEnvironmentVariables(block: () -> R): R {
     withoutEnvironmentVariable("DOCKER_HOST") {
         withoutEnvironmentVariable("DOCKER_CONTEXT") {
-            return block()
+            withoutEnvironmentVariable("DOCKER_CERT_PATH") {
+                withoutEnvironmentVariable("DOCKER_TLS") {
+                    withoutEnvironmentVariable("DOCKER_TLS_VERIFY") {
+                        return block()
+                    }
+                }
+            }
         }
     }
 }

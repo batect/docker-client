@@ -131,7 +131,7 @@ func resolveDefaultDockerEndpoint(baseConfigDir string) (docker.Endpoint, error)
 		tlsData, err = dcontext.TLSDataFromFiles(tlsOptions.CAFile, tlsOptions.CertFile, tlsOptions.KeyFile)
 
 		if err != nil {
-			return docker.Endpoint{}, err
+			return docker.Endpoint{}, fmt.Errorf("could not load TLS data for context '%s': %w", command.DefaultContextName, err)
 		}
 	}
 
