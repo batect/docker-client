@@ -224,7 +224,7 @@ internal fun MemScope.allocClientConfiguration(configuration: DockerClientConfig
         InsecureSkipVerify = configuration.daemonIdentityVerification.insecureSkipVerify
 
         TLS = if (configuration.tls != null) {
-            allocTLSConfiguration(configuration.tls).ptr
+            allocTLSConfiguration(configuration.tls as DockerClientTLSConfiguration).ptr
         } else {
             null
         }
