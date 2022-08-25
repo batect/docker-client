@@ -249,7 +249,7 @@ func (p *legacyImageBuildResponseBodyParser) onBuildOutput(stream string) error 
 
 func (p *legacyImageBuildResponseBodyParser) onProgress(msg jsonmessage.JSONMessage) error {
 	if p.currentStepIsPullStep {
-		var progressDetail PullImageProgressDetail = nil
+		var progressDetail PullImageProgressDetail
 
 		if msg.Progress != nil {
 			progressDetail = newPullImageProgressDetail(msg.Progress.Current, msg.Progress.Total)

@@ -248,7 +248,7 @@ func newBuildKitImageBuildResponseBodyParser(outputStreamHandle OutputStreamHand
 }
 
 func (p *buildKitImageBuildResponseBodyParser) Parse(response types.ImageBuildResponse, tracer *buildKitBuildTracer) (string, error) {
-	tracer.Start() //nolint:contextcheck
+	tracer.Start()
 	defer tracer.Stop()
 
 	p.imageID = ""
@@ -315,7 +315,6 @@ func (t *buildKitBuildTracer) Start() {
 	t.eg.Go(func() error {
 		// We deliberately don't use the build operation's context as the context below -
 		// otherwise, error messages might not be printed after the context is cancelled.
-		//nolint:contextcheck
 		return t.run()
 	})
 }

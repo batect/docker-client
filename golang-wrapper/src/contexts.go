@@ -25,7 +25,7 @@ import (
 var (
 	activeContexts                   = map[ContextHandle]*activeContext{}
 	activeContextsLock               = sync.RWMutex{}
-	nextContextHandle  ContextHandle = 0
+	nextContextHandle  ContextHandle = 0 //nolint:revive
 )
 
 type activeContext struct {

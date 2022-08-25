@@ -46,7 +46,7 @@ import (
 var (
 	activeClients                        = map[DockerClientHandle]*activeClient{}
 	activeClientsLock                    = sync.RWMutex{}
-	nextClientHandle  DockerClientHandle = 0
+	nextClientHandle  DockerClientHandle = 0 //nolint:revive
 )
 
 type activeClient struct {

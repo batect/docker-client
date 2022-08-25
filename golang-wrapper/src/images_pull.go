@@ -130,7 +130,7 @@ func processPullResponse(
 			pulledDigest = strings.TrimPrefix(message.Status, "Digest: ")
 		}
 
-		var progressDetail PullImageProgressDetail = nil
+		var progressDetail PullImageProgressDetail
 		defer C.FreePullImageProgressDetail(progressDetail)
 
 		if message.Progress != nil {
