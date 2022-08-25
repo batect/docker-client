@@ -70,7 +70,7 @@ class DockerClientBuildKitImageBuildSpec : ShouldSpec({
 
             outputText shouldContain """
                 |#(\d+) \[internal] load build definition from Dockerfile
-                |(#\1 transferring dockerfile:( \d+B)?
+                |(#\1 transferring dockerfile:( \d+B)?( \d+\.\d+s)?
                 |)?#\1 transferring dockerfile: \d+B (\d+\.\d+s )?done
                 |#\1 DONE \d+\.\d+s
                 |
