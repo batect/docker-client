@@ -42,13 +42,6 @@
 
 # APIs
 
-* Client configuration
-  * Support for Docker CLI config contexts
-    * See github.com/docker/cli: cli/command/cli.go Initialize()
-    * Rework configuration API:
-      * add method to get CLI context by name
-      * allow consumer to either: pass returned context settings, modify and pass context settings, provide their own settings or use defaults
-
 * Images
   * Build
     * BuildKit
