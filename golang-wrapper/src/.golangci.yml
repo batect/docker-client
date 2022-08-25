@@ -5,7 +5,7 @@ linters:
     - bidichk
     - contextcheck
     # Disabled: - cyclop
-    - deadcode
+    # Deprecated: - deadcode
     - depguard
     - dogsled
     - dupl
@@ -42,8 +42,10 @@ linters:
     # Deprecated: - ifshort
     - importas
     - ineffassign
+    - interfacebloat
     # Deprecated: - interfacer
     - lll
+    - logrlint
     - makezero
     # Deprecated: - maligned
     - misspell
@@ -58,11 +60,12 @@ linters:
     - prealloc
     - predeclared
     - promlinter
+    - reassign
     - revive
     - rowserrcheck
     - sqlclosecheck
     - staticcheck
-    - structcheck
+    # Deprecated: - structcheck
     - stylecheck
     - tenv
     - testpackage
@@ -72,7 +75,7 @@ linters:
     - unconvert
     - unparam
     - unused
-    - varcheck
+    # Deprecated: - varcheck
     # Disabled: - varnamelen
     - wastedassign
     - whitespace
