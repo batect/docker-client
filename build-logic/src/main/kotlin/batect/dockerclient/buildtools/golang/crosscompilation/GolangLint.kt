@@ -18,7 +18,6 @@ package batect.dockerclient.buildtools.golang.crosscompilation
 
 import batect.dockerclient.buildtools.Architecture
 import batect.dockerclient.buildtools.OperatingSystem
-import org.gradle.api.DefaultTask
 import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.provider.Property
@@ -26,7 +25,6 @@ import org.gradle.api.tasks.CacheableTask
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.InputDirectory
 import org.gradle.api.tasks.InputFile
-import org.gradle.api.tasks.Internal
 import org.gradle.api.tasks.OutputFile
 import org.gradle.api.tasks.PathSensitive
 import org.gradle.api.tasks.PathSensitivity
@@ -37,7 +35,7 @@ import javax.inject.Inject
 import kotlin.io.path.absolutePathString
 
 @CacheableTask
-abstract class GolangLint @Inject constructor(private val execActionFactory: ExecActionFactory) : DefaultTask() {
+abstract class GolangLint @Inject constructor(private val execActionFactory: ExecActionFactory) : GolangCrossCompilationTask() {
     @get:InputDirectory
     @get:PathSensitive(PathSensitivity.RELATIVE)
     abstract val sourceDirectory: DirectoryProperty
@@ -47,19 +45,10 @@ abstract class GolangLint @Inject constructor(private val execActionFactory: Exe
     abstract val executablePath: RegularFileProperty
 
     @get:Input
-    abstract val golangVersion: Property<String>
-
-    @get:Input
-    abstract val zigVersion: Property<String>
-
-    @get:Input
     abstract val systemPath: Property<String>
 
     @get:OutputFile
     abstract val upToDateCheckFilePath: RegularFileProperty
-
-    @get:Internal
-    abstract val environmentService: Property<GolangCrossCompilationEnvironmentService>
 
     init {
         group = "verification"

@@ -18,34 +18,17 @@ package batect.dockerclient.buildtools.golang.crosscompilation
 
 import batect.dockerclient.buildtools.Architecture
 import batect.dockerclient.buildtools.OperatingSystem
-import org.gradle.api.DefaultTask
-import org.gradle.api.file.RegularFileProperty
-import org.gradle.api.provider.Property
-import org.gradle.api.tasks.Input
-import org.gradle.api.tasks.InputFile
-import org.gradle.api.tasks.Internal
-import org.gradle.api.tasks.PathSensitive
-import org.gradle.api.tasks.PathSensitivity
 import org.gradle.api.tasks.TaskAction
 import org.gradle.process.ExecOperations
 import javax.inject.Inject
 
-abstract class GolangCacheClean @Inject constructor(private val execOperations: ExecOperations) : DefaultTask() {
-    @get:Input
-    abstract val golangVersion: Property<String>
-
-    // TODO: remove the need for this - this task doesn't need a Zig compiler
-    @get:Input
-    abstract val zigVersion: Property<String>
-
-    @get:Internal
-    abstract val environmentService: Property<GolangCrossCompilationEnvironmentService>
-
+abstract class GolangCacheClean @Inject constructor(private val execOperations: ExecOperations) : GolangCrossCompilationTask() {
     @TaskAction
     fun run() {
         val env = environmentService.get().getOrPrepareEnvironment(
             this,
             golangVersion.get(),
+            // TODO: remove the need for this - this task doesn't need a Zig compiler
             zigVersion.get(),
             OperatingSystem.current,
             Architecture.current,

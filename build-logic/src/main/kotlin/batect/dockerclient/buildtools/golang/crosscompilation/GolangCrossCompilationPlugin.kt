@@ -44,11 +44,10 @@ class GolangCrossCompilationPlugin @Inject constructor(private val execActionFac
         val golangExtension = createExtension(target)
         val environmentServiceProvider = registerEnvironmentService(target)
 
-        configureGolangBuildTaskDefaults(target, golangExtension, zigExtension, environmentServiceProvider)
-        registerCleanTask(target, golangExtension, zigExtension, environmentServiceProvider)
-
+        configureTaskDefaults(target, golangExtension, zigExtension, environmentServiceProvider)
+        configureGolangBuildTaskDefaults(target, golangExtension)
+        registerCleanTask(target)
         registerLintDownloadTasks(target, golangExtension)
-        configureLintingTaskDefaults(target, golangExtension, zigExtension, environmentServiceProvider)
         registerLintTask(target, golangExtension)
     }
 
@@ -67,31 +66,39 @@ class GolangCrossCompilationPlugin @Inject constructor(private val execActionFac
         ) {}
     }
 
-    private fun configureGolangBuildTaskDefaults(
+    private fun configureTaskDefaults(
         target: Project,
         golangExtension: GolangCrossCompilationPluginExtension,
         zigExtension: ZigPluginExtension,
         environmentServiceProvider: Provider<GolangCrossCompilationEnvironmentService>
     ) {
-        target.tasks.withType<GolangBuild>() {
-            usesService(environmentServiceProvider)
-            environmentService.set(environmentServiceProvider)
+        target.tasks.withType<GolangCrossCompilationTask>().configureEach { task ->
+            task.usesService(environmentServiceProvider)
+            task.environmentService.set(environmentServiceProvider)
 
-            golangVersion.set(golangExtension.golangVersion)
-            zigVersion.set(zigExtension.zigVersion)
-            sourceDirectory.convention(golangExtension.sourceDirectory)
+            task.golangVersion.set(golangExtension.golangVersion)
+            task.zigVersion.set(zigExtension.zigVersion)
+        }
+    }
 
-            outputDirectory.convention(
+    private fun configureGolangBuildTaskDefaults(
+        target: Project,
+        golangExtension: GolangCrossCompilationPluginExtension
+    ) {
+        target.tasks.withType<GolangBuild>().configureEach { task ->
+            task.sourceDirectory.convention(golangExtension.sourceDirectory)
+
+            task.outputDirectory.convention(
                 golangExtension.outputDirectory.map { outputDirectory ->
                     outputDirectory
-                        .dir(targetOperatingSystem.map { it.name.lowercase() }).get()
-                        .dir(targetArchitecture.map { it.name.lowercase() }).get()
-                        .dir(targetBinaryType.map { it.name.lowercase() }).get()
+                        .dir(task.targetOperatingSystem.map { it.name.lowercase() }).get()
+                        .dir(task.targetArchitecture.map { it.name.lowercase() }).get()
+                        .dir(task.targetBinaryType.map { it.name.lowercase() }).get()
                 }
             )
 
-            baseOutputName.convention(
-                targetOperatingSystem.zip(libraryName) { targetOperatingSystem, libraryName ->
+            task.baseOutputName.convention(
+                task.targetOperatingSystem.zip(task.libraryName) { targetOperatingSystem, libraryName ->
                     when (targetOperatingSystem) {
                         OperatingSystem.Windows -> libraryName
                         OperatingSystem.Linux, OperatingSystem.Darwin -> "lib$libraryName"
@@ -100,10 +107,10 @@ class GolangCrossCompilationPlugin @Inject constructor(private val execActionFac
                 }
             )
 
-            outputLibraryFile.convention(
-                targetBinaryType.flatMap { targetBinaryType ->
+            task.outputLibraryFile.convention(
+                task.targetBinaryType.flatMap { targetBinaryType ->
                     val fileName: Provider<String> = when (targetBinaryType) {
-                        BinaryType.Shared -> targetOperatingSystem.flatMap { targetOperatingSystem ->
+                        BinaryType.Shared -> task.targetOperatingSystem.flatMap { targetOperatingSystem ->
                             val extension = when (targetOperatingSystem) {
                                 OperatingSystem.Windows -> "dll"
                                 OperatingSystem.Linux -> "so"
@@ -111,34 +118,18 @@ class GolangCrossCompilationPlugin @Inject constructor(private val execActionFac
                                 else -> throw IllegalArgumentException("Unknown operating system: $targetOperatingSystem")
                             }
 
-                            baseOutputName.map { "$it.$extension" }
+                            task.baseOutputName.map { "$it.$extension" }
                         }
 
-                        BinaryType.Archive -> libraryName.map { "$it.a" } // Yes, this should be .lib on Windows, but having everything with .a makes the cinterop configuration for Kotlin much easier.
+                        BinaryType.Archive -> task.libraryName.map { "$it.a" } // Yes, this should be .lib on Windows, but having everything with .a makes the cinterop configuration for Kotlin much easier.
                         else -> throw IllegalArgumentException("Unknown binary type: $targetBinaryType")
                     }
 
-                    outputDirectory.zip(fileName) { outputDirectory, name -> outputDirectory.file(name) }
+                    task.outputDirectory.zip(fileName) { outputDirectory, name -> outputDirectory.file(name) }
                 }
             )
 
-            outputHeaderFile.convention(outputDirectory.file(libraryName.map { "$it.h" }))
-        }
-    }
-
-    private fun configureLintingTaskDefaults(
-        target: Project,
-        golangExtension: GolangCrossCompilationPluginExtension,
-        zigExtension: ZigPluginExtension,
-        environmentServiceProvider: Provider<GolangCrossCompilationEnvironmentService>
-    ) {
-        target.tasks.withType<GolangLint> {
-            usesService(environmentServiceProvider)
-            environmentService.set(environmentServiceProvider)
-
-            golangVersion.set(golangExtension.golangVersion)
-            zigVersion.set(zigExtension.zigVersion)
-            systemPath.convention(target.providers.environmentVariable("PATH"))
+            task.outputHeaderFile.convention(task.outputDirectory.file(task.libraryName.map { "$it.h" }))
         }
     }
 
@@ -146,6 +137,7 @@ class GolangCrossCompilationPlugin @Inject constructor(private val execActionFac
         target.tasks.register<GolangLint>("lint") {
             executablePath.set(extension.linterExecutablePath)
             sourceDirectory.set(extension.sourceDirectory)
+            systemPath.convention(target.providers.environmentVariable("PATH"))
             upToDateCheckFilePath.set(target.layout.buildDirectory.file("lint/upToDate"))
         }
     }
@@ -207,19 +199,8 @@ class GolangCrossCompilationPlugin @Inject constructor(private val execActionFac
         extension.linterExecutablePath.set(target.layout.file(extractExecutable.map { it.outputs.files.singleFile.resolve(executableName) }))
     }
 
-    private fun registerCleanTask(
-        target: Project,
-        golangExtension: GolangCrossCompilationPluginExtension,
-        zigExtension: ZigPluginExtension,
-        environmentServiceProvider: Provider<GolangCrossCompilationEnvironmentService>
-    ) {
-        target.tasks.register<GolangCacheClean>("cleanGolangCache") {
-            usesService(environmentServiceProvider)
-            environmentService.set(environmentServiceProvider)
-
-            golangVersion.set(golangExtension.golangVersion)
-            zigVersion.set(zigExtension.zigVersion)
-        }
+    private fun registerCleanTask(target: Project) {
+        target.tasks.register<GolangCacheClean>("cleanGolangCache")
     }
 
     private val archiveFileExtension = when (OperatingSystem.current) {

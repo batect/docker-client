@@ -19,15 +19,12 @@ package batect.dockerclient.buildtools.golang.crosscompilation
 import batect.dockerclient.buildtools.Architecture
 import batect.dockerclient.buildtools.BinaryType
 import batect.dockerclient.buildtools.OperatingSystem
-import org.gradle.api.DefaultTask
 import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.file.RegularFileProperty
-import org.gradle.api.provider.MapProperty
 import org.gradle.api.provider.Property
 import org.gradle.api.tasks.CacheableTask
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.InputDirectory
-import org.gradle.api.tasks.InputFile
 import org.gradle.api.tasks.Internal
 import org.gradle.api.tasks.OutputDirectory
 import org.gradle.api.tasks.OutputFile
@@ -38,7 +35,7 @@ import org.gradle.workers.WorkerExecutor
 import javax.inject.Inject
 
 @CacheableTask
-abstract class GolangBuild @Inject constructor(private val workerExecutor: WorkerExecutor) : DefaultTask() {
+abstract class GolangBuild @Inject constructor(private val workerExecutor: WorkerExecutor) : GolangCrossCompilationTask() {
     @get:InputDirectory
     @get:PathSensitive(PathSensitivity.RELATIVE)
     abstract val sourceDirectory: DirectoryProperty
@@ -55,12 +52,6 @@ abstract class GolangBuild @Inject constructor(private val workerExecutor: Worke
     @get:Internal
     abstract val libraryName: Property<String>
 
-    @get:Input
-    abstract val golangVersion: Property<String>
-
-    @get:Input
-    abstract val zigVersion: Property<String>
-
     @get:OutputDirectory
     abstract val outputDirectory: DirectoryProperty
 
@@ -72,9 +63,6 @@ abstract class GolangBuild @Inject constructor(private val workerExecutor: Worke
 
     @get:Internal
     abstract val baseOutputName: Property<String>
-
-    @get:Internal
-    abstract val environmentService: Property<GolangCrossCompilationEnvironmentService>
 
     init {
         group = "build"
