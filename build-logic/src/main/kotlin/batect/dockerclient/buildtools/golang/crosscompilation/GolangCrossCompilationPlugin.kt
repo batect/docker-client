@@ -33,9 +33,8 @@ import org.gradle.kotlin.dsl.getByType
 import org.gradle.kotlin.dsl.register
 import org.gradle.kotlin.dsl.withType
 import org.gradle.process.internal.ExecActionFactory
-import java.io.ByteArrayOutputStream
-import java.io.File
 import javax.inject.Inject
+import kotlin.reflect.jvm.jvmName
 
 class GolangCrossCompilationPlugin @Inject constructor(private val execActionFactory: ExecActionFactory) : Plugin<Project> {
     override fun apply(target: Project) {
@@ -43,14 +42,13 @@ class GolangCrossCompilationPlugin @Inject constructor(private val execActionFac
 
         val zigExtension = target.extensions.getByType<ZigPluginExtension>()
         val golangExtension = createExtension(target)
-        val environmentVariablesProvider = GolangCrossCompilationEnvironmentVariablesProvider(golangExtension, zigExtension, target)
+        val environmentServiceProvider = registerEnvironmentService(target)
 
-        registerGolangDownloadTasks(target, golangExtension)
-        configureGolangBuildTaskDefaults(target, golangExtension, environmentVariablesProvider)
-        registerCleanTask(target, golangExtension)
+        configureGolangBuildTaskDefaults(target, golangExtension, zigExtension, environmentServiceProvider)
+        registerCleanTask(target, golangExtension, zigExtension, environmentServiceProvider)
 
         registerLintDownloadTasks(target, golangExtension)
-        configureLintingTaskDefaults(target, environmentVariablesProvider)
+        configureLintingTaskDefaults(target, golangExtension, zigExtension, environmentServiceProvider)
         registerLintTask(target, golangExtension)
     }
 
@@ -58,27 +56,30 @@ class GolangCrossCompilationPlugin @Inject constructor(private val execActionFac
         val extension = target.extensions.create<GolangCrossCompilationPluginExtension>("golang")
         extension.sourceDirectory.convention(target.layout.projectDirectory.dir("src"))
         extension.outputDirectory.convention(target.layout.buildDirectory.dir("libs"))
-        extension.macOSSystemRootDirectory.convention(target.layout.dir(target.provider { macOSSystemRoot }))
-
-        extension.rootZigCacheDirectory.convention(
-            target.layout.buildDirectory.map { buildDirectory ->
-                buildDirectory
-                    .dir("zig")
-                    .dir("cache")
-            }
-        )
 
         return extension
+    }
+
+    private fun registerEnvironmentService(target: Project): Provider<GolangCrossCompilationEnvironmentService> {
+        return target.gradle.sharedServices.registerIfAbsent(
+            GolangCrossCompilationEnvironmentService::class.jvmName,
+            GolangCrossCompilationEnvironmentService::class.java
+        ) {}
     }
 
     private fun configureGolangBuildTaskDefaults(
         target: Project,
         golangExtension: GolangCrossCompilationPluginExtension,
-        environmentVariablesProvider: GolangCrossCompilationEnvironmentVariablesProvider
+        zigExtension: ZigPluginExtension,
+        environmentServiceProvider: Provider<GolangCrossCompilationEnvironmentService>
     ) {
         target.tasks.withType<GolangBuild>() {
+            usesService(environmentServiceProvider)
+            environmentService.set(environmentServiceProvider)
+
+            golangVersion.set(golangExtension.golangVersion)
+            zigVersion.set(zigExtension.zigVersion)
             sourceDirectory.convention(golangExtension.sourceDirectory)
-            golangCompilerExecutablePath.convention(golangExtension.golangCompilerExecutablePath)
 
             outputDirectory.convention(
                 golangExtension.outputDirectory.map { outputDirectory ->
@@ -122,28 +123,21 @@ class GolangCrossCompilationPlugin @Inject constructor(private val execActionFac
             )
 
             outputHeaderFile.convention(outputDirectory.file(libraryName.map { "$it.h" }))
-
-            environmentVariablesProvider.configureEnvironmentVariablesForTarget(
-                compilationEnvironmentVariables,
-                targetOperatingSystem,
-                targetArchitecture,
-                this.name
-            )
         }
     }
 
     private fun configureLintingTaskDefaults(
         target: Project,
-        environmentVariablesProvider: GolangCrossCompilationEnvironmentVariablesProvider
+        golangExtension: GolangCrossCompilationPluginExtension,
+        zigExtension: ZigPluginExtension,
+        environmentServiceProvider: Provider<GolangCrossCompilationEnvironmentService>
     ) {
         target.tasks.withType<GolangLint> {
-            environmentVariablesProvider.configureEnvironmentVariablesForTarget(
-                additionalEnvironmentVariables,
-                project.provider { OperatingSystem.current },
-                project.provider { Architecture.current },
-                this.name
-            )
+            usesService(environmentServiceProvider)
+            environmentService.set(environmentServiceProvider)
 
+            golangVersion.set(golangExtension.golangVersion)
+            zigVersion.set(zigExtension.zigVersion)
             systemPath.convention(target.providers.environmentVariable("PATH"))
         }
     }
@@ -152,70 +146,8 @@ class GolangCrossCompilationPlugin @Inject constructor(private val execActionFac
         target.tasks.register<GolangLint>("lint") {
             executablePath.set(extension.linterExecutablePath)
             sourceDirectory.set(extension.sourceDirectory)
-            goRootDirectory.set(extension.golangRoot)
             upToDateCheckFilePath.set(target.layout.buildDirectory.file("lint/upToDate"))
         }
-    }
-
-    private fun registerGolangDownloadTasks(target: Project, extension: GolangCrossCompilationPluginExtension) {
-        val rootUrl = "https://dl.google.com/go"
-        val archiveFileName = extension.golangVersion
-            .map { "go$it.${OperatingSystem.current.name.lowercase()}-${Architecture.current.golangName}.$archiveFileExtension" }
-
-        val downloadArchive = target.tasks.register<Download>("downloadGolangArchive") {
-            src(archiveFileName.map { "$rootUrl/$it" })
-            dest(target.layout.buildDirectory.file(archiveFileName.map { "tools/downloads/${this.name}/$it" }))
-            overwrite(false)
-        }
-
-        val downloadChecksumFile = target.tasks.register<Download>("downloadGolangChecksum") {
-            val checksumFileName = archiveFileName.map { "$it.sha256" }
-
-            src(checksumFileName.map { "$rootUrl/$it" })
-            dest(target.layout.buildDirectory.file(checksumFileName.map { "tools/downloads/${this.name}/$it" }))
-            overwrite(false)
-        }
-
-        val verifyChecksum = target.tasks.register<VerifyChecksumFromSingleChecksumFile>("verifyGolangChecksum") {
-            checksumFile.set(target.layout.file(downloadChecksumFile.map { it.dest }))
-            fileToVerify.set(target.layout.file(downloadArchive.map { it.dest }))
-        }
-
-        val extractGolang = target.tasks.register<Sync>("extractGolang") {
-            dependsOn(downloadArchive)
-            dependsOn(verifyChecksum)
-
-            val targetDirectory = target.layout.buildDirectory.dir(extension.golangVersion.map { "tools/golang-$it" })
-
-            // Gradle always reads the entire archive, even if it hasn't changed, which can be quite time-consuming, especially if Sophos is active -
-            // this allows us to skip that if we're 90% sure it's not necessary.
-            // See https://gradle-community.slack.com/archives/CALL1EXGT/p1646637432358399?thread_ts=1646520443.914959&cid=CALL1EXGT for further discussion.
-            onlyIf { downloadArchive.get().didWork || !targetDirectory.get().asFile.exists() }
-            doNotTrackState("Tracking state takes 80+ seconds on my machine, workaround in place")
-
-            val source = when (OperatingSystem.current) {
-                OperatingSystem.Windows -> target.zipTree(downloadArchive.map { it.dest })
-                else -> target.tarTree(downloadArchive.map { it.dest })
-            }
-
-            from(source) {
-                eachFile {
-                    it.relativePath = RelativePath(true, *it.relativePath.segments.drop(1).toTypedArray())
-                }
-
-                includeEmptyDirs = false
-            }
-
-            into(targetDirectory)
-        }
-
-        val executableName = when (OperatingSystem.current) {
-            OperatingSystem.Windows -> "go.exe"
-            else -> "go"
-        }
-
-        extension.golangRoot.set(target.layout.dir(extractGolang.map { it.destinationDir }))
-        extension.golangCompilerExecutablePath.set(extension.golangRoot.map { it.dir("bin").file(executableName) })
     }
 
     private fun registerLintDownloadTasks(target: Project, extension: GolangCrossCompilationPluginExtension) {
@@ -275,33 +207,23 @@ class GolangCrossCompilationPlugin @Inject constructor(private val execActionFac
         extension.linterExecutablePath.set(target.layout.file(extractExecutable.map { it.outputs.files.singleFile.resolve(executableName) }))
     }
 
-    private fun registerCleanTask(target: Project, extension: GolangCrossCompilationPluginExtension) {
+    private fun registerCleanTask(
+        target: Project,
+        golangExtension: GolangCrossCompilationPluginExtension,
+        zigExtension: ZigPluginExtension,
+        environmentServiceProvider: Provider<GolangCrossCompilationEnvironmentService>
+    ) {
         target.tasks.register<GolangCacheClean>("cleanGolangCache") {
-            golangCompilerExecutablePath.set(extension.golangCompilerExecutablePath)
+            usesService(environmentServiceProvider)
+            environmentService.set(environmentServiceProvider)
+
+            golangVersion.set(golangExtension.golangVersion)
+            zigVersion.set(zigExtension.zigVersion)
         }
     }
 
     private val archiveFileExtension = when (OperatingSystem.current) {
         OperatingSystem.Windows -> "zip"
         else -> "tar.gz"
-    }
-
-    private val macOSSystemRoot: File? by lazy { findMacOSSystemRoot() }
-
-    private fun findMacOSSystemRoot(): File? {
-        if (OperatingSystem.current != OperatingSystem.Darwin) {
-            return null
-        }
-
-        val action = execActionFactory.newExecAction()
-        val outputStream = ByteArrayOutputStream()
-        action.commandLine = listOf("xcrun", "--show-sdk-path")
-        action.standardOutput = outputStream
-        action.errorOutput = outputStream
-
-        val result = action.execute()
-        result.assertNormalExitValue()
-
-        return File(outputStream.toString(Charsets.UTF_8).trim())
     }
 }

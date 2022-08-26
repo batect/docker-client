@@ -16,98 +16,16 @@
 
 package batect.dockerclient.buildtools.zig
 
-import batect.dockerclient.buildtools.Architecture
-import batect.dockerclient.buildtools.OperatingSystem
-import de.undercouch.gradle.tasks.download.Download
 import org.gradle.api.Plugin
 import org.gradle.api.Project
-import org.gradle.api.file.RegularFile
-import org.gradle.api.file.RelativePath
-import org.gradle.api.internal.file.FileResolver
-import org.gradle.api.internal.resources.DefaultResourceResolver
-import org.gradle.api.provider.Provider
-import org.gradle.api.tasks.Sync
-import org.gradle.internal.nativeintegration.filesystem.FileSystem
 import org.gradle.kotlin.dsl.create
-import org.gradle.kotlin.dsl.register
-import javax.inject.Inject
 
-class ZigPlugin @Inject constructor(fileResolver: FileResolver, fileSystem: FileSystem) : Plugin<Project> {
-    private val resourceResolver = DefaultResourceResolver(fileResolver, fileSystem)
-
+class ZigPlugin : Plugin<Project> {
     override fun apply(target: Project) {
-        val extension = createExtension(target)
-
-        val zigExecutablePath = registerDownloadTasks(target, extension)
-        extension.zigCompilerExecutablePath.set(zigExecutablePath)
+        createExtension(target)
     }
 
     private fun createExtension(target: Project): ZigPluginExtension {
         return target.extensions.create("zig")
-    }
-
-    private fun registerDownloadTasks(target: Project, extension: ZigPluginExtension): Provider<RegularFile> {
-        val archiveFileExtension = when (OperatingSystem.current) {
-            OperatingSystem.Windows -> "zip"
-            else -> "tar.xz"
-        }
-
-        val platformName = "${OperatingSystem.current.zigName}-${Architecture.current.zigName}"
-        val archiveFileName = extension.zigVersion.map { "zig-$platformName-$it.$archiveFileExtension" }
-        val downloadUrl = extension.zigVersion.map { "https://ziglang.org/download/$it/${archiveFileName.get()}" }
-
-        val downloadArchive = target.tasks.register<Download>("downloadZigArchive") {
-            src(downloadUrl)
-            dest(target.layout.buildDirectory.file(archiveFileName.map { "tools/downloads/${this.name}/$it" }))
-            overwrite(false)
-        }
-
-        val downloadChecksumFile = target.tasks.register<Download>("downloadZigChecksum") {
-            src("https://ziglang.org/download/index.json")
-            dest(target.layout.buildDirectory.file(extension.zigVersion.map { "tools/downloads/${this.name}/$it/index.json" }))
-            overwrite(false)
-        }
-
-        val verifyChecksum = target.tasks.register<VerifyZigChecksum>("verifyZigChecksum") {
-            checksumFile.set(target.layout.file(downloadChecksumFile.map { it.dest }))
-            fileToVerify.set(target.layout.file(downloadArchive.map { it.dest }))
-            zigVersion.set(extension.zigVersion)
-            zigPlatformName.set("${Architecture.current.zigName}-${OperatingSystem.current.zigName}")
-        }
-
-        val extractZig = target.tasks.register<Sync>("extractZig") {
-            dependsOn(downloadArchive)
-            dependsOn(verifyChecksum)
-
-            val targetDirectory = target.layout.buildDirectory.dir(extension.zigVersion.map { "tools/zig-$it" })
-
-            // Gradle always reads the entire archive, even if it hasn't changed, which can be quite time-consuming, especially if Sophos is active -
-            // this allows us to skip that if we're 90% sure it's not necessary.
-            // See https://gradle-community.slack.com/archives/CALL1EXGT/p1646637432358399?thread_ts=1646520443.914959&cid=CALL1EXGT for further discussion.
-            onlyIf { downloadArchive.get().didWork || !targetDirectory.get().asFile.exists() }
-            doNotTrackState("Tracking state takes 80+ seconds on my machine, workaround in place")
-
-            val source = when (OperatingSystem.current) {
-                OperatingSystem.Windows -> target.zipTree(downloadArchive.map { it.dest })
-                else -> target.tarTree(XzArchiver(resourceResolver.resolveResource(downloadArchive.map { it.dest })))
-            }
-
-            from(source) {
-                eachFile {
-                    it.relativePath = RelativePath(true, *it.relativePath.segments.drop(1).toTypedArray())
-                }
-
-                includeEmptyDirs = false
-            }
-
-            into(targetDirectory)
-        }
-
-        val executableName = when (OperatingSystem.current) {
-            OperatingSystem.Windows -> "zig.exe"
-            else -> "zig"
-        }
-
-        return target.layout.file(extractZig.map { it.destinationDir.resolve(executableName) })
     }
 }

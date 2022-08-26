@@ -147,13 +147,6 @@ tasks.named("spotlessKotlinGradle") {
 
 val cleanGolangCache = tasks.named("cleanGolangCache")
 
-val removeBuildOutput = tasks.register<Delete>("removeBuildOutput") {
-    mustRunAfter(cleanGolangCache)
-
-    delete(layout.buildDirectory)
-}
-
 tasks.named("clean") {
     dependsOn(cleanGolangCache)
-    dependsOn(removeBuildOutput)
 }

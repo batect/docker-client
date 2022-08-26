@@ -23,14 +23,7 @@ import org.gradle.api.provider.Property
 abstract class GolangCrossCompilationPluginExtension {
     abstract val sourceDirectory: DirectoryProperty
     abstract val outputDirectory: DirectoryProperty
-    abstract val golangRoot: DirectoryProperty
-
     abstract val golangVersion: Property<String>
-    abstract val golangCompilerExecutablePath: RegularFileProperty
-
     abstract val golangCILintVersion: Property<String>
     abstract val linterExecutablePath: RegularFileProperty
-
-    abstract val macOSSystemRootDirectory: DirectoryProperty
-    abstract val rootZigCacheDirectory: DirectoryProperty
 }

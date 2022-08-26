@@ -16,9 +16,14 @@
 
 package batect.dockerclient.buildtools.golang.crosscompilation
 
+import batect.dockerclient.buildtools.Architecture
+import batect.dockerclient.buildtools.OperatingSystem
 import org.gradle.api.DefaultTask
 import org.gradle.api.file.RegularFileProperty
+import org.gradle.api.provider.Property
+import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.InputFile
+import org.gradle.api.tasks.Internal
 import org.gradle.api.tasks.PathSensitive
 import org.gradle.api.tasks.PathSensitivity
 import org.gradle.api.tasks.TaskAction
@@ -26,14 +31,28 @@ import org.gradle.process.ExecOperations
 import javax.inject.Inject
 
 abstract class GolangCacheClean @Inject constructor(private val execOperations: ExecOperations) : DefaultTask() {
-    @get:InputFile
-    @get:PathSensitive(PathSensitivity.NONE)
-    abstract val golangCompilerExecutablePath: RegularFileProperty
+    @get:Input
+    abstract val golangVersion: Property<String>
+
+    // TODO: remove the need for this - this task doesn't need a Zig compiler
+    @get:Input
+    abstract val zigVersion: Property<String>
+
+    @get:Internal
+    abstract val environmentService: Property<GolangCrossCompilationEnvironmentService>
 
     @TaskAction
     fun run() {
+        val env = environmentService.get().getOrPrepareEnvironment(
+            this,
+            golangVersion.get(),
+            zigVersion.get(),
+            OperatingSystem.current,
+            Architecture.current,
+        )
+
         val result = execOperations.exec {
-            it.commandLine(golangCompilerExecutablePath.get().asFile.absolutePath, "clean", "-cache")
+            it.commandLine(env.golangCompiler, "clean", "-cache")
         }
 
         result.assertNormalExitValue()

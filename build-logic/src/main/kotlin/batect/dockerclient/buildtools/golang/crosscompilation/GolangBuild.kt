@@ -55,12 +55,11 @@ abstract class GolangBuild @Inject constructor(private val workerExecutor: Worke
     @get:Internal
     abstract val libraryName: Property<String>
 
-    @get:InputFile
-    @get:PathSensitive(PathSensitivity.NONE)
-    abstract val golangCompilerExecutablePath: RegularFileProperty
+    @get:Input
+    abstract val golangVersion: Property<String>
 
     @get:Input
-    abstract val compilationEnvironmentVariables: MapProperty<String, String>
+    abstract val zigVersion: Property<String>
 
     @get:OutputDirectory
     abstract val outputDirectory: DirectoryProperty
@@ -73,6 +72,9 @@ abstract class GolangBuild @Inject constructor(private val workerExecutor: Worke
 
     @get:Internal
     abstract val baseOutputName: Property<String>
+
+    @get:Internal
+    abstract val environmentService: Property<GolangCrossCompilationEnvironmentService>
 
     init {
         group = "build"
@@ -88,25 +90,34 @@ abstract class GolangBuild @Inject constructor(private val workerExecutor: Worke
 
     @TaskAction
     fun run() {
+        val env = environmentService.get().getOrPrepareEnvironment(
+            this,
+            golangVersion.get(),
+            zigVersion.get(),
+            targetOperatingSystem.get(),
+            targetArchitecture.get()
+        )
+
         workerExecutor.noIsolation().submit(GolangBuildAction::class.java) {
             it.outputDirectory.set(outputDirectory)
             it.sourceDirectory.set(sourceDirectory)
-            it.compilationCommand.set(compilationCommand)
-            it.compilationCommandEnvironment.set(compilationEnvironmentVariables.get())
+            it.compilationCommand.set(buildCompilationCommand(env))
+            it.compilationCommandEnvironment.set(env.environmentVariables)
             it.outputLibraryFile.set(outputLibraryFile)
             it.outputHeaderFile.set(outputHeaderFile)
         }
     }
 
-    private val compilationCommand: List<String>
-        get() = listOf(
-            golangCompilerExecutablePath.get().asFile.absolutePath,
+    private fun buildCompilationCommand(env: GolangCrossCompilationEnvironment): List<String> {
+        return listOf(
+            env.golangCompiler.toString(),
             "build",
             "-buildmode=c-${targetBinaryType.get().name.lowercase()}",
             *targetSpecificGoBuildArgs,
             "-o",
             outputLibraryFile.get().toString()
         )
+    }
 
     // -ldflags "-s" below is inspired by https://github.com/ziglang/zig/issues/9050#issuecomment-859939664
     // and fixes errors like the following when building the shared library for darwin/amd64:
