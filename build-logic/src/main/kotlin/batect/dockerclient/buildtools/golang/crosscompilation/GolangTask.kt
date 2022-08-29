@@ -16,19 +16,15 @@
 
 package batect.dockerclient.buildtools.golang.crosscompilation
 
-import org.gradle.api.tasks.TaskAction
-import org.gradle.process.ExecOperations
-import javax.inject.Inject
+import org.gradle.api.DefaultTask
+import org.gradle.api.provider.Property
+import org.gradle.api.tasks.Input
+import org.gradle.api.tasks.Internal
 
-abstract class GolangCacheClean @Inject constructor(private val execOperations: ExecOperations) : GolangTask() {
-    @TaskAction
-    fun run() {
-        val env = golangEnvironmentService.get().getOrPrepareEnvironment(golangVersion.get(), this).get()
+abstract class GolangTask : DefaultTask() {
+    @get:Input
+    abstract val golangVersion: Property<String>
 
-        val result = execOperations.exec {
-            it.commandLine(env.compiler, "clean", "-cache")
-        }
-
-        result.assertNormalExitValue()
-    }
+    @get:Internal
+    abstract val golangEnvironmentService: Property<GolangEnvironmentService>
 }

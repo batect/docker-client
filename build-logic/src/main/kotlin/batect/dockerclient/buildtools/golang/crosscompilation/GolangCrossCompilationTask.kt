@@ -29,15 +29,9 @@ import java.nio.file.Paths
 import java.util.concurrent.CompletableFuture
 import kotlin.io.path.absolutePathString
 
-abstract class GolangCrossCompilationTask : DefaultTask() {
-    @get:Input
-    abstract val golangVersion: Property<String>
-
+abstract class GolangCrossCompilationTask : GolangTask() {
     @get:Input
     abstract val zigVersion: Property<String>
-
-    @get:Internal
-    abstract val golangEnvironmentService: Property<GolangEnvironmentService>
 
     @get:Internal
     abstract val zigEnvironmentService: Property<ZigEnvironmentService>
@@ -46,11 +40,8 @@ abstract class GolangCrossCompilationTask : DefaultTask() {
         targetOperatingSystem: OperatingSystem,
         targetArchitecture: Architecture
     ): GolangCrossCompilationEnvironment {
-        val toolsDir = project.buildDir.toPath().resolve("tools").toAbsolutePath()
-        val downloadsDir = toolsDir.resolve("downloads")
-
-        val golangEnvironmentProvider = golangEnvironmentService.get().getOrPrepareEnvironment(golangVersion.get(), this, toolsDir, downloadsDir)
-        val zigEnvironmentProvider = zigEnvironmentService.get().getOrPrepareEnvironment(zigVersion.get(), this, toolsDir, downloadsDir)
+        val golangEnvironmentProvider = golangEnvironmentService.get().getOrPrepareEnvironment(golangVersion.get(), this)
+        val zigEnvironmentProvider = zigEnvironmentService.get().getOrPrepareEnvironment(zigVersion.get(), this)
 
         CompletableFuture.allOf(golangEnvironmentProvider, zigEnvironmentProvider).get()
 

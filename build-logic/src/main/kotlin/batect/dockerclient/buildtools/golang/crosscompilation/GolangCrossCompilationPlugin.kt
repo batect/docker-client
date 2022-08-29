@@ -74,14 +74,15 @@ class GolangCrossCompilationPlugin @Inject constructor(private val execActionFac
         golangEnvironmentServiceProvider: Provider<GolangEnvironmentService>,
         zigEnvironmentServiceProvider: Provider<ZigEnvironmentService>
     ) {
-        target.tasks.withType<GolangCrossCompilationTask>().configureEach { task ->
+        target.tasks.withType<GolangTask>().configureEach { task ->
             task.usesService(golangEnvironmentServiceProvider)
             task.golangEnvironmentService.set(golangEnvironmentServiceProvider)
+            task.golangVersion.set(extension.golangVersion)
+        }
 
+        target.tasks.withType<GolangCrossCompilationTask>().configureEach { task ->
             task.usesService(zigEnvironmentServiceProvider)
             task.zigEnvironmentService.set(zigEnvironmentServiceProvider)
-
-            task.golangVersion.set(extension.golangVersion)
             task.zigVersion.set(extension.zigVersion)
         }
     }

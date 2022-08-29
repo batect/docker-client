@@ -38,14 +38,16 @@ import java.util.concurrent.ConcurrentHashMap
 abstract class ZigEnvironmentService : BuildService<BuildServiceParameters.None> {
     private val environments = ConcurrentHashMap<String, CompletableFuture<ZigEnvironment>>()
 
-    fun getOrPrepareEnvironment(version: String, task: Task, toolsDir: Path, downloadsDir: Path): CompletableFuture<ZigEnvironment> {
+    fun getOrPrepareEnvironment(version: String, task: Task): CompletableFuture<ZigEnvironment> {
         return environments.computeIfAbsent(version) {
-            prepareEnvironment(version, task, toolsDir, downloadsDir)
+            prepareEnvironment(version, task)
         }
     }
 
-    private fun prepareEnvironment(version: String, task: Task, toolsDir: Path, downloadsDir: Path): CompletableFuture<ZigEnvironment> {
+    private fun prepareEnvironment(version: String, task: Task): CompletableFuture<ZigEnvironment> {
+        val toolsDir = task.project.buildDir.toPath().resolve("tools").toAbsolutePath()
         val zigRoot = toolsDir.resolve("zig-$version")
+        val downloadsDir = toolsDir.resolve("downloads")
 
         val executableName = when (OperatingSystem.current) {
             OperatingSystem.Windows -> "zig.exe"

@@ -34,14 +34,16 @@ import kotlin.io.path.readText
 abstract class GolangEnvironmentService : BuildService<BuildServiceParameters.None> {
     private val environments = ConcurrentHashMap<String, CompletableFuture<GolangEnvironment>>()
 
-    fun getOrPrepareEnvironment(version: String, task: Task, toolsDir: Path, downloadsDir: Path): CompletableFuture<GolangEnvironment> {
+    fun getOrPrepareEnvironment(version: String, task: Task): CompletableFuture<GolangEnvironment> {
         return environments.computeIfAbsent(version) {
-            prepareEnvironment(version, task, toolsDir, downloadsDir)
+            prepareEnvironment(version, task)
         }
     }
 
-    private fun prepareEnvironment(version: String, task: Task, toolsDir: Path, downloadsDir: Path): CompletableFuture<GolangEnvironment> {
+    private fun prepareEnvironment(version: String, task: Task): CompletableFuture<GolangEnvironment> {
+        val toolsDir = task.project.buildDir.toPath().resolve("tools").toAbsolutePath()
         val goRoot = toolsDir.resolve("golang-$version")
+        val downloadsDir = toolsDir.resolve("downloads")
 
         val executableName = when (OperatingSystem.current) {
             OperatingSystem.Windows -> "go.exe"
