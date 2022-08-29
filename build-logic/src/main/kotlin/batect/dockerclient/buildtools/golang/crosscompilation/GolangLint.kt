@@ -61,7 +61,7 @@ abstract class GolangLint @Inject constructor(private val execActionFactory: Exe
             golangVersion.get(),
             zigVersion.get(),
             OperatingSystem.current,
-            Architecture.current,
+            Architecture.current
         )
 
         val action = execActionFactory.newExecAction()

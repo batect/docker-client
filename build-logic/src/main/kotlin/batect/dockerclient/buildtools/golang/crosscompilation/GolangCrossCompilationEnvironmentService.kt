@@ -291,5 +291,5 @@ abstract class GolangCrossCompilationEnvironmentService : BuildService<BuildServ
 data class GolangCrossCompilationEnvironment(
     val golangRoot: Path,
     val golangCompiler: Path,
-    val environmentVariables: Map<String, String>,
+    val environmentVariables: Map<String, String>
 )

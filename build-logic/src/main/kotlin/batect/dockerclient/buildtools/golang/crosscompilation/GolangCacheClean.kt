@@ -31,7 +31,7 @@ abstract class GolangCacheClean @Inject constructor(private val execOperations: 
             // TODO: remove the need for this - this task doesn't need a Zig compiler
             zigVersion.get(),
             OperatingSystem.current,
-            Architecture.current,
+            Architecture.current
         )
 
         val result = execOperations.exec {
