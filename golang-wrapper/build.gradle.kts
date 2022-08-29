@@ -76,7 +76,7 @@ targets.forEach { target ->
     buildArchiveLibs.configure { dependsOn(buildArchiveLib) }
 }
 
-tasks.withType<GolangBuild> {
+tasks.withType<GolangBuild>().configureEach {
     libraryName.set(baseName)
 
     dependsOn(generateTypes)
