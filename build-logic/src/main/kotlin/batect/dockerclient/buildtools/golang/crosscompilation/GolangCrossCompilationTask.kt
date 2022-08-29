@@ -16,10 +16,18 @@
 
 package batect.dockerclient.buildtools.golang.crosscompilation
 
+import batect.dockerclient.buildtools.Architecture
+import batect.dockerclient.buildtools.OperatingSystem
+import batect.dockerclient.buildtools.zig.ZigEnvironment
+import batect.dockerclient.buildtools.zig.ZigEnvironmentService
 import org.gradle.api.DefaultTask
 import org.gradle.api.provider.Property
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.Internal
+import java.nio.file.Path
+import java.nio.file.Paths
+import java.util.concurrent.CompletableFuture
+import kotlin.io.path.absolutePathString
 
 abstract class GolangCrossCompilationTask : DefaultTask() {
     @get:Input
@@ -29,5 +37,88 @@ abstract class GolangCrossCompilationTask : DefaultTask() {
     abstract val zigVersion: Property<String>
 
     @get:Internal
-    abstract val environmentService: Property<GolangCrossCompilationEnvironmentService>
+    abstract val golangEnvironmentService: Property<GolangEnvironmentService>
+
+    @get:Internal
+    abstract val zigEnvironmentService: Property<ZigEnvironmentService>
+
+    protected fun prepareEnvironment(
+        targetOperatingSystem: OperatingSystem,
+        targetArchitecture: Architecture
+    ): GolangCrossCompilationEnvironment {
+        val toolsDir = project.buildDir.toPath().resolve("tools").toAbsolutePath()
+        val downloadsDir = toolsDir.resolve("downloads")
+
+        val golangEnvironmentProvider = golangEnvironmentService.get().getOrPrepareEnvironment(golangVersion.get(), this, toolsDir, downloadsDir)
+        val zigEnvironmentProvider = zigEnvironmentService.get().getOrPrepareEnvironment(zigVersion.get(), this, toolsDir, downloadsDir)
+
+        CompletableFuture.allOf(golangEnvironmentProvider, zigEnvironmentProvider).get()
+
+        val golangEnvironment = golangEnvironmentProvider.get()
+        val zigEnvironment = zigEnvironmentProvider.get()
+
+        return GolangCrossCompilationEnvironment(
+            golangEnvironment.root,
+            golangEnvironment.compiler,
+            environmentVariablesForTarget(zigEnvironment, targetOperatingSystem, targetArchitecture)
+        )
+    }
+
+    private fun environmentVariablesForTarget(
+        zigEnvironment: ZigEnvironment,
+        targetOperatingSystem: OperatingSystem,
+        targetArchitecture: Architecture
+    ): Map<String, String> {
+        val rootCacheDirectory = project.buildDir.resolve("zig").resolve("cache").resolve(this.name)
+
+        return mapOf(
+            "CGO_ENABLED" to "1",
+            "GOOS" to targetOperatingSystem.name.lowercase(),
+            "GOARCH" to targetArchitecture.golangName,
+            "CC" to zigCompilerCommandLine(zigEnvironment, "cc", targetOperatingSystem, targetArchitecture),
+            "CXX" to zigCompilerCommandLine(zigEnvironment, "c++", targetOperatingSystem, targetArchitecture),
+            "ZIG_LOCAL_CACHE_DIR" to rootCacheDirectory.resolve("local").absolutePath,
+            "ZIG_GLOBAL_CACHE_DIR" to rootCacheDirectory.resolve("global").absolutePath
+        )
+    }
+
+    private fun zigCompilerCommandLine(
+        zigEnvironment: ZigEnvironment,
+        compilerType: String,
+        targetOperatingSystem: OperatingSystem,
+        targetArchitecture: Architecture
+    ): String {
+        val target = "${targetArchitecture.zigName}-${targetOperatingSystem.zigName}-gnu"
+
+        val targetSpecificArgs = when (targetOperatingSystem) {
+            OperatingSystem.Darwin -> """--sysroot "$macOSSystemRootDirectory" "-I/usr/include" "-F/System/Library/Frameworks" "-L/usr/lib""""
+            else -> ""
+        }
+
+        return """"${zigEnvironment.compiler}" $compilerType -target $target $targetSpecificArgs"""
+    }
+
+    companion object {
+        private val macOSSystemRootDirectory: String by lazy {
+            val process = ProcessBuilder("xcrun", "--show-sdk-path")
+                .redirectOutput(ProcessBuilder.Redirect.PIPE)
+                .redirectErrorStream(true)
+                .start()
+
+            val exitCode = process.waitFor()
+            val output = process.inputReader().readText().trim()
+
+            if (exitCode != 0) {
+                throw RuntimeException("Retrieving macOS system root failed: command 'xcrun --show-sdk-path' exited with code $exitCode and output: $output")
+            }
+
+            Paths.get(output).absolutePathString()
+        }
+    }
 }
+
+data class GolangCrossCompilationEnvironment(
+    val golangRoot: Path,
+    val golangCompiler: Path,
+    val environmentVariables: Map<String, String>
+)

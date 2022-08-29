@@ -56,13 +56,7 @@ abstract class GolangLint @Inject constructor(private val execActionFactory: Exe
 
     @TaskAction
     fun run() {
-        val env = environmentService.get().getOrPrepareEnvironment(
-            this,
-            golangVersion.get(),
-            zigVersion.get(),
-            OperatingSystem.current,
-            Architecture.current
-        )
+        val env = prepareEnvironment(OperatingSystem.current, Architecture.current)
 
         val action = execActionFactory.newExecAction()
         action.workingDir = sourceDirectory.asFile.get()

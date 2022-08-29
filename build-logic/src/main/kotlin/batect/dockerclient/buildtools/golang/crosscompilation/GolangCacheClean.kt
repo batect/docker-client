@@ -25,14 +25,8 @@ import javax.inject.Inject
 abstract class GolangCacheClean @Inject constructor(private val execOperations: ExecOperations) : GolangCrossCompilationTask() {
     @TaskAction
     fun run() {
-        val env = environmentService.get().getOrPrepareEnvironment(
-            this,
-            golangVersion.get(),
-            // TODO: remove the need for this - this task doesn't need a Zig compiler
-            zigVersion.get(),
-            OperatingSystem.current,
-            Architecture.current
-        )
+        // TODO: remove the need for Zig version - this task doesn't need a Zig compiler
+        val env = prepareEnvironment(OperatingSystem.current, Architecture.current)
 
         val result = execOperations.exec {
             it.commandLine(env.golangCompiler, "clean", "-cache")

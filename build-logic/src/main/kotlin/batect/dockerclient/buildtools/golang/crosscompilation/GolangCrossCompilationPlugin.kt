@@ -19,6 +19,7 @@ package batect.dockerclient.buildtools.golang.crosscompilation
 import batect.dockerclient.buildtools.Architecture
 import batect.dockerclient.buildtools.BinaryType
 import batect.dockerclient.buildtools.OperatingSystem
+import batect.dockerclient.buildtools.zig.ZigEnvironmentService
 import de.undercouch.gradle.tasks.download.Download
 import org.gradle.api.Plugin
 import org.gradle.api.Project
@@ -34,14 +35,15 @@ import kotlin.reflect.jvm.jvmName
 
 class GolangCrossCompilationPlugin @Inject constructor(private val execActionFactory: ExecActionFactory) : Plugin<Project> {
     override fun apply(target: Project) {
-        val golangExtension = createExtension(target)
-        val environmentServiceProvider = registerEnvironmentService(target)
+        val extension = createExtension(target)
+        val golangEnvironmentServiceProvider = registerGolangEnvironmentService(target)
+        val zigEnvironmentServiceProvider = registerZigEnvironmentService(target)
 
-        configureTaskDefaults(target, golangExtension, environmentServiceProvider)
-        configureGolangBuildTaskDefaults(target, golangExtension)
+        configureTaskDefaults(target, extension, golangEnvironmentServiceProvider, zigEnvironmentServiceProvider)
+        configureGolangBuildTaskDefaults(target, extension)
         registerCleanTask(target)
-        registerLintDownloadTasks(target, golangExtension)
-        registerLintTask(target, golangExtension)
+        registerLintDownloadTasks(target, extension)
+        registerLintTask(target, extension)
     }
 
     private fun createExtension(target: Project): GolangCrossCompilationPluginExtension {
@@ -52,24 +54,35 @@ class GolangCrossCompilationPlugin @Inject constructor(private val execActionFac
         return extension
     }
 
-    private fun registerEnvironmentService(target: Project): Provider<GolangCrossCompilationEnvironmentService> {
+    private fun registerGolangEnvironmentService(target: Project): Provider<GolangEnvironmentService> {
         return target.gradle.sharedServices.registerIfAbsent(
-            GolangCrossCompilationEnvironmentService::class.jvmName,
-            GolangCrossCompilationEnvironmentService::class.java
+            GolangEnvironmentService::class.jvmName,
+            GolangEnvironmentService::class.java
+        ) {}
+    }
+
+    private fun registerZigEnvironmentService(target: Project): Provider<ZigEnvironmentService> {
+        return target.gradle.sharedServices.registerIfAbsent(
+            ZigEnvironmentService::class.jvmName,
+            ZigEnvironmentService::class.java
         ) {}
     }
 
     private fun configureTaskDefaults(
         target: Project,
-        golangExtension: GolangCrossCompilationPluginExtension,
-        environmentServiceProvider: Provider<GolangCrossCompilationEnvironmentService>
+        extension: GolangCrossCompilationPluginExtension,
+        golangEnvironmentServiceProvider: Provider<GolangEnvironmentService>,
+        zigEnvironmentServiceProvider: Provider<ZigEnvironmentService>
     ) {
         target.tasks.withType<GolangCrossCompilationTask>().configureEach { task ->
-            task.usesService(environmentServiceProvider)
-            task.environmentService.set(environmentServiceProvider)
+            task.usesService(golangEnvironmentServiceProvider)
+            task.golangEnvironmentService.set(golangEnvironmentServiceProvider)
 
-            task.golangVersion.set(golangExtension.golangVersion)
-            task.zigVersion.set(golangExtension.zigVersion)
+            task.usesService(zigEnvironmentServiceProvider)
+            task.zigEnvironmentService.set(zigEnvironmentServiceProvider)
+
+            task.golangVersion.set(extension.golangVersion)
+            task.zigVersion.set(extension.zigVersion)
         }
     }
 
