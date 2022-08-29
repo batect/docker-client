@@ -18,7 +18,9 @@ package batect.dockerclient.buildtools.golang.crosscompilation
 
 import batect.dockerclient.buildtools.Architecture
 import batect.dockerclient.buildtools.OperatingSystem
+import batect.dockerclient.buildtools.checksums.verifyChecksum
 import batect.dockerclient.buildtools.zig.XzArchiver
+import batect.dockerclient.buildtools.zig.ZigChecksumsFile
 import de.undercouch.gradle.tasks.download.DownloadAction
 import org.gradle.api.Project
 import org.gradle.api.Task
@@ -36,6 +38,7 @@ import java.nio.file.Paths
 import java.util.concurrent.CompletableFuture
 import java.util.concurrent.ConcurrentHashMap
 import kotlin.io.path.absolutePathString
+import kotlin.io.path.readText
 
 abstract class GolangCrossCompilationEnvironmentService : BuildService<BuildServiceParameters.None> {
     private val golangVersions = ConcurrentHashMap<GolangVersion, CompletableFuture<GolangEnvironment>>()
@@ -123,7 +126,7 @@ abstract class GolangCrossCompilationEnvironmentService : BuildService<BuildServ
                 return@thenRun
             }
 
-            // TODO: verify checksum
+            verifyGolangArchiveChecksum(archivePath, checksumPath)
 
             val source = when (OperatingSystem.current) {
                 OperatingSystem.Windows -> task.project.zipTree(archivePath)
@@ -134,15 +137,15 @@ abstract class GolangCrossCompilationEnvironmentService : BuildService<BuildServ
         }
     }
 
-    private fun downloadAndExtractZig(zigVersion: ZigVersion, task: Task, zigRoot: Path, downloadsDir: Path): CompletableFuture<Void> {
+    private fun downloadAndExtractZig(version: ZigVersion, task: Task, zigRoot: Path, downloadsDir: Path): CompletableFuture<Void> {
         val rootUrl = "https://ziglang.org/download"
         val platformName = "${OperatingSystem.current.zigName}-${Architecture.current.zigName}"
-        val archiveFileName = "zig-$platformName-$zigVersion.$zigArchiveFileExtension"
+        val archiveFileName = "zig-$platformName-$version.$zigArchiveFileExtension"
         val archivePath = downloadsDir.resolve(archiveFileName)
         val checksumFileName = "$archiveFileName.checksums.json"
         val checksumPath = downloadsDir.resolve(checksumFileName)
 
-        val archiveDownload = download(task, "$rootUrl/$zigVersion/$archiveFileName", archivePath)
+        val archiveDownload = download(task, "$rootUrl/$version/$archiveFileName", archivePath)
         val checksumDownload = download(task, "$rootUrl/index.json", checksumPath)
 
         return CompletableFuture.allOf(archiveDownload, checksumDownload).thenRun {
@@ -154,7 +157,7 @@ abstract class GolangCrossCompilationEnvironmentService : BuildService<BuildServ
                 return@thenRun
             }
 
-            // TODO: verify checksum
+            verifyZigArchiveChecksum(archivePath, checksumPath, version)
 
             val source = when (OperatingSystem.current) {
                 OperatingSystem.Windows -> task.project.zipTree(archivePath)
@@ -163,6 +166,24 @@ abstract class GolangCrossCompilationEnvironmentService : BuildService<BuildServ
 
             extract(task, source, zigRoot)
         }
+    }
+
+    private fun verifyGolangArchiveChecksum(archivePath: Path, checksumPath: Path) {
+        val expectedChecksum = checksumPath.readText(Charsets.UTF_8)
+
+        verifyChecksum(archivePath, expectedChecksum)
+    }
+
+    private fun verifyZigArchiveChecksum(archivePath: Path, checksumPath: Path, version: ZigVersion) {
+        val expectedChecksum = findExpectedChecksum(checksumPath, version)
+
+        verifyChecksum(archivePath, expectedChecksum)
+    }
+
+    private fun findExpectedChecksum(checksumPath: Path, version: ZigVersion): String {
+        val platformName = "${Architecture.current.zigName}-${OperatingSystem.current.zigName}"
+
+        return ZigChecksumsFile(checksumPath).archiveChecksumForVersionAndPlatform(version.version, platformName)
     }
 
     private fun download(task: Task, url: String, destination: Path): CompletableFuture<DownloadResult> {
@@ -179,8 +200,6 @@ abstract class GolangCrossCompilationEnvironmentService : BuildService<BuildServ
     }
 
     private fun extract(task: Task, source: FileTree, destination: Path) {
-        Files.deleteIfExists(destination)
-
         task.project.sync { sync ->
             sync.from(source) {
                 it.eachFile { f ->

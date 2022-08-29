@@ -16,8 +16,8 @@
 
 package batect.dockerclient.buildtools.golang.crosscompilation
 
-import batect.dockerclient.buildtools.ChecksumVerificationFailedException
-import batect.dockerclient.buildtools.VerifyChecksum
+import batect.dockerclient.buildtools.checksums.ChecksumVerificationException
+import batect.dockerclient.buildtools.checksums.VerifyChecksum
 import org.gradle.api.DefaultTask
 import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.tasks.InputFile
@@ -56,7 +56,7 @@ abstract class VerifyChecksumFromMultiChecksumFile @Inject constructor(private v
         val fileName = fileToVerifyValue.name
 
         return checksums.getOrElse(fileName) {
-            throw ChecksumVerificationFailedException("There is no checksum for $fileName in $checksumFileValue.")
+            throw ChecksumVerificationException("There is no checksum for $fileName in $checksumFileValue.")
         }
     }
 }

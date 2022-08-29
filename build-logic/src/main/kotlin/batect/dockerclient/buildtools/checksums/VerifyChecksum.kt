@@ -14,7 +14,7 @@
     limitations under the License.
 */
 
-package batect.dockerclient.buildtools
+package batect.dockerclient.buildtools.checksums
 
 import okio.HashingSource
 import okio.blackholeSink
@@ -34,7 +34,7 @@ abstract class VerifyChecksum : WorkAction<VerifyChecksumParameters> {
         val actualChecksum = computeActualChecksum(fileToVerify)
 
         if (actualChecksum != expectedChecksum) {
-            throw ChecksumVerificationFailedException("$fileToVerify is expected to have checksum $expectedChecksum, but has checksum $actualChecksum.")
+            throw ChecksumMismatchException("$fileToVerify is expected to have checksum $expectedChecksum, but has checksum $actualChecksum.")
         }
     }
 

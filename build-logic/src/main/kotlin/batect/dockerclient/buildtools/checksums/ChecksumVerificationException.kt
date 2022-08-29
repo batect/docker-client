@@ -14,6 +14,6 @@
     limitations under the License.
 */
 
-package batect.dockerclient.buildtools
+package batect.dockerclient.buildtools.checksums
 
-class ChecksumVerificationFailedException(message: String) : RuntimeException(message)
+open class ChecksumVerificationException(message: String) : RuntimeException(message)
