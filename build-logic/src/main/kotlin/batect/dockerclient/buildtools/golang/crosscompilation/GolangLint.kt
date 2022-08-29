@@ -24,13 +24,14 @@ import org.gradle.api.provider.Property
 import org.gradle.api.tasks.CacheableTask
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.InputDirectory
-import org.gradle.api.tasks.InputFile
+import org.gradle.api.tasks.Internal
 import org.gradle.api.tasks.OutputFile
 import org.gradle.api.tasks.PathSensitive
 import org.gradle.api.tasks.PathSensitivity
 import org.gradle.api.tasks.TaskAction
 import org.gradle.process.internal.ExecActionFactory
 import java.nio.file.Path
+import java.util.concurrent.CompletableFuture
 import javax.inject.Inject
 import kotlin.io.path.absolutePathString
 
@@ -40,9 +41,8 @@ abstract class GolangLint @Inject constructor(private val execActionFactory: Exe
     @get:PathSensitive(PathSensitivity.RELATIVE)
     abstract val sourceDirectory: DirectoryProperty
 
-    @get:InputFile
-    @get:PathSensitive(PathSensitivity.NONE)
-    abstract val executablePath: RegularFileProperty
+    @get:Input
+    abstract val linterVersion: Property<String>
 
     @get:Input
     abstract val systemPath: Property<String>
@@ -50,13 +50,22 @@ abstract class GolangLint @Inject constructor(private val execActionFactory: Exe
     @get:OutputFile
     abstract val upToDateCheckFilePath: RegularFileProperty
 
+    @get:Internal
+    abstract val linterService: Property<GolangLinterService>
+
     init {
         group = "verification"
     }
 
     @TaskAction
     fun run() {
-        val env = prepareEnvironment(OperatingSystem.current, Architecture.current)
+        val environmentProvider = prepareEnvironment(OperatingSystem.current, Architecture.current)
+        val linterProvider = linterService.get().getOrPrepareLinter(linterVersion.get(), this)
+
+        CompletableFuture.allOf(environmentProvider, linterProvider).get()
+
+        val env = environmentProvider.get()
+        val linter = linterProvider.get()
 
         val action = execActionFactory.newExecAction()
         action.workingDir = sourceDirectory.asFile.get()
@@ -65,7 +74,7 @@ abstract class GolangLint @Inject constructor(private val execActionFactory: Exe
         action.environment(env.environmentVariables)
 
         action.commandLine = listOf(
-            executablePath.get().toString(),
+            linter.binary.toString(),
             "run",
             "--timeout",
             "5m"

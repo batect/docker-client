@@ -3,5 +3,4 @@
 .gradle/
 .idea/
 build/
-build-logic/src/test/resources/*-test-fixtures/userHome/
 gradle-build-scan.txt

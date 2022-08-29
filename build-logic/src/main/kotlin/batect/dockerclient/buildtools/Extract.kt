@@ -17,13 +17,16 @@
 package batect.dockerclient.buildtools
 
 import org.gradle.api.Task
+import org.gradle.api.file.CopySpec
 import org.gradle.api.file.FileTree
 import org.gradle.api.file.RelativePath
 import java.nio.file.Path
 
-internal fun extract(task: Task, source: FileTree, destination: Path) {
+internal fun extract(task: Task, source: FileTree, destination: Path, applyFromOptions: CopySpec.() -> Unit = {}) {
     task.project.sync { sync ->
         sync.from(source) {
+            it.applyFromOptions()
+
             it.eachFile { f ->
                 f.relativePath = RelativePath(true, *f.relativePath.segments.drop(1).toTypedArray())
             }

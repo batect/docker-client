@@ -16,34 +16,28 @@
 
 package batect.dockerclient.buildtools.golang.crosscompilation
 
-import batect.dockerclient.buildtools.Architecture
 import batect.dockerclient.buildtools.BinaryType
 import batect.dockerclient.buildtools.OperatingSystem
 import batect.dockerclient.buildtools.zig.ZigEnvironmentService
-import de.undercouch.gradle.tasks.download.Download
 import org.gradle.api.Plugin
 import org.gradle.api.Project
-import org.gradle.api.file.RelativePath
 import org.gradle.api.provider.Provider
-import org.gradle.api.tasks.Sync
 import org.gradle.kotlin.dsl.create
 import org.gradle.kotlin.dsl.register
 import org.gradle.kotlin.dsl.withType
-import org.gradle.process.internal.ExecActionFactory
-import javax.inject.Inject
 import kotlin.reflect.jvm.jvmName
 
-class GolangCrossCompilationPlugin @Inject constructor(private val execActionFactory: ExecActionFactory) : Plugin<Project> {
+class GolangCrossCompilationPlugin : Plugin<Project> {
     override fun apply(target: Project) {
         val extension = createExtension(target)
         val golangEnvironmentServiceProvider = registerGolangEnvironmentService(target)
         val zigEnvironmentServiceProvider = registerZigEnvironmentService(target)
+        val linterServiceProvider = registerLinterService(target)
 
         configureTaskDefaults(target, extension, golangEnvironmentServiceProvider, zigEnvironmentServiceProvider)
         configureGolangBuildTaskDefaults(target, extension)
         registerCleanTask(target)
-        registerLintDownloadTasks(target, extension)
-        registerLintTask(target, extension)
+        registerLintTask(target, extension, linterServiceProvider)
     }
 
     private fun createExtension(target: Project): GolangCrossCompilationPluginExtension {
@@ -65,6 +59,13 @@ class GolangCrossCompilationPlugin @Inject constructor(private val execActionFac
         return target.gradle.sharedServices.registerIfAbsent(
             ZigEnvironmentService::class.jvmName,
             ZigEnvironmentService::class.java
+        ) {}
+    }
+
+    private fun registerLinterService(target: Project): Provider<GolangLinterService> {
+        return target.gradle.sharedServices.registerIfAbsent(
+            GolangLinterService::class.jvmName,
+            GolangLinterService::class.java
         ) {}
     }
 
@@ -139,78 +140,19 @@ class GolangCrossCompilationPlugin @Inject constructor(private val execActionFac
         }
     }
 
-    private fun registerLintTask(target: Project, extension: GolangCrossCompilationPluginExtension) {
+    private fun registerLintTask(target: Project, extension: GolangCrossCompilationPluginExtension, linterServiceProvider: Provider<GolangLinterService>) {
         target.tasks.register<GolangLint>("lint") {
-            executablePath.set(extension.linterExecutablePath)
+            this.usesService(linterServiceProvider)
+            this.linterService.set(linterServiceProvider)
+
+            linterVersion.set(extension.golangCILintVersion)
             sourceDirectory.set(extension.sourceDirectory)
             systemPath.convention(target.providers.environmentVariable("PATH"))
             upToDateCheckFilePath.set(target.layout.buildDirectory.file("lint/upToDate"))
         }
     }
 
-    private fun registerLintDownloadTasks(target: Project, extension: GolangCrossCompilationPluginExtension) {
-        val extensionProvider = target.provider { extension }
-        val rootUrl = extension.golangCILintVersion.map { "https://github.com/golangci/golangci-lint/releases/download/v$it" }
-        val filePrefix = extension.golangCILintVersion.map { "golangci-lint-$it" }
-
-        val downloadArchive = target.tasks.register<Download>("downloadGolangCILintArchive") {
-            val archiveFileName = filePrefix.map { "$it-${OperatingSystem.current.name.lowercase()}-${Architecture.current.golangName}.$archiveFileExtension" }
-
-            src(extensionProvider.map { "${rootUrl.get()}/${archiveFileName.get()}" })
-            dest(target.layout.buildDirectory.file(archiveFileName.map { "tools/downloads/${this.name}/$it" }))
-            overwrite(false)
-        }
-
-        val downloadChecksumFile = target.tasks.register<Download>("downloadGolangCILintChecksum") {
-            val checksumFileName = filePrefix.map { "$it-checksums.txt" }
-
-            src(extensionProvider.map { "${rootUrl.get()}/${checksumFileName.get()}" })
-            dest(target.layout.buildDirectory.file(checksumFileName.map { "tools/downloads/${this.name}/$it" }))
-            overwrite(false)
-        }
-
-        val verifyChecksum = target.tasks.register<VerifyChecksumFromMultiChecksumFile>("verifyGolangCILintChecksum") {
-            checksumFile.set(target.layout.file(downloadChecksumFile.map { it.dest }))
-            fileToVerify.set(target.layout.file(downloadArchive.map { it.dest }))
-        }
-
-        val executableName = when (OperatingSystem.current) {
-            OperatingSystem.Windows -> "golangci-lint.exe"
-            else -> "golangci-lint"
-        }
-
-        val extractExecutable = target.tasks.register<Sync>("extractGolangCILintExecutable") {
-            dependsOn(verifyChecksum)
-
-            val source = when (OperatingSystem.current) {
-                OperatingSystem.Windows -> target.zipTree(downloadArchive.map { it.dest })
-                else -> target.tarTree(downloadArchive.map { it.dest })
-            }
-
-            from(source) {
-                include("**/$executableName")
-
-                eachFile {
-                    it.relativePath = RelativePath(true, *it.relativePath.segments.takeLast(1).toTypedArray())
-                }
-
-                includeEmptyDirs = false
-            }
-
-            val targetDirectory = target.layout.buildDirectory.dir(extension.golangCILintVersion.map { "tools/golangci-lint-$it" })
-
-            into(targetDirectory)
-        }
-
-        extension.linterExecutablePath.set(target.layout.file(extractExecutable.map { it.outputs.files.singleFile.resolve(executableName) }))
-    }
-
     private fun registerCleanTask(target: Project) {
         target.tasks.register<GolangCacheClean>("cleanGolangCache")
-    }
-
-    private val archiveFileExtension = when (OperatingSystem.current) {
-        OperatingSystem.Windows -> "zip"
-        else -> "tar.gz"
     }
 }

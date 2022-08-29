@@ -78,7 +78,7 @@ abstract class GolangBuild @Inject constructor(private val workerExecutor: Worke
 
     @TaskAction
     fun run() {
-        val env = prepareEnvironment(targetOperatingSystem.get(), targetArchitecture.get())
+        val env = prepareEnvironment(targetOperatingSystem.get(), targetArchitecture.get()).get()
 
         workerExecutor.noIsolation().submit(GolangBuildAction::class.java) {
             it.outputDirectory.set(outputDirectory)

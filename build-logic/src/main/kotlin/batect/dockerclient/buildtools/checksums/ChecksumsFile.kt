@@ -14,15 +14,21 @@
     limitations under the License.
 */
 
-package batect.dockerclient.buildtools.golang.crosscompilation
+package batect.dockerclient.buildtools.checksums
 
-import org.gradle.api.file.DirectoryProperty
-import org.gradle.api.provider.Property
+import java.nio.file.Path
+import kotlin.io.path.readLines
 
-abstract class GolangCrossCompilationPluginExtension {
-    abstract val sourceDirectory: DirectoryProperty
-    abstract val outputDirectory: DirectoryProperty
-    abstract val golangVersion: Property<String>
-    abstract val zigVersion: Property<String>
-    abstract val golangCILintVersion: Property<String>
+data class ChecksumsFile(val path: Path) {
+    private val checksums by lazy {
+        path
+            .readLines(Charsets.UTF_8)
+            .associate { it.substringAfter("  ") to it.substringBefore("  ") }
+    }
+
+    fun checksumForFile(name: String): String {
+        return checksums.getOrElse(name) {
+            throw ChecksumVerificationException("There is no checksum for $name in $path.")
+        }
+    }
 }

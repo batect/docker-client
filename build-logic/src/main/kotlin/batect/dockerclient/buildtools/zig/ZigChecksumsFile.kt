@@ -24,10 +24,10 @@ import java.nio.file.Path
 import kotlin.io.path.readText
 
 data class ZigChecksumsFile(val path: Path) {
-    private val checksumFileContent by lazy { Json.parseToJsonElement(path.readText(Charsets.UTF_8)) as JsonObject }
+    private val fileContent by lazy { Json.parseToJsonElement(path.readText(Charsets.UTF_8)) as JsonObject }
 
     fun archiveChecksumForVersionAndPlatform(version: String, platformName: String): String {
-        val versionDetails = checksumFileContent.getOrElse(version) {
+        val versionDetails = fileContent.getOrElse(version) {
             throw ChecksumVerificationException("Version '$version' not found in $path.")
         } as JsonObject
 

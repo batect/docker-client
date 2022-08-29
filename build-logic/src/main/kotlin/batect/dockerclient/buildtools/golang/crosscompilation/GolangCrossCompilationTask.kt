@@ -20,7 +20,6 @@ import batect.dockerclient.buildtools.Architecture
 import batect.dockerclient.buildtools.OperatingSystem
 import batect.dockerclient.buildtools.zig.ZigEnvironment
 import batect.dockerclient.buildtools.zig.ZigEnvironmentService
-import org.gradle.api.DefaultTask
 import org.gradle.api.provider.Property
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.Internal
@@ -39,20 +38,20 @@ abstract class GolangCrossCompilationTask : GolangTask() {
     protected fun prepareEnvironment(
         targetOperatingSystem: OperatingSystem,
         targetArchitecture: Architecture
-    ): GolangCrossCompilationEnvironment {
+    ): CompletableFuture<GolangCrossCompilationEnvironment> {
         val golangEnvironmentProvider = golangEnvironmentService.get().getOrPrepareEnvironment(golangVersion.get(), this)
         val zigEnvironmentProvider = zigEnvironmentService.get().getOrPrepareEnvironment(zigVersion.get(), this)
 
-        CompletableFuture.allOf(golangEnvironmentProvider, zigEnvironmentProvider).get()
+        return CompletableFuture.allOf(golangEnvironmentProvider, zigEnvironmentProvider).thenApply {
+            val golangEnvironment = golangEnvironmentProvider.get()
+            val zigEnvironment = zigEnvironmentProvider.get()
 
-        val golangEnvironment = golangEnvironmentProvider.get()
-        val zigEnvironment = zigEnvironmentProvider.get()
-
-        return GolangCrossCompilationEnvironment(
-            golangEnvironment.root,
-            golangEnvironment.compiler,
-            environmentVariablesForTarget(zigEnvironment, targetOperatingSystem, targetArchitecture)
-        )
+            GolangCrossCompilationEnvironment(
+                golangEnvironment.root,
+                golangEnvironment.compiler,
+                environmentVariablesForTarget(zigEnvironment, targetOperatingSystem, targetArchitecture)
+            )
+        }
     }
 
     private fun environmentVariablesForTarget(

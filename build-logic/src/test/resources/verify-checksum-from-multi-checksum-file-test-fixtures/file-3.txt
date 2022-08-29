@@ -1,1 +1,0 @@
-This is the third file, which doesn't have a checksum in checksums.txt.

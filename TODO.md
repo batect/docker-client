@@ -20,7 +20,6 @@
   * Use https://github.com/square/kotlinpoet/ to generate Kotlin code rather than current string concatenation approach?
 * Fix issue linking sample apps and tests for non-Mac Kotlin/Native targets from Mac hosts (eg. running `./gradlew samples:interactive-container:linkReleaseExecutableLinuxX64` on a Mac host)
   * Currently ignored through `isSameOperatingSystemAsHost` checks in `build.gradle.kts`
-* Use Gradle's dependency infrastructure to download Golang and Zig compilers?
 * Use Gradle's project dependencies to refer to the Golang wrapper in the client project, rather than the current hack referencing Gradle tasks directly
   * https://docs.gradle.org/current/userguide/declaring_dependencies_between_subprojects.html#sec:depending_on_output_of_another_project
 
