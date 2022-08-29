@@ -24,6 +24,7 @@ abstract class GolangCrossCompilationPluginExtension {
     abstract val sourceDirectory: DirectoryProperty
     abstract val outputDirectory: DirectoryProperty
     abstract val golangVersion: Property<String>
+    abstract val zigVersion: Property<String>
     abstract val golangCILintVersion: Property<String>
     abstract val linterExecutablePath: RegularFileProperty
 }

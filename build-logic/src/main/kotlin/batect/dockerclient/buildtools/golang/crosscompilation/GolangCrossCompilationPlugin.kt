@@ -19,17 +19,13 @@ package batect.dockerclient.buildtools.golang.crosscompilation
 import batect.dockerclient.buildtools.Architecture
 import batect.dockerclient.buildtools.BinaryType
 import batect.dockerclient.buildtools.OperatingSystem
-import batect.dockerclient.buildtools.zig.ZigPlugin
-import batect.dockerclient.buildtools.zig.ZigPluginExtension
 import de.undercouch.gradle.tasks.download.Download
 import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.gradle.api.file.RelativePath
 import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.Sync
-import org.gradle.kotlin.dsl.apply
 import org.gradle.kotlin.dsl.create
-import org.gradle.kotlin.dsl.getByType
 import org.gradle.kotlin.dsl.register
 import org.gradle.kotlin.dsl.withType
 import org.gradle.process.internal.ExecActionFactory
@@ -38,13 +34,10 @@ import kotlin.reflect.jvm.jvmName
 
 class GolangCrossCompilationPlugin @Inject constructor(private val execActionFactory: ExecActionFactory) : Plugin<Project> {
     override fun apply(target: Project) {
-        target.apply<ZigPlugin>()
-
-        val zigExtension = target.extensions.getByType<ZigPluginExtension>()
         val golangExtension = createExtension(target)
         val environmentServiceProvider = registerEnvironmentService(target)
 
-        configureTaskDefaults(target, golangExtension, zigExtension, environmentServiceProvider)
+        configureTaskDefaults(target, golangExtension, environmentServiceProvider)
         configureGolangBuildTaskDefaults(target, golangExtension)
         registerCleanTask(target)
         registerLintDownloadTasks(target, golangExtension)
@@ -69,7 +62,6 @@ class GolangCrossCompilationPlugin @Inject constructor(private val execActionFac
     private fun configureTaskDefaults(
         target: Project,
         golangExtension: GolangCrossCompilationPluginExtension,
-        zigExtension: ZigPluginExtension,
         environmentServiceProvider: Provider<GolangCrossCompilationEnvironmentService>
     ) {
         target.tasks.withType<GolangCrossCompilationTask>().configureEach { task ->
@@ -77,7 +69,7 @@ class GolangCrossCompilationPlugin @Inject constructor(private val execActionFac
             task.environmentService.set(environmentServiceProvider)
 
             task.golangVersion.set(golangExtension.golangVersion)
-            task.zigVersion.set(zigExtension.zigVersion)
+            task.zigVersion.set(golangExtension.zigVersion)
         }
     }
 
