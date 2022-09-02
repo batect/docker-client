@@ -18,7 +18,6 @@ import (
 	"context"
 	"fmt"
 	"io"
-	"runtime"
 	"sync"
 
 	"github.com/docker/cli/cli/streams"
@@ -39,6 +38,12 @@ type HijackedIOStreamer struct {
 	Tty bool
 }
 
+// FIXME: if the output stream ends first, this method will leak the input streaming goroutine
+// until one last read() operation returns.
+// In the context of this Kotlin library, the stdin stream will be closed by the Kotlin side as soon
+// as the container exits if the stdin stream is an Okio-backed input stream, so the goroutine will exit once that happens.
+// If the stdin stream is /dev/stdin, then the goroutine will exit after consuming one more read operation,
+// which may not happen for quite some time. There doesn't seem to be an easy way to avoid this.
 func (h *HijackedIOStreamer) Stream(ctx context.Context) error {
 	restoreInput, err := h.setupInput()
 	if err != nil {
@@ -83,7 +88,6 @@ func (h *HijackedIOStreamer) setupInput() (restore func(), err error) {
 	var restoreOnce sync.Once
 	restore = func() {
 		restoreOnce.Do(func() {
-			//nolint:errcheck
 			h.restoreTerminal()
 		})
 	}
@@ -147,13 +151,7 @@ func (h *HijackedIOStreamer) setRawTerminal() error {
 	return h.OutputStream.SetRawTerminal()
 }
 
-func (h *HijackedIOStreamer) restoreTerminal() error {
+func (h *HijackedIOStreamer) restoreTerminal() {
 	h.InputStream.RestoreTerminal()
 	h.OutputStream.RestoreTerminal()
-
-	if h.InputStream != nil && runtime.GOOS != "darwin" && runtime.GOOS != "windows" {
-		return h.InputStream.Close()
-	}
-
-	return nil
 }
