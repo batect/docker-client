@@ -18,6 +18,7 @@ package batect.dockerclient
 
 import batect.dockerclient.io.SinkTextOutput
 import batect.dockerclient.io.SourceTextInput
+import batect.dockerclient.io.TextInput
 import io.kotest.assertions.asClue
 import io.kotest.assertions.json.shouldEqualJson
 import io.kotest.assertions.throwables.shouldNotThrowAny
@@ -1626,6 +1627,31 @@ class DockerClientContainerManagementSpec : ShouldSpec({
                     }
 
                     exception.message shouldBe "No such container:path: ${container.id}:/does-not-exist"
+                } finally {
+                    client.removeContainer(container, force = true)
+                }
+            }
+        }
+
+        should("be able to run two containers in a row that use stdin") {
+            repeat(2) {
+                val spec = ContainerCreationSpec.Builder(image)
+                    .withCommand("sh", "-c", "echo 'Hello stdout' >/dev/stdout && echo 'Hello stderr' >/dev/stderr && exit 123")
+                    .build()
+
+                val container = client.createContainer(spec)
+
+                try {
+                    val stdout = Buffer()
+                    val stderr = Buffer()
+
+                    val exitCode = client.run(container, SinkTextOutput(stdout), SinkTextOutput(stderr), TextInput.StandardInput)
+                    val stdoutText = stdout.readUtf8()
+                    val stderrText = stderr.readUtf8()
+
+                    exitCode shouldBe 123
+                    stdoutText shouldBe "Hello stdout\n"
+                    stderrText shouldBe "Hello stderr\n"
                 } finally {
                     client.removeContainer(container, force = true)
                 }
