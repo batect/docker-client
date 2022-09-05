@@ -307,13 +307,19 @@ public data class ContainerCreationSpec(
 public data class ExtraHost(val hostname: String, val address: String)
 
 /**
+ * Common properties for all forms of mounts into containers: [HostMount], [VolumeMount], [TmpfsMount] and [DeviceMount].
+ */
+public sealed interface ContainerMount {
+    public val containerPath: String
+}
+
+/**
  * Base class for bind mounts into containers.
  *
  * @see [HostMount]
  * @see [VolumeMount]
  */
-public sealed class BindMount(private val source: String) {
-    public abstract val containerPath: String
+public sealed class BindMount(private val source: String) : ContainerMount {
     public abstract val options: String?
 
     internal val formattedForDocker: String
@@ -339,14 +345,14 @@ public data class VolumeMount(val volume: VolumeReference, override val containe
  *
  * @see [ContainerCreationSpec.Builder.withTmpfsMount]
  */
-public data class TmpfsMount(val containerPath: String, val options: String)
+public data class TmpfsMount(override val containerPath: String, val options: String) : ContainerMount
 
 /**
  * A local device mounted into a container.
  *
  * @see [ContainerCreationSpec.Builder.withDeviceMount]
  */
-public data class DeviceMount(val localPath: Path, val containerPath: String, val permissions: String = defaultPermissions) {
+public data class DeviceMount(val localPath: Path, override val containerPath: String, val permissions: String = defaultPermissions) : ContainerMount {
     public companion object {
         public const val defaultPermissions: String = "rwm"
     }
