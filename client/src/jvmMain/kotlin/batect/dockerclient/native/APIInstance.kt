@@ -24,12 +24,13 @@ import java.nio.file.Files
 import java.nio.file.Path
 import java.nio.file.Paths
 
+@Suppress("detekt:SwallowedException")
 internal val nativeAPI: API by lazy {
     try {
         val systemTempDirectory = Files.createTempDirectory("batect-docker-client")
         extractAndLoadNativeLibrary(systemTempDirectory)
     } catch (e: UnsatisfiedLinkError) {
-        // Try an alternative directory - see https://github.com/batect/batect/issues/1340
+        // Try an alternative directory - see https://github.com/batect/batect/issues/1340.
         val userHome = Paths.get(System.getProperty("user.home"), ".batect", "docker")
         Files.createDirectories(userHome)
 
