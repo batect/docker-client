@@ -96,13 +96,18 @@ abstract class GolangCrossCompilationTask : GolangTask() {
                 .start()
 
             val exitCode = process.waitFor()
-            val output = process.inputReader().readText().trim()
+
+            val output = process.inputStream.use { input ->
+                input.bufferedReader(Charsets.UTF_8).use { reader ->
+                    reader.readText()
+                }
+            }
 
             if (exitCode != 0) {
                 throw RuntimeException("Retrieving macOS system root failed: command 'xcrun --show-sdk-path' exited with code $exitCode and output: $output")
             }
 
-            Paths.get(output).absolutePathString()
+            Paths.get(output.trim()).absolutePathString()
         }
     }
 }
