@@ -22,22 +22,30 @@ import jnr.ffi.LibraryOption
 import jnr.ffi.Platform
 import java.nio.file.Files
 import java.nio.file.Path
+import java.nio.file.Paths
 
 internal val nativeAPI: API by lazy {
-    val libraryDirectory = extractNativeLibrary()
+    try {
+        val systemTempDirectory = Files.createTempDirectory("batect-docker-client")
+        extractAndLoadNativeLibrary(systemTempDirectory)
+    } catch (e: UnsatisfiedLinkError) {
+        // Try an alternative directory - see https://github.com/batect/batect/issues/1340
+        val userHome = Paths.get(System.getProperty("user.home"), ".batect", "docker")
+        Files.createDirectories(userHome)
 
-    LibraryLoader
-        .create(API::class.java)
-        .option(LibraryOption.LoadNow, true)
-        .option(LibraryOption.IgnoreError, true)
-        .option(LibraryOption.PreferCustomPaths, true)
-        .search(libraryDirectory.toString())
-        .library("dockerclientwrapper")
-        .failImmediately()
-        .load()
+        val userTempDirectory = Files.createTempDirectory(userHome, "batect-docker-client")
+        extractAndLoadNativeLibrary(userTempDirectory)
+    }
 }
 
-private fun extractNativeLibrary(): Path {
+private fun extractAndLoadNativeLibrary(outputDirectory: Path): API {
+    outputDirectory.toFile().deleteOnExit()
+    extractNativeLibrary(outputDirectory)
+
+    return loadNativeLibrary(outputDirectory)
+}
+
+private fun extractNativeLibrary(outputDirectory: Path) {
     val classLoader = DockerClient::class.java.classLoader
     val platform = "${Platform.getNativePlatform().os.name.lowercase()}/${Platform.getNativePlatform().cpu.name.lowercase()}"
     val libraryFileName = Platform.getNativePlatform().mapLibraryName("dockerclientwrapper")
@@ -45,13 +53,20 @@ private fun extractNativeLibrary(): Path {
     val stream = classLoader.getResourceAsStream(resourcePath) ?: throw UnsupportedOperationException("Platform '$platform' is not supported.")
 
     stream.use {
-        val outputDirectory = Files.createTempDirectory("batect-docker-client")
-        outputDirectory.toFile().deleteOnExit()
-
         val outputFile = outputDirectory.resolve(libraryFileName)
         Files.copy(it, outputFile)
         outputFile.toFile().deleteOnExit()
-
-        return outputDirectory
     }
+}
+
+private fun loadNativeLibrary(outputDirectory: Path): API {
+    return LibraryLoader
+        .create(API::class.java)
+        .option(LibraryOption.LoadNow, true)
+        .option(LibraryOption.IgnoreError, true)
+        .option(LibraryOption.PreferCustomPaths, true)
+        .search(outputDirectory.toString())
+        .library("dockerclientwrapper")
+        .failImmediately()
+        .load()
 }
