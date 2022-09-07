@@ -8,9 +8,10 @@ A Docker client library for Kotlin/JVM and Kotlin/Native.
 
 ## Status
 
-:construction: This project is still experimental, with limited support for the Docker API.
-The initial focus is on providing the APIs used by [Batect](https://batect.dev).
+:construction: This project is an ongoing work in progress. It is used by [Batect](https://batect.dev) as of v0.80, and should
+be stable enough for production use.
 
+However, it only has the APIs required by Batect. Others are likely missing.
 If you require an API not provided here, please [open a new issue](https://github.com/batect/docker-client/issues).
 
 ## How to use
