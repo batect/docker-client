@@ -20,12 +20,11 @@ import io.kotest.assertions.throwables.shouldNotThrowAny
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.core.spec.style.ShouldSpec
 import io.kotest.matchers.shouldBe
-import okio.FileSystem
 import okio.Path
 import okio.Path.Companion.toPath
 
 class ImageBuildSpecSpec : ShouldSpec({
-    val rootTestImagesDirectory: Path = FileSystem.SYSTEM.canonicalize("./src/commonTest/resources/images".toPath())
+    val rootTestImagesDirectory: Path = systemFileSystem.canonicalize("./src/commonTest/resources/images".toPath())
 
     should("throw an exception when the provided context directory does not exist") {
         val exception = shouldThrow<InvalidImageBuildSpecException> {
@@ -114,5 +113,32 @@ class ImageBuildSpecSpec : ShouldSpec({
         }
 
         exception.message shouldBe "Image tag '_nonsense' is not a valid Docker image tag: invalid reference format"
+    }
+
+    should("throw an exception when attempting to add a secret when no builder has been set") {
+        val exception = shouldThrow<UnsupportedImageBuildFeatureException> {
+            ImageBuildSpec.Builder(rootTestImagesDirectory.resolve("basic-image"))
+                .withSecret("somesecret", EnvironmentBuildSecret("SOME_ENV_VAR"))
+        }
+
+        exception.message shouldBe "Secrets are only supported when building an image with BuildKit."
+    }
+
+    should("throw an exception when attempting to add a secret when the legacy builder has been selected") {
+        val exception = shouldThrow<UnsupportedImageBuildFeatureException> {
+            ImageBuildSpec.Builder(rootTestImagesDirectory.resolve("basic-image"))
+                .withBuilder(BuilderVersion.Legacy)
+                .withSecret("somesecret", EnvironmentBuildSecret("SOME_ENV_VAR"))
+        }
+
+        exception.message shouldBe "Secrets are only supported when building an image with BuildKit."
+    }
+
+    should("not throw an exception when attempting to add a secret when BuildKit has been selected") {
+        shouldNotThrowAny {
+            ImageBuildSpec.Builder(rootTestImagesDirectory.resolve("basic-image"))
+                .withBuilder(BuilderVersion.BuildKit)
+                .withSecret("somesecret", EnvironmentBuildSecret("SOME_ENV_VAR"))
+        }
     }
 })

@@ -40,6 +40,7 @@ import (
 	"github.com/moby/buildkit/session"
 	"github.com/moby/buildkit/session/auth/authprovider"
 	"github.com/moby/buildkit/session/filesync"
+	"github.com/moby/buildkit/session/secrets/secretsprovider"
 	"github.com/moby/buildkit/util/progress/progressui"
 	"github.com/moby/buildkit/util/progress/progresswriter"
 	digest "github.com/opencontainers/go-digest"
@@ -121,16 +122,37 @@ type loggingAttachable interface {
 // This function is based on trySession() from github.com/docker/cli/command/image/build_session.go
 func createSession(ctx context.Context, request *imageBuildRequest, tracer *buildKitBuildTracer) (*session.Session, error) {
 	sharedKey := buildkit.GetBuildSharedKey(request.ContextDirectory)
-
 	sess, err := session.NewSession(ctx, filepath.Base(request.ContextDirectory), sharedKey)
 
 	if err != nil {
 		return nil, fmt.Errorf("failed to create session: %w", err)
 	}
 
+	sess.Allow(createFileSyncProvider(request))
+
+	secretsProvider, err := createSecretsProvider(request)
+
+	if err != nil {
+		return nil, err
+	}
+
+	sess.Allow(secretsProvider)
+
+	authProvider, err := createAuthProvider(tracer)
+
+	if err != nil {
+		return nil, err
+	}
+
+	sess.Allow(authProvider)
+
+	return sess, nil
+}
+
+func createFileSyncProvider(request *imageBuildRequest) session.Attachable {
 	dockerfileDir := filepath.Dir(request.PathToDockerfile)
 
-	sess.Allow(filesync.NewFSSyncProvider([]filesync.SyncedDir{
+	return filesync.NewFSSyncProvider([]filesync.SyncedDir{
 		{
 			Name: "context",
 			Dir:  request.ContextDirectory,
@@ -140,8 +162,20 @@ func createSession(ctx context.Context, request *imageBuildRequest, tracer *buil
 			Name: "dockerfile",
 			Dir:  dockerfileDir,
 		},
-	}))
+	})
+}
 
+func createSecretsProvider(request *imageBuildRequest) (session.Attachable, error) {
+	store, err := secretsprovider.NewStore(request.Secrets)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return secretsprovider.NewSecretProvider(store), nil
+}
+
+func createAuthProvider(tracer *buildKitBuildTracer) (session.Attachable, error) {
 	// At the time of writing, this Writer is just used for warning messages when loading the local config file, so we can safely ignore these messages.
 	authProvider := authprovider.NewDockerAuthProvider(io.Discard)
 	authProviderLogger, authProviderSupportsLogging := authProvider.(loggingAttachable)
@@ -154,9 +188,7 @@ func createSession(ctx context.Context, request *imageBuildRequest, tracer *buil
 		tracer.LogStatus(s)
 	})
 
-	sess.Allow(authProvider)
-
-	return sess, nil
+	return authProvider, nil
 }
 
 func resetUIDAndGID(path string, stat *fsutiltypes.Stat) bool {

@@ -50,6 +50,7 @@ import kotlinx.cinterop.readBytes
 import kotlinx.cinterop.toCValues
 import kotlinx.cinterop.toKString
 import kotlinx.datetime.Instant
+import okio.Path
 import okio.Path.Companion.toPath
 import kotlin.time.Duration.Companion.nanoseconds
 
@@ -257,6 +258,38 @@ internal fun MemScope.allocBuildImageRequest(spec: ImageBuildSpec): BuildImageRe
         NoCache = spec.noCache
         TargetBuildStage = spec.targetBuildStage.cstr.ptr
         BuilderVersion = spec.builderApiVersion?.cstr?.ptr
+
+        val fileSecrets = spec.secrets
+            .filterValues { it is FileBuildSecret }
+            .map { (key, secret) ->
+                allocFileBuildSecret(key, (secret as FileBuildSecret).source)
+            }
+
+        FileSecrets = allocArrayOfPointersTo(fileSecrets)
+        FileSecretsCount = fileSecrets.size.toULong()
+
+        val environmentSecrets = spec.secrets
+            .filterValues { it is EnvironmentBuildSecret }
+            .map { (key, secret) ->
+                allocEnvironmentBuildSecret(key, (secret as EnvironmentBuildSecret).sourceEnvironmentVariableName)
+            }
+
+        EnvironmentSecrets = allocArrayOfPointersTo(environmentSecrets)
+        EnvironmentSecretsCount = environmentSecrets.size.toULong()
+    }
+}
+
+internal fun MemScope.allocFileBuildSecret(id: String, source: Path): batect.dockerclient.native.FileBuildSecret {
+    return alloc<batect.dockerclient.native.FileBuildSecret> {
+        ID = id.cstr.ptr
+        Path = source.toString().cstr.ptr
+    }
+}
+
+internal fun MemScope.allocEnvironmentBuildSecret(id: String, source: String): batect.dockerclient.native.EnvironmentBuildSecret {
+    return alloc<batect.dockerclient.native.EnvironmentBuildSecret> {
+        ID = id.cstr.ptr
+        SourceEnvironmentVariableName = source.cstr.ptr
     }
 }
 

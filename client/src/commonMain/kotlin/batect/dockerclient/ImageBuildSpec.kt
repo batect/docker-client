@@ -31,8 +31,15 @@ public data class ImageBuildSpec(
     val alwaysPullBaseImages: Boolean = false,
     val noCache: Boolean = false,
     val targetBuildStage: String = "",
-    val builder: BuilderVersion? = null
+    val builder: BuilderVersion? = null,
+    val secrets: Map<String, BuildSecret> = emptyMap()
 ) {
+    init {
+        if (secrets.isNotEmpty() && builder != BuilderVersion.BuildKit) {
+            throw UnsupportedImageBuildFeatureException("Secrets are only supported when building an image with BuildKit.")
+        }
+    }
+
     /**
      * Builder to create an instance of an [ImageBuildSpec] for use with [DockerClient.buildImage].
      *
@@ -111,6 +118,17 @@ public data class ImageBuildSpec(
 
         public fun withDaemonDefaultBuilder(): Builder {
             spec = spec.copy(builder = null)
+
+            return this
+        }
+
+        public fun withFileSecret(id: String, source: Path): Builder = withSecret(id, FileBuildSecret(source))
+        public fun withEnvironmentSecret(id: String, sourceEnvironmentVariableName: String): Builder = withSecret(id, EnvironmentBuildSecret(sourceEnvironmentVariableName))
+        public fun withSecret(id: String, value: BuildSecret): Builder = withSecrets(id to value)
+        public fun withSecrets(vararg secrets: Pair<String, BuildSecret>): Builder = withSecrets(mapOf(*secrets))
+
+        public fun withSecrets(secrets: Map<String, BuildSecret>): Builder {
+            spec = spec.copy(secrets = spec.secrets + secrets)
 
             return this
         }

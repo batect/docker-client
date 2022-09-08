@@ -45,6 +45,18 @@ internal var BuildImageRequest.imageTags by WriteOnlyList<BuildImageRequest, Str
     ::stringToPointer
 )
 
+internal var BuildImageRequest.fileSecrets by WriteOnlyList<BuildImageRequest, Pair<String, batect.dockerclient.FileBuildSecret>>(
+    BuildImageRequest::fileSecretsCount,
+    BuildImageRequest::fileSecretsPointer,
+    ::fileBuildSecretToNative
+)
+
+internal var BuildImageRequest.environmentSecrets by WriteOnlyList<BuildImageRequest, Pair<String, batect.dockerclient.EnvironmentBuildSecret>>(
+    BuildImageRequest::environmentSecretsCount,
+    BuildImageRequest::environmentSecretsPointer,
+    ::environmentBuildSecretToNative
+)
+
 internal var CreateContainerRequest.command by WriteOnlyList<CreateContainerRequest, String>(
     CreateContainerRequest::commandCount,
     CreateContainerRequest::commandPointer,
@@ -242,6 +254,26 @@ private fun stringToPointer(value: String, memoryManager: MemoryManager): Pointe
 
 private fun pointerToString(value: Pointer): String {
     return value.getString(0)
+}
+
+private fun fileBuildSecretToNative(value: Pair<String, batect.dockerclient.FileBuildSecret>, memoryManager: MemoryManager): Pointer {
+    val runtime = Runtime.getRuntime(nativeAPI)
+    val secret = FileBuildSecret(runtime)
+
+    secret.id.set(value.first)
+    secret.path.set(value.second.source.toString())
+
+    return Struct.getMemory(secret)
+}
+
+private fun environmentBuildSecretToNative(value: Pair<String, batect.dockerclient.EnvironmentBuildSecret>, memoryManager: MemoryManager): Pointer {
+    val runtime = Runtime.getRuntime(nativeAPI)
+    val secret = EnvironmentBuildSecret(runtime)
+
+    secret.id.set(value.first)
+    secret.sourceEnvironmentVariableName.set(value.second.sourceEnvironmentVariableName)
+
+    return Struct.getMemory(secret)
 }
 
 private fun deviceMountToNative(value: batect.dockerclient.DeviceMount, @Suppress("UNUSED_PARAMETER") memoryManager: MemoryManager): Pointer {

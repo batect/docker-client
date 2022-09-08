@@ -39,7 +39,6 @@ import io.kotest.matchers.types.shouldBeTypeOf
 import kotlinx.coroutines.TimeoutCancellationException
 import kotlinx.coroutines.withTimeout
 import okio.Buffer
-import okio.FileSystem
 import okio.Path
 import okio.Path.Companion.toPath
 import kotlin.random.Random
@@ -50,7 +49,7 @@ import kotlin.time.measureTime
 @ExperimentalTime
 @OptIn(ExperimentalKotest::class)
 class DockerClientLegacyImageBuildSpec : ShouldSpec({
-    val rootTestImagesDirectory: Path = FileSystem.SYSTEM.canonicalize("./src/commonTest/resources/images".toPath())
+    val rootTestImagesDirectory: Path = systemFileSystem.canonicalize("./src/commonTest/resources/images".toPath())
     val client = closeAfterTest(DockerClient.create())
 
     context("when working with Linux container images").onlyIfDockerDaemonSupportsLinuxContainers {
@@ -682,7 +681,7 @@ private fun imageReferenceWithoutTag(imageReference: String): String? {
 }
 
 private fun readFileContents(path: Path): String =
-    FileSystem.SYSTEM.read(path) {
+    systemFileSystem.read(path) {
         return readUtf8()
     }
 

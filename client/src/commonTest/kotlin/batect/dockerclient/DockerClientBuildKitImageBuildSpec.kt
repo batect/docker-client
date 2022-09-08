@@ -38,7 +38,6 @@ import io.kotest.matchers.types.shouldBeTypeOf
 import kotlinx.coroutines.TimeoutCancellationException
 import kotlinx.coroutines.withTimeout
 import okio.Buffer
-import okio.FileSystem
 import okio.Path
 import okio.Path.Companion.toPath
 import kotlin.random.Random
@@ -49,7 +48,7 @@ import kotlin.time.measureTime
 @ExperimentalTime
 @OptIn(ExperimentalKotest::class)
 class DockerClientBuildKitImageBuildSpec : ShouldSpec({
-    val rootTestImagesDirectory: Path = FileSystem.SYSTEM.canonicalize("./src/commonTest/resources/images".toPath())
+    val rootTestImagesDirectory: Path = systemFileSystem.canonicalize("./src/commonTest/resources/images".toPath())
     val client = closeAfterTest(DockerClient.create())
 
     context("when working with Linux container images").onlyIfDockerDaemonSupportsLinuxContainers {
@@ -710,6 +709,46 @@ class DockerClientBuildKitImageBuildSpec : ShouldSpec({
             }
 
             duration shouldBeLessThan 700.milliseconds
+        }
+
+        should("be able to build an image with a secret from a file") {
+            val spec = ImageBuildSpec.Builder(rootTestImagesDirectory.resolve("secret"))
+                .withBuildKitBuilder()
+                .withNoBuildCache()
+                .withFileSecret("the-secret", systemFileSystem.canonicalize("./src/commonTest/resources/secrets/image-build-secret.txt".toPath()))
+                .build()
+
+            val output = Buffer()
+
+            client.buildImage(spec, SinkTextOutput(output))
+
+            val outputText = output.readUtf8().trim()
+
+            outputText shouldContain """
+                |^#\d \d+.\d+ The secret is:
+                |#\d \d+.\d+ The super-secret value from a file$
+            """.trimMargin().toRegex(RegexOption.MULTILINE)
+        }
+
+        should("be able to build an image with a secret from an environment variable") {
+            val spec = ImageBuildSpec.Builder(rootTestImagesDirectory.resolve("secret"))
+                .withBuildKitBuilder()
+                .withNoBuildCache()
+                .withEnvironmentSecret("the-secret", "SECRET_ENV_VAR")
+                .build()
+
+            val output = Buffer()
+
+            withEnvironmentVariable("SECRET_ENV_VAR", "The super-secret value from an environment variable") {
+                client.buildImage(spec, SinkTextOutput(output))
+            }
+
+            val outputText = output.readUtf8().trim()
+
+            outputText shouldContain """
+                |^#\d \d+.\d+ The secret is:
+                |#\d \d+.\d+ The super-secret value from an environment variable$
+            """.trimMargin().toRegex(RegexOption.MULTILINE)
         }
     }
 })

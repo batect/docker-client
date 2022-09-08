@@ -55,6 +55,8 @@ type PullImageProgressUpdate *C.PullImageProgressUpdate
 type PullImageProgressCallback C.PullImageProgressCallback
 type GetImageReturn *C.GetImageReturn
 type StringPair *C.StringPair
+type FileBuildSecret *C.FileBuildSecret
+type EnvironmentBuildSecret *C.EnvironmentBuildSecret
 type BuildImageRequest *C.BuildImageRequest
 type BuildImageReturn *C.BuildImageReturn
 type BuildImageProgressUpdate_ImageBuildContextUploadProgress *C.BuildImageProgressUpdate_ImageBuildContextUploadProgress
@@ -393,6 +395,28 @@ func newStringPair(
     return value
 }
 
+func newFileBuildSecret(
+    ID string,
+    Path string,
+) FileBuildSecret {
+    value := C.AllocFileBuildSecret()
+    value.ID = C.CString(ID)
+    value.Path = C.CString(Path)
+
+    return value
+}
+
+func newEnvironmentBuildSecret(
+    ID string,
+    SourceEnvironmentVariableName string,
+) EnvironmentBuildSecret {
+    value := C.AllocEnvironmentBuildSecret()
+    value.ID = C.CString(ID)
+    value.SourceEnvironmentVariableName = C.CString(SourceEnvironmentVariableName)
+
+    return value
+}
+
 func newBuildImageRequest(
     ContextDirectory string,
     PathToDockerfile string,
@@ -402,6 +426,8 @@ func newBuildImageRequest(
     NoCache bool,
     TargetBuildStage string,
     BuilderVersion string,
+    FileSecrets []FileBuildSecret,
+    EnvironmentSecrets []EnvironmentBuildSecret,
 ) BuildImageRequest {
     value := C.AllocBuildImageRequest()
     value.ContextDirectory = C.CString(ContextDirectory)
@@ -426,6 +452,22 @@ func newBuildImageRequest(
     value.NoCache = C.bool(NoCache)
     value.TargetBuildStage = C.CString(TargetBuildStage)
     value.BuilderVersion = C.CString(BuilderVersion)
+
+    value.FileSecretsCount = C.uint64_t(len(FileSecrets))
+    value.FileSecrets = C.CreateFileBuildSecretArray(value.FileSecretsCount)
+
+    for i, v := range FileSecrets {
+        C.SetFileBuildSecretArrayElement(value.FileSecrets, C.uint64_t(i), v)
+    }
+
+
+    value.EnvironmentSecretsCount = C.uint64_t(len(EnvironmentSecrets))
+    value.EnvironmentSecrets = C.CreateEnvironmentBuildSecretArray(value.EnvironmentSecretsCount)
+
+    for i, v := range EnvironmentSecrets {
+        C.SetEnvironmentBuildSecretArrayElement(value.EnvironmentSecrets, C.uint64_t(i), v)
+    }
+
 
     return value
 }

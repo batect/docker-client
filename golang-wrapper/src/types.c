@@ -460,6 +460,42 @@ void FreeStringPair(StringPair* value) {
     free(value);
 }
 
+FileBuildSecret* AllocFileBuildSecret() {
+    FileBuildSecret* value = malloc(sizeof(FileBuildSecret));
+    value->ID = NULL;
+    value->Path = NULL;
+
+    return value;
+}
+
+void FreeFileBuildSecret(FileBuildSecret* value) {
+    if (value == NULL) {
+        return;
+    }
+
+    free(value->ID);
+    free(value->Path);
+    free(value);
+}
+
+EnvironmentBuildSecret* AllocEnvironmentBuildSecret() {
+    EnvironmentBuildSecret* value = malloc(sizeof(EnvironmentBuildSecret));
+    value->ID = NULL;
+    value->SourceEnvironmentVariableName = NULL;
+
+    return value;
+}
+
+void FreeEnvironmentBuildSecret(EnvironmentBuildSecret* value) {
+    if (value == NULL) {
+        return;
+    }
+
+    free(value->ID);
+    free(value->SourceEnvironmentVariableName);
+    free(value);
+}
+
 BuildImageRequest* AllocBuildImageRequest() {
     BuildImageRequest* value = malloc(sizeof(BuildImageRequest));
     value->ContextDirectory = NULL;
@@ -468,8 +504,12 @@ BuildImageRequest* AllocBuildImageRequest() {
     value->ImageTags = NULL;
     value->TargetBuildStage = NULL;
     value->BuilderVersion = NULL;
+    value->FileSecrets = NULL;
+    value->EnvironmentSecrets = NULL;
     value->BuildArgsCount = 0;
     value->ImageTagsCount = 0;
+    value->FileSecretsCount = 0;
+    value->EnvironmentSecretsCount = 0;
 
     return value;
 }
@@ -493,6 +533,16 @@ void FreeBuildImageRequest(BuildImageRequest* value) {
     free(value->ImageTags);
     free(value->TargetBuildStage);
     free(value->BuilderVersion);
+    for (uint64_t i = 0; i < value->FileSecretsCount; i++) {
+        FreeFileBuildSecret(value->FileSecrets[i]);
+    }
+
+    free(value->FileSecrets);
+    for (uint64_t i = 0; i < value->EnvironmentSecretsCount; i++) {
+        FreeEnvironmentBuildSecret(value->EnvironmentSecrets[i]);
+    }
+
+    free(value->EnvironmentSecrets);
     free(value);
 }
 
@@ -1336,6 +1386,30 @@ void SetstringArrayElement(char** array, uint64_t index, char* value) {
 }
 
 char* GetstringArrayElement(char** array, uint64_t index) {
+    return array[index];
+}
+
+FileBuildSecret** CreateFileBuildSecretArray(uint64_t size) {
+    return malloc(size * sizeof(FileBuildSecret*));
+}
+
+void SetFileBuildSecretArrayElement(FileBuildSecret** array, uint64_t index, FileBuildSecret* value) {
+    array[index] = value;
+}
+
+FileBuildSecret* GetFileBuildSecretArrayElement(FileBuildSecret** array, uint64_t index) {
+    return array[index];
+}
+
+EnvironmentBuildSecret** CreateEnvironmentBuildSecretArray(uint64_t size) {
+    return malloc(size * sizeof(EnvironmentBuildSecret*));
+}
+
+void SetEnvironmentBuildSecretArrayElement(EnvironmentBuildSecret** array, uint64_t index, EnvironmentBuildSecret* value) {
+    array[index] = value;
+}
+
+EnvironmentBuildSecret* GetEnvironmentBuildSecretArrayElement(EnvironmentBuildSecret** array, uint64_t index) {
     return array[index];
 }
 

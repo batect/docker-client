@@ -20,12 +20,11 @@ import batect.dockerclient.io.SinkTextOutput
 import io.kotest.core.spec.style.ShouldSpec
 import io.kotest.matchers.collections.shouldEndWith
 import okio.Buffer
-import okio.FileSystem
 import okio.Path
 import okio.Path.Companion.toPath
 
 class DockerClientImageBuildSpec : ShouldSpec({
-    val rootTestImagesDirectory: Path = FileSystem.SYSTEM.canonicalize("./src/commonTest/resources/images".toPath())
+    val rootTestImagesDirectory: Path = systemFileSystem.canonicalize("./src/commonTest/resources/images".toPath())
     val client = closeAfterTest(DockerClient.create())
 
     context("when no particular image builder is specified") {

@@ -46,9 +46,11 @@ import batect.dockerclient.native.config
 import batect.dockerclient.native.deviceMounts
 import batect.dockerclient.native.directories
 import batect.dockerclient.native.entrypoint
+import batect.dockerclient.native.environmentSecrets
 import batect.dockerclient.native.environmentVariables
 import batect.dockerclient.native.exposedPorts
 import batect.dockerclient.native.extraHosts
+import batect.dockerclient.native.fileSecrets
 import batect.dockerclient.native.files
 import batect.dockerclient.native.filters
 import batect.dockerclient.native.healthcheckCommand
@@ -187,6 +189,8 @@ internal fun BuildImageRequest(jvm: ImageBuildSpec): BuildImageRequest {
     request.noCache.set(jvm.noCache)
     request.targetBuildStage.set(jvm.targetBuildStage)
     request.builderVersion.set(jvm.builderApiVersion)
+    request.fileSecrets = jvm.secrets.filterValues { it is FileBuildSecret }.map { it.key to it.value as FileBuildSecret }
+    request.environmentSecrets = jvm.secrets.filterValues { it is EnvironmentBuildSecret }.map { it.key to it.value as EnvironmentBuildSecret }
 
     return request
 }

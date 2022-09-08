@@ -153,6 +153,18 @@ public class InvalidImageBuildSpecException(
 ) : DockerClientException(message, cause)
 
 /**
+ * Thrown when an [ImageBuildSpec] is created with features that are not supported by the selected [BuilderVersion].
+ *
+ * For example, the legacy builder does not support passing secrets to an image build.
+ *
+ * @see [ImageBuildSpec.Builder.withBuilder]
+ */
+public class UnsupportedImageBuildFeatureException(
+    message: String,
+    cause: Throwable? = null
+) : DockerClientException(message, cause)
+
+/**
  * Thrown when creating a container fails.
  */
 public expect class ContainerCreationFailedException(

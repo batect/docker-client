@@ -391,6 +391,32 @@ internal class StringPair(runtime: Runtime) : Struct(runtime), AutoCloseable {
     }
 }
 
+internal class FileBuildSecret(runtime: Runtime) : Struct(runtime), AutoCloseable {
+    constructor(pointer: jnr.ffi.Pointer) : this(pointer.runtime) {
+        this.useMemory(pointer)
+    }
+
+    val id = UTF8StringRef()
+    val path = UTF8StringRef()
+
+    override fun close() {
+        nativeAPI.FreeFileBuildSecret(this)
+    }
+}
+
+internal class EnvironmentBuildSecret(runtime: Runtime) : Struct(runtime), AutoCloseable {
+    constructor(pointer: jnr.ffi.Pointer) : this(pointer.runtime) {
+        this.useMemory(pointer)
+    }
+
+    val id = UTF8StringRef()
+    val sourceEnvironmentVariableName = UTF8StringRef()
+
+    override fun close() {
+        nativeAPI.FreeEnvironmentBuildSecret(this)
+    }
+}
+
 internal class BuildImageRequest(runtime: Runtime) : Struct(runtime), AutoCloseable {
     constructor(pointer: jnr.ffi.Pointer) : this(pointer.runtime) {
         this.useMemory(pointer)
@@ -406,6 +432,10 @@ internal class BuildImageRequest(runtime: Runtime) : Struct(runtime), AutoClosea
     val noCache = Boolean()
     val targetBuildStage = UTF8StringRef()
     val builderVersion = UTF8StringRef()
+    val fileSecretsCount = u_int64_t()
+    val fileSecretsPointer = Pointer()
+    val environmentSecretsCount = u_int64_t()
+    val environmentSecretsPointer = Pointer()
 
     override fun close() {
         nativeAPI.FreeBuildImageRequest(this)

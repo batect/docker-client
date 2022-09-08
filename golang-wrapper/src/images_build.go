@@ -29,6 +29,7 @@ import (
 	"github.com/docker/docker/api/types/filters"
 	"github.com/docker/docker/client"
 	"github.com/docker/docker/pkg/jsonmessage"
+	"github.com/moby/buildkit/session/secrets/secretsprovider"
 )
 
 //export BuildImage
@@ -75,9 +76,15 @@ type imageBuildRequest struct {
 	AlwaysPullBaseImages bool
 	NoCache              bool
 	TargetBuildStage     string
+	Secrets              []secretsprovider.Source
 }
 
 func fromCBuildImageRequest(request *C.BuildImageRequest) *imageBuildRequest {
+	secrets := append(
+		secretsFromFileSecrets(request.FileSecrets, request.FileSecretsCount),
+		secretsFromEnvironmentSecrets(request.EnvironmentSecrets, request.EnvironmentSecretsCount)...,
+	)
+
 	return &imageBuildRequest{
 		ContextDirectory:     C.GoString(request.ContextDirectory),
 		PathToDockerfile:     C.GoString(request.PathToDockerfile),
@@ -86,6 +93,7 @@ func fromCBuildImageRequest(request *C.BuildImageRequest) *imageBuildRequest {
 		AlwaysPullBaseImages: bool(request.AlwaysPullBaseImages),
 		NoCache:              bool(request.NoCache),
 		TargetBuildStage:     C.GoString(request.TargetBuildStage),
+		Secrets:              secrets,
 	}
 }
 
@@ -109,6 +117,34 @@ func fromStringArray(array **C.char, count C.uint64_t) []string {
 	for i := 0; i < int(count); i++ {
 		value := C.GoString(C.GetstringArrayElement(array, C.uint64_t(i)))
 		l = append(l, value)
+	}
+
+	return l
+}
+
+func secretsFromFileSecrets(secrets **C.FileBuildSecret, count C.uint64_t) []secretsprovider.Source {
+	l := make([]secretsprovider.Source, 0, count)
+
+	for i := 0; i < int(count); i++ {
+		s := C.GetFileBuildSecretArrayElement(secrets, C.uint64_t(i))
+		id := C.GoString(s.ID)
+		path := C.GoString(s.Path)
+
+		l = append(l, secretsprovider.Source{ID: id, FilePath: path})
+	}
+
+	return l
+}
+
+func secretsFromEnvironmentSecrets(secrets **C.EnvironmentBuildSecret, count C.uint64_t) []secretsprovider.Source {
+	l := make([]secretsprovider.Source, 0, count)
+
+	for i := 0; i < int(count); i++ {
+		s := C.GetEnvironmentBuildSecretArrayElement(secrets, C.uint64_t(i))
+		id := C.GoString(s.ID)
+		environmentVariableName := C.GoString(s.SourceEnvironmentVariableName)
+
+		l = append(l, secretsprovider.Source{ID: id, Env: environmentVariableName})
 	}
 
 	return l

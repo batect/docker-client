@@ -119,6 +119,10 @@ internal interface API {
     fun AllocGetImageReturn(): GetImageReturn?
     fun FreeStringPair(@In value: StringPair)
     fun AllocStringPair(): StringPair?
+    fun FreeFileBuildSecret(@In value: FileBuildSecret)
+    fun AllocFileBuildSecret(): FileBuildSecret?
+    fun FreeEnvironmentBuildSecret(@In value: EnvironmentBuildSecret)
+    fun AllocEnvironmentBuildSecret(): EnvironmentBuildSecret?
     fun FreeBuildImageRequest(@In value: BuildImageRequest)
     fun AllocBuildImageRequest(): BuildImageRequest?
     fun FreeBuildImageReturn(@In value: BuildImageReturn)

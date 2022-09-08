@@ -252,6 +252,22 @@
     - name: Value
       type: string
 
+- name: FileBuildSecret
+  type: struct
+  fields:
+    - name: ID
+      type: string
+    - name: Path
+      type: string
+
+- name: EnvironmentBuildSecret
+  type: struct
+  fields:
+    - name: ID
+      type: string
+    - name: SourceEnvironmentVariableName
+      type: string
+
 - name: BuildImageRequest
   type: struct
   fields:
@@ -271,6 +287,10 @@
       type: string
     - name: BuilderVersion
       type: string
+    - name: FileSecrets
+      type: FileBuildSecret[]
+    - name: EnvironmentSecrets
+      type: EnvironmentBuildSecret[]
 
 - name: BuildImageReturn
   type: struct
