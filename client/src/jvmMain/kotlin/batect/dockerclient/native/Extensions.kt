@@ -256,7 +256,7 @@ private fun pointerToString(value: Pointer): String {
     return value.getString(0)
 }
 
-private fun fileBuildSecretToNative(value: Pair<String, batect.dockerclient.FileBuildSecret>, memoryManager: MemoryManager): Pointer {
+private fun fileBuildSecretToNative(value: Pair<String, batect.dockerclient.FileBuildSecret>, @Suppress("UNUSED_PARAMETER") memoryManager: MemoryManager): Pointer {
     val runtime = Runtime.getRuntime(nativeAPI)
     val secret = FileBuildSecret(runtime)
 
@@ -266,7 +266,7 @@ private fun fileBuildSecretToNative(value: Pair<String, batect.dockerclient.File
     return Struct.getMemory(secret)
 }
 
-private fun environmentBuildSecretToNative(value: Pair<String, batect.dockerclient.EnvironmentBuildSecret>, memoryManager: MemoryManager): Pointer {
+private fun environmentBuildSecretToNative(value: Pair<String, batect.dockerclient.EnvironmentBuildSecret>, @Suppress("UNUSED_PARAMETER") memoryManager: MemoryManager): Pointer {
     val runtime = Runtime.getRuntime(nativeAPI)
     val secret = EnvironmentBuildSecret(runtime)
 

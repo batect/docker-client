@@ -44,7 +44,7 @@ public sealed interface BuildSecret
 public data class EnvironmentBuildSecret(val sourceEnvironmentVariableName: String) : BuildSecret
 
 /**
- * A secret used for a BuildKit image build whose value is taken from a local file
+ * A secret used for a BuildKit image build whose value is taken from a local file.
  *
  * @see [ImageBuildSpec.Builder.withFileSecret]
  * @see [ImageBuildSpec.Builder.withSecret]
