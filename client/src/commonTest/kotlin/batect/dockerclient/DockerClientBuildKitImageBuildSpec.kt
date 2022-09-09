@@ -725,8 +725,8 @@ class DockerClientBuildKitImageBuildSpec : ShouldSpec({
             val outputText = output.readUtf8().trim()
 
             outputText shouldContain """
-                |^#\d \d+.\d+ The secret is:
-                |#\d \d+.\d+ The super-secret value from a file$
+                |^#\d+ \d+.\d+ The secret is:
+                |#\d+ \d+.\d+ The super-secret value from a file$
             """.trimMargin().toRegex(RegexOption.MULTILINE)
         }
 
@@ -746,8 +746,8 @@ class DockerClientBuildKitImageBuildSpec : ShouldSpec({
             val outputText = output.readUtf8().trim()
 
             outputText shouldContain """
-                |^#\d \d+.\d+ The secret is:
-                |#\d \d+.\d+ The super-secret value from an environment variable$
+                |^#\d+ \d+.\d+ The secret is:
+                |#\d+ \d+.\d+ The super-secret value from an environment variable$
             """.trimMargin().toRegex(RegexOption.MULTILINE)
         }
     }
