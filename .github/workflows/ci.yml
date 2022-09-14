@@ -388,4 +388,4 @@ jobs:
     steps:
     - name: Publish documentation to GitHub Pages
       id: publish
-      uses: actions/deploy-pages@v1.0.10
+      uses: actions/deploy-pages@v1.1.0
