@@ -21,7 +21,6 @@ import (
 	"C"
 	"encoding/json"
 	"errors"
-	"github.com/moby/buildkit/session/sshforward/sshprovider"
 	"io"
 	"unsafe"
 
@@ -31,6 +30,7 @@ import (
 	"github.com/docker/docker/client"
 	"github.com/docker/docker/pkg/jsonmessage"
 	"github.com/moby/buildkit/session/secrets/secretsprovider"
+	"github.com/moby/buildkit/session/sshforward/sshprovider"
 )
 
 //export BuildImage
