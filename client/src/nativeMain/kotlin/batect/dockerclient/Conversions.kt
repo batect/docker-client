@@ -299,6 +299,7 @@ internal fun MemScope.allocSSHAgent(agent: SSHAgent): batect.dockerclient.native
     return alloc<batect.dockerclient.native.SSHAgent> {
         ID = agent.id.cstr.ptr
         Paths = allocArrayOfPointersTo(agent.paths.map { it.toString() })
+        PathsCount = agent.paths.size.toULong()
     }
 }
 

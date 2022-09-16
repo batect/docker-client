@@ -752,10 +752,12 @@ class DockerClientBuildKitImageBuildSpec : ShouldSpec({
         }
 
         should("be able to build an image with a SSH agent") {
+            val sshKeyPath = systemFileSystem.canonicalize("./src/commonTest/resources/ssh-keys/id_rsa".toPath())
+
             val spec = ImageBuildSpec.Builder(rootTestImagesDirectory.resolve("ssh"))
                 .withBuildKitBuilder()
                 .withNoBuildCache()
-                .withDefaultSSHAgent()
+                .withSSHAgent(SSHAgent.defaultID, setOf(sshKeyPath))
                 .build()
 
             val output = Buffer()
@@ -766,7 +768,7 @@ class DockerClientBuildKitImageBuildSpec : ShouldSpec({
 
             outputText shouldContain """
                 |^#\d+ \d+.\d+ SSH agent is available!
-                |#\d+ \d+.\d+ srw-------\s+1 root\s+root\s+0 [A-Z][a-z]{2} \d+ \d+:\d+ /run/buildkit/ssh_agent.0$
+                |#\d+ \d+.\d+ 4096 SHA256:NZIAzXUaPE2QoH9BgqOy7GaNt9I1ChdiTR9wBSv2SZk\s\s\(RSA\)$
             """.trimMargin().toRegex(RegexOption.MULTILINE)
         }
     }
