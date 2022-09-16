@@ -21,6 +21,7 @@ import (
 	"C"
 	"encoding/json"
 	"errors"
+	"github.com/moby/buildkit/session/sshforward/sshprovider"
 	"io"
 	"unsafe"
 
@@ -77,6 +78,7 @@ type imageBuildRequest struct {
 	NoCache              bool
 	TargetBuildStage     string
 	Secrets              []secretsprovider.Source
+	SSHAgents            []sshprovider.AgentConfig
 }
 
 func fromCBuildImageRequest(request *C.BuildImageRequest) *imageBuildRequest {
@@ -94,6 +96,7 @@ func fromCBuildImageRequest(request *C.BuildImageRequest) *imageBuildRequest {
 		NoCache:              bool(request.NoCache),
 		TargetBuildStage:     C.GoString(request.TargetBuildStage),
 		Secrets:              secrets,
+		SSHAgents:            sshAgentsFromRequest(request.SSHAgents, request.SSHAgentsCount),
 	}
 }
 
@@ -145,6 +148,20 @@ func secretsFromEnvironmentSecrets(secrets **C.EnvironmentBuildSecret, count C.u
 		environmentVariableName := C.GoString(s.SourceEnvironmentVariableName)
 
 		l = append(l, secretsprovider.Source{ID: id, Env: environmentVariableName})
+	}
+
+	return l
+}
+
+func sshAgentsFromRequest(agents **C.SSHAgent, count C.uint64_t) []sshprovider.AgentConfig {
+	l := make([]sshprovider.AgentConfig, 0, count)
+
+	for i := 0; i < int(count); i++ {
+		agent := C.GetSSHAgentArrayElement(agents, C.uint64_t(i))
+		id := C.GoString(agent.ID)
+		paths := fromStringArray(agent.Paths, agent.PathsCount)
+
+		l = append(l, sshprovider.AgentConfig{ID: id, Paths: paths})
 	}
 
 	return l

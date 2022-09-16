@@ -185,6 +185,12 @@ typedef struct {
 } EnvironmentBuildSecret;
 
 typedef struct {
+    char* ID;
+    uint64_t PathsCount;
+    char** Paths;
+} SSHAgent;
+
+typedef struct {
     char* ContextDirectory;
     char* PathToDockerfile;
     uint64_t BuildArgsCount;
@@ -199,6 +205,8 @@ typedef struct {
     FileBuildSecret** FileSecrets;
     uint64_t EnvironmentSecretsCount;
     EnvironmentBuildSecret** EnvironmentSecrets;
+    uint64_t SSHAgentsCount;
+    SSHAgent** SSHAgents;
 } BuildImageRequest;
 
 typedef struct {
@@ -527,6 +535,8 @@ EXPORTED_FUNCTION FileBuildSecret* AllocFileBuildSecret();
 EXPORTED_FUNCTION void FreeFileBuildSecret(FileBuildSecret* value);
 EXPORTED_FUNCTION EnvironmentBuildSecret* AllocEnvironmentBuildSecret();
 EXPORTED_FUNCTION void FreeEnvironmentBuildSecret(EnvironmentBuildSecret* value);
+EXPORTED_FUNCTION SSHAgent* AllocSSHAgent();
+EXPORTED_FUNCTION void FreeSSHAgent(SSHAgent* value);
 EXPORTED_FUNCTION BuildImageRequest* AllocBuildImageRequest();
 EXPORTED_FUNCTION void FreeBuildImageRequest(BuildImageRequest* value);
 EXPORTED_FUNCTION BuildImageReturn* AllocBuildImageReturn();
@@ -607,18 +617,21 @@ EXPORTED_FUNCTION void FreeInspectExecReturn(InspectExecReturn* value);
 EXPORTED_FUNCTION VolumeReference** CreateVolumeReferenceArray(uint64_t size);
 EXPORTED_FUNCTION void SetVolumeReferenceArrayElement(VolumeReference** array, uint64_t index, VolumeReference* value);
 EXPORTED_FUNCTION VolumeReference* GetVolumeReferenceArrayElement(VolumeReference** array, uint64_t index);
-EXPORTED_FUNCTION StringPair** CreateStringPairArray(uint64_t size);
-EXPORTED_FUNCTION void SetStringPairArrayElement(StringPair** array, uint64_t index, StringPair* value);
-EXPORTED_FUNCTION StringPair* GetStringPairArrayElement(StringPair** array, uint64_t index);
 EXPORTED_FUNCTION char** CreatestringArray(uint64_t size);
 EXPORTED_FUNCTION void SetstringArrayElement(char** array, uint64_t index, char* value);
 EXPORTED_FUNCTION char* GetstringArrayElement(char** array, uint64_t index);
+EXPORTED_FUNCTION StringPair** CreateStringPairArray(uint64_t size);
+EXPORTED_FUNCTION void SetStringPairArrayElement(StringPair** array, uint64_t index, StringPair* value);
+EXPORTED_FUNCTION StringPair* GetStringPairArrayElement(StringPair** array, uint64_t index);
 EXPORTED_FUNCTION FileBuildSecret** CreateFileBuildSecretArray(uint64_t size);
 EXPORTED_FUNCTION void SetFileBuildSecretArrayElement(FileBuildSecret** array, uint64_t index, FileBuildSecret* value);
 EXPORTED_FUNCTION FileBuildSecret* GetFileBuildSecretArrayElement(FileBuildSecret** array, uint64_t index);
 EXPORTED_FUNCTION EnvironmentBuildSecret** CreateEnvironmentBuildSecretArray(uint64_t size);
 EXPORTED_FUNCTION void SetEnvironmentBuildSecretArrayElement(EnvironmentBuildSecret** array, uint64_t index, EnvironmentBuildSecret* value);
 EXPORTED_FUNCTION EnvironmentBuildSecret* GetEnvironmentBuildSecretArrayElement(EnvironmentBuildSecret** array, uint64_t index);
+EXPORTED_FUNCTION SSHAgent** CreateSSHAgentArray(uint64_t size);
+EXPORTED_FUNCTION void SetSSHAgentArrayElement(SSHAgent** array, uint64_t index, SSHAgent* value);
+EXPORTED_FUNCTION SSHAgent* GetSSHAgentArrayElement(SSHAgent** array, uint64_t index);
 EXPORTED_FUNCTION DeviceMount** CreateDeviceMountArray(uint64_t size);
 EXPORTED_FUNCTION void SetDeviceMountArrayElement(DeviceMount** array, uint64_t index, DeviceMount* value);
 EXPORTED_FUNCTION DeviceMount* GetDeviceMountArrayElement(DeviceMount** array, uint64_t index);

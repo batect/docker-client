@@ -750,6 +750,25 @@ class DockerClientBuildKitImageBuildSpec : ShouldSpec({
                 |#\d+ \d+.\d+ The super-secret value from an environment variable$
             """.trimMargin().toRegex(RegexOption.MULTILINE)
         }
+
+        should("be able to build an image with a SSH agent") {
+            val spec = ImageBuildSpec.Builder(rootTestImagesDirectory.resolve("ssh"))
+                .withBuildKitBuilder()
+                .withNoBuildCache()
+                .withDefaultSSHAgent()
+                .build()
+
+            val output = Buffer()
+
+            client.buildImage(spec, SinkTextOutput(output))
+
+            val outputText = output.readUtf8().trim()
+
+            outputText shouldContain """
+                |^#\d+ \d+.\d+ SSH agent is available!
+                |#\d+ \d+.\d+ srw-------\s+1 root\s+root\s+0 [A-Z][a-z]{2} \d+ \d+:\d+ /run/buildkit/ssh_agent.0$
+            """.trimMargin().toRegex(RegexOption.MULTILINE)
+        }
     }
 })
 

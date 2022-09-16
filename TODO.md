@@ -39,7 +39,6 @@
 * Images
   * Build
     * BuildKit
-      * Support for SSH passthrough - fail if attempted with legacy builder
       * Support for cache-from and cache-to - fail if attempted with legacy builder
       * Add support for warnings (added in BuildKit 0.10.0)
       * Upgrade to most recent version of BuildKit library (currently blocked due to version hell)

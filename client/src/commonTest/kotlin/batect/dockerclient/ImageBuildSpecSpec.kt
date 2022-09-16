@@ -141,4 +141,31 @@ class ImageBuildSpecSpec : ShouldSpec({
                 .withSecret("somesecret", EnvironmentBuildSecret("SOME_ENV_VAR"))
         }
     }
+
+    should("throw an exception when attempting to add a SSH agent when no builder has been set") {
+        val exception = shouldThrow<UnsupportedImageBuildFeatureException> {
+            ImageBuildSpec.Builder(rootTestImagesDirectory.resolve("basic-image"))
+                .withSSHAgent(SSHAgent.default)
+        }
+
+        exception.message shouldBe "SSH agents are only supported when building an image with BuildKit."
+    }
+
+    should("throw an exception when attempting to add a SSH agent when the legacy builder has been selected") {
+        val exception = shouldThrow<UnsupportedImageBuildFeatureException> {
+            ImageBuildSpec.Builder(rootTestImagesDirectory.resolve("basic-image"))
+                .withBuilder(BuilderVersion.Legacy)
+                .withSSHAgent(SSHAgent.default)
+        }
+
+        exception.message shouldBe "SSH agents are only supported when building an image with BuildKit."
+    }
+
+    should("not throw an exception when attempting to add a SSH agent when BuildKit has been selected") {
+        shouldNotThrowAny {
+            ImageBuildSpec.Builder(rootTestImagesDirectory.resolve("basic-image"))
+                .withBuilder(BuilderVersion.BuildKit)
+                .withSSHAgent(SSHAgent.default)
+        }
+    }
 })

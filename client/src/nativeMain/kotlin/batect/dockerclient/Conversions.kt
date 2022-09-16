@@ -258,6 +258,8 @@ internal fun MemScope.allocBuildImageRequest(spec: ImageBuildSpec): BuildImageRe
         NoCache = spec.noCache
         TargetBuildStage = spec.targetBuildStage.cstr.ptr
         BuilderVersion = spec.builderApiVersion?.cstr?.ptr
+        SSHAgents = allocArrayOfPointersTo(spec.sshAgents.map { allocSSHAgent(it) })
+        SSHAgentsCount = spec.sshAgents.size.toULong()
 
         val fileSecrets = spec.secrets
             .filterValues { it is FileBuildSecret }
@@ -290,6 +292,13 @@ internal fun MemScope.allocEnvironmentBuildSecret(id: String, source: String): b
     return alloc<batect.dockerclient.native.EnvironmentBuildSecret> {
         ID = id.cstr.ptr
         SourceEnvironmentVariableName = source.cstr.ptr
+    }
+}
+
+internal fun MemScope.allocSSHAgent(agent: SSHAgent): batect.dockerclient.native.SSHAgent {
+    return alloc<batect.dockerclient.native.SSHAgent> {
+        ID = agent.id.cstr.ptr
+        Paths = allocArrayOfPointersTo(agent.paths.map { it.toString() })
     }
 }
 

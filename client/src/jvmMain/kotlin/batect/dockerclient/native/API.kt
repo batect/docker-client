@@ -123,6 +123,8 @@ internal interface API {
     fun AllocFileBuildSecret(): FileBuildSecret?
     fun FreeEnvironmentBuildSecret(@In value: EnvironmentBuildSecret)
     fun AllocEnvironmentBuildSecret(): EnvironmentBuildSecret?
+    fun FreeSSHAgent(@In value: SSHAgent)
+    fun AllocSSHAgent(): SSHAgent?
     fun FreeBuildImageRequest(@In value: BuildImageRequest)
     fun AllocBuildImageRequest(): BuildImageRequest?
     fun FreeBuildImageReturn(@In value: BuildImageReturn)

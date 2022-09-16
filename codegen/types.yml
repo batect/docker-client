@@ -268,6 +268,14 @@
     - name: SourceEnvironmentVariableName
       type: string
 
+- name: SSHAgent
+  type: struct
+  fields:
+    - name: ID
+      type: string
+    - name: Paths
+      type: string[]
+
 - name: BuildImageRequest
   type: struct
   fields:
@@ -291,6 +299,8 @@
       type: FileBuildSecret[]
     - name: EnvironmentSecrets
       type: EnvironmentBuildSecret[]
+    - name: SSHAgents
+      type: SSHAgent[]
 
 - name: BuildImageReturn
   type: struct

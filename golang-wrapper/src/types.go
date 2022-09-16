@@ -57,6 +57,7 @@ type GetImageReturn *C.GetImageReturn
 type StringPair *C.StringPair
 type FileBuildSecret *C.FileBuildSecret
 type EnvironmentBuildSecret *C.EnvironmentBuildSecret
+type SSHAgent *C.SSHAgent
 type BuildImageRequest *C.BuildImageRequest
 type BuildImageReturn *C.BuildImageReturn
 type BuildImageProgressUpdate_ImageBuildContextUploadProgress *C.BuildImageProgressUpdate_ImageBuildContextUploadProgress
@@ -417,6 +418,24 @@ func newEnvironmentBuildSecret(
     return value
 }
 
+func newSSHAgent(
+    ID string,
+    Paths []string,
+) SSHAgent {
+    value := C.AllocSSHAgent()
+    value.ID = C.CString(ID)
+
+    value.PathsCount = C.uint64_t(len(Paths))
+    value.Paths = C.CreatestringArray(value.PathsCount)
+
+    for i, v := range Paths {
+        C.SetstringArrayElement(value.Paths, C.uint64_t(i), C.CString(v))
+    }
+
+
+    return value
+}
+
 func newBuildImageRequest(
     ContextDirectory string,
     PathToDockerfile string,
@@ -428,6 +447,7 @@ func newBuildImageRequest(
     BuilderVersion string,
     FileSecrets []FileBuildSecret,
     EnvironmentSecrets []EnvironmentBuildSecret,
+    SSHAgents []SSHAgent,
 ) BuildImageRequest {
     value := C.AllocBuildImageRequest()
     value.ContextDirectory = C.CString(ContextDirectory)
@@ -466,6 +486,14 @@ func newBuildImageRequest(
 
     for i, v := range EnvironmentSecrets {
         C.SetEnvironmentBuildSecretArrayElement(value.EnvironmentSecrets, C.uint64_t(i), v)
+    }
+
+
+    value.SSHAgentsCount = C.uint64_t(len(SSHAgents))
+    value.SSHAgents = C.CreateSSHAgentArray(value.SSHAgentsCount)
+
+    for i, v := range SSHAgents {
+        C.SetSSHAgentArrayElement(value.SSHAgents, C.uint64_t(i), v)
     }
 
 

@@ -496,6 +496,29 @@ void FreeEnvironmentBuildSecret(EnvironmentBuildSecret* value) {
     free(value);
 }
 
+SSHAgent* AllocSSHAgent() {
+    SSHAgent* value = malloc(sizeof(SSHAgent));
+    value->ID = NULL;
+    value->Paths = NULL;
+    value->PathsCount = 0;
+
+    return value;
+}
+
+void FreeSSHAgent(SSHAgent* value) {
+    if (value == NULL) {
+        return;
+    }
+
+    free(value->ID);
+    for (uint64_t i = 0; i < value->PathsCount; i++) {
+        free(value->Paths[i]);
+    }
+
+    free(value->Paths);
+    free(value);
+}
+
 BuildImageRequest* AllocBuildImageRequest() {
     BuildImageRequest* value = malloc(sizeof(BuildImageRequest));
     value->ContextDirectory = NULL;
@@ -506,10 +529,12 @@ BuildImageRequest* AllocBuildImageRequest() {
     value->BuilderVersion = NULL;
     value->FileSecrets = NULL;
     value->EnvironmentSecrets = NULL;
+    value->SSHAgents = NULL;
     value->BuildArgsCount = 0;
     value->ImageTagsCount = 0;
     value->FileSecretsCount = 0;
     value->EnvironmentSecretsCount = 0;
+    value->SSHAgentsCount = 0;
 
     return value;
 }
@@ -543,6 +568,11 @@ void FreeBuildImageRequest(BuildImageRequest* value) {
     }
 
     free(value->EnvironmentSecrets);
+    for (uint64_t i = 0; i < value->SSHAgentsCount; i++) {
+        FreeSSHAgent(value->SSHAgents[i]);
+    }
+
+    free(value->SSHAgents);
     free(value);
 }
 
@@ -1365,18 +1395,6 @@ VolumeReference* GetVolumeReferenceArrayElement(VolumeReference** array, uint64_
     return array[index];
 }
 
-StringPair** CreateStringPairArray(uint64_t size) {
-    return malloc(size * sizeof(StringPair*));
-}
-
-void SetStringPairArrayElement(StringPair** array, uint64_t index, StringPair* value) {
-    array[index] = value;
-}
-
-StringPair* GetStringPairArrayElement(StringPair** array, uint64_t index) {
-    return array[index];
-}
-
 char** CreatestringArray(uint64_t size) {
     return malloc(size * sizeof(char*));
 }
@@ -1386,6 +1404,18 @@ void SetstringArrayElement(char** array, uint64_t index, char* value) {
 }
 
 char* GetstringArrayElement(char** array, uint64_t index) {
+    return array[index];
+}
+
+StringPair** CreateStringPairArray(uint64_t size) {
+    return malloc(size * sizeof(StringPair*));
+}
+
+void SetStringPairArrayElement(StringPair** array, uint64_t index, StringPair* value) {
+    array[index] = value;
+}
+
+StringPair* GetStringPairArrayElement(StringPair** array, uint64_t index) {
     return array[index];
 }
 
@@ -1410,6 +1440,18 @@ void SetEnvironmentBuildSecretArrayElement(EnvironmentBuildSecret** array, uint6
 }
 
 EnvironmentBuildSecret* GetEnvironmentBuildSecretArrayElement(EnvironmentBuildSecret** array, uint64_t index) {
+    return array[index];
+}
+
+SSHAgent** CreateSSHAgentArray(uint64_t size) {
+    return malloc(size * sizeof(SSHAgent*));
+}
+
+void SetSSHAgentArrayElement(SSHAgent** array, uint64_t index, SSHAgent* value) {
+    array[index] = value;
+}
+
+SSHAgent* GetSSHAgentArrayElement(SSHAgent** array, uint64_t index) {
     return array[index];
 }
 

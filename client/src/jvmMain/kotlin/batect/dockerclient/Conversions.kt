@@ -60,6 +60,7 @@ import batect.dockerclient.native.log
 import batect.dockerclient.native.loggingOptions
 import batect.dockerclient.native.nativeAPI
 import batect.dockerclient.native.networkAliases
+import batect.dockerclient.native.sshAgents
 import batect.dockerclient.native.test
 import batect.dockerclient.native.tmpfsMounts
 import batect.dockerclient.native.values
@@ -191,6 +192,7 @@ internal fun BuildImageRequest(jvm: ImageBuildSpec): BuildImageRequest {
     request.builderVersion.set(jvm.builderApiVersion)
     request.fileSecrets = jvm.secrets.filterValues { it is FileBuildSecret }.map { it.key to it.value as FileBuildSecret }
     request.environmentSecrets = jvm.secrets.filterValues { it is EnvironmentBuildSecret }.map { it.key to it.value as EnvironmentBuildSecret }
+    request.sshAgents = jvm.sshAgents
 
     return request
 }

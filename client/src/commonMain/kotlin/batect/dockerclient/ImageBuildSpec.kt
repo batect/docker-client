@@ -32,11 +32,16 @@ public data class ImageBuildSpec(
     val noCache: Boolean = false,
     val targetBuildStage: String = "",
     val builder: BuilderVersion? = null,
-    val secrets: Map<String, BuildSecret> = emptyMap()
+    val secrets: Map<String, BuildSecret> = emptyMap(),
+    val sshAgents: Set<SSHAgent> = emptySet()
 ) {
     init {
         if (secrets.isNotEmpty() && builder != BuilderVersion.BuildKit) {
             throw UnsupportedImageBuildFeatureException("Secrets are only supported when building an image with BuildKit.")
+        }
+
+        if (sshAgents.isNotEmpty() && builder != BuilderVersion.BuildKit) {
+            throw UnsupportedImageBuildFeatureException("SSH agents are only supported when building an image with BuildKit.")
         }
     }
 
@@ -133,6 +138,15 @@ public data class ImageBuildSpec(
             return this
         }
 
+        public fun withDefaultSSHAgent(): Builder = withSSHAgent(SSHAgent.default)
+        public fun withSSHAgent(id: String, paths: Set<Path> = emptySet()): Builder = withSSHAgent(SSHAgent(id, paths))
+
+        public fun withSSHAgent(agent: SSHAgent): Builder {
+            spec = spec.copy(sshAgents = spec.sshAgents + agent)
+
+            return this
+        }
+
         public fun build(): ImageBuildSpec {
             if (!systemFileSystem.exists(spec.pathToDockerfile)) {
                 throw InvalidImageBuildSpecException("Dockerfile '${spec.pathToDockerfile}' does not exist.")
@@ -150,6 +164,20 @@ public data class ImageBuildSpec(
         BuilderVersion.Legacy -> "1"
         BuilderVersion.BuildKit -> "2"
         null -> null
+    }
+}
+
+/**
+ * Represents a SSH agent exposed to a BuildKit image build.
+ *
+ * @property id ID of agent, used to refer to agent in `--mount` flag in Dockerfile
+ * @property paths paths to either a SSH agent socket on the host machine or a set of keys to expose to the build from the host machine.
+ *   If empty, the default SSH agent socket from the `SSH_AUTH_SOCK` environment variable is used.
+ */
+public data class SSHAgent(val id: String, val paths: Set<Path>) {
+    public companion object {
+        public const val defaultID: String = "default"
+        public val default: SSHAgent = SSHAgent(defaultID, emptySet())
     }
 }
 

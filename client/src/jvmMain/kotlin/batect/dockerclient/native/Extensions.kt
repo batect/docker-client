@@ -57,6 +57,18 @@ internal var BuildImageRequest.environmentSecrets by WriteOnlyList<BuildImageReq
     ::environmentBuildSecretToNative
 )
 
+internal var BuildImageRequest.sshAgents by WriteOnlyList<BuildImageRequest, batect.dockerclient.SSHAgent>(
+    BuildImageRequest::sshAgentsCount,
+    BuildImageRequest::sshAgentsPointer,
+    ::sshAgentToNative
+)
+
+internal var SSHAgent.paths by WriteOnlyList<SSHAgent, String>(
+    SSHAgent::pathsCount,
+    SSHAgent::pathsPointer,
+    ::stringToPointer
+)
+
 internal var CreateContainerRequest.command by WriteOnlyList<CreateContainerRequest, String>(
     CreateContainerRequest::commandCount,
     CreateContainerRequest::commandPointer,
@@ -272,6 +284,16 @@ private fun environmentBuildSecretToNative(value: Pair<String, batect.dockerclie
 
     secret.id.set(value.first)
     secret.sourceEnvironmentVariableName.set(value.second.sourceEnvironmentVariableName)
+
+    return Struct.getMemory(secret)
+}
+
+private fun sshAgentToNative(value: batect.dockerclient.SSHAgent, @Suppress("UNUSED_PARAMETER") memoryManager: MemoryManager): Pointer {
+    val runtime = Runtime.getRuntime(nativeAPI)
+    val secret = SSHAgent(runtime)
+
+    secret.id.set(value.id)
+    secret.paths = value.paths.map { it.toString() }
 
     return Struct.getMemory(secret)
 }

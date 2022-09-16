@@ -417,6 +417,20 @@ internal class EnvironmentBuildSecret(runtime: Runtime) : Struct(runtime), AutoC
     }
 }
 
+internal class SSHAgent(runtime: Runtime) : Struct(runtime), AutoCloseable {
+    constructor(pointer: jnr.ffi.Pointer) : this(pointer.runtime) {
+        this.useMemory(pointer)
+    }
+
+    val id = UTF8StringRef()
+    val pathsCount = u_int64_t()
+    val pathsPointer = Pointer()
+
+    override fun close() {
+        nativeAPI.FreeSSHAgent(this)
+    }
+}
+
 internal class BuildImageRequest(runtime: Runtime) : Struct(runtime), AutoCloseable {
     constructor(pointer: jnr.ffi.Pointer) : this(pointer.runtime) {
         this.useMemory(pointer)
@@ -436,6 +450,8 @@ internal class BuildImageRequest(runtime: Runtime) : Struct(runtime), AutoClosea
     val fileSecretsPointer = Pointer()
     val environmentSecretsCount = u_int64_t()
     val environmentSecretsPointer = Pointer()
+    val sshAgentsCount = u_int64_t()
+    val sshAgentsPointer = Pointer()
 
     override fun close() {
         nativeAPI.FreeBuildImageRequest(this)

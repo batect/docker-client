@@ -20,6 +20,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/moby/buildkit/session/sshforward/sshprovider"
 	"io"
 	"net"
 	"path/filepath"
@@ -128,15 +129,11 @@ func createSession(ctx context.Context, request *imageBuildRequest, tracer *buil
 		return nil, fmt.Errorf("failed to create session: %w", err)
 	}
 
-	sess.Allow(createFileSyncProvider(request))
-
 	secretsProvider, err := createSecretsProvider(request)
 
 	if err != nil {
 		return nil, err
 	}
-
-	sess.Allow(secretsProvider)
 
 	authProvider, err := createAuthProvider(tracer)
 
@@ -144,7 +141,16 @@ func createSession(ctx context.Context, request *imageBuildRequest, tracer *buil
 		return nil, err
 	}
 
+	sshProvider, err := createSSHProvider(request)
+
+	if err != nil {
+		return nil, err
+	}
+
+	sess.Allow(createFileSyncProvider(request))
+	sess.Allow(secretsProvider)
 	sess.Allow(authProvider)
+	sess.Allow(sshProvider)
 
 	return sess, nil
 }
@@ -189,6 +195,10 @@ func createAuthProvider(tracer *buildKitBuildTracer) (session.Attachable, error)
 	})
 
 	return authProvider, nil
+}
+
+func createSSHProvider(request *imageBuildRequest) (session.Attachable, error) {
+	return sshprovider.NewSSHAgentProvider(request.SSHAgents)
 }
 
 func resetUIDAndGID(path string, stat *fsutiltypes.Stat) bool {
