@@ -40,7 +40,7 @@ class DockerClientDaemonInformationSpec : ShouldSpec({
         val daemonInfo = client.getDaemonVersionInformation()
 
         daemonInfo.asClue {
-            it.version shouldMatch """^\d+\.\d+\.\d+(\+[a-zA-Z0-9-]+)?$""".toRegex()
+            it.version shouldMatch """^(\d+\.\d+\.\d+(\+[a-zA-Z0-9-]+)?|master-dockerproject-\d\d\d\d-\d\d-\d\d)$""".toRegex()
             it.apiVersion.shouldMatchAPIVersionPattern()
             it.minAPIVersion.shouldMatchAPIVersionPattern()
             it.operatingSystem shouldBeIn setOf("linux", "windows")

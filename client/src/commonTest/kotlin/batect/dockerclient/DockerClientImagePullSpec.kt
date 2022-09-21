@@ -238,7 +238,8 @@ class DockerClientImagePullSpec : ShouldSpec({
             )
             ContainerOperatingSystem.Windows -> setOf(
                 "no matching manifest for windows/amd64 in the manifest list entries",
-                "image operating system \"linux\" cannot be used on this platform"
+                "image operating system \"linux\" cannot be used on this platform",
+                "image operating system \"linux\" cannot be used on this platform: operating system is not supported"
             )
         }
 
