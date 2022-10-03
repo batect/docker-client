@@ -228,6 +228,9 @@ internal fun MemScope.allocClientConfiguration(configuration: DockerClientConfig
         InsecureSkipVerify = configuration.daemonIdentityVerification.insecureSkipVerify
 
         TLS = if (configuration.tls != null) {
+            // Without this cast, the compileNativeMainKotlinMetadata task fails with "Smart cast to 'DockerClientTLSConfiguration' is impossible,
+            // because 'configuration.tls' is a public API property declared in different module"
+            @Suppress("USELESS_CAST")
             allocTLSConfiguration(configuration.tls as DockerClientTLSConfiguration).ptr
         } else {
             null
