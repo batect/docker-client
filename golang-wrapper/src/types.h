@@ -191,6 +191,12 @@ typedef struct {
 } SSHAgent;
 
 typedef struct {
+    char* Type;
+    uint64_t AttributesCount;
+    StringPair** Attributes;
+} ImageBuildCache;
+
+typedef struct {
     char* ContextDirectory;
     char* PathToDockerfile;
     uint64_t BuildArgsCount;
@@ -207,6 +213,12 @@ typedef struct {
     EnvironmentBuildSecret** EnvironmentSecrets;
     uint64_t SSHAgentsCount;
     SSHAgent** SSHAgents;
+    uint64_t CacheFromCount;
+    ImageBuildCache** CacheFrom;
+    uint64_t CacheToCount;
+    ImageBuildCache** CacheTo;
+    char* BuildKitInstanceName;
+    int64_t BuildKitInstanceType;
 } BuildImageRequest;
 
 typedef struct {
@@ -537,6 +549,8 @@ EXPORTED_FUNCTION EnvironmentBuildSecret* AllocEnvironmentBuildSecret();
 EXPORTED_FUNCTION void FreeEnvironmentBuildSecret(EnvironmentBuildSecret* value);
 EXPORTED_FUNCTION SSHAgent* AllocSSHAgent();
 EXPORTED_FUNCTION void FreeSSHAgent(SSHAgent* value);
+EXPORTED_FUNCTION ImageBuildCache* AllocImageBuildCache();
+EXPORTED_FUNCTION void FreeImageBuildCache(ImageBuildCache* value);
 EXPORTED_FUNCTION BuildImageRequest* AllocBuildImageRequest();
 EXPORTED_FUNCTION void FreeBuildImageRequest(BuildImageRequest* value);
 EXPORTED_FUNCTION BuildImageReturn* AllocBuildImageReturn();
@@ -632,6 +646,9 @@ EXPORTED_FUNCTION EnvironmentBuildSecret* GetEnvironmentBuildSecretArrayElement(
 EXPORTED_FUNCTION SSHAgent** CreateSSHAgentArray(uint64_t size);
 EXPORTED_FUNCTION void SetSSHAgentArrayElement(SSHAgent** array, uint64_t index, SSHAgent* value);
 EXPORTED_FUNCTION SSHAgent* GetSSHAgentArrayElement(SSHAgent** array, uint64_t index);
+EXPORTED_FUNCTION ImageBuildCache** CreateImageBuildCacheArray(uint64_t size);
+EXPORTED_FUNCTION void SetImageBuildCacheArrayElement(ImageBuildCache** array, uint64_t index, ImageBuildCache* value);
+EXPORTED_FUNCTION ImageBuildCache* GetImageBuildCacheArrayElement(ImageBuildCache** array, uint64_t index);
 EXPORTED_FUNCTION DeviceMount** CreateDeviceMountArray(uint64_t size);
 EXPORTED_FUNCTION void SetDeviceMountArrayElement(DeviceMount** array, uint64_t index, DeviceMount* value);
 EXPORTED_FUNCTION DeviceMount* GetDeviceMountArrayElement(DeviceMount** array, uint64_t index);

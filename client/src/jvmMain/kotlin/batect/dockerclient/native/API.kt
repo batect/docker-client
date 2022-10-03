@@ -125,6 +125,8 @@ internal interface API {
     fun AllocEnvironmentBuildSecret(): EnvironmentBuildSecret?
     fun FreeSSHAgent(@In value: SSHAgent)
     fun AllocSSHAgent(): SSHAgent?
+    fun FreeImageBuildCache(@In value: ImageBuildCache)
+    fun AllocImageBuildCache(): ImageBuildCache?
     fun FreeBuildImageRequest(@In value: BuildImageRequest)
     fun AllocBuildImageRequest(): BuildImageRequest?
     fun FreeBuildImageReturn(@In value: BuildImageReturn)

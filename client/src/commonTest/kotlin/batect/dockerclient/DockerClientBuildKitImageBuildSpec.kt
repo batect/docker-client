@@ -767,6 +767,44 @@ class DockerClientBuildKitImageBuildSpec : ShouldSpec({
                 |#\d+ \d+.\d+ 4096 SHA256:NZIAzXUaPE2QoH9BgqOy7GaNt9I1ChdiTR9wBSv2SZk\s\s\(RSA\)$
             """.trimMargin().toRegex(RegexOption.MULTILINE)
         }
+
+        should("be able to build an image that uses a build cache") {
+            val basePath = rootTestImagesDirectory.resolve("buildkit-caching")
+
+            val spec = ImageBuildSpec.Builder(basePath.resolve("image"))
+                .withBuildKitBuilder()
+                .withNoBuildCache()
+                .withCacheFrom("local", mapOf("src" to basePath.resolve("cache").toString()))
+                .build()
+
+            val output = Buffer()
+
+            client.buildImage(spec, SinkTextOutput(output))
+
+            val outputText = output.readUtf8().trim()
+            println(outputText)
+
+            outputText shouldContain """^#(\d+) importing cache manifest from local:[a-f0-9]+$""".toRegex(RegexOption.MULTILINE)
+        }
+
+        should("be able to build an image that produces a build cache") {
+            val basePath = rootTestImagesDirectory.resolve("buildkit-caching")
+
+            val spec = ImageBuildSpec.Builder(basePath.resolve("image"))
+                .withBuildKitBuilder()
+                .withNoBuildCache()
+                .withCacheTo("local", mapOf("src" to basePath.resolve("output-cache").toString()))
+                .build()
+
+            val output = Buffer()
+
+            client.buildImage(spec, SinkTextOutput(output))
+
+            val outputText = output.readUtf8().trim()
+            println(outputText)
+
+            true shouldBe false
+        }
     }
 })
 

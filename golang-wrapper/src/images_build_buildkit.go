@@ -27,6 +27,7 @@ import (
 	"github.com/batect/docker-client/golang-wrapper/src/replacements/progress"
 	"github.com/docker/buildx/build"
 	"github.com/docker/buildx/driver"
+	"github.com/docker/buildx/store"
 	"github.com/docker/buildx/util/imagetools"
 	"github.com/docker/cli/cli/config/configfile"
 	"github.com/docker/docker/api/types/versions"
@@ -42,6 +43,13 @@ import (
 	_ "github.com/docker/buildx/driver/docker"
 	_ "github.com/docker/buildx/driver/docker-container"
 	_ "github.com/docker/buildx/driver/remote"
+)
+
+const (
+	// These values must be kept in sync with the values in BuildKitInstance in Kotlin.
+	buildKitInstanceTypeSelectedOrDefaultDockerDriver = 1
+	buildKitInstanceTypeDefaultDockerDriver           = 2
+	buildKitInstanceTypeNamed                         = 3
 )
 
 func buildImageWithBuildKitBuilder(
@@ -78,6 +86,8 @@ func buildImageWithBuildKitBuilder(
 		Tags:      request.ImageTags,
 		Target:    request.TargetBuildStage,
 		Session:   sess,
+		CacheFrom: request.CacheFrom,
+		CacheTo:   request.CacheTo,
 	}
 
 	imageID, err := runBuild(ctx, docker, configFile, opts, outputStreamHandle.OutputStream(), onProgressUpdate, callbackUserData)
@@ -201,7 +211,51 @@ func runBuild(
 	return resp[targetName].ExporterResponse["containerimage.digest"], nil
 }
 
-func createDriver(ctx context.Context, docker *client.Client, configFile *configfile.ConfigFile, contextPathHash string) ([]build.DriverInfo, error) {
+// If an instance name has been specified, and it is the name of the in-use Docker CLI context, use default driver for the current Docker CLI context (second half of getDefaultDrivers)
+// If an instance name has been specified, and it is the name of an inactive Docker CLI context, fail
+// If an instance name has been specified, and it is not the name of a Docker CLI context, use that instance (getInstanceByName)
+// If no instance name has been specified:
+//   - check for a selected instance and use that if it is present (first half of getDefaultDrivers)
+//   - otherwise use the default driver for the current Docker CLI context (second half of getDefaultDrivers)
+func createDriver(ctx context.Context, docker *client.Client, configFile *configfile.ConfigFile, request *imageBuildRequest, contextPathHash string) ([]build.DriverInfo, error) {
+	switch request.BuildKitInstanceType {
+	case buildKitInstanceTypeSelectedOrDefaultDockerDriver:
+		if selectedInstance, err := getSelectedInstance(configFile); err != nil {
+			return nil, err
+		} else if selectedInstance != nil {
+			panic("TODO: get selected instance")
+		}
+
+		return createDefaultDriver(ctx, docker, configFile, contextPathHash)
+	case buildKitInstanceTypeDefaultDockerDriver:
+		return createDefaultDriver(ctx, docker, configFile, contextPathHash)
+	case buildKitInstanceTypeNamed:
+		return createDriverByName(...)
+	default:
+		return nil, fmt.Errorf("invalid BuildKit instance type %d", request.BuildKitInstanceType)
+	}
+}
+
+func getSelectedInstance(configFile *configfile.ConfigFile) (*store.NodeGroup, error) {
+	configDir := buildxConfigDir(configFile)
+	store, err := store.New(configDir)
+
+	if err != nil {
+		return nil, err
+	}
+
+	txn, release, err := store.Txn()
+
+	if err != nil {
+		return nil, err
+	}
+
+	defer release()
+
+	panic("TODO")
+}
+
+func createDefaultDriver(ctx context.Context, docker *client.Client, configFile *configfile.ConfigFile, contextPathHash string) ([]build.DriverInfo, error) {
 	imageOpt := imagetools.Opt{Auth: configFile}
 
 	d, err := driver.GetDriver(ctx, "buildx_buildkit_default", nil, "", docker, imageOpt.Auth, nil, nil, nil, nil, nil, contextPathHash)
@@ -223,7 +277,6 @@ func createDriver(ctx context.Context, docker *client.Client, configFile *config
 // This is based on GetProxyConfig from github.com/docker/buildx/store/storeutil/storeutil.go
 func getProxyConfig(docker *client.Client, configFile *configfile.ConfigFile) map[string]string {
 	host := docker.DaemonHost()
-
 	proxy, ok := configFile.Proxies[host]
 
 	if !ok {

@@ -63,10 +63,27 @@ internal var BuildImageRequest.sshAgents by WriteOnlyList<BuildImageRequest, bat
     ::sshAgentToNative
 )
 
+internal var BuildImageRequest.cacheFrom by WriteOnlyList<BuildImageRequest, batect.dockerclient.ImageBuildCache>(
+    BuildImageRequest::cacheFromCount,
+    BuildImageRequest::cacheFromPointer,
+    ::imageBuildCacheToNative
+)
+
+internal var BuildImageRequest.cacheTo by WriteOnlyList<BuildImageRequest, batect.dockerclient.ImageBuildCache>(
+    BuildImageRequest::cacheToCount,
+    BuildImageRequest::cacheToPointer,
+    ::imageBuildCacheToNative
+)
+
 internal var SSHAgent.paths by WriteOnlyList<SSHAgent, String>(
     SSHAgent::pathsCount,
     SSHAgent::pathsPointer,
     ::stringToPointer
+)
+
+internal var ImageBuildCache.attributes by WriteOnlyList<ImageBuildCache, StringPair>(
+    ImageBuildCache::attributesCount,
+    ImageBuildCache::attributesPointer
 )
 
 internal var CreateContainerRequest.command by WriteOnlyList<CreateContainerRequest, String>(
@@ -296,6 +313,16 @@ private fun sshAgentToNative(value: batect.dockerclient.SSHAgent, @Suppress("UNU
     secret.paths = value.paths.map { it.toString() }
 
     return Struct.getMemory(secret)
+}
+
+private fun imageBuildCacheToNative(value: batect.dockerclient.ImageBuildCache, @Suppress("UNUSED_PARAMETER") memoryManager: MemoryManager): Pointer {
+    val runtime = Runtime.getRuntime(nativeAPI)
+    val cache = ImageBuildCache(runtime)
+
+    cache.type.set(value.type)
+    cache.attributes = value.attributes.map { StringPair(it.key, it.value) }
+
+    return Struct.getMemory(cache)
 }
 
 private fun deviceMountToNative(value: batect.dockerclient.DeviceMount, @Suppress("UNUSED_PARAMETER") memoryManager: MemoryManager): Pointer {

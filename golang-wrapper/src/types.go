@@ -58,6 +58,7 @@ type StringPair *C.StringPair
 type FileBuildSecret *C.FileBuildSecret
 type EnvironmentBuildSecret *C.EnvironmentBuildSecret
 type SSHAgent *C.SSHAgent
+type ImageBuildCache *C.ImageBuildCache
 type BuildImageRequest *C.BuildImageRequest
 type BuildImageReturn *C.BuildImageReturn
 type BuildImageProgressUpdate_ImageBuildContextUploadProgress *C.BuildImageProgressUpdate_ImageBuildContextUploadProgress
@@ -436,6 +437,24 @@ func newSSHAgent(
     return value
 }
 
+func newImageBuildCache(
+    Type string,
+    Attributes []StringPair,
+) ImageBuildCache {
+    value := C.AllocImageBuildCache()
+    value.Type = C.CString(Type)
+
+    value.AttributesCount = C.uint64_t(len(Attributes))
+    value.Attributes = C.CreateStringPairArray(value.AttributesCount)
+
+    for i, v := range Attributes {
+        C.SetStringPairArrayElement(value.Attributes, C.uint64_t(i), v)
+    }
+
+
+    return value
+}
+
 func newBuildImageRequest(
     ContextDirectory string,
     PathToDockerfile string,
@@ -448,6 +467,10 @@ func newBuildImageRequest(
     FileSecrets []FileBuildSecret,
     EnvironmentSecrets []EnvironmentBuildSecret,
     SSHAgents []SSHAgent,
+    CacheFrom []ImageBuildCache,
+    CacheTo []ImageBuildCache,
+    BuildKitInstanceName string,
+    BuildKitInstanceType int64,
 ) BuildImageRequest {
     value := C.AllocBuildImageRequest()
     value.ContextDirectory = C.CString(ContextDirectory)
@@ -496,6 +519,24 @@ func newBuildImageRequest(
         C.SetSSHAgentArrayElement(value.SSHAgents, C.uint64_t(i), v)
     }
 
+
+    value.CacheFromCount = C.uint64_t(len(CacheFrom))
+    value.CacheFrom = C.CreateImageBuildCacheArray(value.CacheFromCount)
+
+    for i, v := range CacheFrom {
+        C.SetImageBuildCacheArrayElement(value.CacheFrom, C.uint64_t(i), v)
+    }
+
+
+    value.CacheToCount = C.uint64_t(len(CacheTo))
+    value.CacheTo = C.CreateImageBuildCacheArray(value.CacheToCount)
+
+    for i, v := range CacheTo {
+        C.SetImageBuildCacheArrayElement(value.CacheTo, C.uint64_t(i), v)
+    }
+
+    value.BuildKitInstanceName = C.CString(BuildKitInstanceName)
+    value.BuildKitInstanceType = C.int64_t(BuildKitInstanceType)
 
     return value
 }

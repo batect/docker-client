@@ -39,6 +39,8 @@ import batect.dockerclient.native.UploadToContainerRequest
 import batect.dockerclient.native.attributes
 import batect.dockerclient.native.bindMounts
 import batect.dockerclient.native.buildArgs
+import batect.dockerclient.native.cacheFrom
+import batect.dockerclient.native.cacheTo
 import batect.dockerclient.native.capabilitiesToAdd
 import batect.dockerclient.native.capabilitiesToDrop
 import batect.dockerclient.native.command
@@ -193,6 +195,16 @@ internal fun BuildImageRequest(jvm: ImageBuildSpec): BuildImageRequest {
     request.fileSecrets = jvm.secrets.filterValues { it is FileBuildSecret }.map { it.key to it.value as FileBuildSecret }
     request.environmentSecrets = jvm.secrets.filterValues { it is EnvironmentBuildSecret }.map { it.key to it.value as EnvironmentBuildSecret }
     request.sshAgents = jvm.sshAgents
+    request.cacheFrom = jvm.cacheFrom
+    request.cacheTo = jvm.cacheTo
+
+    if (jvm.builder is ImageBuilder.BuildKit) {
+        request.buildKitInstanceType.set(jvm.builder.instance.golangConstantValue)
+
+        if (jvm.builder.instance is BuildKitInstance.Named) {
+            request.buildKitInstanceName.set(jvm.builder.instance.name)
+        }
+    }
 
     return request
 }

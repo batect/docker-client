@@ -27,6 +27,7 @@ import (
 	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/api/types/filters"
 	"github.com/docker/docker/pkg/jsonmessage"
+	"github.com/moby/buildkit/client"
 	"github.com/moby/buildkit/session/secrets/secretsprovider"
 	"github.com/moby/buildkit/session/sshforward/sshprovider"
 )
@@ -77,6 +78,10 @@ type imageBuildRequest struct {
 	TargetBuildStage     string
 	Secrets              []secretsprovider.Source
 	SSHAgents            []sshprovider.AgentConfig
+	CacheFrom            []client.CacheOptionsEntry
+	CacheTo              []client.CacheOptionsEntry
+	BuildKitInstanceName string
+	BuildKitInstanceType int
 }
 
 func fromCBuildImageRequest(request *C.BuildImageRequest) *imageBuildRequest {
@@ -95,6 +100,10 @@ func fromCBuildImageRequest(request *C.BuildImageRequest) *imageBuildRequest {
 		TargetBuildStage:     C.GoString(request.TargetBuildStage),
 		Secrets:              secrets,
 		SSHAgents:            sshAgentsFromRequest(request.SSHAgents, request.SSHAgentsCount),
+		CacheFrom:            imageBuildCacheFromRequest(request.CacheFrom, request.CacheFromCount),
+		CacheTo:              imageBuildCacheFromRequest(request.CacheTo, request.CacheToCount),
+		BuildKitInstanceName: C.GoString(request.BuildKitInstanceName),
+		BuildKitInstanceType: int(request.BuildKitInstanceType),
 	}
 }
 
@@ -160,6 +169,20 @@ func sshAgentsFromRequest(agents **C.SSHAgent, count C.uint64_t) []sshprovider.A
 		paths := fromStringArray(agent.Paths, agent.PathsCount)
 
 		l = append(l, sshprovider.AgentConfig{ID: id, Paths: paths})
+	}
+
+	return l
+}
+
+func imageBuildCacheFromRequest(caches **C.ImageBuildCache, count C.uint64_t) []client.CacheOptionsEntry {
+	l := make([]client.CacheOptionsEntry, 0, count)
+
+	for i := 0; i < int(count); i++ {
+		cache := C.GetImageBuildCacheArrayElement(caches, C.uint64_t(i))
+		t := C.GoString(cache.Type)
+		attributes := fromStringPairs(cache.Attributes, cache.AttributesCount)
+
+		l = append(l, client.CacheOptionsEntry{Type: t, Attrs: attributes})
 	}
 
 	return l

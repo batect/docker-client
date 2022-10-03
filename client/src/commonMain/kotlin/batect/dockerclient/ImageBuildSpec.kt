@@ -31,16 +31,18 @@ public data class ImageBuildSpec(
     val alwaysPullBaseImages: Boolean = false,
     val noCache: Boolean = false,
     val targetBuildStage: String = "",
-    val builder: BuilderVersion? = null,
+    val builder: ImageBuilder? = null,
     val secrets: Map<String, BuildSecret> = emptyMap(),
-    val sshAgents: Set<SSHAgent> = emptySet()
+    val sshAgents: Set<SSHAgent> = emptySet(),
+    val cacheFrom: Set<ImageBuildCache> = emptySet(),
+    val cacheTo: Set<ImageBuildCache> = emptySet()
 ) {
     init {
-        if (secrets.isNotEmpty() && builder != BuilderVersion.BuildKit) {
+        if (secrets.isNotEmpty() && builder?.version != BuilderVersion.BuildKit) {
             throw UnsupportedImageBuildFeatureException("Secrets are only supported when building an image with BuildKit.")
         }
 
-        if (sshAgents.isNotEmpty() && builder != BuilderVersion.BuildKit) {
+        if (sshAgents.isNotEmpty() && builder?.version != BuilderVersion.BuildKit) {
             throw UnsupportedImageBuildFeatureException("SSH agents are only supported when building an image with BuildKit.")
         }
     }
@@ -112,10 +114,10 @@ public data class ImageBuildSpec(
             return this
         }
 
-        public fun withLegacyBuilder(): Builder = withBuilder(BuilderVersion.Legacy)
-        public fun withBuildKitBuilder(): Builder = withBuilder(BuilderVersion.BuildKit)
+        public fun withLegacyBuilder(): Builder = withBuilder(ImageBuilder.Legacy)
+        public fun withBuildKitBuilder(instance: BuildKitInstance = BuildKitInstance.SelectedOrDefaultDockerDriver): Builder = withBuilder(ImageBuilder.BuildKit(instance))
 
-        public fun withBuilder(builder: BuilderVersion): Builder {
+        public fun withBuilder(builder: ImageBuilder): Builder {
             spec = spec.copy(builder = builder)
 
             return this
@@ -147,6 +149,24 @@ public data class ImageBuildSpec(
             return this
         }
 
+        public fun withCacheFrom(type: String, vararg attributes: Pair<String, String>): Builder = withCacheFrom(type, mapOf(*attributes))
+        public fun withCacheFrom(type: String, attributes: Map<String, String> = emptyMap()): Builder = withCacheFrom(ImageBuildCache(type, attributes))
+
+        public fun withCacheFrom(cache: ImageBuildCache): Builder {
+            spec = spec.copy(cacheFrom = spec.cacheFrom + cache)
+
+            return this
+        }
+
+        public fun withCacheTo(type: String, vararg attributes: Pair<String, String>): Builder = withCacheTo(type, mapOf(*attributes))
+        public fun withCacheTo(type: String, attributes: Map<String, String> = emptyMap()): Builder = withCacheTo(ImageBuildCache(type, attributes))
+
+        public fun withCacheTo(cache: ImageBuildCache): Builder {
+            spec = spec.copy(cacheTo = spec.cacheTo + cache)
+
+            return this
+        }
+
         public fun build(): ImageBuildSpec {
             if (!systemFileSystem.exists(spec.pathToDockerfile)) {
                 throw InvalidImageBuildSpecException("Dockerfile '${spec.pathToDockerfile}' does not exist.")
@@ -160,7 +180,7 @@ public data class ImageBuildSpec(
         }
     }
 
-    internal val builderApiVersion: String? = when (builder) {
+    internal val builderApiVersion: String? = when (builder?.version) {
         BuilderVersion.Legacy -> "1"
         BuilderVersion.BuildKit -> "2"
         null -> null
@@ -180,5 +200,40 @@ public data class SSHAgent(val id: String, val paths: Set<Path>) {
         public val default: SSHAgent = SSHAgent(defaultID, emptySet())
     }
 }
+
+/**
+ * A Docker image builder.
+ */
+public sealed class ImageBuilder(public val version: BuilderVersion) {
+    /**
+     * The legacy image builder.
+     */
+    public object Legacy : ImageBuilder(BuilderVersion.Legacy)
+
+    /**
+     * A BuildKit image builder.
+     */
+    public data class BuildKit(val instance: BuildKitInstance = BuildKitInstance.SelectedOrDefaultDockerDriver) : ImageBuilder(BuilderVersion.BuildKit)
+}
+
+/**
+ * A BuildKit node.
+ */
+public sealed class BuildKitInstance(internal val golangConstantValue: Int) {
+    public object SelectedOrDefaultDockerDriver : BuildKitInstance(1)
+    public object DefaultDockerDriver : BuildKitInstance(2)
+    public data class Named(val name: String) : BuildKitInstance(3)
+}
+
+/**
+ * Represents a cache used during a BuildKit image build.
+ *
+ * https://github.com/moby/buildkit#cache lists the types of caches supported and their supported attributes.
+ *
+ * @property type the type of cache to use
+ * @property attributes attributes to pass to cache implementation (eg. remote cache URL)
+ *
+ */
+public data class ImageBuildCache(val type: String, val attributes: Map<String, String> = emptyMap())
 
 internal expect fun validateImageTag(tag: String)

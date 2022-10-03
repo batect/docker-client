@@ -278,6 +278,20 @@ internal fun MemScope.allocBuildImageRequest(spec: ImageBuildSpec): BuildImageRe
 
         EnvironmentSecrets = allocArrayOfPointersTo(environmentSecrets)
         EnvironmentSecretsCount = environmentSecrets.size.toULong()
+
+        CacheFrom = allocArrayOfPointersTo(spec.cacheFrom.map { allocBuildCache(it) })
+        CacheFromCount = spec.cacheFrom.size.toULong()
+
+        CacheTo = allocArrayOfPointersTo(spec.cacheTo.map { allocBuildCache(it) })
+        CacheToCount = spec.cacheTo.size.toULong()
+
+        if (spec.builder is ImageBuilder.BuildKit) {
+            BuildKitInstanceType = spec.builder.instance.golangConstantValue.toLong()
+
+            if (spec.builder.instance is BuildKitInstance.Named) {
+                BuildKitInstanceName = spec.builder.instance.name.cstr.ptr
+            }
+        }
     }
 }
 
@@ -300,6 +314,14 @@ internal fun MemScope.allocSSHAgent(agent: SSHAgent): batect.dockerclient.native
         ID = agent.id.cstr.ptr
         Paths = allocArrayOfPointersTo(agent.paths.map { it.toString() })
         PathsCount = agent.paths.size.toULong()
+    }
+}
+
+internal fun MemScope.allocBuildCache(cache: ImageBuildCache): batect.dockerclient.native.ImageBuildCache {
+    return alloc<batect.dockerclient.native.ImageBuildCache> {
+        Type = cache.type.cstr.ptr
+        Attributes = allocArrayOfPointersTo(cache.attributes.map { allocStringPair(it) })
+        AttributesCount = cache.attributes.size.toULong()
     }
 }
 

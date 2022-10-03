@@ -431,6 +431,20 @@ internal class SSHAgent(runtime: Runtime) : Struct(runtime), AutoCloseable {
     }
 }
 
+internal class ImageBuildCache(runtime: Runtime) : Struct(runtime), AutoCloseable {
+    constructor(pointer: jnr.ffi.Pointer) : this(pointer.runtime) {
+        this.useMemory(pointer)
+    }
+
+    val type = UTF8StringRef()
+    val attributesCount = u_int64_t()
+    val attributesPointer = Pointer()
+
+    override fun close() {
+        nativeAPI.FreeImageBuildCache(this)
+    }
+}
+
 internal class BuildImageRequest(runtime: Runtime) : Struct(runtime), AutoCloseable {
     constructor(pointer: jnr.ffi.Pointer) : this(pointer.runtime) {
         this.useMemory(pointer)
@@ -452,6 +466,12 @@ internal class BuildImageRequest(runtime: Runtime) : Struct(runtime), AutoClosea
     val environmentSecretsPointer = Pointer()
     val sshAgentsCount = u_int64_t()
     val sshAgentsPointer = Pointer()
+    val cacheFromCount = u_int64_t()
+    val cacheFromPointer = Pointer()
+    val cacheToCount = u_int64_t()
+    val cacheToPointer = Pointer()
+    val buildKitInstanceName = UTF8StringRef()
+    val buildKitInstanceType = int64_t()
 
     override fun close() {
         nativeAPI.FreeBuildImageRequest(this)
