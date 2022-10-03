@@ -39,6 +39,10 @@
 * Images
   * Build
     * BuildKit
-      * Support for cache-from and cache-to - fail if attempted with legacy builder
+      * Support for contexts
+        * Always set opts.Exports to export to Docker?
+      * Support for cache-from and cache-to
+        * Cache from: fail if attempted with legacy builder
+        * Cache to: fail if attempted with legacy builder
       * Add support for warnings (added in BuildKit 0.10.0)
       * Upgrade to most recent version of BuildKit library (currently blocked due to version hell)

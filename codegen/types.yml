@@ -276,6 +276,14 @@
     - name: Paths
       type: string[]
 
+- name: ImageBuildCache
+  type: struct
+  fields:
+    - name: Type
+      type: string
+    - name: Attributes
+      type: StringPair[]
+
 - name: BuildImageRequest
   type: struct
   fields:
@@ -301,6 +309,14 @@
       type: EnvironmentBuildSecret[]
     - name: SSHAgents
       type: SSHAgent[]
+    - name: CacheFrom
+      type: ImageBuildCache[]
+    - name: CacheTo
+      type: ImageBuildCache[]
+    - name: BuildKitInstanceName
+      type: string
+    - name: BuildKitInstanceType
+      type: int64
 
 - name: BuildImageReturn
   type: struct

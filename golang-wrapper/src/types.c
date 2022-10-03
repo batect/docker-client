@@ -519,6 +519,29 @@ void FreeSSHAgent(SSHAgent* value) {
     free(value);
 }
 
+ImageBuildCache* AllocImageBuildCache() {
+    ImageBuildCache* value = malloc(sizeof(ImageBuildCache));
+    value->Type = NULL;
+    value->Attributes = NULL;
+    value->AttributesCount = 0;
+
+    return value;
+}
+
+void FreeImageBuildCache(ImageBuildCache* value) {
+    if (value == NULL) {
+        return;
+    }
+
+    free(value->Type);
+    for (uint64_t i = 0; i < value->AttributesCount; i++) {
+        FreeStringPair(value->Attributes[i]);
+    }
+
+    free(value->Attributes);
+    free(value);
+}
+
 BuildImageRequest* AllocBuildImageRequest() {
     BuildImageRequest* value = malloc(sizeof(BuildImageRequest));
     value->ContextDirectory = NULL;
@@ -530,11 +553,16 @@ BuildImageRequest* AllocBuildImageRequest() {
     value->FileSecrets = NULL;
     value->EnvironmentSecrets = NULL;
     value->SSHAgents = NULL;
+    value->CacheFrom = NULL;
+    value->CacheTo = NULL;
+    value->BuildKitInstanceName = NULL;
     value->BuildArgsCount = 0;
     value->ImageTagsCount = 0;
     value->FileSecretsCount = 0;
     value->EnvironmentSecretsCount = 0;
     value->SSHAgentsCount = 0;
+    value->CacheFromCount = 0;
+    value->CacheToCount = 0;
 
     return value;
 }
@@ -573,6 +601,17 @@ void FreeBuildImageRequest(BuildImageRequest* value) {
     }
 
     free(value->SSHAgents);
+    for (uint64_t i = 0; i < value->CacheFromCount; i++) {
+        FreeImageBuildCache(value->CacheFrom[i]);
+    }
+
+    free(value->CacheFrom);
+    for (uint64_t i = 0; i < value->CacheToCount; i++) {
+        FreeImageBuildCache(value->CacheTo[i]);
+    }
+
+    free(value->CacheTo);
+    free(value->BuildKitInstanceName);
     free(value);
 }
 
@@ -1452,6 +1491,18 @@ void SetSSHAgentArrayElement(SSHAgent** array, uint64_t index, SSHAgent* value) 
 }
 
 SSHAgent* GetSSHAgentArrayElement(SSHAgent** array, uint64_t index) {
+    return array[index];
+}
+
+ImageBuildCache** CreateImageBuildCacheArray(uint64_t size) {
+    return malloc(size * sizeof(ImageBuildCache*));
+}
+
+void SetImageBuildCacheArrayElement(ImageBuildCache** array, uint64_t index, ImageBuildCache* value) {
+    array[index] = value;
+}
+
+ImageBuildCache* GetImageBuildCacheArrayElement(ImageBuildCache** array, uint64_t index) {
     return array[index];
 }
 

@@ -52,7 +52,7 @@ class DockerClientBuildKitImageBuildSpec : ShouldSpec({
     val client = closeAfterTest(DockerClient.create())
 
     context("when working with Linux container images").onlyIfDockerDaemonSupportsLinuxContainers {
-        should("be able to build a basic Linux container image") {
+        xshould("be able to build a basic Linux container image") {
             val spec = ImageBuildSpec.Builder(rootTestImagesDirectory.resolve("basic-image"))
                 .withBuildKitBuilder()
                 .withNoBuildCache()
@@ -170,7 +170,7 @@ class DockerClientBuildKitImageBuildSpec : ShouldSpec({
             )
         }
 
-        should("be able to build a Linux container image using files in the build context") {
+        xshould("be able to build a Linux container image using files in the build context") {
             val spec = ImageBuildSpec.Builder(rootTestImagesDirectory.resolve("image-with-context"))
                 .withBuildKitBuilder()
                 .withBuildArg("CACHE_BUSTER", Random.nextInt().toString())
@@ -199,7 +199,7 @@ class DockerClientBuildKitImageBuildSpec : ShouldSpec({
             """.trimIndent()
         }
 
-        should("be able to build a Linux container image with .dockerignore respected") {
+        xshould("be able to build a Linux container image with .dockerignore respected") {
             val spec = ImageBuildSpec.Builder(rootTestImagesDirectory.resolve("image-with-dockerignore"))
                 .withBuildKitBuilder()
                 .withBuildArg("CACHE_BUSTER", Random.nextInt().toString())
@@ -228,7 +228,7 @@ class DockerClientBuildKitImageBuildSpec : ShouldSpec({
             """.trimIndent()
         }
 
-        should("be able to build a Linux container image with a non-default Dockerfile name") {
+        xshould("be able to build a Linux container image with a non-default Dockerfile name") {
             val spec = ImageBuildSpec.Builder(rootTestImagesDirectory.resolve("non-default-dockerfile"))
                 .withBuildKitBuilder()
                 .withDockerfile("subdirectory/my-dockerfile".toPath())
@@ -241,7 +241,7 @@ class DockerClientBuildKitImageBuildSpec : ShouldSpec({
             outputText shouldContain "RUN echo This is the non-default Dockerfile"
         }
 
-        should("be able to build a Linux container image and pass build args to the build process") {
+        xshould("be able to build a Linux container image and pass build args to the build process") {
             val spec = ImageBuildSpec.Builder(rootTestImagesDirectory.resolve("build-args"))
                 .withBuildKitBuilder()
                 .withNoBuildCache()
@@ -259,7 +259,7 @@ class DockerClientBuildKitImageBuildSpec : ShouldSpec({
             outputText shouldContain """^#\d+ \d+\.\d+ Third arg: third value$""".toRegex(RegexOption.MULTILINE)
         }
 
-        context("using a base image not present on the machine") {
+        xcontext("using a base image not present on the machine") {
             val imageTag = "batect-docker-client-buildkit-image-build-pull-progress"
             val contextDirectory = rootTestImagesDirectory.resolve("buildkit-pull-progress")
             val dockerfile = contextDirectory.resolve("Dockerfile")
@@ -346,7 +346,7 @@ class DockerClientBuildKitImageBuildSpec : ShouldSpec({
             }
         }
 
-        should("be able to build a Linux container image and tag it") {
+        xshould("be able to build a Linux container image and tag it") {
             val imageTag1 = "batect-docker-client/image-build-test:1"
             val imageTag2 = "batect-docker-client/image-build-test:2"
 
@@ -366,7 +366,7 @@ class DockerClientBuildKitImageBuildSpec : ShouldSpec({
             client.getImage(imageTag2) shouldNotBe null
         }
 
-        should("be able to reuse a SinkTextOutput instance") {
+        xshould("be able to reuse a SinkTextOutput instance") {
             val spec = ImageBuildSpec.Builder(rootTestImagesDirectory.resolve("basic-image"))
                 .withBuildKitBuilder()
                 .withNoBuildCache()
@@ -396,7 +396,7 @@ class DockerClientBuildKitImageBuildSpec : ShouldSpec({
             outputText shouldMatch """($singleBuildOutputPattern\s*){2}""".toRegex()
         }
 
-        should("be able to build a Linux container image that uses a base image that requires authentication") {
+        xshould("be able to build a Linux container image that uses a base image that requires authentication") {
             val spec = ImageBuildSpec.Builder(rootTestImagesDirectory.resolve("authenticated-base-image"))
                 .withBuildKitBuilder()
                 .withBaseImageAlwaysPulled()
@@ -412,7 +412,7 @@ class DockerClientBuildKitImageBuildSpec : ShouldSpec({
             progressUpdatesReceived shouldEndWith BuildComplete(image)
         }
 
-        should("be able to build a Linux container image where the Dockerfile path is specified with an absolute path") {
+        xshould("be able to build a Linux container image where the Dockerfile path is specified with an absolute path") {
             val contextDirectory = rootTestImagesDirectory.resolve("basic-image")
             val spec = ImageBuildSpec.Builder(contextDirectory)
                 .withBuildKitBuilder()
@@ -429,7 +429,7 @@ class DockerClientBuildKitImageBuildSpec : ShouldSpec({
             progressUpdatesReceived shouldEndWith BuildComplete(image)
         }
 
-        should("be able to build a multi-stage Linux container image") {
+        xshould("be able to build a multi-stage Linux container image") {
             val spec = ImageBuildSpec.Builder(rootTestImagesDirectory.resolve("multistage"))
                 .withBuildKitBuilder()
                 .build()
@@ -490,7 +490,7 @@ class DockerClientBuildKitImageBuildSpec : ShouldSpec({
             progressUpdatesReceived shouldEndWith BuildComplete(image)
         }
 
-        should("be able to build a specific stage of a multi-stage Linux container image") {
+        xshould("be able to build a specific stage of a multi-stage Linux container image") {
             val spec = ImageBuildSpec.Builder(rootTestImagesDirectory.resolve("multistage-with-failing-default-stage"))
                 .withBuildKitBuilder()
                 .withTargetBuildStage("other")
@@ -525,7 +525,7 @@ class DockerClientBuildKitImageBuildSpec : ShouldSpec({
             progressUpdatesReceived shouldEndWith BuildComplete(image)
         }
 
-        should("be able to build a Linux container image with a failing RUN step") {
+        xshould("be able to build a Linux container image with a failing RUN step") {
             val spec = ImageBuildSpec.Builder(rootTestImagesDirectory.resolve("failing-command"))
                 .withBuildKitBuilder()
                 .build()
@@ -572,7 +572,7 @@ class DockerClientBuildKitImageBuildSpec : ShouldSpec({
             }
         }
 
-        should("be able to build a Linux container image with a non-existent image") {
+        xshould("be able to build a Linux container image with a non-existent image") {
             val spec = ImageBuildSpec.Builder(rootTestImagesDirectory.resolve("failing-base-image"))
                 .withBuildKitBuilder()
                 .build()
@@ -611,7 +611,7 @@ class DockerClientBuildKitImageBuildSpec : ShouldSpec({
         }
 
         // Note that BuildKit does not support reporting progress information for file downloads.
-        should("be able to build a Linux container image that downloads a file") {
+        xshould("be able to build a Linux container image that downloads a file") {
             val spec = ImageBuildSpec.Builder(rootTestImagesDirectory.resolve("file-download"))
                 .withBuildKitBuilder()
                 .withNoBuildCache()
@@ -643,7 +643,7 @@ class DockerClientBuildKitImageBuildSpec : ShouldSpec({
             progressUpdatesReceived shouldEndWith BuildComplete(image)
         }
 
-        should("gracefully handle a progress callback that throws an exception while building an image") {
+        xshould("gracefully handle a progress callback that throws an exception while building an image") {
             val exceptionThrownByCallbackHandler = RuntimeException("This is an exception from the callback handler")
 
             val exceptionThrownByBuildMethod = shouldThrow<ImageBuildFailedException> {
@@ -664,7 +664,7 @@ class DockerClientBuildKitImageBuildSpec : ShouldSpec({
             exceptionThrownByBuildMethod.cause shouldBe exceptionThrownByCallbackHandler
         }
 
-        should("propagate configured proxy settings to the build") {
+        xshould("propagate configured proxy settings to the build") {
             setClientProxySettingsForTest(client)
 
             val spec = ImageBuildSpec.Builder(rootTestImagesDirectory.resolve("proxy-reporter"))
@@ -688,7 +688,7 @@ class DockerClientBuildKitImageBuildSpec : ShouldSpec({
             outputText shouldContain "Value of no_proxy is https://no-proxy"
         }
 
-        should("be able to use Kotlin timeouts to abort a build") {
+        xshould("be able to use Kotlin timeouts to abort a build") {
             val spec = ImageBuildSpec.Builder(rootTestImagesDirectory.resolve("slow-build"))
                 .withBuildKitBuilder()
                 .withNoBuildCache()
@@ -707,7 +707,7 @@ class DockerClientBuildKitImageBuildSpec : ShouldSpec({
             duration shouldBeLessThan 700.milliseconds
         }
 
-        should("be able to build an image with a secret from a file") {
+        xshould("be able to build an image with a secret from a file") {
             val spec = ImageBuildSpec.Builder(rootTestImagesDirectory.resolve("secret"))
                 .withBuildKitBuilder()
                 .withNoBuildCache()
@@ -726,7 +726,7 @@ class DockerClientBuildKitImageBuildSpec : ShouldSpec({
             """.trimMargin().toRegex(RegexOption.MULTILINE)
         }
 
-        should("be able to build an image with a secret from an environment variable") {
+        xshould("be able to build an image with a secret from an environment variable") {
             val spec = ImageBuildSpec.Builder(rootTestImagesDirectory.resolve("secret"))
                 .withBuildKitBuilder()
                 .withNoBuildCache()
@@ -747,7 +747,7 @@ class DockerClientBuildKitImageBuildSpec : ShouldSpec({
             """.trimMargin().toRegex(RegexOption.MULTILINE)
         }
 
-        should("be able to build an image with a SSH agent") {
+        xshould("be able to build an image with a SSH agent") {
             val sshKeyPath = systemFileSystem.canonicalize("./src/commonTest/resources/ssh-keys/id_rsa".toPath())
 
             val spec = ImageBuildSpec.Builder(rootTestImagesDirectory.resolve("ssh"))
@@ -766,6 +766,44 @@ class DockerClientBuildKitImageBuildSpec : ShouldSpec({
                 |^#\d+ \d+.\d+ SSH agent is available!
                 |#\d+ \d+.\d+ 4096 SHA256:NZIAzXUaPE2QoH9BgqOy7GaNt9I1ChdiTR9wBSv2SZk\s\s\(RSA\)$
             """.trimMargin().toRegex(RegexOption.MULTILINE)
+        }
+
+        should("be able to build an image that uses a build cache") {
+            val basePath = rootTestImagesDirectory.resolve("buildkit-caching")
+
+            val spec = ImageBuildSpec.Builder(basePath.resolve("image"))
+                .withBuildKitBuilder()
+                .withNoBuildCache()
+                .withCacheFrom("local", mapOf("src" to basePath.resolve("cache").toString()))
+                .build()
+
+            val output = Buffer()
+
+            client.buildImage(spec, SinkTextOutput(output))
+
+            val outputText = output.readUtf8().trim()
+            println(outputText)
+
+            outputText shouldContain """^#(\d+) importing cache manifest from local:[a-f0-9]+$""".toRegex(RegexOption.MULTILINE)
+        }
+
+        should("be able to build an image that produces a build cache") {
+            val basePath = rootTestImagesDirectory.resolve("buildkit-caching")
+
+            val spec = ImageBuildSpec.Builder(basePath.resolve("image"))
+                .withBuildKitBuilder()
+                .withNoBuildCache()
+                .withCacheTo("local", mapOf("src" to basePath.resolve("output-cache").toString()))
+                .build()
+
+            val output = Buffer()
+
+            client.buildImage(spec, SinkTextOutput(output))
+
+            val outputText = output.readUtf8().trim()
+            println(outputText)
+
+            true shouldBe false
         }
     }
 })
