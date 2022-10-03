@@ -29,7 +29,7 @@ func CreateVolume(clientHandle DockerClientHandle, contextHandle ContextHandle, 
 	docker := clientHandle.DockerAPIClient()
 	ctx := contextHandle.Context()
 
-	request := volume.VolumeCreateBody{
+	request := volume.CreateOptions{
 		Name: C.GoString(name),
 	}
 

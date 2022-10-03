@@ -603,11 +603,7 @@ class DockerClientBuildKitImageBuildSpec : ShouldSpec({
                 it.stepName shouldBe "[internal] load metadata for docker.io/batect/this-image-does-not-exist:1.0"
             }
 
-            progressUpdatesReceived shouldContainAnyOf setOf(
-                BuildFailed("failed to solve with frontend dockerfile.v0: failed to create LLB definition: docker.io/batect/this-image-does-not-exist:1.0: not found"),
-                BuildFailed("failed to solve with frontend dockerfile.v0: failed to create LLB definition: pull access denied, repository does not exist or may require authorization: server message: insufficient_scope: authorization failed"),
-                BuildFailed("failed to solve with frontend dockerfile.v0: failed to build LLB: failed to load cache key: pull access denied, repository does not exist or may require authorization: server message: insufficient_scope: authorization failed")
-            )
+            progressUpdatesReceived shouldContain BuildFailed("docker.io/batect/this-image-does-not-exist:1.0: not found")
 
             progressUpdatesReceived.forNone {
                 it.shouldBeTypeOf<BuildComplete>()

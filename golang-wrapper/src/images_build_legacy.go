@@ -120,9 +120,18 @@ func createLegacyBuilderImageBuildOptions(docker *client.Client, configFile *con
 		authConfigs[k] = types.AuthConfig(auth)
 	}
 
-	opts := createImageBuildOptions(docker, configFile, pathToDockerfile, request)
-	opts.Version = types.BuilderV1
-	opts.AuthConfigs = authConfigs
+	opts := types.ImageBuildOptions{
+		Dockerfile:  pathToDockerfile,
+		BuildArgs:   configFile.ParseProxyConfig(docker.DaemonHost(), request.BuildArgs),
+		Tags:        request.ImageTags,
+		PullParent:  request.AlwaysPullBaseImages,
+		NoCache:     request.NoCache,
+		Target:      request.TargetBuildStage,
+		Remove:      true,
+		ForceRemove: true,
+		Version:     types.BuilderV1,
+		AuthConfigs: authConfigs,
+	}
 
 	return opts
 }

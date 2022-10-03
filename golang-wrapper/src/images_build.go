@@ -24,10 +24,8 @@ import (
 	"io"
 	"unsafe"
 
-	"github.com/docker/cli/cli/config/configfile"
 	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/api/types/filters"
-	"github.com/docker/docker/client"
 	"github.com/docker/docker/pkg/jsonmessage"
 	"github.com/moby/buildkit/session/secrets/secretsprovider"
 	"github.com/moby/buildkit/session/sshforward/sshprovider"
@@ -165,21 +163,6 @@ func sshAgentsFromRequest(agents **C.SSHAgent, count C.uint64_t) []sshprovider.A
 	}
 
 	return l
-}
-
-func createImageBuildOptions(docker *client.Client, configFile *configfile.ConfigFile, pathToDockerfile string, request *imageBuildRequest) types.ImageBuildOptions {
-	opts := types.ImageBuildOptions{
-		Dockerfile:  pathToDockerfile,
-		BuildArgs:   configFile.ParseProxyConfig(docker.DaemonHost(), request.BuildArgs),
-		Tags:        request.ImageTags,
-		PullParent:  request.AlwaysPullBaseImages,
-		NoCache:     request.NoCache,
-		Target:      request.TargetBuildStage,
-		Remove:      true,
-		ForceRemove: true,
-	}
-
-	return opts
 }
 
 // This function is based on jsonmessage.DisplayJSONMessagesStream, but allows us to process every message, not just those with
