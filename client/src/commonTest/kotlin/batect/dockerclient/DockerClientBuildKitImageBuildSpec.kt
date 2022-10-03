@@ -23,8 +23,8 @@ import io.kotest.common.ExperimentalKotest
 import io.kotest.core.spec.style.ShouldSpec
 import io.kotest.inspectors.forAtLeastOne
 import io.kotest.inspectors.forNone
+import io.kotest.inspectors.forOne
 import io.kotest.matchers.collections.shouldBeIn
-import io.kotest.matchers.collections.shouldContain
 import io.kotest.matchers.collections.shouldContainAnyOf
 import io.kotest.matchers.collections.shouldContainInOrder
 import io.kotest.matchers.collections.shouldEndWith
@@ -155,17 +155,21 @@ class DockerClientBuildKitImageBuildSpec : ShouldSpec({
                 StepFinished(3)
             )
 
-            progressUpdatesReceived.filterIsInstance<StepStarting>().forAtLeastOne {
+            progressUpdatesReceived.filterIsInstance<StepStarting>().forOne {
                 it.stepName shouldStartWith "[1/2] FROM docker.io/library/alpine:3.14.2"
             }
 
+            val pullStep = progressUpdatesReceived
+                .filterIsInstance<StepStarting>()
+                .single { it.stepName.startsWith("[1/2] FROM docker.io/library/alpine:3.14.2") }
+
             progressUpdatesReceived shouldEndWith listOf(
-                StepFinished(4),
-                StepStarting(5, "[2/2] RUN echo \"Hello world!\""),
-                StepOutput(5, "Hello world!\n"),
-                StepFinished(5),
-                StepStarting(6, "exporting to image"),
-                StepFinished(6),
+                StepFinished(pullStep.stepNumber),
+                StepStarting(pullStep.stepNumber + 1, "[2/2] RUN echo \"Hello world!\""),
+                StepOutput(pullStep.stepNumber + 1, "Hello world!\n"),
+                StepFinished(pullStep.stepNumber + 1),
+                StepStarting(pullStep.stepNumber + 2, "exporting to image"),
+                StepFinished(pullStep.stepNumber + 2),
                 BuildComplete(image)
             )
         }
@@ -559,8 +563,16 @@ class DockerClientBuildKitImageBuildSpec : ShouldSpec({
                 ------$
             """.trimIndent().toRegex(RegexOption.MULTILINE)
 
-            progressUpdatesReceived shouldContainAnyOf setOf(StepStarting(4, "[1/2] FROM docker.io/library/alpine:3.14.2"), StepStarting(4, "[1/2] FROM docker.io/library/alpine:3.14.2@sha256:e1c082e3d3c45cccac829840a25941e679c25d438cc8412c2fa221cf1a824e6a"))
-            progressUpdatesReceived shouldContain StepStarting(5, "[2/2] RUN echo \"This command has failed!\" && exit 1")
+            progressUpdatesReceived.filterIsInstance<StepStarting>().forAtLeastOne {
+                it.stepName shouldBeIn setOf(
+                    "[1/2] FROM docker.io/library/alpine:3.14.2",
+                    "[1/2] FROM docker.io/library/alpine:3.14.2@sha256:e1c082e3d3c45cccac829840a25941e679c25d438cc8412c2fa221cf1a824e6a"
+                )
+            }
+
+            progressUpdatesReceived.filterIsInstance<StepStarting>().forAtLeastOne {
+                it.stepName shouldBe "[2/2] RUN echo \"This command has failed!\" && exit 1"
+            }
 
             progressUpdatesReceived shouldContainAnyOf setOf(
                 BuildFailed("executor failed running [/bin/sh -c echo \"This command has failed!\" && exit 1]: exit code: 1"),
