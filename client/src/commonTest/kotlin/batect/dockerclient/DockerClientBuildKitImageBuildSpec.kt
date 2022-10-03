@@ -34,6 +34,7 @@ import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
 import io.kotest.matchers.string.shouldContain
 import io.kotest.matchers.string.shouldMatch
+import io.kotest.matchers.string.shouldStartWith
 import io.kotest.matchers.types.shouldBeTypeOf
 import kotlinx.coroutines.TimeoutCancellationException
 import kotlinx.coroutines.withTimeout
@@ -91,8 +92,8 @@ class DockerClientBuildKitImageBuildSpec : ShouldSpec({
 
             outputText shouldContain """
                 |#(\d) \[1/2] FROM docker.io/library/alpine:3.14.2(@sha256:e1c082e3d3c45cccac829840a25941e679c25d438cc8412c2fa221cf1a824e6a)?
-                |((#\1 resolve docker.io/library/alpine:3.14.2@sha256:e1c082e3d3c45cccac829840a25941e679c25d438cc8412c2fa221cf1a824e6a
-                |)?#\1 resolve docker.io/library/alpine:3.14.2@sha256:e1c082e3d3c45cccac829840a25941e679c25d438cc8412c2fa221cf1a824e6a (\d+\.\d+s )?done
+                |((#\1 resolve docker.io/library/alpine:3.14.2(@sha256:e1c082e3d3c45cccac829840a25941e679c25d438cc8412c2fa221cf1a824e6a)?
+                |)?#\1 resolve docker.io/library/alpine:3.14.2(@sha256:e1c082e3d3c45cccac829840a25941e679c25d438cc8412c2fa221cf1a824e6a)? (\d+\.\d+s )?done
                 |(#\1 .*
                 |)*)?#\1 (DONE \d+\.\d+s|CACHED)
                 |
@@ -154,10 +155,9 @@ class DockerClientBuildKitImageBuildSpec : ShouldSpec({
                 StepFinished(3)
             )
 
-            progressUpdatesReceived shouldContainAnyOf setOf(
-                StepStarting(4, "[1/2] FROM docker.io/library/alpine:3.14.2"),
-                StepStarting(4, "[1/2] FROM docker.io/library/alpine:3.14.2@sha256:e1c082e3d3c45cccac829840a25941e679c25d438cc8412c2fa221cf1a824e6a")
-            )
+            progressUpdatesReceived.filterIsInstance<StepStarting>().forAtLeastOne {
+                it.stepName shouldStartWith "[1/2] FROM docker.io/library/alpine:3.14.2"
+            }
 
             progressUpdatesReceived shouldEndWith listOf(
                 StepFinished(4),
@@ -603,7 +603,10 @@ class DockerClientBuildKitImageBuildSpec : ShouldSpec({
                 it.stepName shouldBe "[internal] load metadata for docker.io/batect/this-image-does-not-exist:1.0"
             }
 
-            progressUpdatesReceived shouldContain BuildFailed("docker.io/batect/this-image-does-not-exist:1.0: not found")
+            progressUpdatesReceived shouldContainAnyOf setOf(
+                BuildFailed("docker.io/batect/this-image-does-not-exist:1.0: not found"),
+                BuildFailed("pull access denied, repository does not exist or may require authorization: server message: insufficient_scope: authorization failed")
+            )
 
             progressUpdatesReceived.forNone {
                 it.shouldBeTypeOf<BuildComplete>()
