@@ -54,10 +54,6 @@ kotlin {
             executable {
                 entryPoint = "$rootPackage.main"
             }
-
-            all {
-                binaryOptions["memoryModel"] = "experimental"
-            }
         }
 
         // I'm not sure where the culprit lies, but these tasks fails on macOS hosts for non-macOS targets.

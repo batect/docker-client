@@ -288,13 +288,6 @@ kotlin.targets.configureEach {
     }
 }
 
-// Remove this once the new memory model is the default.
-kotlin.targets.withType(KotlinNativeTarget::class.java) {
-    binaries.all {
-        binaryOptions["memoryModel"] = "experimental"
-    }
-}
-
 val kotestProperties = setOf(
     "kotest.filter.specs",
     "kotest.filter.tests"
