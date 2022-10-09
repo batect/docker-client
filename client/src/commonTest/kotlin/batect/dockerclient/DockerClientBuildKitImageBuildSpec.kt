@@ -555,7 +555,7 @@ class DockerClientBuildKitImageBuildSpec : ShouldSpec({
                 "executor failed running [/bin/sh -c echo \"This command has failed!\" && exit 1]: exit code: 1",
 
                 // Docker 19.03 uses this error message:
-                "failed to solve with frontend dockerfile.v0: failed to build LLB: executor failed running [/bin/sh -c echo \"This command has failed!\" && exit 1]: runc did not terminate sucessfully"
+                "executor failed running [/bin/sh -c echo \"This command has failed!\" && exit 1]: runc did not terminate sucessfully"
             )
 
             val outputText = output.readUtf8().trim()
