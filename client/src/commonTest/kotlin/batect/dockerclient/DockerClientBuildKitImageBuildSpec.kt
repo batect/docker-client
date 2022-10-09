@@ -23,7 +23,6 @@ import io.kotest.common.ExperimentalKotest
 import io.kotest.core.spec.style.ShouldSpec
 import io.kotest.inspectors.forAtLeastOne
 import io.kotest.inspectors.forNone
-import io.kotest.inspectors.forOne
 import io.kotest.matchers.collections.shouldBeIn
 import io.kotest.matchers.collections.shouldContainAnyOf
 import io.kotest.matchers.collections.shouldContainInOrder
