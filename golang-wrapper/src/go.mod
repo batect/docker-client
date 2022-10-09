@@ -108,6 +108,6 @@ require (
 	sigs.k8s.io/yaml v1.2.0 // indirect
 )
 
-replace github.com/docker/cli => github.com/docker/cli v20.10.3-0.20220803220330-418ca3b4d46f+incompatible
+replace github.com/docker/cli => github.com/docker/cli v20.10.18+incompatible
 
-replace github.com/docker/docker => github.com/docker/docker v20.10.3-0.20220720171342-a60b458179aa+incompatible
+replace github.com/docker/docker => github.com/docker/docker v20.10.18+incompatible
