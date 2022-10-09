@@ -725,7 +725,7 @@ class DockerClientBuildKitImageBuildSpec : ShouldSpec({
                 }
             }
 
-            duration shouldBeLessThan 700.milliseconds
+            duration shouldBeLessThan 1000.milliseconds
         }
 
         should("be able to build an image with a secret from a file") {
