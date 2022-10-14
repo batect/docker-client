@@ -270,7 +270,7 @@ class DockerClientContainerManagementSpec : ShouldSpec({
             should("throw an appropriate exception when removing a container that doesn't exist") {
                 val exception = shouldThrow<ContainerRemovalFailedException> { client.removeContainer(ContainerReference("does-not-exist")) }
 
-                exception.message shouldBe "Error response from daemon: No such container: does-not-exist"
+                exception.message shouldBe "No such container: does-not-exist"
             }
 
             should("be able to use Kotlin timeouts to abort waiting for a container to exit") {
@@ -369,7 +369,7 @@ class DockerClientContainerManagementSpec : ShouldSpec({
             should("throw an appropriate exception when inspecting a container that doesn't exist") {
                 val exception = shouldThrow<ContainerInspectionFailedException> { client.inspectContainer("does-not-exist") }
 
-                exception.message shouldBe "Error response from daemon: No such container: does-not-exist"
+                exception.message shouldBe "No such container: does-not-exist"
             }
 
             should("be able to set a container's name") {
@@ -1605,7 +1605,7 @@ class DockerClientContainerManagementSpec : ShouldSpec({
                         )
                     }
 
-                    exception.message shouldBe "Error response from daemon: Could not find the file /does-not-exist in container ${container.id}"
+                    exception.message shouldBe "No such container:path: ${container.id}:/does-not-exist"
                 } finally {
                     client.removeContainer(container, force = true)
                 }
@@ -1626,7 +1626,7 @@ class DockerClientContainerManagementSpec : ShouldSpec({
                         )
                     }
 
-                    exception.message shouldBe "Error response from daemon: Could not find the file /does-not-exist in container ${container.id}"
+                    exception.message shouldBe "No such container:path: ${container.id}:/does-not-exist"
                 } finally {
                     client.removeContainer(container, force = true)
                 }

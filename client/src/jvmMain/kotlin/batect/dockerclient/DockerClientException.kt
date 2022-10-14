@@ -229,7 +229,4 @@ public actual class StartingContainerExecFailedException actual constructor(
 }
 
 private val Error.cleanErrorMessage: String
-    get() = this.message.get()
-        .removePrefix("Error: ")
-        .removePrefix("failed to solve: rpc error: code = Unknown desc = ")
-        .removePrefix("failed to solve: ")
+    get() = this.message.get().removePrefix("Error: ")

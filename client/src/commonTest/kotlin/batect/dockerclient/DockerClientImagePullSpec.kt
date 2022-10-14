@@ -256,7 +256,7 @@ class DockerClientImagePullSpec : ShouldSpec({
             client.deleteImage(ImageReference("this-image-does-not-exist"))
         }
 
-        exception.message shouldBe "Error response from daemon: No such image: this-image-does-not-exist:latest"
+        exception.message shouldBe "No such image: this-image-does-not-exist"
     }
 })
 
