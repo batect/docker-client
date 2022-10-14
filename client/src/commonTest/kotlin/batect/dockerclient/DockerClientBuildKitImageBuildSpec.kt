@@ -71,10 +71,7 @@ class DockerClientBuildKitImageBuildSpec : ShouldSpec({
                 |#(\d+) \[internal] load build definition from Dockerfile
                 |(#\1 transferring dockerfile:( \d+B)?( \d+\.\d+s)?
                 |)?#\1 transferring dockerfile: \d+B (\d+\.\d+s )?done
-                |(#\1 \.\.\.
-                |.*
-                |#\1 \[internal] load build definition from Dockerfile
-                |)?#\1 DONE \d+\.\d+s
+                |#\1 DONE \d+\.\d+s
                 |
             """.trimMargin().toRegex()
 
@@ -92,17 +89,13 @@ class DockerClientBuildKitImageBuildSpec : ShouldSpec({
                 |
             """.trimMargin().toRegex()
 
-            // FIXME: BuildKit's progress writer implementation is flaky and doesn't always print the final "#n DONE 2.2s" line.
-            // So we have to make that optional below to prevent this test from being flaky.
             outputText shouldContain """
                 |#(\d) \[1/2] FROM docker.io/library/alpine:3.14.2(@sha256:e1c082e3d3c45cccac829840a25941e679c25d438cc8412c2fa221cf1a824e6a)?
                 |((#\1 resolve docker.io/library/alpine:3.14.2(@sha256:e1c082e3d3c45cccac829840a25941e679c25d438cc8412c2fa221cf1a824e6a)?
                 |)?#\1 resolve docker.io/library/alpine:3.14.2(@sha256:e1c082e3d3c45cccac829840a25941e679c25d438cc8412c2fa221cf1a824e6a)? (\d+\.\d+s )?done
                 |(#\1 .*
-                |)*)?(#\1 \.\.\.
-                |.*
-                |#\1 \[1/2] FROM docker.io/library/alpine:3.14.2(@sha256:e1c082e3d3c45cccac829840a25941e679c25d438cc8412c2fa221cf1a824e6a)?
-                |)?(#\1 (DONE \d+\.\d+s|CACHED))?
+                |)*)?#\1 (DONE \d+\.\d+s|CACHED)
+                |
             """.trimMargin().toRegex()
 
             outputText shouldContain """
