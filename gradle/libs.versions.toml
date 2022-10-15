@@ -1,6 +1,6 @@
 [versions]
 dokka = "1.7.10"
-kotest = "5.5.0"
+kotest = "5.5.1"
 kotlin = "1.7.20"
 kotlinx-serialization = "1.4.0"
 ktlint = "0.47.1"
