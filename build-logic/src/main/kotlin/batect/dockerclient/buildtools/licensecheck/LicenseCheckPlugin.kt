@@ -35,7 +35,7 @@ class LicenseCheckPlugin : Plugin<Project> {
 
             extension.allow("Apache-2.0")
             extension.allow("MIT")
-            extension.allowUrl("https://www.eclipse.org/legal/epl-2.0/")
+            extension.allow("EPL-2.0")
             extension.allowUrl("https://asm.ow2.io/license.html") // BSD
         }
     }
