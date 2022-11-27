@@ -24,19 +24,26 @@ import (
 	"sync"
 
 	"github.com/docker/cli/cli/streams"
+	"github.com/moby/term"
 )
 
 //nolint:gochecknoglobals
 var (
-	outputStreams = map[OutputStreamHandle]*streams.Out{
-		1: streams.NewOut(os.Stdout),
-		2: streams.NewOut(os.Stderr),
-	}
+	outputStreams = systemOutputStreams()
 
 	outputPipes                               = map[OutputStreamHandle]*pipe{}
 	outputStreamsLock                         = sync.RWMutex{}
 	nextOutputStreamHandle OutputStreamHandle = 3
 )
+
+func systemOutputStreams() map[OutputStreamHandle]*streams.Out {
+	_, stdout, stderr := term.StdStreams()
+
+	return map[OutputStreamHandle]*streams.Out{
+		1: streams.NewOut(stdout),
+		2: streams.NewOut(stderr),
+	}
+}
 
 func (handle OutputStreamHandle) OutputStream() *streams.Out {
 	outputStreamsLock.RLock()
