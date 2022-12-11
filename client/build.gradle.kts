@@ -143,26 +143,14 @@ kotlin {
                 implementation(libs.kotest.assertions.json)
                 implementation(libs.kotest.framework.api)
                 implementation(libs.kotest.framework.engine)
-            }
-        }
-
-        // HACK
-        // These tests are here (instead of in commonTest) because of https://youtrack.jetbrains.com/issue/KTOR-4307.
-        // Once that issue is resolved (or an alternative client is available for Windows), we can move these tests back to the commonTest source set.
-        val nonMingwTest by creating {
-            dependsOn(commonTest)
-
-            dependencies {
                 implementation(libs.ktor.client)
-                implementation(libs.ktor.client.cio)
             }
         }
 
         val jvmTest by getting {
-            dependsOn(nonMingwTest)
-
             dependencies {
                 implementation(libs.kotest.runner.junit5)
+                implementation(libs.ktor.client.cio)
             }
         }
 
@@ -172,7 +160,10 @@ kotlin {
 
         val linuxTest by creating {
             dependsOn(nativeTest)
-            dependsOn(nonMingwTest)
+
+            dependencies {
+                implementation(libs.ktor.client.cio)
+            }
         }
 
         val linuxX64Test by getting {
@@ -181,6 +172,10 @@ kotlin {
 
         val mingwTest by creating {
             dependsOn(nativeTest)
+
+            dependencies {
+                implementation(libs.ktor.client.winhttp)
+            }
         }
 
         val mingwX64Test by getting {
@@ -189,7 +184,10 @@ kotlin {
 
         val macosTest by creating {
             dependsOn(nativeTest)
-            dependsOn(nonMingwTest)
+
+            dependencies {
+                implementation(libs.ktor.client.cio)
+            }
         }
 
         val macosX64Test by getting {

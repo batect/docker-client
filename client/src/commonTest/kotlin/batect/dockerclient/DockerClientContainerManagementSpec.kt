@@ -36,6 +36,10 @@ import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
 import io.kotest.matchers.string.shouldContain
 import io.kotest.matchers.string.shouldStartWith
+import io.ktor.client.HttpClient
+import io.ktor.client.request.get
+import io.ktor.http.HttpStatusCode
+import io.ktor.utils.io.core.use
 import kotlinx.coroutines.TimeoutCancellationException
 import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
@@ -1294,6 +1298,57 @@ class DockerClientContainerManagementSpec : ShouldSpec({
                     }
                 } finally {
                     client.deleteNetwork(network)
+                }
+            }
+
+            should("be able to connect to a published port from a container with a corresponding EXPOSE instruction in the image") {
+                val httpServerImage = client.pullImage("nginx:1.21.6")
+
+                val spec = ContainerCreationSpec.Builder(httpServerImage)
+                    .withExposedPort(9000, 80) // Port 80 has a corresponding EXPOSE instruction in the nginx image referenced above.
+                    .build()
+
+                val container = client.createContainer(spec)
+
+                try {
+                    client.startContainer(container)
+
+                    eventually(3.seconds, 200.milliseconds) {
+                        withTimeout(200) {
+                            HttpClient().use { httpClient ->
+                                val response = httpClient.get("http://localhost:9000")
+                                response.status shouldBe HttpStatusCode.OK
+                            }
+                        }
+                    }
+                } finally {
+                    client.removeContainer(container, force = true)
+                }
+            }
+
+            should("be able to connect to a published port from a container without a corresponding EXPOSE instruction in the image") {
+                val imagePath = systemFileSystem.canonicalize("./src/commonTest/resources/images/http-server-without-expose".toPath())
+                val httpServerImage = client.buildImage(ImageBuildSpec.Builder(imagePath).build(), SinkTextOutput(Buffer()))
+
+                val spec = ContainerCreationSpec.Builder(httpServerImage)
+                    .withExposedPort(9000, 81) // Port 81 does not a corresponding EXPOSE instruction in the image built above.
+                    .build()
+
+                val container = client.createContainer(spec)
+
+                try {
+                    client.startContainer(container)
+
+                    eventually(3.seconds, 200.milliseconds) {
+                        withTimeout(200) {
+                            HttpClient().use { httpClient ->
+                                val response = httpClient.get("http://localhost:9000")
+                                response.status shouldBe HttpStatusCode.OK
+                            }
+                        }
+                    }
+                } finally {
+                    client.removeContainer(container, force = true)
                 }
             }
         }
