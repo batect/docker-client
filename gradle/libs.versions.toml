@@ -4,7 +4,7 @@ kotest = "5.5.3"
 kotlin = "1.7.20"
 kotlinx-serialization = "1.4.1"
 ktlint = "0.47.1"
-ktor = "2.1.3"
+ktor = "2.2.1"
 spotless = "6.11.0"
 
 [libraries]
