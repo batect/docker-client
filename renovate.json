@@ -62,7 +62,10 @@
         {
             "groupName": "Kotlin",
             "matchManagers": ["gradle-lite"],
-            "matchPackagePatterns": ["^org\\.jetbrains\\.kotlin\\."],
+            "matchPackagePatterns": [
+                "^org\\.jetbrains\\.kotlin\\.",
+                "^org\\.jetbrains\\.kotlin:"
+            ],
             "matchDepTypes": ["plugin"]
         },
         {
