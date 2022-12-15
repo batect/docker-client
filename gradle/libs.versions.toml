@@ -36,7 +36,7 @@ xz = { group = "org.tukaani", name = "xz", version = "1.9" }
 
 [plugins]
 atomicfu = { id = "org.jetbrains.kotlin.plugin.atomicfu", version.ref = "kotlin" }
-detekt = { id = "io.gitlab.arturbosch.detekt", version = "1.21.0" }
+detekt = { id = "io.gitlab.arturbosch.detekt", version = "1.22.0" }
 dokka = { id = "org.jetbrains.dokka", version.ref = "dokka" }
 kotest-multiplatform = { id = "io.kotest.multiplatform", version.ref = "kotest" }
 kotlin-jvm = { id = "org.jetbrains.kotlin.jvm", version.ref = "kotlin" }

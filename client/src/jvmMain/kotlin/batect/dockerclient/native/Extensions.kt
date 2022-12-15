@@ -229,8 +229,8 @@ private class ReadOnlyList<T : Struct, E>(
     private val readFromPointer: (Pointer) -> E
 ) : ReadOnlyProperty<T, List<E>> {
     override fun getValue(thisRef: T, property: KProperty<*>): List<E> {
-        if (pointerProperty.get(thisRef).intValue() == 0) {
-            throw IllegalArgumentException("Array pointer is null")
+        require(pointerProperty.get(thisRef).intValue() != 0) {
+            "Array pointer is null"
         }
 
         val count = countProperty.get(thisRef).get()
