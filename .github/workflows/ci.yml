@@ -284,7 +284,7 @@ jobs:
           arguments: dokkaHtml --scan
 
       - name: Upload artifact
-        uses: actions/upload-pages-artifact@v1.0.6
+        uses: actions/upload-pages-artifact@v1.0.7
         with:
           path: client/build/dokka/html
 
