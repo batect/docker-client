@@ -1351,6 +1351,35 @@ class DockerClientContainerManagementSpec : ShouldSpec({
                     client.removeContainer(container, force = true)
                 }
             }
+
+            should("be able to publish the same container port twice on different host ports") {
+                val imagePath = systemFileSystem.canonicalize("./src/commonTest/resources/images/http-server-without-expose".toPath())
+                val httpServerImage = client.buildImage(ImageBuildSpec.Builder(imagePath).build(), SinkTextOutput(Buffer()))
+
+                val spec = ContainerCreationSpec.Builder(httpServerImage)
+                    .withExposedPort(9000, 81)
+                    .withExposedPort(9001, 81)
+                    .build()
+
+                val container = client.createContainer(spec)
+
+                try {
+                    client.startContainer(container)
+
+                    eventually(3.seconds, 200.milliseconds) {
+                        withTimeout(200) {
+                            HttpClient().use { httpClient ->
+                                setOf("http://localhost:9000", "http://localhost:9001").forEach { url ->
+                                    val response = httpClient.get(url)
+                                    response.status shouldBe HttpStatusCode.OK
+                                }
+                            }
+                        }
+                    }
+                } finally {
+                    client.removeContainer(container, force = true)
+                }
+            }
         }
 
         context("uploading files and directories to a container") {

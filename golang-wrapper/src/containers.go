@@ -427,14 +427,16 @@ func portBindingsForContainer(request *C.CreateContainerRequest) nat.PortMap {
 
 	for i := 0; i < int(count); i++ {
 		requested := C.GetExposedPortArrayElement(request.ExposedPorts, C.uint64_t(i))
-		port := fmt.Sprintf("%v/%v", requested.ContainerPort, C.GoString(requested.Protocol))
+		port := nat.Port(fmt.Sprintf("%v/%v", requested.ContainerPort, C.GoString(requested.Protocol)))
 
-		portMap[nat.Port(port)] = []nat.PortBinding{
-			{
-				HostIP:   "",
-				HostPort: strconv.FormatInt(int64(requested.LocalPort), 10),
-			},
+		if _, ok := portMap[port]; !ok {
+			portMap[port] = []nat.PortBinding{}
 		}
+
+		portMap[port] = append(portMap[port], nat.PortBinding{
+			HostIP:   "",
+			HostPort: strconv.FormatInt(int64(requested.LocalPort), 10),
+		})
 	}
 
 	return portMap
