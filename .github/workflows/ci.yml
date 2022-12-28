@@ -71,21 +71,21 @@ jobs:
 
       - name: Cache Golang packages
         id: cache-golang-packages
-        uses: actions/cache@v3.0.11
+        uses: actions/cache@v3.2.2
         with:
           path: ~/go
           key: go-packages-${{ runner.os }}-${{ hashFiles('golang-wrapper/src/go.*') }}
 
       - name: Cache Kotlin/Native dependencies
         id: cache-kotlin-native
-        uses: actions/cache@v3.0.11
+        uses: actions/cache@v3.2.2
         with:
           path: ~/.konan
           key: kotlin-native-${{ runner.os }}-${{ hashFiles('gradle/libs.versions.toml') }}
 
       - name: Cache tools
         id: cache-tools
-        uses: actions/cache@v3.0.11
+        uses: actions/cache@v3.2.2
         with:
           path: golang-wrapper/build/tools
           key: tools-${{ runner.os }}-${{ hashFiles('**/*.gradle.kts', 'buildSrc/src/**/*.kt') }}
@@ -142,21 +142,21 @@ jobs:
 
       - name: Cache Golang packages
         id: cache-golang-packages
-        uses: actions/cache@v3.0.11
+        uses: actions/cache@v3.2.2
         with:
           path: ~/go
           key: go-packages-${{ runner.os }}-${{ hashFiles('golang-wrapper/src/go.*') }}
 
       - name: Cache Kotlin/Native dependencies
         id: cache-kotlin-native
-        uses: actions/cache@v3.0.11
+        uses: actions/cache@v3.2.2
         with:
           path: ~/.konan
           key: kotlin-native-${{ runner.os }}-${{ hashFiles('gradle/libs.versions.toml') }}
 
       - name: Cache tools
         id: cache-tools
-        uses: actions/cache@v3.0.11
+        uses: actions/cache@v3.2.2
         with:
           path: golang-wrapper/build/tools
           key: tools-${{ runner.os }}-${{ hashFiles('**/*.gradle.kts', 'buildSrc/src/**/*.kt') }}
@@ -188,21 +188,21 @@ jobs:
 
       - name: Cache Golang packages
         id: cache-golang-packages
-        uses: actions/cache@v3.0.11
+        uses: actions/cache@v3.2.2
         with:
           path: ~/go
           key: go-lint-packages-${{ runner.os }}-${{ hashFiles('golang-wrapper/src/go.*') }}
 
       - name: Cache Kotlin/Native dependencies
         id: cache-kotlin-native
-        uses: actions/cache@v3.0.11
+        uses: actions/cache@v3.2.2
         with:
           path: ~/.konan
           key: kotlin-native-lint-${{ runner.os }}-${{ hashFiles('gradle/libs.versions.toml') }}
 
       - name: Cache tools
         id: cache-tools
-        uses: actions/cache@v3.0.11
+        uses: actions/cache@v3.2.2
         with:
           path: golang-wrapper/build/tools
           key: tools-${{ runner.os }}-${{ hashFiles('**/*.gradle.kts', 'buildSrc/src/**/*.kt') }}
@@ -259,21 +259,21 @@ jobs:
 
       - name: Cache Golang packages
         id: cache-golang-packages
-        uses: actions/cache@v3.0.11
+        uses: actions/cache@v3.2.2
         with:
           path: ~/go
           key: go-packages-${{ runner.os }}-${{ hashFiles('golang-wrapper/src/go.*') }}
 
       - name: Cache Kotlin/Native dependencies
         id: cache-kotlin-native
-        uses: actions/cache@v3.0.11
+        uses: actions/cache@v3.2.2
         with:
           path: ~/.konan
           key: kotlin-native-${{ runner.os }}-${{ hashFiles('gradle/libs.versions.toml') }}
 
       - name: Cache tools
         id: cache-tools
-        uses: actions/cache@v3.0.11
+        uses: actions/cache@v3.2.2
         with:
           path: golang-wrapper/build/tools
           key: tools-${{ runner.os }}-${{ hashFiles('**/*.gradle.kts', 'buildSrc/src/**/*.kt') }}
@@ -318,21 +318,21 @@ jobs:
 
       - name: Cache Golang packages
         id: cache-golang-packages
-        uses: actions/cache@v3.0.11
+        uses: actions/cache@v3.2.2
         with:
           path: ~/go
           key: go-packages-${{ runner.os }}-${{ hashFiles('golang-wrapper/src/go.*') }}
 
       - name: Cache Kotlin/Native dependencies
         id: cache-kotlin-native
-        uses: actions/cache@v3.0.11
+        uses: actions/cache@v3.2.2
         with:
           path: ~/.konan
           key: kotlin-native-${{ runner.os }}-${{ hashFiles('gradle/libs.versions.toml') }}
 
       - name: Cache tools
         id: cache-tools
-        uses: actions/cache@v3.0.11
+        uses: actions/cache@v3.2.2
         with:
           path: golang-wrapper/build/tools
           key: tools-${{ runner.os }}-${{ hashFiles('**/*.gradle.kts', 'buildSrc/src/**/*.kt') }}
