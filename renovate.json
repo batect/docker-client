@@ -65,8 +65,7 @@
             "matchPackagePatterns": [
                 "^org\\.jetbrains\\.kotlin\\.",
                 "^org\\.jetbrains\\.kotlin:"
-            ],
-            "matchDepTypes": ["plugin"]
+            ]
         },
         {
             "matchDatasources": ["maven"],
