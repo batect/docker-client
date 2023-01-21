@@ -1387,7 +1387,7 @@ class DockerClientContainerManagementSpec : ShouldSpec({
 
             should("upload a file to an existing directory") {
                 val spec = ContainerCreationSpec.Builder(uploadTargetImage)
-                    .withCommand("sh", "-c", "cat /existing-directory/new-file.txt && echo --DIVIDER-- && tree -Jugp --noreport /existing-directory")
+                    .withCommand("sh", "-c", "cat /existing-directory/new-file.txt >/dev/stderr && tree -Jugp --noreport /existing-directory && echo 'HACK-FOR-DOCKER-19.03-OUTPUT-DUPLICATION' >/dev/stderr && echo 'HACK-FOR-DOCKER-19.03-OUTPUT-DUPLICATION'")
                     .build()
 
                 val container = client.createContainer(spec)
@@ -1406,9 +1406,9 @@ class DockerClientContainerManagementSpec : ShouldSpec({
                     val stdoutText = stdout.readUtf8()
                     val stderrText = stderr.readUtf8()
 
-                    stdoutText.substringBefore("--DIVIDER--\n") shouldBe "This is the new file\n"
+                    stderrText.substringBefore("HACK-FOR-DOCKER-19.03-OUTPUT-DUPLICATION\n") shouldBe "This is the new file\n"
 
-                    stdoutText.substringAfter("--DIVIDER--\n").trim() shouldEqualJson
+                    stdoutText.substringBefore("HACK-FOR-DOCKER-19.03-OUTPUT-DUPLICATION\n") shouldEqualJson
                         """
                         [
                           {
@@ -1440,7 +1440,6 @@ class DockerClientContainerManagementSpec : ShouldSpec({
                         ]
                         """.trimIndent()
 
-                    stderrText.trim() shouldBe ""
                     exitCode shouldBe 0
                 } finally {
                     client.removeContainer(container, force = true)
@@ -1449,7 +1448,7 @@ class DockerClientContainerManagementSpec : ShouldSpec({
 
             should("upload a file over an existing file") {
                 val spec = ContainerCreationSpec.Builder(uploadTargetImage)
-                    .withCommand("sh", "-c", "cat /existing-directory/existing-file.txt && echo --DIVIDER-- && tree -Jug --noreport /existing-directory")
+                    .withCommand("sh", "-c", "cat /existing-directory/existing-file.txt >/dev/stderr && tree -Jug --noreport /existing-directory && echo 'HACK-FOR-DOCKER-19.03-OUTPUT-DUPLICATION' >/dev/stderr && echo 'HACK-FOR-DOCKER-19.03-OUTPUT-DUPLICATION'")
                     .build()
 
                 val container = client.createContainer(spec)
@@ -1468,9 +1467,9 @@ class DockerClientContainerManagementSpec : ShouldSpec({
                     val stdoutText = stdout.readUtf8()
                     val stderrText = stderr.readUtf8()
 
-                    stdoutText.substringBefore("--DIVIDER--\n") shouldBe "This is the new file\n"
+                    stderrText.substringBefore("HACK-FOR-DOCKER-19.03-OUTPUT-DUPLICATION\n") shouldBe "This is the new file\n"
 
-                    stdoutText.substringAfter("--DIVIDER--\n").trim() shouldEqualJson
+                    stdoutText.substringBefore("HACK-FOR-DOCKER-19.03-OUTPUT-DUPLICATION\n").trim() shouldEqualJson
                         """
                         [
                           {"type":"directory","name":"/existing-directory","user":"root","group":"root","contents":
@@ -1481,7 +1480,6 @@ class DockerClientContainerManagementSpec : ShouldSpec({
                         ]
                         """.trimIndent()
 
-                    stderrText.trim() shouldBe ""
                     exitCode shouldBe 0
                 } finally {
                     client.removeContainer(container, force = true)
@@ -1491,7 +1489,7 @@ class DockerClientContainerManagementSpec : ShouldSpec({
             should("upload a file when the container is configured to run as a user other than root") {
                 val spec = ContainerCreationSpec.Builder(uploadTargetImage)
                     .withUserAndGroup(1234, 5678)
-                    .withCommand("sh", "-c", "cat /existing-directory/existing-file.txt && echo --DIVIDER-- && tree -Jug --noreport /existing-directory")
+                    .withCommand("sh", "-c", "cat /existing-directory/existing-file.txt >/dev/stderr && tree -Jug --noreport /existing-directory && echo 'HACK-FOR-DOCKER-19.03-OUTPUT-DUPLICATION' >/dev/stderr && echo 'HACK-FOR-DOCKER-19.03-OUTPUT-DUPLICATION'")
                     .build()
 
                 val container = client.createContainer(spec)
@@ -1510,11 +1508,9 @@ class DockerClientContainerManagementSpec : ShouldSpec({
                     val stdoutText = stdout.readUtf8()
                     val stderrText = stderr.readUtf8()
 
-                    stderrText.trim() shouldBe ""
+                    stderrText.substringBefore("HACK-FOR-DOCKER-19.03-OUTPUT-DUPLICATION\n") shouldBe "This is the new file\n"
 
-                    stdoutText.substringBefore("--DIVIDER--\n") shouldBe "This is the new file\n"
-
-                    stdoutText.substringAfter("--DIVIDER--\n").trim() shouldEqualJson
+                    stdoutText.substringBefore("HACK-FOR-DOCKER-19.03-OUTPUT-DUPLICATION\n").trim() shouldEqualJson
                         """
                         [
                           {"type":"directory","name":"/existing-directory","user":"root","group":"root","contents":
@@ -1632,7 +1628,7 @@ class DockerClientContainerManagementSpec : ShouldSpec({
 
             should("upload a directory and its contents") {
                 val spec = ContainerCreationSpec.Builder(uploadTargetImage)
-                    .withCommand("sh", "-c", "cat /existing-directory/new-directory/new-file.txt && echo --DIVIDER-- && tree -Jug --noreport /existing-directory/new-directory")
+                    .withCommand("sh", "-c", "cat /existing-directory/new-directory/new-file.txt >/dev/stderr && tree -Jug --noreport /existing-directory/new-directory && echo 'HACK-FOR-DOCKER-19.03-OUTPUT-DUPLICATION' >/dev/stderr && echo 'HACK-FOR-DOCKER-19.03-OUTPUT-DUPLICATION'")
                     .build()
 
                 val container = client.createContainer(spec)
@@ -1654,9 +1650,9 @@ class DockerClientContainerManagementSpec : ShouldSpec({
                     val stdoutText = stdout.readUtf8()
                     val stderrText = stderr.readUtf8()
 
-                    stdoutText.substringBefore("--DIVIDER--\n") shouldBe "This is the new file\n"
+                    stderrText.substringBefore("HACK-FOR-DOCKER-19.03-OUTPUT-DUPLICATION\n") shouldBe "This is the new file\n"
 
-                    stdoutText.substringAfter("--DIVIDER--\n") shouldEqualJson
+                    stdoutText.substringBefore("HACK-FOR-DOCKER-19.03-OUTPUT-DUPLICATION\n") shouldEqualJson
                         """
                         [
                           {"type":"directory","name":"/existing-directory/new-directory","user":"4321","group":"8765","contents":
@@ -1667,7 +1663,6 @@ class DockerClientContainerManagementSpec : ShouldSpec({
                         ]
                         """.trimIndent()
 
-                    stderrText.trim() shouldBe ""
                     exitCode shouldBe 0
                 } finally {
                     client.removeContainer(container, force = true)
