@@ -129,6 +129,11 @@
             "matchPackagePatterns": [
                 "^org\\.jetbrains\\.kotlinx:kotlinx-datetime"
             ]
+        },
+        {
+            "matchPackageNames": ["ziglang/zig"],
+            "matchDatasources": ["github-releases"],
+            "ignoreUnstable": false
         }
     ]
 }
