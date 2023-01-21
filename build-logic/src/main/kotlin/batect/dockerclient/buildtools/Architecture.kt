@@ -21,11 +21,12 @@ import jnr.ffi.Platform
 enum class Architecture(
     val golangName: String,
     val jnrName: String, // Name as per jnr.ffi.Platform.OS constants
-    val zigName: String
+    val zigName: String,
 ) {
     X86("386", "I386", "i386"),
     X64("amd64", "X86_64", "x86_64"),
-    Arm64("arm64", "AARCH64", "aarch64");
+    Arm64("arm64", "AARCH64", "aarch64"),
+    ;
 
     companion object {
         val current: Architecture = when (val arch = Platform.getNativePlatform().cpu) {

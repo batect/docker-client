@@ -41,7 +41,7 @@ abstract class GenerateKotlinJVMTypes : DefaultTask() {
         sourceFile.convention(
             project.provider {
                 project.rootProject.layout.projectDirectory.file("codegen/types.yml")
-            }
+            },
         )
     }
 
@@ -85,7 +85,7 @@ abstract class GenerateKotlinJVMTypes : DefaultTask() {
                     this.useMemory(pointer)
                 }
 
-            """.trimIndent()
+            """.trimIndent(),
         )
 
         type.fields
@@ -100,7 +100,7 @@ abstract class GenerateKotlinJVMTypes : DefaultTask() {
                     nativeAPI.Free${type.name}(this)
                 }
             }
-            """.trimIndent()
+            """.trimIndent(),
         )
     }
 
@@ -119,7 +119,9 @@ abstract class GenerateKotlinJVMTypes : DefaultTask() {
                 |    val ${fieldName}Pointer = Pointer()
                 """.trimMargin()
             }
-            is CallbackType -> throw UnsupportedOperationException("Embedding callback types in structs is not supported. Field $fieldName of ${structType.name} contains callback type ${fieldType.name}.")
+            is CallbackType -> throw UnsupportedOperationException(
+                "Embedding callback types in structs is not supported. Field $fieldName of ${structType.name} contains callback type ${fieldType.name}.",
+            )
         }
     }
 
@@ -150,7 +152,7 @@ abstract class GenerateKotlinJVMTypes : DefaultTask() {
                     @Delegate
                     fun invoke($formattedParameters): Boolean
                 }
-            """.trimIndent()
+            """.trimIndent(),
         )
     }
 

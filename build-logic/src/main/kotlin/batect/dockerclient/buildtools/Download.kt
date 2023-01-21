@@ -39,7 +39,8 @@ internal fun download(task: Task, url: String, destination: Path): CompletableFu
 
 internal enum class DownloadResult {
     UpToDate,
-    Downloaded;
+    Downloaded,
+    ;
 
     companion object {
         fun fromUpToDate(value: Boolean): DownloadResult = when (value) {

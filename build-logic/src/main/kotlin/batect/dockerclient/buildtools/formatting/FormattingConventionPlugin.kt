@@ -45,7 +45,10 @@ class FormattingConventionPlugin : Plugin<Project> {
             encoding("UTF-8")
 
             kotlinGradle {
-                it.ktlint(ktlintVersion).setEditorConfigPath(target.rootProject.file(".editorconfig"))
+                it.ktlint(ktlintVersion)
+                    .setEditorConfigPath(target.rootProject.file(".editorconfig"))
+                    .editorConfigOverride(mapOf("max_line_length" to "285")) // ktlint doesn't seem to respect the value set in .editorconfig
+
                 it.licenseHeader(kotlinLicenseHeader, "plugins|rootProject|import")
             }
 

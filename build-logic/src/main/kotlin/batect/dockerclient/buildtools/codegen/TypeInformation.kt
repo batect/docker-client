@@ -52,7 +52,7 @@ data class AliasType(
     val nativeType: String,
     override val jvmName: String,
     val jnrType: String = nativeType,
-    override val isPointer: Boolean = false
+    override val isPointer: Boolean = false,
 ) : TypeFromConfigFile(), TypeInformation {
     override val yamlName: String = name
     override val cName: String = name
@@ -68,25 +68,25 @@ data class AliasType(
 @SerialName("struct")
 data class StructTypeFromConfigFile(
     override val name: String,
-    val fields: List<FieldInfo>
+    val fields: List<FieldInfo>,
 ) : TypeFromConfigFile() {
     override fun resolve(userDefinedTypes: Map<String, TypeFromConfigFile>): TypeInformation {
         return StructType(
             name,
-            fields.map { (fieldName, fieldValue) -> StructMember(fieldName, resolveTypeReference("field", fieldName, fieldValue, userDefinedTypes, "struct", this.name)) }
+            fields.map { (fieldName, fieldValue) -> StructMember(fieldName, resolveTypeReference("field", fieldName, fieldValue, userDefinedTypes, "struct", this.name)) },
         )
     }
 
     @Serializable
     data class FieldInfo(
         val name: String,
-        val type: String
+        val type: String,
     )
 }
 
 data class StructType(
     val name: String,
-    val fields: List<StructMember>
+    val fields: List<StructMember>,
 ) : TypeInformation {
     override val isPointer: Boolean = true
     override val cName: String = "$name*"
@@ -98,7 +98,7 @@ data class StructType(
 
 data class StructMember(
     val name: String,
-    val type: TypeInformation
+    val type: TypeInformation,
 )
 
 enum class PrimitiveType(
@@ -111,14 +111,24 @@ enum class PrimitiveType(
     override val cgoTypeName: String = "C.$golangName",
     val cgoConversionFunctionName: String = "C.$golangName",
     val alternativeCNames: Set<String> = emptySet(),
-    val jnrPointerAccessorFunctionName: String? = null
+    val jnrPointerAccessorFunctionName: String? = null,
 ) : TypeInformation {
-    StringType("string", "string", "char*", "kotlin.String", jvmNameInStruct = "UTF8StringRef", isPointer = true, cgoConversionFunctionName = "C.CString", jnrPointerAccessorFunctionName = "getString"),
+    StringType(
+        "string",
+        "string",
+        "char*",
+        "kotlin.String",
+        jvmNameInStruct = "UTF8StringRef",
+        isPointer = true,
+        cgoConversionFunctionName = "C.CString",
+        jnrPointerAccessorFunctionName = "getString",
+    ),
     BooleanType("boolean", "bool", "bool", "Boolean", alternativeCNames = setOf("_Bool")),
     Int64Type("int64", "int64", "int64_t", "Long", jvmNameInStruct = "int64_t", cgoConversionFunctionName = "C.int64_t"),
     Int32Type("int32", "int32", "int32_t", "Int", jvmNameInStruct = "int32_t", cgoConversionFunctionName = "C.int32_t"),
     ByteType("byteArray", "[]byte", "void*", "Pointer", isPointer = true, cgoConversionFunctionName = "C.CBytes"),
-    GenericPointerType("void*", "unsafe.Pointer", "void*", "Pointer?");
+    GenericPointerType("void*", "unsafe.Pointer", "void*", "Pointer?"),
+    ;
 
     companion object {
         val yamlNamesToValues: Map<String, PrimitiveType> = values().associateBy { it.yamlName }
@@ -131,7 +141,7 @@ enum class PrimitiveType(
 }
 
 data class ArrayType(
-    val elementType: TypeInformation
+    val elementType: TypeInformation,
 ) : TypeInformation {
     override val yamlName: String = "${elementType.yamlName}[]"
     override val cName: String = "${elementType.cName}*"
@@ -145,25 +155,30 @@ data class ArrayType(
 @SerialName("callback")
 data class CallbackTypeFromConfigFile(
     override val name: String,
-    val parameters: List<ParameterInfo> = emptyList()
+    val parameters: List<ParameterInfo> = emptyList(),
 ) : TypeFromConfigFile() {
     override fun resolve(userDefinedTypes: Map<String, TypeFromConfigFile>): TypeInformation {
         return CallbackType(
             name,
-            parameters.map { (parameterName, parameterType) -> CallbackParameter(parameterName, resolveTypeReference("parameter", parameterName, parameterType, userDefinedTypes, "callback", this.name)) }
+            parameters.map { (parameterName, parameterType) ->
+                CallbackParameter(
+                    parameterName,
+                    resolveTypeReference("parameter", parameterName, parameterType, userDefinedTypes, "callback", this.name),
+                )
+            },
         )
     }
 
     @Serializable
     data class ParameterInfo(
         val name: String,
-        val type: String
+        val type: String,
     )
 }
 
 data class CallbackType(
     val name: String,
-    val parameters: List<CallbackParameter>
+    val parameters: List<CallbackParameter>,
 ) : TypeInformation {
     override val isPointer: Boolean = false
     override val cName: String = name
@@ -175,7 +190,7 @@ data class CallbackType(
 
 data class CallbackParameter(
     val name: String,
-    val type: TypeInformation
+    val type: TypeInformation,
 )
 
 internal fun loadTypeConfigurationFile(path: Path): List<TypeInformation> {
@@ -197,7 +212,7 @@ private fun resolveTypeReference(
     typeName: String,
     allDefinedTypes: Map<String, TypeFromConfigFile>,
     parentTypeDescription: String,
-    parentTypeName: String
+    parentTypeName: String,
 ): TypeInformation {
     if (typeName.endsWith("[]")) {
         val elementType = resolveTypeReference(itemType, itemName, typeName.removeSuffix("[]"), allDefinedTypes, parentTypeDescription, parentTypeName)

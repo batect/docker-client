@@ -21,5 +21,5 @@ enum class BinaryType {
     Shared,
 
     // .a / .lib
-    Archive
+    Archive,
 }
