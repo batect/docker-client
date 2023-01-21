@@ -195,7 +195,7 @@ abstract class GenerateKotlinJVMMethods : DefaultTask() {
         builder.appendLine(kotlinFileHeader)
         builder.appendLine(
             """
-            @file:Suppress("LongParameterList", "MaxLineLength")
+            @file:Suppress("LongParameterList", "MaxLineLength", "ktlint")
 
             package batect.dockerclient.native
 
