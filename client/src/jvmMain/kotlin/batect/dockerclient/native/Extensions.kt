@@ -31,188 +31,188 @@ import kotlin.reflect.KProperty1
 internal val ListAllVolumesReturn.volumes by ReadOnlyList(
     ListAllVolumesReturn::volumesCount,
     ListAllVolumesReturn::volumesPointer,
-    ::VolumeReference
+    ::VolumeReference,
 )
 
 internal var BuildImageRequest.buildArgs by WriteOnlyList<BuildImageRequest, StringPair>(
     BuildImageRequest::buildArgsCount,
-    BuildImageRequest::buildArgsPointer
+    BuildImageRequest::buildArgsPointer,
 )
 
 internal var BuildImageRequest.imageTags by WriteOnlyList<BuildImageRequest, String>(
     BuildImageRequest::imageTagsCount,
     BuildImageRequest::imageTagsPointer,
-    ::stringToPointer
+    ::stringToPointer,
 )
 
 internal var BuildImageRequest.fileSecrets by WriteOnlyList<BuildImageRequest, Pair<String, batect.dockerclient.FileBuildSecret>>(
     BuildImageRequest::fileSecretsCount,
     BuildImageRequest::fileSecretsPointer,
-    ::fileBuildSecretToNative
+    ::fileBuildSecretToNative,
 )
 
 internal var BuildImageRequest.environmentSecrets by WriteOnlyList<BuildImageRequest, Pair<String, batect.dockerclient.EnvironmentBuildSecret>>(
     BuildImageRequest::environmentSecretsCount,
     BuildImageRequest::environmentSecretsPointer,
-    ::environmentBuildSecretToNative
+    ::environmentBuildSecretToNative,
 )
 
 internal var BuildImageRequest.sshAgents by WriteOnlyList<BuildImageRequest, batect.dockerclient.SSHAgent>(
     BuildImageRequest::sshAgentsCount,
     BuildImageRequest::sshAgentsPointer,
-    ::sshAgentToNative
+    ::sshAgentToNative,
 )
 
 internal var SSHAgent.paths by WriteOnlyList<SSHAgent, String>(
     SSHAgent::pathsCount,
     SSHAgent::pathsPointer,
-    ::stringToPointer
+    ::stringToPointer,
 )
 
 internal var CreateContainerRequest.command by WriteOnlyList<CreateContainerRequest, String>(
     CreateContainerRequest::commandCount,
     CreateContainerRequest::commandPointer,
-    ::stringToPointer
+    ::stringToPointer,
 )
 
 internal var CreateContainerRequest.entrypoint by WriteOnlyList<CreateContainerRequest, String>(
     CreateContainerRequest::entrypointCount,
     CreateContainerRequest::entrypointPointer,
-    ::stringToPointer
+    ::stringToPointer,
 )
 
 internal var CreateContainerRequest.extraHosts by WriteOnlyList<CreateContainerRequest, String>(
     CreateContainerRequest::extraHostsCount,
     CreateContainerRequest::extraHostsPointer,
-    ::stringToPointer
+    ::stringToPointer,
 )
 
 internal var CreateContainerRequest.environmentVariables by WriteOnlyList<CreateContainerRequest, String>(
     CreateContainerRequest::environmentVariablesCount,
     CreateContainerRequest::environmentVariablesPointer,
-    ::stringToPointer
+    ::stringToPointer,
 )
 
 internal var CreateContainerRequest.bindMounts by WriteOnlyList<CreateContainerRequest, String>(
     CreateContainerRequest::bindMountsCount,
     CreateContainerRequest::bindMountsPointer,
-    ::stringToPointer
+    ::stringToPointer,
 )
 
 internal var CreateContainerRequest.tmpfsMounts by WriteOnlyList<CreateContainerRequest, StringPair>(
     CreateContainerRequest::tmpfsMountsCount,
-    CreateContainerRequest::tmpfsMountsPointer
+    CreateContainerRequest::tmpfsMountsPointer,
 )
 
 internal var CreateContainerRequest.deviceMounts by WriteOnlyList<CreateContainerRequest, batect.dockerclient.DeviceMount>(
     CreateContainerRequest::deviceMountsCount,
     CreateContainerRequest::deviceMountsPointer,
-    ::deviceMountToNative
+    ::deviceMountToNative,
 )
 
 internal var CreateContainerRequest.exposedPorts by WriteOnlyList<CreateContainerRequest, batect.dockerclient.ExposedPort>(
     CreateContainerRequest::exposedPortsCount,
     CreateContainerRequest::exposedPortsPointer,
-    ::exposedPortToNative
+    ::exposedPortToNative,
 )
 
 internal var CreateContainerRequest.capabilitiesToAdd by WriteOnlyList<CreateContainerRequest, String>(
     CreateContainerRequest::capabilitiesToAddCount,
     CreateContainerRequest::capabilitiesToAddPointer,
-    ::stringToPointer
+    ::stringToPointer,
 )
 
 internal var CreateContainerRequest.capabilitiesToDrop by WriteOnlyList<CreateContainerRequest, String>(
     CreateContainerRequest::capabilitiesToDropCount,
     CreateContainerRequest::capabilitiesToDropPointer,
-    ::stringToPointer
+    ::stringToPointer,
 )
 
 internal var CreateContainerRequest.networkAliases by WriteOnlyList<CreateContainerRequest, String>(
     CreateContainerRequest::networkAliasesCount,
     CreateContainerRequest::networkAliasesPointer,
-    ::stringToPointer
+    ::stringToPointer,
 )
 
 internal var CreateContainerRequest.loggingOptions by WriteOnlyList<CreateContainerRequest, StringPair>(
     CreateContainerRequest::loggingOptionsCount,
-    CreateContainerRequest::loggingOptionsPointer
+    CreateContainerRequest::loggingOptionsPointer,
 )
 
 internal var CreateContainerRequest.healthcheckCommand by WriteOnlyList<CreateContainerRequest, String>(
     CreateContainerRequest::healthcheckCommandCount,
     CreateContainerRequest::healthcheckCommandPointer,
-    ::stringToPointer
+    ::stringToPointer,
 )
 
 internal var CreateContainerRequest.labels by WriteOnlyList<CreateContainerRequest, StringPair>(
     CreateContainerRequest::labelsCount,
-    CreateContainerRequest::labelsPointer
+    CreateContainerRequest::labelsPointer,
 )
 
 internal val ContainerLogConfig.config by ReadOnlyList(
     ContainerLogConfig::configCount,
     ContainerLogConfig::configPointer,
-    ::StringPair
+    ::StringPair,
 )
 
 internal val ContainerConfig.labels by ReadOnlyList(
     ContainerConfig::labelsCount,
     ContainerConfig::labelsPointer,
-    ::StringPair
+    ::StringPair,
 )
 
 internal val ContainerHealthState.log by ReadOnlyList(
     ContainerHealthState::logCount,
     ContainerHealthState::logPointer,
-    ::ContainerHealthLogEntry
+    ::ContainerHealthLogEntry,
 )
 
 internal val ContainerHealthcheckConfig.test by ReadOnlyList(
     ContainerHealthcheckConfig::testCount,
     ContainerHealthcheckConfig::testPointer,
-    ::pointerToString
+    ::pointerToString,
 )
 
 internal val Actor.attributes by ReadOnlyList(
     Actor::attributesCount,
     Actor::attributesPointer,
-    ::StringPair
+    ::StringPair,
 )
 
 internal var UploadToContainerRequest.directories by WriteOnlyList<UploadToContainerRequest, batect.dockerclient.UploadDirectory>(
     UploadToContainerRequest::directoriesCount,
     UploadToContainerRequest::directoriesPointer,
-    ::uploadDirectoryToNative
+    ::uploadDirectoryToNative,
 )
 
 internal var UploadToContainerRequest.files by WriteOnlyList<UploadToContainerRequest, batect.dockerclient.UploadFile>(
     UploadToContainerRequest::filesCount,
     UploadToContainerRequest::filesPointer,
-    ::uploadFileToNative
+    ::uploadFileToNative,
 )
 
 internal var StreamEventsRequest.filters by WriteOnlyList<StreamEventsRequest, StringToStringListPair>(
     StreamEventsRequest::filtersCount,
-    StreamEventsRequest::filtersPointer
+    StreamEventsRequest::filtersPointer,
 )
 
 internal var CreateExecRequest.command by WriteOnlyList<CreateExecRequest, String>(
     CreateExecRequest::commandCount,
     CreateExecRequest::commandPointer,
-    ::stringToPointer
+    ::stringToPointer,
 )
 
 internal var CreateExecRequest.environmentVariables by WriteOnlyList<CreateExecRequest, String>(
     CreateExecRequest::environmentVariablesCount,
     CreateExecRequest::environmentVariablesPointer,
-    ::stringToPointer
+    ::stringToPointer,
 )
 
 internal var StringToStringListPair.values by WriteOnlyList<StringToStringListPair, String>(
     StringToStringListPair::valuesCount,
     StringToStringListPair::valuesPointer,
-    ::stringToPointer
+    ::stringToPointer,
 )
 
 internal fun StringPair(key: String, value: String): StringPair {
@@ -226,7 +226,7 @@ internal fun StringPair(key: String, value: String): StringPair {
 private class ReadOnlyList<T : Struct, E>(
     private val countProperty: KProperty1<T, Struct.u_int64_t>,
     private val pointerProperty: KProperty1<T, Struct.Pointer>,
-    private val readFromPointer: (Pointer) -> E
+    private val readFromPointer: (Pointer) -> E,
 ) : ReadOnlyProperty<T, List<E>> {
     override fun getValue(thisRef: T, property: KProperty<*>): List<E> {
         require(pointerProperty.get(thisRef).intValue() != 0) {
@@ -250,10 +250,10 @@ private class ReadOnlyList<T : Struct, E>(
 
 private fun <T : Struct, E : Struct> WriteOnlyList(
     countProperty: KProperty1<T, Struct.u_int64_t>,
-    pointerProperty: KProperty1<T, Struct.Pointer>
+    pointerProperty: KProperty1<T, Struct.Pointer>,
 ) = WriteOnlyList(
     countProperty,
-    pointerProperty
+    pointerProperty,
 ) { e: E, _ -> Struct.getMemory(e) }
 
 private fun stringToPointer(value: String, memoryManager: MemoryManager): Pointer {
@@ -350,7 +350,7 @@ private fun uploadFileToNative(value: batect.dockerclient.UploadFile, memoryMana
 private class WriteOnlyList<T : Struct, E>(
     private val countProperty: KProperty1<T, Struct.u_int64_t>,
     private val pointerProperty: KProperty1<T, Struct.Pointer>,
-    private val getPointer: (E, MemoryManager) -> Pointer
+    private val getPointer: (E, MemoryManager) -> Pointer,
 ) : ReadWriteProperty<T, Collection<E>> {
     override fun getValue(thisRef: T, property: KProperty<*>): Collection<E> {
         throw UnsupportedOperationException()

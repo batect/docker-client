@@ -28,7 +28,7 @@ public data class Event(
     val action: String,
     val actor: Actor,
     val scope: String,
-    val timestamp: Instant
+    val timestamp: Instant,
 )
 
 /**
@@ -39,7 +39,7 @@ public data class Event(
  */
 public data class Actor(
     val id: String,
-    val attributes: Map<String, String>
+    val attributes: Map<String, String>,
 )
 
 /**
@@ -49,7 +49,7 @@ public data class Actor(
  */
 public enum class EventHandlerAction {
     ContinueStreaming,
-    Stop
+    Stop,
 }
 
 public typealias EventHandler = (Event) -> EventHandlerAction

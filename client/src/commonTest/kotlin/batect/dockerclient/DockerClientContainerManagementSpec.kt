@@ -185,7 +185,7 @@ class DockerClientContainerManagementSpec : ShouldSpec({
                     // If the output is streamed with any kind of buffering, it will be received by our test sink above as one write.
                     stdout.writesReceived shouldBe listOf(
                         "Line 1\n",
-                        "Line 2\n"
+                        "Line 2\n",
                     )
                 } finally {
                     client.removeContainer(container, force = true)
@@ -561,7 +561,7 @@ class DockerClientContainerManagementSpec : ShouldSpec({
 
                     inspectionResult.config.labels shouldBe mapOf(
                         "first-key" to "first-value",
-                        "second-key" to "second-value"
+                        "second-key" to "second-value",
                     )
                 } finally {
                     client.removeContainer(container, force = true)
@@ -787,7 +787,7 @@ class DockerClientContainerManagementSpec : ShouldSpec({
                 val creationSpec: ContainerCreationSpec,
                 val expectedOutput: String,
                 val expectedErrorOutput: String = "",
-                val shouldExitWithZeroExitCode: Boolean = true
+                val shouldExitWithZeroExitCode: Boolean = true,
             )
 
             setOf(
@@ -797,7 +797,7 @@ class DockerClientContainerManagementSpec : ShouldSpec({
                         .withHostname("my-container-name")
                         .withCommand("hostname")
                         .build(),
-                    "my-container-name"
+                    "my-container-name",
                 ),
                 TestScenario(
                     "set environment variables for a container",
@@ -810,7 +810,7 @@ class DockerClientContainerManagementSpec : ShouldSpec({
                         First variable: the first value
                         Second variable: the second value
                         Third variable: the third value
-                    """.trimIndent()
+                    """.trimIndent(),
                 ),
                 TestScenario(
                     "mount a file from the local machine into a container",
@@ -818,7 +818,7 @@ class DockerClientContainerManagementSpec : ShouldSpec({
                         .withHostMount(hostMountDirectory.resolve("some-file.txt"), "/files/some-file.txt")
                         .withCommand("cat", "/files/some-file.txt")
                         .build(),
-                    "This is the file mounted into the container."
+                    "This is the file mounted into the container.",
                 ),
                 TestScenario(
                     "mount a directory from the local machine into a container",
@@ -826,7 +826,7 @@ class DockerClientContainerManagementSpec : ShouldSpec({
                         .withHostMount(hostMountDirectory, "/files")
                         .withCommand("cat", "/files/some-file.txt")
                         .build(),
-                    "This is the file mounted into the container."
+                    "This is the file mounted into the container.",
                 ),
                 TestScenario(
                     "mount a file from the local machine into a container read-only",
@@ -836,7 +836,7 @@ class DockerClientContainerManagementSpec : ShouldSpec({
                         .build(),
                     expectedOutput = "",
                     expectedErrorOutput = "rm: can't remove '/files/some-file.txt': Resource busy",
-                    shouldExitWithZeroExitCode = false
+                    shouldExitWithZeroExitCode = false,
                 ),
                 TestScenario(
                     "mount a directory from the local machine into a container read-only",
@@ -846,7 +846,7 @@ class DockerClientContainerManagementSpec : ShouldSpec({
                         .build(),
                     expectedOutput = "",
                     expectedErrorOutput = "touch: /files/some-other-file.txt: Read-only file system",
-                    shouldExitWithZeroExitCode = false
+                    shouldExitWithZeroExitCode = false,
                 ),
                 TestScenario(
                     "set the entrypoint for a container",
@@ -854,7 +854,7 @@ class DockerClientContainerManagementSpec : ShouldSpec({
                         .withEntrypoint("echo", "Hello from the entrypoint")
                         .withCommand("Hello from the command")
                         .build(),
-                    "Hello from the entrypoint Hello from the command"
+                    "Hello from the entrypoint Hello from the command",
                 ),
                 TestScenario(
                     "set the working directory for a container",
@@ -862,14 +862,14 @@ class DockerClientContainerManagementSpec : ShouldSpec({
                         .withWorkingDirectory("/foo/bar")
                         .withCommand("pwd")
                         .build(),
-                    "/foo/bar"
+                    "/foo/bar",
                 ),
                 TestScenario(
                     "use the default working directory",
                     ContainerCreationSpec.Builder(image)
                         .withCommand("pwd")
                         .build(),
-                    "/"
+                    "/",
                 ),
                 TestScenario(
                     "mount a tmpfs filesystem into a container",
@@ -878,7 +878,7 @@ class DockerClientContainerManagementSpec : ShouldSpec({
                         .withCommand("touch", "/files/some-file.txt")
                         .build(),
                     expectedOutput = "",
-                    expectedErrorOutput = ""
+                    expectedErrorOutput = "",
                 ),
                 TestScenario(
                     "mount a tmpfs filesystem into a container with options",
@@ -888,7 +888,7 @@ class DockerClientContainerManagementSpec : ShouldSpec({
                         .build(),
                     expectedOutput = "",
                     expectedErrorOutput = "touch: /files/some-other-file.txt: Read-only file system",
-                    shouldExitWithZeroExitCode = false
+                    shouldExitWithZeroExitCode = false,
                 ),
                 TestScenario(
                     "mount a device into a container",
@@ -897,7 +897,7 @@ class DockerClientContainerManagementSpec : ShouldSpec({
                         .withCommand("cat", "/dev/my-other-null")
                         .build(),
                     expectedOutput = "",
-                    expectedErrorOutput = ""
+                    expectedErrorOutput = "",
                 ),
                 TestScenario(
                     "set the user and group for a container",
@@ -905,14 +905,14 @@ class DockerClientContainerManagementSpec : ShouldSpec({
                         .withUserAndGroup(123, 456)
                         .withCommand("sh", "-c", "id -u && id -g")
                         .build(),
-                    "123\n456"
+                    "123\n456",
                 ),
                 TestScenario(
                     "use the default user and group",
                     ContainerCreationSpec.Builder(image)
                         .withCommand("sh", "-c", "id -u && id -g")
                         .build(),
-                    "0\n0"
+                    "0\n0",
                 ),
                 TestScenario(
                     "run a container without an init process",
@@ -922,7 +922,7 @@ class DockerClientContainerManagementSpec : ShouldSpec({
                     """
                         |PID   COMMAND
                         |    1 ps
-                    """.trimMargin()
+                    """.trimMargin(),
                 ),
                 TestScenario(
                     "use the default size for /dev/shm",
@@ -932,7 +932,7 @@ class DockerClientContainerManagementSpec : ShouldSpec({
                     """
                         |Filesystem           1K-blocks      Used Available Use% Mounted on
                         |shm                      65536         0     65536   0% /dev/shm
-                    """.trimMargin()
+                    """.trimMargin(),
                 ),
                 TestScenario(
                     "use a custom size for /dev/shm",
@@ -943,7 +943,7 @@ class DockerClientContainerManagementSpec : ShouldSpec({
                     """
                         |Filesystem           1K-blocks      Used Available Use% Mounted on
                         |shm                         20         0        20   0% /dev/shm
-                    """.trimMargin()
+                    """.trimMargin(),
                 ),
                 TestScenario(
                     "run without a TTY attached",
@@ -960,14 +960,14 @@ class DockerClientContainerManagementSpec : ShouldSpec({
 
                                 echo "This is stdout" >/dev/stdout
                                 echo "This is stderr" >/dev/stderr
-                            """.trimIndent()
+                            """.trimIndent(),
                         )
                         .build(),
                     expectedOutput = """
                             Is not a TTY
                             This is stdout
                     """.trimIndent(),
-                    expectedErrorOutput = "This is stderr"
+                    expectedErrorOutput = "This is stderr",
                 ),
                 TestScenario(
                     "run with a TTY attached",
@@ -984,12 +984,12 @@ class DockerClientContainerManagementSpec : ShouldSpec({
 
                                 echo "This is stdout" >/dev/stdout
                                 echo "This is stderr" >/dev/stderr
-                            """.trimIndent()
+                            """.trimIndent(),
                         )
                         .withTTY()
                         .build(),
                     expectedOutput = "Is a TTY\r\nThis is stdout\r\nThis is stderr",
-                    expectedErrorOutput = ""
+                    expectedErrorOutput = "",
                 ),
                 TestScenario(
                     "run an unprivileged container",
@@ -999,7 +999,7 @@ class DockerClientContainerManagementSpec : ShouldSpec({
                     """
                         Container does not have NET_ADMIN capability
                         Container has CHOWN capability
-                    """.trimIndent()
+                    """.trimIndent(),
                 ),
                 TestScenario(
                     "run a privileged container",
@@ -1010,7 +1010,7 @@ class DockerClientContainerManagementSpec : ShouldSpec({
                     """
                         Container has NET_ADMIN capability
                         Container has CHOWN capability
-                    """.trimIndent()
+                    """.trimIndent(),
                 ),
                 TestScenario(
                     "run a container with additional capabilities",
@@ -1021,7 +1021,7 @@ class DockerClientContainerManagementSpec : ShouldSpec({
                     """
                         Container has NET_ADMIN capability
                         Container has CHOWN capability
-                    """.trimIndent()
+                    """.trimIndent(),
                 ),
                 TestScenario(
                     "run a container with reduced capabilities",
@@ -1032,34 +1032,34 @@ class DockerClientContainerManagementSpec : ShouldSpec({
                     """
                         Container does not have NET_ADMIN capability
                         Container does not have CHOWN capability
-                    """.trimIndent()
+                    """.trimIndent(),
                 ),
                 TestScenario(
                     "use the default command on a container",
                     ContainerCreationSpec.Builder(defaultCommandImage)
                         .build(),
-                    "This is the default command"
+                    "This is the default command",
                 ),
                 TestScenario(
                     "override the default command on a container",
                     ContainerCreationSpec.Builder(defaultCommandImage)
                         .withCommand("echo", "This is the overriding command")
                         .build(),
-                    "This is the overriding command"
+                    "This is the overriding command",
                 ),
                 TestScenario(
                     "use the default entrypoint on a container",
                     ContainerCreationSpec.Builder(defaultEntrypointImage)
                         .build(),
-                    "This is the default entrypoint"
+                    "This is the default entrypoint",
                 ),
                 TestScenario(
                     "override the default entrypoint on a container",
                     ContainerCreationSpec.Builder(defaultEntrypointImage)
                         .withEntrypoint("echo", "This is the overriding entrypoint")
                         .build(),
-                    "This is the overriding entrypoint"
-                )
+                    "This is the overriding entrypoint",
+                ),
             ).forEach { scenario ->
                 should("be able to ${scenario.description}") {
                     val container = client.createContainer(scenario.creationSpec)
@@ -1272,7 +1272,7 @@ class DockerClientContainerManagementSpec : ShouldSpec({
 
                                 echo "eth0 is ${'$'}ETH0_IP"
                                 echo "alias is ${'$'}{ALIAS_IP## }"
-                            """.trimIndent()
+                            """.trimIndent(),
                         )
                         .build()
 
@@ -1396,7 +1396,7 @@ class DockerClientContainerManagementSpec : ShouldSpec({
                     client.uploadToContainer(
                         container,
                         setOf(UploadFile("new-file.txt", 1234, 5678, "0641".toInt(8), "This is the new file\n".encodeToByteArray())),
-                        "/existing-directory"
+                        "/existing-directory",
                     )
 
                     val stdout = Buffer()
@@ -1457,7 +1457,7 @@ class DockerClientContainerManagementSpec : ShouldSpec({
                     client.uploadToContainer(
                         container,
                         setOf(UploadFile("existing-file.txt", 1234, 5678, "0644".toInt(8), "This is the new file\n".encodeToByteArray())),
-                        "/existing-directory"
+                        "/existing-directory",
                     )
 
                     val stdout = Buffer()
@@ -1498,7 +1498,7 @@ class DockerClientContainerManagementSpec : ShouldSpec({
                     client.uploadToContainer(
                         container,
                         setOf(UploadFile("existing-file.txt", 1234, 5678, "644".toInt(8), "This is the new file\n".encodeToByteArray())),
-                        "/existing-directory"
+                        "/existing-directory",
                     )
 
                     val stdout = Buffer()
@@ -1538,7 +1538,7 @@ class DockerClientContainerManagementSpec : ShouldSpec({
                     client.uploadToContainer(
                         container,
                         setOf(UploadDirectory("new-directory", 1234, 5678, "0751".toInt(8))),
-                        "/existing-directory"
+                        "/existing-directory",
                     )
 
                     val stdout = Buffer()
@@ -1598,7 +1598,7 @@ class DockerClientContainerManagementSpec : ShouldSpec({
                     client.uploadToContainer(
                         container,
                         setOf(UploadDirectory("existing-directory", 1234, 5678, "0755".toInt(8))),
-                        "/"
+                        "/",
                     )
 
                     val stdout = Buffer()
@@ -1638,9 +1638,9 @@ class DockerClientContainerManagementSpec : ShouldSpec({
                         container,
                         setOf(
                             UploadFile("new-directory/new-file.txt", 1234, 5678, "0644".toInt(8), "This is the new file\n".encodeToByteArray()),
-                            UploadDirectory("new-directory", 4321, 8765, "0755".toInt(8))
+                            UploadDirectory("new-directory", 4321, 8765, "0755".toInt(8)),
                         ),
-                        "/existing-directory"
+                        "/existing-directory",
                     )
 
                     val stdout = Buffer()
@@ -1680,7 +1680,7 @@ class DockerClientContainerManagementSpec : ShouldSpec({
                         client.uploadToContainer(
                             container,
                             setOf(UploadFile("new-file.txt", 1234, 5678, "0644".toInt(8), "This is the new file\n".encodeToByteArray())),
-                            "/does-not-exist"
+                            "/does-not-exist",
                         )
                     }
 
@@ -1701,7 +1701,7 @@ class DockerClientContainerManagementSpec : ShouldSpec({
                         client.uploadToContainer(
                             container,
                             setOf(UploadDirectory("new-directory", 1234, 5678, "0755".toInt(8))),
-                            "/does-not-exist"
+                            "/does-not-exist",
                         )
                     }
 

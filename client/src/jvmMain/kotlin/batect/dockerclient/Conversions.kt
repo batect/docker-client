@@ -77,7 +77,7 @@ internal fun DockerClientConfiguration(native: ClientConfiguration): DockerClien
         native.host.get(),
         if (native.tls == null) null else DockerClientTLSConfiguration(native.tls!!),
         TLSVerification.fromInsecureSkipVerify(native.insecureSkipVerify.get()),
-        if (configDirectory == "") null else configDirectory.toPath()
+        if (configDirectory == "") null else configDirectory.toPath(),
     )
 }
 
@@ -241,7 +241,7 @@ internal fun ContainerInspectionResult(native: batect.dockerclient.native.Contai
         native.name.get(),
         ContainerHostConfig(native.hostConfig!!),
         ContainerState(native.state!!),
-        ContainerConfig(native.config!!)
+        ContainerConfig(native.config!!),
     )
 
 internal fun ContainerHostConfig(native: batect.dockerclient.native.ContainerHostConfig): ContainerHostConfig =
@@ -250,18 +250,18 @@ internal fun ContainerHostConfig(native: batect.dockerclient.native.ContainerHos
 internal fun ContainerLogConfig(native: batect.dockerclient.native.ContainerLogConfig): ContainerLogConfig =
     ContainerLogConfig(
         native.type.get(),
-        native.config.associate { it.key.get() to it.value.get() }
+        native.config.associate { it.key.get() to it.value.get() },
     )
 
 internal fun ContainerState(native: batect.dockerclient.native.ContainerState): ContainerState =
     ContainerState(
-        if (native.health == null) null else ContainerHealthState(native.health!!)
+        if (native.health == null) null else ContainerHealthState(native.health!!),
     )
 
 internal fun ContainerHealthState(native: batect.dockerclient.native.ContainerHealthState): ContainerHealthState =
     ContainerHealthState(
         native.status.get(),
-        native.log.map { ContainerHealthLogEntry(it) }
+        native.log.map { ContainerHealthLogEntry(it) },
     )
 
 internal fun ContainerHealthLogEntry(native: batect.dockerclient.native.ContainerHealthLogEntry): ContainerHealthLogEntry =
@@ -269,13 +269,13 @@ internal fun ContainerHealthLogEntry(native: batect.dockerclient.native.Containe
         Instant.fromEpochMilliseconds(native.start.get()),
         Instant.fromEpochMilliseconds(native.end.get()),
         native.exitCode.get(),
-        native.output.get()
+        native.output.get(),
     )
 
 internal fun ContainerConfig(native: batect.dockerclient.native.ContainerConfig): ContainerConfig =
     ContainerConfig(
         native.labels.associate { it.key.get() to it.value.get() },
-        if (native.healthcheck == null) null else ContainerHealthcheckConfig(native.healthcheck!!)
+        if (native.healthcheck == null) null else ContainerHealthcheckConfig(native.healthcheck!!),
     )
 
 internal fun ContainerHealthcheckConfig(native: batect.dockerclient.native.ContainerHealthcheckConfig): ContainerHealthcheckConfig =
@@ -284,7 +284,7 @@ internal fun ContainerHealthcheckConfig(native: batect.dockerclient.native.Conta
         native.interval.get().nanoseconds,
         native.timeout.get().nanoseconds,
         native.startPeriod.get().nanoseconds,
-        native.retries.intValue()
+        native.retries.intValue(),
     )
 
 internal fun UploadToContainerRequest(items: Set<UploadItem>): UploadToContainerRequest {
@@ -302,12 +302,12 @@ internal fun Event(native: batect.dockerclient.native.Event): Event = Event(
     native.action.get(),
     Actor(native.actor!!),
     native.scope.get(),
-    fromEpochNanoseconds(native.timestamp.get())
+    fromEpochNanoseconds(native.timestamp.get()),
 )
 
 internal fun Actor(native: batect.dockerclient.native.Actor): Actor = Actor(
     native.id.get(),
-    native.attributes.associate { it.key.get() to it.value.get() }
+    native.attributes.associate { it.key.get() to it.value.get() },
 )
 
 internal fun StreamEventsRequest(since: Instant?, until: Instant?, filters: Map<String, Set<String>>): StreamEventsRequest {
@@ -341,7 +341,7 @@ internal fun CreateExecRequest(jvm: ContainerExecSpec): CreateExecRequest {
 
 internal fun ContainerExecInspectionResult(native: batect.dockerclient.native.InspectExecResult): ContainerExecInspectionResult = ContainerExecInspectionResult(
     if (native.running.get()) null else native.exitCode.get(),
-    native.running.get()
+    native.running.get(),
 )
 
 internal fun StringToStringListPair(key: String, values: Set<String>): StringToStringListPair {

@@ -33,7 +33,7 @@ public data class ImageBuildSpec(
     val targetBuildStage: String = "",
     val builder: BuilderVersion? = null,
     val secrets: Map<String, BuildSecret> = emptyMap(),
-    val sshAgents: Set<SSHAgent> = emptySet()
+    val sshAgents: Set<SSHAgent> = emptySet(),
 ) {
     init {
         if (secrets.isNotEmpty() && builder != BuilderVersion.BuildKit) {

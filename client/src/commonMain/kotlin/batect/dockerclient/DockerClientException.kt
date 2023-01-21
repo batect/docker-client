@@ -22,7 +22,7 @@ package batect.dockerclient
 public expect open class DockerClientException(
     message: String,
     cause: Throwable? = null,
-    golangErrorType: String? = null
+    golangErrorType: String? = null,
 ) : RuntimeException {
     public val golangErrorType: String?
 }
@@ -33,7 +33,7 @@ public expect open class DockerClientException(
 public expect class PingFailedException(
     message: String,
     cause: Throwable? = null,
-    golangErrorType: String? = null
+    golangErrorType: String? = null,
 ) : DockerClientException
 
 /**
@@ -42,7 +42,7 @@ public expect class PingFailedException(
 public expect class GetDaemonVersionInformationFailedException(
     message: String,
     cause: Throwable? = null,
-    golangErrorType: String? = null
+    golangErrorType: String? = null,
 ) : DockerClientException
 
 /**
@@ -51,7 +51,7 @@ public expect class GetDaemonVersionInformationFailedException(
 public expect class VolumeCreationFailedException(
     message: String,
     cause: Throwable? = null,
-    golangErrorType: String? = null
+    golangErrorType: String? = null,
 ) : DockerClientException
 
 /**
@@ -60,7 +60,7 @@ public expect class VolumeCreationFailedException(
 public expect class VolumeDeletionFailedException(
     message: String,
     cause: Throwable? = null,
-    golangErrorType: String? = null
+    golangErrorType: String? = null,
 ) : DockerClientException
 
 /**
@@ -69,7 +69,7 @@ public expect class VolumeDeletionFailedException(
 public expect class ListAllVolumesFailedException(
     message: String,
     cause: Throwable? = null,
-    golangErrorType: String? = null
+    golangErrorType: String? = null,
 ) : DockerClientException
 
 /**
@@ -78,7 +78,7 @@ public expect class ListAllVolumesFailedException(
 public expect class NetworkCreationFailedException(
     message: String,
     cause: Throwable? = null,
-    golangErrorType: String? = null
+    golangErrorType: String? = null,
 ) : DockerClientException
 
 /**
@@ -87,7 +87,7 @@ public expect class NetworkCreationFailedException(
 public expect class NetworkDeletionFailedException(
     message: String,
     cause: Throwable? = null,
-    golangErrorType: String? = null
+    golangErrorType: String? = null,
 ) : DockerClientException
 
 /**
@@ -96,7 +96,7 @@ public expect class NetworkDeletionFailedException(
 public expect class NetworkRetrievalFailedException(
     message: String,
     cause: Throwable? = null,
-    golangErrorType: String? = null
+    golangErrorType: String? = null,
 ) : DockerClientException
 
 /**
@@ -105,7 +105,7 @@ public expect class NetworkRetrievalFailedException(
 public expect class ImagePullFailedException(
     message: String,
     cause: Throwable? = null,
-    golangErrorType: String? = null
+    golangErrorType: String? = null,
 ) : DockerClientException
 
 /**
@@ -114,7 +114,7 @@ public expect class ImagePullFailedException(
 public expect class ImageDeletionFailedException(
     message: String,
     cause: Throwable? = null,
-    golangErrorType: String? = null
+    golangErrorType: String? = null,
 ) : DockerClientException
 
 /**
@@ -123,7 +123,7 @@ public expect class ImageDeletionFailedException(
 public expect class ImageRetrievalFailedException(
     message: String,
     cause: Throwable? = null,
-    golangErrorType: String? = null
+    golangErrorType: String? = null,
 ) : DockerClientException
 
 /**
@@ -132,7 +132,7 @@ public expect class ImageRetrievalFailedException(
 public expect class ImageBuildFailedException(
     message: String,
     cause: Throwable? = null,
-    golangErrorType: String? = null
+    golangErrorType: String? = null,
 ) : DockerClientException
 
 /**
@@ -141,7 +141,7 @@ public expect class ImageBuildFailedException(
 public expect class ImageBuildCachePruneFailedException(
     message: String,
     cause: Throwable? = null,
-    golangErrorType: String? = null
+    golangErrorType: String? = null,
 ) : DockerClientException
 
 /**
@@ -149,7 +149,7 @@ public expect class ImageBuildCachePruneFailedException(
  */
 public class InvalidImageBuildSpecException(
     message: String,
-    cause: Throwable? = null
+    cause: Throwable? = null,
 ) : DockerClientException(message, cause)
 
 /**
@@ -161,7 +161,7 @@ public class InvalidImageBuildSpecException(
  */
 public class UnsupportedImageBuildFeatureException(
     message: String,
-    cause: Throwable? = null
+    cause: Throwable? = null,
 ) : DockerClientException(message, cause)
 
 /**
@@ -170,7 +170,7 @@ public class UnsupportedImageBuildFeatureException(
 public expect class ContainerCreationFailedException(
     message: String,
     cause: Throwable? = null,
-    golangErrorType: String? = null
+    golangErrorType: String? = null,
 ) : DockerClientException
 
 /**
@@ -179,7 +179,7 @@ public expect class ContainerCreationFailedException(
 public expect class ContainerStartFailedException(
     message: String,
     cause: Throwable? = null,
-    golangErrorType: String? = null
+    golangErrorType: String? = null,
 ) : DockerClientException
 
 /**
@@ -188,7 +188,7 @@ public expect class ContainerStartFailedException(
 public expect class ContainerStopFailedException(
     message: String,
     cause: Throwable? = null,
-    golangErrorType: String? = null
+    golangErrorType: String? = null,
 ) : DockerClientException
 
 /**
@@ -197,7 +197,7 @@ public expect class ContainerStopFailedException(
 public expect class ContainerRemovalFailedException(
     message: String,
     cause: Throwable? = null,
-    golangErrorType: String? = null
+    golangErrorType: String? = null,
 ) : DockerClientException
 
 /**
@@ -206,7 +206,7 @@ public expect class ContainerRemovalFailedException(
 public expect class ContainerWaitFailedException(
     message: String,
     cause: Throwable? = null,
-    golangErrorType: String? = null
+    golangErrorType: String? = null,
 ) : DockerClientException
 
 /**
@@ -215,7 +215,7 @@ public expect class ContainerWaitFailedException(
 public expect class AttachToContainerFailedException(
     message: String,
     cause: Throwable? = null,
-    golangErrorType: String? = null
+    golangErrorType: String? = null,
 ) : DockerClientException
 
 /**
@@ -224,7 +224,7 @@ public expect class AttachToContainerFailedException(
 public expect class ContainerInspectionFailedException(
     message: String,
     cause: Throwable? = null,
-    golangErrorType: String? = null
+    golangErrorType: String? = null,
 ) : DockerClientException
 
 /**
@@ -233,7 +233,7 @@ public expect class ContainerInspectionFailedException(
 public expect class ContainerUploadFailedException(
     message: String,
     cause: Throwable? = null,
-    golangErrorType: String? = null
+    golangErrorType: String? = null,
 ) : DockerClientException
 
 /**
@@ -242,7 +242,7 @@ public expect class ContainerUploadFailedException(
 public expect class StreamingEventsFailedException(
     message: String,
     cause: Throwable? = null,
-    golangErrorType: String? = null
+    golangErrorType: String? = null,
 ) : DockerClientException
 
 /**
@@ -251,7 +251,7 @@ public expect class StreamingEventsFailedException(
 public expect class ContainerExecCreationFailedException(
     message: String,
     cause: Throwable? = null,
-    golangErrorType: String? = null
+    golangErrorType: String? = null,
 ) : DockerClientException
 
 /**
@@ -260,7 +260,7 @@ public expect class ContainerExecCreationFailedException(
 public expect class ContainerExecInspectionFailedException(
     message: String,
     cause: Throwable? = null,
-    golangErrorType: String? = null
+    golangErrorType: String? = null,
 ) : DockerClientException
 
 /**
@@ -269,5 +269,5 @@ public expect class ContainerExecInspectionFailedException(
 public expect class StartingContainerExecFailedException(
     message: String,
     cause: Throwable? = null,
-    golangErrorType: String? = null
+    golangErrorType: String? = null,
 ) : DockerClientException

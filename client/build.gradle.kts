@@ -219,7 +219,7 @@ kotlin {
             "compileKotlin${target.name.capitalize()}",
             "compileTestKotlin${target.name.capitalize()}",
             "${target.name}MainKlibrary",
-            "${target.name}TestKlibrary"
+            "${target.name}TestKlibrary",
         ).forEach { taskName ->
             tasks.named(taskName) {
                 onlyIf { target.konanTarget.isSupportedOnThisMachine && (target.konanTarget.isSameOperatingSystemAsHost || runTargetsForOtherHosts) }
@@ -237,7 +237,9 @@ kotlin {
 
 fun KotlinNativeCompilation.addDockerClientWrapperCinterop() {
     val generationTask = golangWrapperProject.tasks.named<GenerateGolangTypes>("generateTypes")
-    val sourceTask = golangWrapperProject.tasks.named<GolangBuild>("buildArchiveLib${konanTarget.golangOSName.capitalize()}${konanTarget.architecture.name.toLowerCase().capitalize()}")
+    val sourceTask = golangWrapperProject.tasks.named<GolangBuild>(
+        "buildArchiveLib${konanTarget.golangOSName.capitalize()}${konanTarget.architecture.name.toLowerCase().capitalize()}",
+    )
 
     cinterops.register("dockerClientWrapper") {
         extraOpts("-libraryPath", sourceTask.get().outputDirectory.get())
@@ -288,13 +290,13 @@ kotlin.targets.configureEach {
 
 val kotestProperties = setOf(
     "kotest.filter.specs",
-    "kotest.filter.tests"
+    "kotest.filter.tests",
 )
 
 val testEnvironmentVariables = setOf(
     "DISABLE_DOCKER_DAEMON_TESTS",
     "DOCKER_CONTAINER_OPERATING_SYSTEM",
-    "DOCKER_CONNECTION_OVER_TCP"
+    "DOCKER_CONNECTION_OVER_TCP",
 ) + kotestProperties + kotestProperties.map { it.replace('.', '_') }
 
 tasks.named<Test>("jvmTest") {
@@ -409,7 +411,7 @@ val dependOnGeneratedCode = setOf(
     "spotlessKotlin",
     "detekt",
     "detektJvmMain",
-    "detektJvmTest"
+    "detektJvmTest",
 )
 
 dependOnGeneratedCode.forEach { task -> tasks.named(task) { dependsOn(generateJvm) } }

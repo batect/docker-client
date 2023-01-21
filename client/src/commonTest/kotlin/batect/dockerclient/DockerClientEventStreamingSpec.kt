@@ -161,7 +161,7 @@ class DockerClientEventStreamingSpec : ShouldSpec({
 
         val filters = mapOf(
             "volume" to setOf(volumeName),
-            "event" to setOf("destroy")
+            "event" to setOf("destroy"),
         )
 
         val events = mutableListOf<Event>()

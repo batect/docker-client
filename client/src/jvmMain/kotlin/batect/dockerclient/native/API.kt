@@ -37,7 +37,16 @@ internal interface API {
     fun StartContainer(@In clientHandle: DockerClientHandle, @In contextHandle: ContextHandle, @In id: kotlin.String): Error?
     fun StopContainer(@In clientHandle: DockerClientHandle, @In contextHandle: ContextHandle, @In id: kotlin.String, @In timeoutSeconds: Long): Error?
     fun RemoveContainer(@In clientHandle: DockerClientHandle, @In contextHandle: ContextHandle, @In id: kotlin.String, @In force: Boolean, @In removeVolumes: Boolean): Error?
-    fun AttachToContainerOutput(@In clientHandle: DockerClientHandle, @In contextHandle: ContextHandle, @In id: kotlin.String, @In stdoutStreamHandle: OutputStreamHandle, @In stderrStreamHandle: OutputStreamHandle, @In stdinStreamHandle: InputStreamHandle, @In onReady: ReadyCallback, @In callbackUserData: Pointer?): Error?
+    fun AttachToContainerOutput(
+        @In clientHandle: DockerClientHandle,
+        @In contextHandle: ContextHandle,
+        @In id: kotlin.String,
+        @In stdoutStreamHandle: OutputStreamHandle,
+        @In stderrStreamHandle: OutputStreamHandle,
+        @In stdinStreamHandle: InputStreamHandle,
+        @In onReady: ReadyCallback,
+        @In callbackUserData: Pointer?,
+    ): Error?
     fun WaitForContainerToExit(@In clientHandle: DockerClientHandle, @In contextHandle: ContextHandle, @In id: kotlin.String, @In onReady: ReadyCallback, @In callbackUserData: Pointer?): WaitForContainerToExitReturn?
     fun InspectContainer(@In clientHandle: DockerClientHandle, @In contextHandle: ContextHandle, @In idOrName: kotlin.String): InspectContainerReturn?
     fun UploadToContainer(@In clientHandle: DockerClientHandle, @In contextHandle: ContextHandle, @In containerID: kotlin.String, @In request: UploadToContainerRequest, @In destinationPath: kotlin.String): Error?

@@ -24,7 +24,7 @@ public typealias ImagePullProgressReceiver = (ImagePullProgressUpdate) -> Unit
 public data class ImagePullProgressUpdate(
     val message: String,
     val detail: ImagePullProgressDetail?,
-    val id: String
+    val id: String,
 )
 
 /**
@@ -40,5 +40,5 @@ public data class ImagePullProgressDetail(
     /**
      * The total number of bytes in this operation.
      */
-    val total: Long
+    val total: Long,
 )

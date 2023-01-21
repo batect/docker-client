@@ -61,7 +61,7 @@ internal fun DockerClientConfiguration(native: batect.dockerclient.native.Client
         native.Host!!.toKString(),
         if (native.TLS == null) null else DockerClientTLSConfiguration(native.TLS!!.pointed),
         TLSVerification.fromInsecureSkipVerify(native.InsecureSkipVerify),
-        if (configDirectory == "") null else configDirectory.toPath()
+        if (configDirectory == "") null else configDirectory.toPath(),
     )
 }
 
@@ -69,7 +69,7 @@ internal fun DockerClientTLSConfiguration(native: TLSConfiguration): DockerClien
     DockerClientTLSConfiguration(
         native.CAFile!!.readBytes(native.CAFileSize),
         native.CertFile!!.readBytes(native.CertFileSize),
-        native.KeyFile!!.readBytes(native.KeyFileSize)
+        native.KeyFile!!.readBytes(native.KeyFileSize),
     )
 
 internal fun VolumeReference(native: batect.dockerclient.native.VolumeReference): VolumeReference =
@@ -85,7 +85,7 @@ internal fun ImagePullProgressUpdate(native: PullImageProgressUpdate): ImagePull
     ImagePullProgressUpdate(
         native.Message!!.toKString(),
         if (native.Detail == null) null else ImagePullProgressDetail(native.Detail!!.pointed),
-        native.ID!!.toKString()
+        native.ID!!.toKString(),
     )
 
 internal fun ImagePullProgressDetail(native: PullImageProgressDetail): ImagePullProgressDetail =
@@ -111,26 +111,26 @@ internal fun contextUploadProgress(native: BuildImageProgressUpdate_ImageBuildCo
 internal fun StepStarting(native: BuildImageProgressUpdate_StepStarting): StepStarting =
     StepStarting(
         native.StepNumber,
-        native.StepName!!.toKString()
+        native.StepName!!.toKString(),
     )
 
 internal fun StepOutput(native: BuildImageProgressUpdate_StepOutput): StepOutput =
     StepOutput(
         native.StepNumber,
-        native.Output!!.toKString()
+        native.Output!!.toKString(),
     )
 
 internal fun StepPullProgressUpdate(native: BuildImageProgressUpdate_StepPullProgressUpdate): StepPullProgressUpdate =
     StepPullProgressUpdate(
         native.StepNumber,
-        ImagePullProgressUpdate(native.PullProgress!!.pointed)
+        ImagePullProgressUpdate(native.PullProgress!!.pointed),
     )
 
 internal fun StepDownloadProgressUpdate(native: BuildImageProgressUpdate_StepDownloadProgressUpdate): StepDownloadProgressUpdate =
     StepDownloadProgressUpdate(
         native.StepNumber,
         native.DownloadedBytes,
-        native.TotalBytes
+        native.TotalBytes,
     )
 
 internal fun StepFinished(native: BuildImageProgressUpdate_StepFinished): StepFinished =
@@ -144,7 +144,7 @@ internal fun ContainerInspectionResult(native: batect.dockerclient.native.Contai
     native.Name!!.toKString(),
     ContainerHostConfig(native.HostConfig!!.pointed),
     ContainerState(native.State!!.pointed),
-    ContainerConfig(native.Config!!.pointed)
+    ContainerConfig(native.Config!!.pointed),
 )
 
 internal fun ContainerHostConfig(native: batect.dockerclient.native.ContainerHostConfig): ContainerHostConfig =
@@ -153,18 +153,18 @@ internal fun ContainerHostConfig(native: batect.dockerclient.native.ContainerHos
 internal fun ContainerLogConfig(native: batect.dockerclient.native.ContainerLogConfig): ContainerLogConfig =
     ContainerLogConfig(
         native.Type!!.toKString(),
-        mapFromStringPairs(native.Config!!, native.ConfigCount)
+        mapFromStringPairs(native.Config!!, native.ConfigCount),
     )
 
 internal fun ContainerState(native: batect.dockerclient.native.ContainerState): ContainerState =
     ContainerState(
-        if (native.Health == null) null else ContainerHealthState(native.Health!!.pointed)
+        if (native.Health == null) null else ContainerHealthState(native.Health!!.pointed),
     )
 
 internal fun ContainerHealthState(native: batect.dockerclient.native.ContainerHealthState): ContainerHealthState =
     ContainerHealthState(
         native.Status!!.toKString(),
-        fromArray(native.Log!!, native.LogCount) { ContainerHealthLogEntry(it) }
+        fromArray(native.Log!!, native.LogCount) { ContainerHealthLogEntry(it) },
     )
 
 internal fun ContainerHealthLogEntry(native: batect.dockerclient.native.ContainerHealthLogEntry): ContainerHealthLogEntry =
@@ -172,13 +172,13 @@ internal fun ContainerHealthLogEntry(native: batect.dockerclient.native.Containe
         Instant.fromEpochMilliseconds(native.Start),
         Instant.fromEpochMilliseconds(native.End),
         native.ExitCode,
-        native.Output!!.toKString()
+        native.Output!!.toKString(),
     )
 
 internal fun ContainerConfig(native: batect.dockerclient.native.ContainerConfig): ContainerConfig =
     ContainerConfig(
         mapFromStringPairs(native.Labels!!, native.LabelsCount),
-        if (native.Healthcheck == null) null else ContainerHealthcheckConfig(native.Healthcheck!!.pointed)
+        if (native.Healthcheck == null) null else ContainerHealthcheckConfig(native.Healthcheck!!.pointed),
     )
 
 internal fun ContainerHealthcheckConfig(native: batect.dockerclient.native.ContainerHealthcheckConfig): ContainerHealthcheckConfig =
@@ -187,7 +187,7 @@ internal fun ContainerHealthcheckConfig(native: batect.dockerclient.native.Conta
         native.Interval.nanoseconds,
         native.Timeout.nanoseconds,
         native.StartPeriod.nanoseconds,
-        native.Retries.toInt()
+        native.Retries.toInt(),
     )
 
 internal fun Event(native: batect.dockerclient.native.Event): Event =
@@ -196,19 +196,19 @@ internal fun Event(native: batect.dockerclient.native.Event): Event =
         native.Action!!.toKString(),
         Actor(native.Actor!!.pointed),
         native.Scope!!.toKString(),
-        fromEpochNanoseconds(native.Timestamp)
+        fromEpochNanoseconds(native.Timestamp),
     )
 
 internal fun Actor(native: batect.dockerclient.native.Actor): Actor =
     Actor(
         native.ID!!.toKString(),
-        mapFromStringPairs(native.Attributes!!, native.AttributesCount)
+        mapFromStringPairs(native.Attributes!!, native.AttributesCount),
     )
 
 internal inline fun <reified NativeType : CPointed, KotlinType> fromArray(
     source: CPointer<CPointerVar<NativeType>>,
     count: ULong,
-    creator: (NativeType) -> KotlinType
+    creator: (NativeType) -> KotlinType,
 ): List<KotlinType> {
     return (0.toULong().until(count))
         .map { i -> creator(source[i.toLong()]!!.pointed) }
@@ -448,5 +448,5 @@ internal fun MemScope.allocCreateExecRequest(spec: ContainerExecSpec): CreateExe
 
 internal fun ContainerExecInspectionResult(native: batect.dockerclient.native.InspectExecResult): ContainerExecInspectionResult = ContainerExecInspectionResult(
     if (native.Running) null else native.ExitCode,
-    native.Running
+    native.Running,
 )

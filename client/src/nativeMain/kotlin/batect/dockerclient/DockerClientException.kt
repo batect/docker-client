@@ -24,7 +24,7 @@ import kotlinx.cinterop.toKString
 public actual open class DockerClientException actual constructor(
     message: String,
     cause: Throwable?,
-    public actual val golangErrorType: String?
+    public actual val golangErrorType: String?,
 ) : RuntimeException(message, cause) {
     internal constructor(error: Error) : this(error.cleanErrorMessage, null, golangErrorType = error.Type!!.toKString())
 
@@ -35,7 +35,7 @@ public actual open class DockerClientException actual constructor(
 public actual class PingFailedException actual constructor(
     message: String,
     cause: Throwable?,
-    golangErrorType: String?
+    golangErrorType: String?,
 ) : DockerClientException(message, cause, golangErrorType) {
     internal constructor(error: Error) : this(error.cleanErrorMessage, null, golangErrorType = error.Type!!.toKString())
 }
@@ -43,7 +43,7 @@ public actual class PingFailedException actual constructor(
 public actual class GetDaemonVersionInformationFailedException actual constructor(
     message: String,
     cause: Throwable?,
-    golangErrorType: String?
+    golangErrorType: String?,
 ) : DockerClientException(message, cause, golangErrorType) {
     internal constructor(error: Error) : this(error.cleanErrorMessage, null, golangErrorType = error.Type!!.toKString())
 }
@@ -51,7 +51,7 @@ public actual class GetDaemonVersionInformationFailedException actual constructo
 public actual class VolumeCreationFailedException actual constructor(
     message: String,
     cause: Throwable?,
-    golangErrorType: String?
+    golangErrorType: String?,
 ) : DockerClientException(message, cause, golangErrorType) {
     internal constructor(error: Error) : this(error.cleanErrorMessage, null, golangErrorType = error.Type!!.toKString())
 }
@@ -59,7 +59,7 @@ public actual class VolumeCreationFailedException actual constructor(
 public actual class VolumeDeletionFailedException actual constructor(
     message: String,
     cause: Throwable?,
-    golangErrorType: String?
+    golangErrorType: String?,
 ) : DockerClientException(message, cause, golangErrorType) {
     internal constructor(error: Error) : this(error.cleanErrorMessage, null, golangErrorType = error.Type!!.toKString())
 }
@@ -67,7 +67,7 @@ public actual class VolumeDeletionFailedException actual constructor(
 public actual class ListAllVolumesFailedException actual constructor(
     message: String,
     cause: Throwable?,
-    golangErrorType: String?
+    golangErrorType: String?,
 ) : DockerClientException(message, cause, golangErrorType) {
     internal constructor(error: Error) : this(error.cleanErrorMessage, null, golangErrorType = error.Type!!.toKString())
 }
@@ -75,7 +75,7 @@ public actual class ListAllVolumesFailedException actual constructor(
 public actual class NetworkCreationFailedException actual constructor(
     message: String,
     cause: Throwable?,
-    golangErrorType: String?
+    golangErrorType: String?,
 ) : DockerClientException(message, cause, golangErrorType) {
     internal constructor(error: Error) : this(error.cleanErrorMessage, null, golangErrorType = error.Type!!.toKString())
 }
@@ -83,7 +83,7 @@ public actual class NetworkCreationFailedException actual constructor(
 public actual class NetworkDeletionFailedException actual constructor(
     message: String,
     cause: Throwable?,
-    golangErrorType: String?
+    golangErrorType: String?,
 ) : DockerClientException(message, cause, golangErrorType) {
     internal constructor(error: Error) : this(error.cleanErrorMessage, null, golangErrorType = error.Type!!.toKString())
 }
@@ -91,7 +91,7 @@ public actual class NetworkDeletionFailedException actual constructor(
 public actual class NetworkRetrievalFailedException actual constructor(
     message: String,
     cause: Throwable?,
-    golangErrorType: String?
+    golangErrorType: String?,
 ) : DockerClientException(message, cause, golangErrorType) {
     internal constructor(error: Error) : this(error.cleanErrorMessage, null, golangErrorType = error.Type!!.toKString())
 }
@@ -99,7 +99,7 @@ public actual class NetworkRetrievalFailedException actual constructor(
 public actual class ImagePullFailedException actual constructor(
     message: String,
     cause: Throwable?,
-    golangErrorType: String?
+    golangErrorType: String?,
 ) : DockerClientException(message, cause, golangErrorType) {
     internal constructor(error: Error) : this(error.cleanErrorMessage, null, golangErrorType = error.Type!!.toKString())
 }
@@ -107,7 +107,7 @@ public actual class ImagePullFailedException actual constructor(
 public actual class ImageDeletionFailedException actual constructor(
     message: String,
     cause: Throwable?,
-    golangErrorType: String?
+    golangErrorType: String?,
 ) : DockerClientException(message, cause, golangErrorType) {
     internal constructor(error: Error) : this(error.cleanErrorMessage, null, golangErrorType = error.Type!!.toKString())
 }
@@ -115,7 +115,7 @@ public actual class ImageDeletionFailedException actual constructor(
 public actual class ImageRetrievalFailedException actual constructor(
     message: String,
     cause: Throwable?,
-    golangErrorType: String?
+    golangErrorType: String?,
 ) : DockerClientException(message, cause, golangErrorType) {
     internal constructor(error: Error) : this(error.cleanErrorMessage, null, golangErrorType = error.Type!!.toKString())
 }
@@ -123,7 +123,7 @@ public actual class ImageRetrievalFailedException actual constructor(
 public actual class ImageBuildFailedException actual constructor(
     message: String,
     cause: Throwable?,
-    golangErrorType: String?
+    golangErrorType: String?,
 ) : DockerClientException(message, cause, golangErrorType) {
     internal constructor(error: Error) : this(error.cleanErrorMessage, null, golangErrorType = error.Type!!.toKString())
 }
@@ -131,7 +131,7 @@ public actual class ImageBuildFailedException actual constructor(
 public actual class ImageBuildCachePruneFailedException actual constructor(
     message: String,
     cause: Throwable?,
-    golangErrorType: String?
+    golangErrorType: String?,
 ) : DockerClientException(message, cause, golangErrorType) {
     internal constructor(error: Error) : this(error.cleanErrorMessage, null, golangErrorType = error.Type!!.toKString())
 }
@@ -139,28 +139,28 @@ public actual class ImageBuildCachePruneFailedException actual constructor(
 public actual class ContainerCreationFailedException actual constructor(
     message: String,
     cause: Throwable?,
-    golangErrorType: String?
+    golangErrorType: String?,
 ) : DockerClientException(message, cause, golangErrorType) {
     internal constructor(error: Error) : this(error.cleanErrorMessage, null, golangErrorType = error.Type!!.toKString())
 }
 public actual class ContainerStartFailedException actual constructor(
     message: String,
     cause: Throwable?,
-    golangErrorType: String?
+    golangErrorType: String?,
 ) : DockerClientException(message, cause, golangErrorType) {
     internal constructor(error: Error) : this(error.cleanErrorMessage, null, golangErrorType = error.Type!!.toKString())
 }
 public actual class ContainerStopFailedException actual constructor(
     message: String,
     cause: Throwable?,
-    golangErrorType: String?
+    golangErrorType: String?,
 ) : DockerClientException(message, cause, golangErrorType) {
     internal constructor(error: Error) : this(error.cleanErrorMessage, null, golangErrorType = error.Type!!.toKString())
 }
 public actual class ContainerRemovalFailedException actual constructor(
     message: String,
     cause: Throwable?,
-    golangErrorType: String?
+    golangErrorType: String?,
 ) : DockerClientException(message, cause, golangErrorType) {
     internal constructor(error: Error) : this(error.cleanErrorMessage, null, golangErrorType = error.Type!!.toKString())
 }
@@ -168,7 +168,7 @@ public actual class ContainerRemovalFailedException actual constructor(
 public actual class ContainerWaitFailedException actual constructor(
     message: String,
     cause: Throwable?,
-    golangErrorType: String?
+    golangErrorType: String?,
 ) : DockerClientException(message, cause, golangErrorType) {
     internal constructor(error: Error) : this(error.cleanErrorMessage, null, golangErrorType = error.Type!!.toKString())
 }
@@ -176,7 +176,7 @@ public actual class ContainerWaitFailedException actual constructor(
 public actual class AttachToContainerFailedException actual constructor(
     message: String,
     cause: Throwable?,
-    golangErrorType: String?
+    golangErrorType: String?,
 ) : DockerClientException(message, cause, golangErrorType) {
     internal constructor(error: Error) : this(error.cleanErrorMessage, null, golangErrorType = error.Type!!.toKString())
 }
@@ -184,7 +184,7 @@ public actual class AttachToContainerFailedException actual constructor(
 public actual class ContainerInspectionFailedException actual constructor(
     message: String,
     cause: Throwable?,
-    golangErrorType: String?
+    golangErrorType: String?,
 ) : DockerClientException(message, cause, golangErrorType) {
     internal constructor(error: Error) : this(error.cleanErrorMessage, null, golangErrorType = error.Type!!.toKString())
 }
@@ -192,7 +192,7 @@ public actual class ContainerInspectionFailedException actual constructor(
 public actual class ContainerUploadFailedException actual constructor(
     message: String,
     cause: Throwable?,
-    golangErrorType: String?
+    golangErrorType: String?,
 ) : DockerClientException(message, cause, golangErrorType) {
     internal constructor(error: Error) : this(error.cleanErrorMessage, null, golangErrorType = error.Type!!.toKString())
 }
@@ -200,7 +200,7 @@ public actual class ContainerUploadFailedException actual constructor(
 public actual class StreamingEventsFailedException actual constructor(
     message: String,
     cause: Throwable?,
-    golangErrorType: String?
+    golangErrorType: String?,
 ) : DockerClientException(message, cause, golangErrorType) {
     internal constructor(error: Error) : this(error.cleanErrorMessage, null, golangErrorType = error.Type!!.toKString())
 }
@@ -208,7 +208,7 @@ public actual class StreamingEventsFailedException actual constructor(
 public actual class ContainerExecCreationFailedException actual constructor(
     message: String,
     cause: Throwable?,
-    golangErrorType: String?
+    golangErrorType: String?,
 ) : DockerClientException(message, cause, golangErrorType) {
     internal constructor(error: Error) : this(error.cleanErrorMessage, null, golangErrorType = error.Type!!.toKString())
 }
@@ -216,7 +216,7 @@ public actual class ContainerExecCreationFailedException actual constructor(
 public actual class ContainerExecInspectionFailedException actual constructor(
     message: String,
     cause: Throwable?,
-    golangErrorType: String?
+    golangErrorType: String?,
 ) : DockerClientException(message, cause, golangErrorType) {
     internal constructor(error: Error) : this(error.cleanErrorMessage, null, golangErrorType = error.Type!!.toKString())
 }
@@ -224,7 +224,7 @@ public actual class ContainerExecInspectionFailedException actual constructor(
 public actual class StartingContainerExecFailedException actual constructor(
     message: String,
     cause: Throwable?,
-    golangErrorType: String?
+    golangErrorType: String?,
 ) : DockerClientException(message, cause, golangErrorType) {
     internal constructor(error: Error) : this(error.cleanErrorMessage, null, golangErrorType = error.Type!!.toKString())
 }

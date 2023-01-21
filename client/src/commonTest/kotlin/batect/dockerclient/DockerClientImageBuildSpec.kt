@@ -40,7 +40,7 @@ class DockerClientImageBuildSpec : ShouldSpec({
             }
 
             progressUpdatesReceived shouldEndWith listOf(
-                BuildComplete(image)
+                BuildComplete(image),
             )
         }
     }

@@ -29,7 +29,7 @@ public data class ContainerInspectionResult(
     val name: String,
     val hostConfig: ContainerHostConfig,
     val state: ContainerState,
-    val config: ContainerConfig
+    val config: ContainerConfig,
 )
 
 /**
@@ -39,7 +39,7 @@ public data class ContainerInspectionResult(
  * @see [DockerClient.inspectContainer]
  */
 public data class ContainerHostConfig(
-    val logConfig: ContainerLogConfig
+    val logConfig: ContainerLogConfig,
 )
 
 /**
@@ -50,7 +50,7 @@ public data class ContainerHostConfig(
  */
 public data class ContainerLogConfig(
     val type: String,
-    val config: Map<String, String>
+    val config: Map<String, String>,
 )
 
 /**
@@ -60,7 +60,7 @@ public data class ContainerLogConfig(
  * @see [DockerClient.inspectContainer]
  */
 public data class ContainerState(
-    val health: ContainerHealthState?
+    val health: ContainerHealthState?,
 )
 
 /**
@@ -71,7 +71,7 @@ public data class ContainerState(
  */
 public data class ContainerHealthState(
     val status: String,
-    val log: List<ContainerHealthLogEntry>
+    val log: List<ContainerHealthLogEntry>,
 )
 
 /**
@@ -84,7 +84,7 @@ public data class ContainerHealthLogEntry(
     val start: Instant,
     val end: Instant,
     val exitCode: Long,
-    val output: String
+    val output: String,
 )
 
 /**
@@ -95,7 +95,7 @@ public data class ContainerHealthLogEntry(
  */
 public data class ContainerConfig(
     val labels: Map<String, String>,
-    val healthcheck: ContainerHealthcheckConfig?
+    val healthcheck: ContainerHealthcheckConfig?,
 )
 
 /**
@@ -109,5 +109,5 @@ public data class ContainerHealthcheckConfig(
     val interval: Duration?,
     val timeout: Duration?,
     val startPeriod: Duration?,
-    val retries: Int?
+    val retries: Int?,
 )

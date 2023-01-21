@@ -56,7 +56,7 @@ public data class ContainerCreationSpec(
     val labels: Map<String, String> = emptyMap(),
     val attachStdin: Boolean = false,
     val stdinOnce: Boolean = false,
-    val openStdin: Boolean = false
+    val openStdin: Boolean = false,
 ) {
     internal fun ensureValid() {
         if (networkAliases.isNotEmpty() && network == null) {
@@ -152,7 +152,8 @@ public data class ContainerCreationSpec(
             return this
         }
 
-        public fun withDeviceMount(localPath: Path, containerPath: String, permissions: String = DeviceMount.defaultPermissions): Builder = withDeviceMount(DeviceMount(localPath, containerPath, permissions))
+        public fun withDeviceMount(localPath: Path, containerPath: String, permissions: String = DeviceMount.defaultPermissions): Builder =
+            withDeviceMount(DeviceMount(localPath, containerPath, permissions))
 
         public fun withDeviceMount(mount: DeviceMount): Builder {
             spec = spec.copy(deviceMounts = spec.deviceMounts + mount)
@@ -160,7 +161,8 @@ public data class ContainerCreationSpec(
             return this
         }
 
-        public fun withExposedPort(localPort: Long, containerPort: Long, protocol: String = ExposedPort.defaultProtocol): Builder = withExposedPort(ExposedPort(localPort, containerPort, protocol))
+        public fun withExposedPort(localPort: Long, containerPort: Long, protocol: String = ExposedPort.defaultProtocol): Builder =
+            withExposedPort(ExposedPort(localPort, containerPort, protocol))
 
         public fun withExposedPort(port: ExposedPort): Builder {
             spec = spec.copy(exposedPorts = spec.exposedPorts + port)

@@ -89,14 +89,14 @@ class DockerClientConfigurationBuilderSpec : ShouldSpec({
             .withTLSConfiguration(
                 rootTestCertificatesDirectory / "ca.pem",
                 rootTestCertificatesDirectory / "cert.pem",
-                rootTestCertificatesDirectory / "key.pem"
+                rootTestCertificatesDirectory / "key.pem",
             )
             .build()
 
         config.tls shouldBe DockerClientTLSConfiguration(
             systemFileSystem.readAllBytes(rootTestCertificatesDirectory / "ca.pem"),
             systemFileSystem.readAllBytes(rootTestCertificatesDirectory / "cert.pem"),
-            systemFileSystem.readAllBytes(rootTestCertificatesDirectory / "key.pem")
+            systemFileSystem.readAllBytes(rootTestCertificatesDirectory / "key.pem"),
         )
     }
 
@@ -108,7 +108,7 @@ class DockerClientConfigurationBuilderSpec : ShouldSpec({
                 .withTLSConfiguration(
                     caFilePath,
                     rootTestCertificatesDirectory / "cert.pem",
-                    rootTestCertificatesDirectory / "key.pem"
+                    rootTestCertificatesDirectory / "key.pem",
                 )
                 .build()
         }
@@ -124,7 +124,7 @@ class DockerClientConfigurationBuilderSpec : ShouldSpec({
                 .withTLSConfiguration(
                     rootTestCertificatesDirectory / "ca.pem",
                     certFilePath,
-                    rootTestCertificatesDirectory / "key.pem"
+                    rootTestCertificatesDirectory / "key.pem",
                 )
                 .build()
         }
@@ -140,7 +140,7 @@ class DockerClientConfigurationBuilderSpec : ShouldSpec({
                 .withTLSConfiguration(
                     rootTestCertificatesDirectory / "ca.pem",
                     rootTestCertificatesDirectory / "cert.pem",
-                    keyFilePath
+                    keyFilePath,
                 )
                 .build()
         }

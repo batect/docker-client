@@ -53,10 +53,10 @@ class DockerClientImagePullSpec : ShouldSpec({
             //   docker push ghcr.io/batect/docker-client:sample-authenticated-image
             //
             // If you need to configure credentials locally: https://docs.github.com/en/packages/working-with-a-github-packages-registry/working-with-the-container-registry#authenticating-to-the-container-registry
-            "that requires authentication to pull" to "ghcr.io/batect/docker-client:sample-authenticated-image"
+            "that requires authentication to pull" to "ghcr.io/batect/docker-client:sample-authenticated-image",
         )
         ContainerOperatingSystem.Windows -> mapOf(
-            "with a tag" to defaultWindowsTestImage
+            "with a tag" to defaultWindowsTestImage,
         )
     }
 
@@ -111,7 +111,7 @@ class DockerClientImagePullSpec : ShouldSpec({
             progressUpdatesReceived shouldContainAnyOf setOf(
                 ImagePullProgressUpdate("Downloading", ImagePullProgressDetail(0, layerSize), layerId),
                 ImagePullProgressUpdate("Downloading", ImagePullProgressDetail(layerSize, layerSize), layerId),
-                ImagePullProgressUpdate("Download complete", ImagePullProgressDetail(0, 0), layerId)
+                ImagePullProgressUpdate("Download complete", ImagePullProgressDetail(0, 0), layerId),
             )
 
             progressUpdatesReceived.forAtLeastOne {
@@ -124,7 +124,7 @@ class DockerClientImagePullSpec : ShouldSpec({
             progressUpdatesReceived shouldEndWith listOf(
                 ImagePullProgressUpdate("Pull complete", ImagePullProgressDetail(0, 0), layerId),
                 ImagePullProgressUpdate("Digest: sha256:ed32e6eb4f059d2ac57e47413855d737db00c21f39edb0a5845c3a30a18a7263", null, ""),
-                ImagePullProgressUpdate("Status: Downloaded newer image for $imageWithoutTag", null, "")
+                ImagePullProgressUpdate("Status: Downloaded newer image for $imageWithoutTag", null, ""),
             )
         }
     }
@@ -155,7 +155,7 @@ class DockerClientImagePullSpec : ShouldSpec({
 
         progressUpdatesReceived shouldStartWith listOf(
             ImagePullProgressUpdate("Pulling from windows/nanoserver", null, image),
-            ImagePullProgressUpdate("Pulling fs layer", ImagePullProgressDetail(0, 0), layerId)
+            ImagePullProgressUpdate("Pulling fs layer", ImagePullProgressDetail(0, 0), layerId),
         )
 
         progressUpdatesReceived.forAtLeastOne {
@@ -177,7 +177,7 @@ class DockerClientImagePullSpec : ShouldSpec({
         progressUpdatesReceived shouldEndWith listOf(
             ImagePullProgressUpdate("Pull complete", ImagePullProgressDetail(0, 0), layerId),
             ImagePullProgressUpdate("Digest: sha256:4f06e1d8263b934d2e88dc1c6ff402f5b499c4d19ad6d0e2a5b9ee945f782928", null, ""),
-            ImagePullProgressUpdate("Status: Downloaded newer image for $image", null, "")
+            ImagePullProgressUpdate("Status: Downloaded newer image for $image", null, ""),
         )
     }
 
@@ -216,7 +216,7 @@ class DockerClientImagePullSpec : ShouldSpec({
             "Error response from daemon: manifest for batect/this-image-does-not-exist:abc123 not found: manifest unknown: manifest unknown",
 
             // User is not logged in
-            "Error response from daemon: pull access denied for batect/this-image-does-not-exist, repository does not exist or may require 'docker login': denied: requested access to the resource is denied"
+            "Error response from daemon: pull access denied for batect/this-image-does-not-exist, repository does not exist or may require 'docker login': denied: requested access to the resource is denied",
         )
     }
 
@@ -234,12 +234,12 @@ class DockerClientImagePullSpec : ShouldSpec({
             ContainerOperatingSystem.Linux -> setOf(
                 "no matching manifest for linux/amd64 in the manifest list entries",
                 "no matching manifest for linux/arm64/v8 in the manifest list entries",
-                "image operating system \"windows\" cannot be used on this platform"
+                "image operating system \"windows\" cannot be used on this platform",
             )
             ContainerOperatingSystem.Windows -> setOf(
                 "no matching manifest for windows/amd64 in the manifest list entries",
                 "image operating system \"linux\" cannot be used on this platform",
-                "image operating system \"linux\" cannot be used on this platform: operating system is not supported"
+                "image operating system \"linux\" cannot be used on this platform: operating system is not supported",
             )
         }
 
