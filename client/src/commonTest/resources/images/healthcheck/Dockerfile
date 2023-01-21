@@ -1,4 +1,4 @@
-FROM alpine:3.17.0
+FROM alpine:3.17.1
 
 COPY healthcheck.sh /healthcheck.sh
 COPY alternative-healthcheck.sh /alternative-healthcheck.sh
