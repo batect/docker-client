@@ -1368,8 +1368,8 @@ class DockerClientContainerManagementSpec : ShouldSpec({
 
                     eventually(3.seconds, 200.milliseconds) {
                         withTimeout(200) {
-                            HttpClient().use { httpClient ->
-                                setOf("http://localhost:9000", "http://localhost:9001").forEach { url ->
+                            setOf("http://localhost:9000", "http://localhost:9001").forEach { url ->
+                                HttpClient().use { httpClient ->
                                     val response = httpClient.get(url)
                                     response.status shouldBe HttpStatusCode.OK
                                 }
