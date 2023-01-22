@@ -18,8 +18,11 @@ package batect.dockerclient.buildtools
 
 import jnr.ffi.Platform
 
-enum class OperatingSystem(val zigName: String) {
-    Darwin("macos"),
+enum class OperatingSystem(
+    val zigName: String,
+    val cABI: String = "gnu",
+) {
+    Darwin("macos", cABI = "none"),
     Linux("linux"),
     Windows("windows"),
     ;
