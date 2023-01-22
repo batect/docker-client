@@ -125,7 +125,7 @@ class DockerClientBuildKitImageBuildSpec : ShouldSpec({
             progressUpdatesReceived shouldContainInOrder listOf(
                 StepStarting(dockerfileLoadStep.stepNumber, "[internal] load build definition from Dockerfile"),
                 StepContextUploadProgress(dockerfileLoadStep.stepNumber, 0),
-                StepFinished(dockerfileLoadStep.stepNumber)
+                StepFinished(dockerfileLoadStep.stepNumber),
             )
 
             progressUpdatesReceived.forAtLeastOne {
@@ -146,12 +146,12 @@ class DockerClientBuildKitImageBuildSpec : ShouldSpec({
                 StepStarting(dockerignoreLoadStep.stepNumber, "[internal] load .dockerignore"),
                 StepContextUploadProgress(dockerignoreLoadStep.stepNumber, 0),
                 StepContextUploadProgress(dockerignoreLoadStep.stepNumber, 2),
-                StepFinished(dockerignoreLoadStep.stepNumber)
+                StepFinished(dockerignoreLoadStep.stepNumber),
             )
 
             progressUpdatesReceived shouldContainInOrder listOf(
                 StepStarting(3, "[internal] load metadata for docker.io/library/alpine:3.14.2"),
-                StepFinished(3)
+                StepFinished(3),
             )
 
             progressUpdatesReceived.filterIsInstance<StepStarting>().forAtLeastOne {
@@ -169,7 +169,7 @@ class DockerClientBuildKitImageBuildSpec : ShouldSpec({
                 StepFinished(pullStep.stepNumber + 1),
                 StepStarting(pullStep.stepNumber + 2, "exporting to image"),
                 StepFinished(pullStep.stepNumber + 2),
-                BuildComplete(image)
+                BuildComplete(image),
             )
         }
 
@@ -344,7 +344,7 @@ class DockerClientBuildKitImageBuildSpec : ShouldSpec({
                     StepFinished(progressUpdateStepNumber),
                     StepStarting(progressUpdateStepNumber + 1, "exporting to image"),
                     StepFinished(progressUpdateStepNumber + 1),
-                    BuildComplete(image)
+                    BuildComplete(image),
                 )
             }
         }
@@ -547,7 +547,7 @@ class DockerClientBuildKitImageBuildSpec : ShouldSpec({
                 "executor failed running [/bin/sh -c echo \"This command has failed!\" && exit 1]: exit code: 1",
 
                 // Docker 19.03 uses this error message:
-                "failed to solve with frontend dockerfile.v0: failed to build LLB: executor failed running [/bin/sh -c echo \"This command has failed!\" && exit 1]: runc did not terminate sucessfully"
+                "failed to solve with frontend dockerfile.v0: failed to build LLB: executor failed running [/bin/sh -c echo \"This command has failed!\" && exit 1]: runc did not terminate sucessfully",
             )
 
             val outputText = output.readUtf8().trim()
@@ -565,7 +565,7 @@ class DockerClientBuildKitImageBuildSpec : ShouldSpec({
             progressUpdatesReceived.filterIsInstance<StepStarting>().forAtLeastOne {
                 it.stepName shouldBeIn setOf(
                     "[1/2] FROM docker.io/library/alpine:3.14.2",
-                    "[1/2] FROM docker.io/library/alpine:3.14.2@sha256:e1c082e3d3c45cccac829840a25941e679c25d438cc8412c2fa221cf1a824e6a"
+                    "[1/2] FROM docker.io/library/alpine:3.14.2@sha256:e1c082e3d3c45cccac829840a25941e679c25d438cc8412c2fa221cf1a824e6a",
                 )
             }
 
@@ -575,7 +575,7 @@ class DockerClientBuildKitImageBuildSpec : ShouldSpec({
 
             progressUpdatesReceived shouldContainAnyOf setOf(
                 BuildFailed("executor failed running [/bin/sh -c echo \"This command has failed!\" && exit 1]: exit code: 1"),
-                BuildFailed("failed to solve with frontend dockerfile.v0: failed to build LLB: executor failed running [/bin/sh -c echo \"This command has failed!\" && exit 1]: runc did not terminate sucessfully")
+                BuildFailed("failed to solve with frontend dockerfile.v0: failed to build LLB: executor failed running [/bin/sh -c echo \"This command has failed!\" && exit 1]: runc did not terminate sucessfully"),
             )
 
             progressUpdatesReceived.forNone {
@@ -603,7 +603,7 @@ class DockerClientBuildKitImageBuildSpec : ShouldSpec({
                 "failed to solve with frontend dockerfile.v0: failed to create LLB definition: pull access denied, repository does not exist or may require authorization: server message: insufficient_scope: authorization failed",
 
                 // Docker 19.03 uses this error message:
-                "failed to solve with frontend dockerfile.v0: failed to build LLB: failed to load cache key: pull access denied, repository does not exist or may require authorization: server message: insufficient_scope: authorization failed"
+                "failed to solve with frontend dockerfile.v0: failed to build LLB: failed to load cache key: pull access denied, repository does not exist or may require authorization: server message: insufficient_scope: authorization failed",
             )
 
             val outputText = output.readUtf8().trim()
@@ -617,7 +617,7 @@ class DockerClientBuildKitImageBuildSpec : ShouldSpec({
             progressUpdatesReceived shouldContainAnyOf setOf(
                 BuildFailed("failed to solve with frontend dockerfile.v0: failed to create LLB definition: docker.io/batect/this-image-does-not-exist:1.0: not found"),
                 BuildFailed("failed to solve with frontend dockerfile.v0: failed to create LLB definition: pull access denied, repository does not exist or may require authorization: server message: insufficient_scope: authorization failed"),
-                BuildFailed("failed to solve with frontend dockerfile.v0: failed to build LLB: failed to load cache key: pull access denied, repository does not exist or may require authorization: server message: insufficient_scope: authorization failed")
+                BuildFailed("failed to solve with frontend dockerfile.v0: failed to build LLB: failed to load cache key: pull access denied, repository does not exist or may require authorization: server message: insufficient_scope: authorization failed"),
             )
 
             progressUpdatesReceived.forNone {

@@ -23,5 +23,5 @@ package batect.dockerclient
  */
 public data class ContainerExecInspectionResult(
     val exitCode: Long?,
-    val running: Boolean
+    val running: Boolean,
 )

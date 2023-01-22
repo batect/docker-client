@@ -30,7 +30,7 @@ public data class DockerClientConfiguration(
     val host: String,
     val tls: DockerClientTLSConfiguration? = null,
     val daemonIdentityVerification: TLSVerification = TLSVerification.Enabled,
-    val configurationDirectory: Path? = null
+    val configurationDirectory: Path? = null,
 ) {
     public companion object {
         /**
@@ -74,14 +74,14 @@ public data class DockerClientConfiguration(
         public fun withTLSConfiguration(
             caFilePath: Path,
             certFilePath: Path,
-            keyFilePath: Path
+            keyFilePath: Path,
         ): Builder {
             configuration = configuration.copy(
                 tls = DockerClientTLSConfiguration(
                     readAllBytes(caFilePath, "CA certificate"),
                     readAllBytes(certFilePath, "Client certificate"),
-                    readAllBytes(keyFilePath, "Client key")
-                )
+                    readAllBytes(keyFilePath, "Client key"),
+                ),
             )
 
             return this
@@ -125,7 +125,7 @@ public data class DockerClientConfiguration(
 public data class DockerClientTLSConfiguration(
     val caFile: ByteArray,
     val certFile: ByteArray,
-    val keyFile: ByteArray
+    val keyFile: ByteArray,
 ) {
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
@@ -155,7 +155,8 @@ public data class DockerClientTLSConfiguration(
  */
 public enum class TLSVerification(internal val insecureSkipVerify: Boolean) {
     Enabled(false),
-    InsecureDisabled(true);
+    InsecureDisabled(true),
+    ;
 
     internal companion object {
         internal fun fromInsecureSkipVerify(value: Boolean): TLSVerification = when (value) {

@@ -109,7 +109,7 @@ class DockerClientContainerExecSpec : ShouldSpec({
                     .withCommand(
                         "sh",
                         "-c",
-                        "echo 'Hello stdout' >/dev/stdout && echo 'Hello stderr' >/dev/stderr && sleep 5 && echo 'Stdout should never receive this' >/dev/stdout && echo 'Stderr should never receive this' >/dev/stderr"
+                        "echo 'Hello stdout' >/dev/stdout && echo 'Hello stderr' >/dev/stderr && sleep 5 && echo 'Stdout should never receive this' >/dev/stdout && echo 'Stderr should never receive this' >/dev/stderr",
                     )
                     .withStdoutAttached()
                     .withStderrAttached()
@@ -162,7 +162,7 @@ class DockerClientContainerExecSpec : ShouldSpec({
                 // If the output is streamed with any kind of buffering, it will be received by our test sink above as one write.
                 stdout.writesReceived shouldBe listOf(
                     "Line 1\n",
-                    "Line 2\n"
+                    "Line 2\n",
                 )
             }
         }
@@ -402,7 +402,7 @@ class DockerClientContainerExecSpec : ShouldSpec({
 
                 exception.message shouldBeIn setOf(
                     "Error response from daemon: OCI runtime exec failed: exec failed: container_linux.go:380: starting container process caused: exec: \"this-command-does-not-exist\": executable file not found in \$PATH: unknown",
-                    "Error response from daemon: OCI runtime exec failed: exec failed: unable to start container process: exec: \"this-command-does-not-exist\": executable file not found in \$PATH: unknown"
+                    "Error response from daemon: OCI runtime exec failed: exec failed: unable to start container process: exec: \"this-command-does-not-exist\": executable file not found in \$PATH: unknown",
                 )
             }
         }
@@ -473,7 +473,7 @@ class DockerClientContainerExecSpec : ShouldSpec({
 
                             echo "This is stdout" >/dev/stdout
                             echo "This is stderr" >/dev/stderr
-                        """.trimIndent()
+                        """.trimIndent(),
                     )
                     .withStdoutAttached()
                     .withStderrAttached()
@@ -511,7 +511,7 @@ class DockerClientContainerExecSpec : ShouldSpec({
 
                             echo "This is stdout" >/dev/stdout
                             echo "This is stderr" >/dev/stderr
-                        """.trimIndent()
+                        """.trimIndent(),
                     )
                     .withStdoutAttached()
                     .withStderrAttached()
@@ -552,7 +552,7 @@ class DockerClientContainerExecSpec : ShouldSpec({
                                 # Is not a TTY
                                 exit 2
                             fi
-                        """.trimIndent()
+                        """.trimIndent(),
                     )
                     .withStdoutAttached()
                     .withStderrAttached()
@@ -584,7 +584,7 @@ class DockerClientContainerExecSpec : ShouldSpec({
                                 # Is not a TTY
                                 exit 2
                             fi
-                        """.trimIndent()
+                        """.trimIndent(),
                     )
                     .withStdoutAttached()
                     .withStderrAttached()
@@ -611,7 +611,7 @@ class DockerClientContainerExecSpec : ShouldSpec({
                         """
                             echo "UID: $(id -u)"
                             echo "GID: $(id -g)"
-                        """.trimIndent()
+                        """.trimIndent(),
                     )
                     .withStdoutAttached()
                     .withStderrAttached()

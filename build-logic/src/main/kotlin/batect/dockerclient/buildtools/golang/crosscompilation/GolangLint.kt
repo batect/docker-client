@@ -77,7 +77,7 @@ abstract class GolangLint @Inject constructor(private val execActionFactory: Exe
             linter.binary.toString(),
             "run",
             "--timeout",
-            "5m"
+            "5m",
         )
 
         action.execute().assertNormalExitValue()

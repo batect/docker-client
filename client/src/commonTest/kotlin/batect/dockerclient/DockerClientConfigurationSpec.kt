@@ -108,7 +108,7 @@ class DockerClientConfigurationSpec : ShouldSpec({
                             configuration.tls shouldBe DockerClientTLSConfiguration(
                                 systemFileSystem.readAllBytes(tlsDirectory / "ca.pem"),
                                 systemFileSystem.readAllBytes(tlsDirectory / "cert.pem"),
-                                systemFileSystem.readAllBytes(tlsDirectory / "key.pem")
+                                systemFileSystem.readAllBytes(tlsDirectory / "key.pem"),
                             )
                         }
 
@@ -155,7 +155,7 @@ class DockerClientConfigurationSpec : ShouldSpec({
                             configuration.tls shouldBe DockerClientTLSConfiguration(
                                 systemFileSystem.readAllBytes(tlsDirectory / "ca.pem"),
                                 byteArrayOf(),
-                                systemFileSystem.readAllBytes(tlsDirectory / "key.pem")
+                                systemFileSystem.readAllBytes(tlsDirectory / "key.pem"),
                             )
                         }
 
@@ -179,7 +179,7 @@ class DockerClientConfigurationSpec : ShouldSpec({
                             configuration.tls shouldBe DockerClientTLSConfiguration(
                                 systemFileSystem.readAllBytes(tlsDirectory / "ca.pem"),
                                 systemFileSystem.readAllBytes(tlsDirectory / "cert.pem"),
-                                byteArrayOf()
+                                byteArrayOf(),
                             )
                         }
 
@@ -202,7 +202,7 @@ class DockerClientConfigurationSpec : ShouldSpec({
                         configuration.tls shouldBe DockerClientTLSConfiguration(
                             systemFileSystem.readAllBytes(tlsDirectory / "ca.pem"),
                             systemFileSystem.readAllBytes(tlsDirectory / "cert.pem"),
-                            systemFileSystem.readAllBytes(tlsDirectory / "key.pem")
+                            systemFileSystem.readAllBytes(tlsDirectory / "key.pem"),
                         )
                     }
 
@@ -227,7 +227,7 @@ class DockerClientConfigurationSpec : ShouldSpec({
                     configuration.tls shouldBe DockerClientTLSConfiguration(
                         systemFileSystem.readAllBytes(tlsDirectory / "ca.pem"),
                         systemFileSystem.readAllBytes(tlsDirectory / "cert.pem"),
-                        systemFileSystem.readAllBytes(tlsDirectory / "key.pem")
+                        systemFileSystem.readAllBytes(tlsDirectory / "key.pem"),
                     )
                 }
 
@@ -277,7 +277,7 @@ class DockerClientConfigurationSpec : ShouldSpec({
                     configuration.tls shouldBe DockerClientTLSConfiguration(
                         systemFileSystem.readAllBytes(tlsDirectory / "ca.pem"),
                         systemFileSystem.readAllBytes(tlsDirectory / "cert.pem"),
-                        systemFileSystem.readAllBytes(tlsDirectory / "key.pem")
+                        systemFileSystem.readAllBytes(tlsDirectory / "key.pem"),
                     )
                 }
             }

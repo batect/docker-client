@@ -90,7 +90,7 @@ internal actual class RealDockerClient actual constructor(configuration: DockerC
                     response.APIVersion!!.toKString(),
                     response.OSType!!.toKString(),
                     response.Experimental,
-                    BuilderVersion.fromAPI(response.BuilderVersion!!.toKString())
+                    BuilderVersion.fromAPI(response.BuilderVersion!!.toKString()),
                 )
             }
         }
@@ -112,7 +112,7 @@ internal actual class RealDockerClient actual constructor(configuration: DockerC
                     response.GitCommit!!.toKString(),
                     response.OperatingSystem!!.toKString(),
                     response.Architecture!!.toKString(),
-                    response.Experimental
+                    response.Experimental,
                 )
             }
         }
@@ -261,7 +261,7 @@ internal actual class RealDockerClient actual constructor(configuration: DockerC
                             throw ImageBuildFailedException(
                                 "Image build progress receiver threw an exception: ${callbackState.exceptionThrown}",
                                 callbackState.exceptionThrown,
-                                errorType
+                                errorType,
                             )
                         }
 
@@ -322,7 +322,7 @@ internal actual class RealDockerClient actual constructor(configuration: DockerC
         stdout: TextOutput?,
         stderr: TextOutput?,
         stdin: TextInput?,
-        attachedNotification: ReadyNotification?
+        attachedNotification: ReadyNotification?,
     ) {
         stdout?.prepareStream().use { stdoutStream ->
             stderr?.prepareStream().use { stderrStream ->
@@ -344,7 +344,7 @@ internal actual class RealDockerClient actual constructor(configuration: DockerC
                                     stderrStream?.outputStreamHandle ?: 0.toULong(),
                                     stdinStream?.inputStreamHandle ?: 0.toULong(),
                                     callback,
-                                    callbackUserData
+                                    callbackUserData,
                                 ).ifFailed { error ->
                                     if (error.pointed.Type!!.toKString() == "main.ReadyCallbackFailedError") {
                                         throw callbackState.exceptionThrown!!
@@ -451,7 +451,7 @@ internal actual class RealDockerClient actual constructor(configuration: DockerC
         attachTTY: Boolean,
         stdout: TextOutput?,
         stderr: TextOutput?,
-        stdin: TextInput?
+        stdin: TextInput?,
     ) {
         stdout?.prepareStream().use { stdoutStream ->
             stderr?.prepareStream().use { stderrStream ->
@@ -470,7 +470,7 @@ internal actual class RealDockerClient actual constructor(configuration: DockerC
                                     attachTTY,
                                     stdoutStream?.outputStreamHandle ?: 0.toULong(),
                                     stderrStream?.outputStreamHandle ?: 0.toULong(),
-                                    stdinStream?.inputStreamHandle ?: 0.toULong()
+                                    stdinStream?.inputStreamHandle ?: 0.toULong(),
                                 ).ifFailed { error ->
                                     throw StartingContainerExecFailedException(error.pointed)
                                 }
@@ -501,7 +501,7 @@ internal actual class RealDockerClient actual constructor(configuration: DockerC
                         context.handle,
                         allocStreamEventsRequest(since, until, filters).ptr,
                         callback,
-                        callbackUserData
+                        callbackUserData,
                     ).ifFailed { error ->
                         val errorType = error.pointed.Type!!.toKString()
 
@@ -513,7 +513,7 @@ internal actual class RealDockerClient actual constructor(configuration: DockerC
                             throw StreamingEventsFailedException(
                                 "Event receiver threw an exception: ${callbackState.exceptionThrown}",
                                 callbackState.exceptionThrown,
-                                errorType
+                                errorType,
                             )
                         } else {
                             // Event receiver aborted streaming - do not propagate the exception.

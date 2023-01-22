@@ -63,7 +63,7 @@ internal actual class RealDockerClient actual constructor(configuration: DockerC
                     response.apiVersion.get(),
                     response.osType.get(),
                     response.experimental.get(),
-                    BuilderVersion.fromAPI(response.builderVersion.get())
+                    BuilderVersion.fromAPI(response.builderVersion.get()),
                 )
             }
         }
@@ -85,7 +85,7 @@ internal actual class RealDockerClient actual constructor(configuration: DockerC
                     response.gitCommit.get(),
                     response.operatingSystem.get(),
                     response.architecture.get(),
-                    response.experimental.get()
+                    response.experimental.get(),
                 )
             }
         }
@@ -245,7 +245,7 @@ internal actual class RealDockerClient actual constructor(configuration: DockerC
                                 throw ImageBuildFailedException(
                                     "Image build progress receiver threw an exception: $exceptionThrownInCallback",
                                     exceptionThrownInCallback,
-                                    ret.error!!.type.get()
+                                    ret.error!!.type.get(),
                                 )
                             }
 
@@ -313,7 +313,7 @@ internal actual class RealDockerClient actual constructor(configuration: DockerC
         stdout: TextOutput?,
         stderr: TextOutput?,
         stdin: TextInput?,
-        attachedNotification: ReadyNotification?
+        attachedNotification: ReadyNotification?,
     ) {
         val callback = ReadyCallback(attachedNotification)
 
@@ -334,7 +334,7 @@ internal actual class RealDockerClient actual constructor(configuration: DockerC
                                 stderrStream?.outputStreamHandle?.toLong() ?: 0,
                                 stdinStream?.inputStreamHandle?.toLong() ?: 0,
                                 callback,
-                                null
+                                null,
                             ).ifFailed { error ->
                                 if (error.type.get() == "main.ReadyCallbackFailedError") {
                                     throw callback.exceptionThrownInCallback!!
@@ -474,7 +474,7 @@ internal actual class RealDockerClient actual constructor(configuration: DockerC
                                     attachTTY,
                                     stdoutStream?.outputStreamHandle?.toLong() ?: 0,
                                     stderrStream?.outputStreamHandle?.toLong() ?: 0,
-                                    stdinStream?.inputStreamHandle?.toLong() ?: 0
+                                    stdinStream?.inputStreamHandle?.toLong() ?: 0,
                                 ).ifFailed { error ->
                                     throw StartingContainerExecFailedException(error)
                                 }

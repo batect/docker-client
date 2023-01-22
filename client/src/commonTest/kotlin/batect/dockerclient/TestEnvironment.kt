@@ -62,11 +62,11 @@ expect val testEnvironmentOperatingSystem: OperatingSystem
 
 enum class ContainerOperatingSystem {
     Linux,
-    Windows
+    Windows,
 }
 
 enum class OperatingSystem {
     Linux,
     Windows,
-    MacOS
+    MacOS,
 }

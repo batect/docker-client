@@ -37,7 +37,7 @@ abstract class GolangCrossCompilationTask : GolangTask() {
 
     protected fun prepareEnvironment(
         targetOperatingSystem: OperatingSystem,
-        targetArchitecture: Architecture
+        targetArchitecture: Architecture,
     ): CompletableFuture<GolangCrossCompilationEnvironment> {
         val golangEnvironmentProvider = golangEnvironmentService.get().getOrPrepareEnvironment(golangVersion.get(), this)
         val zigEnvironmentProvider = zigEnvironmentService.get().getOrPrepareEnvironment(zigVersion.get(), this)
@@ -49,7 +49,7 @@ abstract class GolangCrossCompilationTask : GolangTask() {
             GolangCrossCompilationEnvironment(
                 golangEnvironment.root,
                 golangEnvironment.compiler,
-                environmentVariablesForTarget(zigEnvironment, targetOperatingSystem, targetArchitecture)
+                environmentVariablesForTarget(zigEnvironment, targetOperatingSystem, targetArchitecture),
             )
         }
     }
@@ -57,7 +57,7 @@ abstract class GolangCrossCompilationTask : GolangTask() {
     private fun environmentVariablesForTarget(
         zigEnvironment: ZigEnvironment,
         targetOperatingSystem: OperatingSystem,
-        targetArchitecture: Architecture
+        targetArchitecture: Architecture,
     ): Map<String, String> {
         val rootCacheDirectory = project.buildDir.resolve("zig").resolve("cache").resolve(this.name)
 
@@ -68,7 +68,7 @@ abstract class GolangCrossCompilationTask : GolangTask() {
             "CC" to zigCompilerCommandLine(zigEnvironment, "cc", targetOperatingSystem, targetArchitecture),
             "CXX" to zigCompilerCommandLine(zigEnvironment, "c++", targetOperatingSystem, targetArchitecture),
             "ZIG_LOCAL_CACHE_DIR" to rootCacheDirectory.resolve("local").absolutePath,
-            "ZIG_GLOBAL_CACHE_DIR" to rootCacheDirectory.resolve("global").absolutePath
+            "ZIG_GLOBAL_CACHE_DIR" to rootCacheDirectory.resolve("global").absolutePath,
         )
     }
 
@@ -76,7 +76,7 @@ abstract class GolangCrossCompilationTask : GolangTask() {
         zigEnvironment: ZigEnvironment,
         compilerType: String,
         targetOperatingSystem: OperatingSystem,
-        targetArchitecture: Architecture
+        targetArchitecture: Architecture,
     ): String {
         val target = "${targetArchitecture.zigName}-${targetOperatingSystem.zigName}-gnu"
 
@@ -115,5 +115,5 @@ abstract class GolangCrossCompilationTask : GolangTask() {
 data class GolangCrossCompilationEnvironment(
     val golangRoot: Path,
     val golangCompiler: Path,
-    val environmentVariables: Map<String, String>
+    val environmentVariables: Map<String, String>,
 )

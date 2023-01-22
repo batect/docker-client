@@ -25,5 +25,5 @@ public data class PingResponse(
     val apiVersion: String,
     val osType: String,
     val experimental: Boolean,
-    val builderVersion: BuilderVersion
+    val builderVersion: BuilderVersion,
 )

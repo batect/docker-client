@@ -97,7 +97,7 @@ abstract class GolangBuild @Inject constructor(private val workerExecutor: Worke
             "-buildmode=c-${targetBinaryType.get().name.lowercase()}",
             *targetSpecificGoBuildArgs,
             "-o",
-            outputLibraryFile.get().toString()
+            outputLibraryFile.get().toString(),
         )
     }
 

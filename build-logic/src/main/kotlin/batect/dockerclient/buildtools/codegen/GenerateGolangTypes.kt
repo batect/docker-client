@@ -47,25 +47,25 @@ abstract class GenerateGolangTypes : DefaultTask() {
         sourceFile.convention(
             project.provider {
                 project.rootProject.layout.projectDirectory.file("codegen/types.yml")
-            }
+            },
         )
 
         headerFile.convention(
             project.provider {
                 project.layout.projectDirectory.file("src/types.h")
-            }
+            },
         )
 
         cFile.convention(
             project.provider {
                 project.layout.projectDirectory.file("src/types.c")
-            }
+            },
         )
 
         goFile.convention(
             project.provider {
                 project.layout.projectDirectory.file("src/types.go")
-            }
+            },
         )
     }
 
@@ -90,10 +90,10 @@ abstract class GenerateGolangTypes : DefaultTask() {
         return when (type) {
             is StructType -> setOf(
                 CMethod.alloc(type),
-                CMethod.free(type)
+                CMethod.free(type),
             )
             is CallbackType -> setOf(
-                CMethod.invoke(type)
+                CMethod.invoke(type),
             )
             else -> emptySet()
         }
@@ -103,7 +103,7 @@ abstract class GenerateGolangTypes : DefaultTask() {
         return setOf(
             CMethod.createArray(elementType),
             CMethod.setArrayElement(elementType),
-            CMethod.getArrayElement(elementType)
+            CMethod.getArrayElement(elementType),
         )
     }
 
@@ -126,7 +126,7 @@ abstract class GenerateGolangTypes : DefaultTask() {
             #define EXPORTED_FUNCTION
             #endif
 
-            """.trimIndent()
+            """.trimIndent(),
         )
 
         types.forEach { generateHeaderFileContentForType(builder, it) }
@@ -135,7 +135,7 @@ abstract class GenerateGolangTypes : DefaultTask() {
         builder.appendLine(
             """
             #endif
-            """.trimIndent()
+            """.trimIndent(),
         )
 
         Files.writeString(headerFile.get().asFile.toPath(), builder, Charsets.UTF_8)
@@ -186,7 +186,7 @@ abstract class GenerateGolangTypes : DefaultTask() {
             """
                 #include <stdlib.h>
                 #include "${headerFile.get().asFile.name}"
-            """.trimIndent()
+            """.trimIndent(),
         )
 
         methods.forEach { method ->
@@ -212,7 +212,7 @@ abstract class GenerateGolangTypes : DefaultTask() {
             import "C"
             import "unsafe"
 
-            """.trimIndent()
+            """.trimIndent(),
         )
 
         types.forEach { type ->
@@ -241,7 +241,7 @@ abstract class GenerateGolangTypes : DefaultTask() {
             """
             ) ${type.golangName} {
                 value := C.Alloc${type.name}()
-            """.trimIndent()
+            """.trimIndent(),
         )
 
         type.fields.forEach { (fieldName, fieldType) -> builder.appendLine(generateGoConstructorSetter(type, fieldName, fieldType)) }
@@ -251,7 +251,7 @@ abstract class GenerateGolangTypes : DefaultTask() {
 
                 return value
             }
-            """.trimIndent()
+            """.trimIndent(),
         )
 
         builder.appendLine()
@@ -271,7 +271,9 @@ abstract class GenerateGolangTypes : DefaultTask() {
                 |    }
                 |
                 """.trimMargin()
-            is CallbackType -> throw UnsupportedOperationException("Embedding callback types in structs is not supported. Field $fieldName of ${structType.name} contains callback type ${fieldType.name}.")
+            is CallbackType -> throw UnsupportedOperationException(
+                "Embedding callback types in structs is not supported. Field $fieldName of ${structType.name} contains callback type ${fieldType.name}.",
+            )
         }
     }
 
@@ -283,12 +285,15 @@ abstract class GenerateGolangTypes : DefaultTask() {
     }
 
     private fun generateGoInvoke(builder: StringBuilder, type: CallbackType) {
+        val parameterDeclarations = type.parameters.joinToString(", ") { "${it.name} ${it.type.golangName}" }
+        val parameterNames = type.parameters.joinToString(", ") { it.name }
+
         builder.appendLine(
             """
-                func invoke${type.name}(method ${type.golangName}, userData unsafe.Pointer, ${type.parameters.joinToString(", ") { "${it.name} ${it.type.golangName}" }}) bool {
-                    return bool(C.Invoke${type.name}(method, userData, ${type.parameters.joinToString(", ") { it.name }}))
+                func invoke${type.name}(method ${type.golangName}, userData unsafe.Pointer, $parameterDeclarations) bool {
+                    return bool(C.Invoke${type.name}(method, userData, $parameterNames))
                 }
-            """.trimIndent()
+            """.trimIndent(),
         )
 
         builder.appendLine()
@@ -298,7 +303,7 @@ abstract class GenerateGolangTypes : DefaultTask() {
         val name: String,
         val returnType: String?,
         val parameters: List<CMethodParameter>,
-        val body: String
+        val body: String,
     ) {
         private val parameterList: String = parameters.joinToString(", ") { "${it.type} ${it.name}" }
 
@@ -340,7 +345,7 @@ abstract class GenerateGolangTypes : DefaultTask() {
                     "Alloc${type.name}",
                     "${type.name}*",
                     emptyList(),
-                    builder.toString()
+                    builder.toString(),
                 )
             }
 
@@ -354,7 +359,7 @@ abstract class GenerateGolangTypes : DefaultTask() {
                         return;
                     }
 
-                    """.trimIndent()
+                    """.trimIndent(),
                 )
 
                 pointerFields.forEach { (fieldName, fieldType) ->
@@ -367,7 +372,7 @@ abstract class GenerateGolangTypes : DefaultTask() {
                     "Free${type.name}",
                     null,
                     listOf(CMethodParameter("value", "${type.name}*")),
-                    builder.toString()
+                    builder.toString(),
                 )
             }
 
@@ -391,21 +396,21 @@ abstract class GenerateGolangTypes : DefaultTask() {
                 "Create${elementType.yamlName}Array",
                 "${elementType.cName}*",
                 listOf(CMethodParameter("size", "uint64_t")),
-                "return malloc(size * sizeof(${elementType.cName}));"
+                "return malloc(size * sizeof(${elementType.cName}));",
             )
 
             fun setArrayElement(elementType: TypeInformation): CMethod = CMethod(
                 "Set${elementType.yamlName}ArrayElement",
                 null,
                 listOf(CMethodParameter("array", "${elementType.cName}*"), CMethodParameter("index", "uint64_t"), CMethodParameter("value", elementType.cName)),
-                "array[index] = value;"
+                "array[index] = value;",
             )
 
             fun getArrayElement(elementType: TypeInformation): CMethod = CMethod(
                 "Get${elementType.yamlName}ArrayElement",
                 elementType.cName,
                 listOf(CMethodParameter("array", "${elementType.cName}*"), CMethodParameter("index", "uint64_t")),
-                "return array[index];"
+                "return array[index];",
             )
 
             fun invoke(callback: CallbackType): CMethod {
@@ -423,8 +428,13 @@ abstract class GenerateGolangTypes : DefaultTask() {
                 return CMethod(
                     "Invoke${callback.name}",
                     "bool",
-                    listOf(CMethodParameter("method", callback.cName), CMethodParameter("userData", "void*")) + callback.parameters.map { CMethodParameter(it.name, it.type.cName) },
-                    body.toString()
+                    listOf(
+                        CMethodParameter("method", callback.cName),
+                        CMethodParameter("userData", "void*"),
+                    ) + callback.parameters.map {
+                        CMethodParameter(it.name, it.type.cName)
+                    },
+                    body.toString(),
                 )
             }
         }
@@ -432,7 +442,7 @@ abstract class GenerateGolangTypes : DefaultTask() {
 
     private data class CMethodParameter(
         val name: String,
-        val type: String
+        val type: String,
     )
 
     private fun List<TypeInformation>.findAllTypesUsedAsArrayElements(): Set<TypeInformation> = this

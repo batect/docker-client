@@ -21,7 +21,8 @@ package batect.dockerclient
  */
 public enum class BuilderVersion {
     Legacy,
-    BuildKit;
+    BuildKit,
+    ;
 
     internal companion object {
         internal fun fromAPI(value: String): BuilderVersion =

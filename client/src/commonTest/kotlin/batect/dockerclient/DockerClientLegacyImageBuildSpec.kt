@@ -85,7 +85,7 @@ class DockerClientLegacyImageBuildSpec : ShouldSpec({
 
             progressUpdatesReceived shouldStartWith listOf(
                 ImageBuildContextUploadProgress(2048),
-                StepStarting(1, "FROM alpine:3.14.2")
+                StepStarting(1, "FROM alpine:3.14.2"),
             )
 
             progressUpdatesReceived shouldEndWith listOf(
@@ -93,7 +93,7 @@ class DockerClientLegacyImageBuildSpec : ShouldSpec({
                 StepStarting(2, "RUN echo \"Hello world!\""),
                 StepOutput(2, "Hello world!\n"),
                 StepFinished(2),
-                BuildComplete(image)
+                BuildComplete(image),
             )
         }
 
@@ -240,7 +240,7 @@ class DockerClientLegacyImageBuildSpec : ShouldSpec({
                 progressUpdatesReceived shouldContainAnyOf setOf(
                     StepPullProgressUpdate(1, ImagePullProgressUpdate("Downloading", ImagePullProgressDetail(0, layerSize), layerId)),
                     StepPullProgressUpdate(1, ImagePullProgressUpdate("Downloading", ImagePullProgressDetail(layerSize, layerSize), layerId)),
-                    StepPullProgressUpdate(1, ImagePullProgressUpdate("Download complete", ImagePullProgressDetail(0, 0), layerId))
+                    StepPullProgressUpdate(1, ImagePullProgressUpdate("Download complete", ImagePullProgressDetail(0, 0), layerId)),
                 )
 
                 progressUpdatesReceived.forAtLeastOne {
@@ -258,7 +258,7 @@ class DockerClientLegacyImageBuildSpec : ShouldSpec({
                     StepPullProgressUpdate(1, ImagePullProgressUpdate("Status: Downloaded newer image for $imageReference", null, "")),
                     StepOutput(1, "Successfully tagged $imageTag:latest\n"),
                     StepFinished(1),
-                    BuildComplete(image)
+                    BuildComplete(image),
                 )
             }
         }
@@ -456,7 +456,7 @@ class DockerClientLegacyImageBuildSpec : ShouldSpec({
 
             exception.message shouldBeIn setOf(
                 "manifest for batect/this-image-does-not-exist:1.0 not found: manifest unknown: manifest unknown",
-                "pull access denied for batect/this-image-does-not-exist, repository does not exist or may require 'docker login': denied: requested access to the resource is denied"
+                "pull access denied for batect/this-image-does-not-exist, repository does not exist or may require 'docker login': denied: requested access to the resource is denied",
             )
 
             val outputText = output.readUtf8().trim()
@@ -467,7 +467,7 @@ class DockerClientLegacyImageBuildSpec : ShouldSpec({
 
             progressUpdatesReceived.shouldContainAnyOf(
                 BuildFailed("manifest for batect/this-image-does-not-exist:1.0 not found: manifest unknown: manifest unknown"),
-                BuildFailed("pull access denied for batect/this-image-does-not-exist, repository does not exist or may require 'docker login': denied: requested access to the resource is denied")
+                BuildFailed("pull access denied for batect/this-image-does-not-exist, repository does not exist or may require 'docker login': denied: requested access to the resource is denied"),
             )
 
             progressUpdatesReceived.forNone {
@@ -634,7 +634,7 @@ class DockerClientLegacyImageBuildSpec : ShouldSpec({
 
                 progressUpdatesReceived shouldStartWith listOf(
                     ImageBuildContextUploadProgress(3072),
-                    StepStarting(1, "FROM mcr.microsoft.com/windows/nanoserver@sha256:4f06e1d8263b934d2e88dc1c6ff402f5b499c4d19ad6d0e2a5b9ee945f782928")
+                    StepStarting(1, "FROM mcr.microsoft.com/windows/nanoserver@sha256:4f06e1d8263b934d2e88dc1c6ff402f5b499c4d19ad6d0e2a5b9ee945f782928"),
                 )
 
                 progressUpdatesReceived shouldEndWith listOf(
@@ -644,7 +644,7 @@ class DockerClientLegacyImageBuildSpec : ShouldSpec({
                     StepStarting(3, "RUN type file.txt"),
                     StepOutput(3, "This is the file.\n"),
                     StepFinished(3),
-                    BuildComplete(image)
+                    BuildComplete(image),
                 )
             } finally {
                 client.deleteImage(image, force = true)

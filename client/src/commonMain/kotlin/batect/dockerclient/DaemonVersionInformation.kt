@@ -28,5 +28,5 @@ public data class DaemonVersionInformation(
     val gitCommit: String,
     val operatingSystem: String,
     val architecture: String,
-    val experimental: Boolean
+    val experimental: Boolean,
 )

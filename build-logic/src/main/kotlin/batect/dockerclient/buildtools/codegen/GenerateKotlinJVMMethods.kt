@@ -48,7 +48,7 @@ abstract class GenerateKotlinJVMMethods : DefaultTask() {
         typesFile.convention(
             project.provider {
                 project.rootProject.layout.projectDirectory.file("codegen/types.yml")
-            }
+            },
         )
     }
 
@@ -103,7 +103,7 @@ abstract class GenerateKotlinJVMMethods : DefaultTask() {
         return FunctionDefinition(
             functionName,
             resolveReturnType(returnTypeName, types, functionName),
-            parameters
+            parameters,
         )
     }
 
@@ -112,13 +112,15 @@ abstract class GenerateKotlinJVMMethods : DefaultTask() {
             .split(",")
             .map { it.trim() }
             .map { parameterSource ->
-                val parsedParameter = parameterDefinitionRegex.matchEntire(parameterSource) ?: throw RuntimeException("Cannot parse parameter definition in function '$functionName': $parameterSource")
+                val parsedParameter = parameterDefinitionRegex.matchEntire(parameterSource) ?: throw RuntimeException(
+                    "Cannot parse parameter definition in function '$functionName': $parameterSource",
+                )
                 val parameterName = parsedParameter.groups["parameterName"]!!.value
                 val parameterType = parsedParameter.groups["parameterType"]!!.value
 
                 FunctionParameter(
                     parameterName,
-                    resolveTypeReference(parameterType, types, "type for parameter '$parameterName' in function '$functionName'")
+                    resolveTypeReference(parameterType, types, "type for parameter '$parameterName' in function '$functionName'"),
                 )
             }
     }
@@ -175,13 +177,13 @@ abstract class GenerateKotlinJVMMethods : DefaultTask() {
                     FunctionDefinition(
                         "Free${type.name}",
                         null,
-                        listOf(FunctionParameter("value", type))
+                        listOf(FunctionParameter("value", type)),
                     ),
                     FunctionDefinition(
                         "Alloc${type.name}",
                         type,
-                        emptyList()
-                    )
+                        emptyList(),
+                    ),
                 )
             }
             .toSet()
@@ -193,7 +195,7 @@ abstract class GenerateKotlinJVMMethods : DefaultTask() {
         builder.appendLine(kotlinFileHeader)
         builder.appendLine(
             """
-            @file:Suppress("LongParameterList", "MaxLineLength")
+            @file:Suppress("LongParameterList", "MaxLineLength", "ktlint")
 
             package batect.dockerclient.native
 
@@ -202,7 +204,7 @@ abstract class GenerateKotlinJVMMethods : DefaultTask() {
 
             @Suppress("FunctionName")
             internal interface API {
-            """.trimIndent()
+            """.trimIndent(),
         )
 
         functions.forEach { function -> builder.appendLine("    ${function.kotlinDefinition}") }
@@ -215,7 +217,7 @@ abstract class GenerateKotlinJVMMethods : DefaultTask() {
     data class FunctionDefinition(
         val name: String,
         val returnType: TypeInformation?,
-        val parameters: List<FunctionParameter>
+        val parameters: List<FunctionParameter>,
     ) {
         val kotlinDefinition: String
             get() {
@@ -242,7 +244,7 @@ abstract class GenerateKotlinJVMMethods : DefaultTask() {
 
     data class FunctionParameter(
         val name: String,
-        val type: TypeInformation
+        val type: TypeInformation,
     ) {
         val kotlinDefinition: String = "@In $name: ${type.jvmParameterName}"
     }
@@ -274,6 +276,7 @@ abstract class GenerateKotlinJVMMethods : DefaultTask() {
             #endif
         """.trimIndent()
 
+        @Suppress("ktlint:max-line-length")
         private val functionDefinitionRegex: Regex = """extern(?: __declspec\(dllexport\))? (?<returnType>[a-zA-Z]+\*?) (?<functionName>[a-zA-Z]+)\((?<parameters>[a-zA-z0-9_,* ]+)?\);""".toRegex()
         private val parameterDefinitionRegex: Regex = """(?<parameterType>[a-zA-Z0-9_]+\*?) (?<parameterName>[a-zA-Z]+)""".toRegex()
     }

@@ -31,7 +31,7 @@ public data class ContainerExecSpec(
     val environmentVariables: Map<String, String> = emptyMap(),
     val workingDirectory: String? = null,
     val userAndGroup: UserAndGroup? = null,
-    val privileged: Boolean = false
+    val privileged: Boolean = false,
 ) {
     internal val environmentVariablesFormattedForDocker: List<String> = environmentVariables.map { "${it.key}=${it.value}" }
     internal val userAndGroupFormattedForDocker: String? = if (userAndGroup == null) null else "${userAndGroup.uid}:${userAndGroup.gid}"

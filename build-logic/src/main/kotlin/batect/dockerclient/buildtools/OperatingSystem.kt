@@ -21,7 +21,8 @@ import jnr.ffi.Platform
 enum class OperatingSystem(val zigName: String) {
     Darwin("macos"),
     Linux("linux"),
-    Windows("windows");
+    Windows("windows"),
+    ;
 
     companion object {
         val current: OperatingSystem = when (val os = Platform.getNativePlatform().os) {

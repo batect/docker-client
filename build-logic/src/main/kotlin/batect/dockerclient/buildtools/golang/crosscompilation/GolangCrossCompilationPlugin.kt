@@ -51,21 +51,21 @@ class GolangCrossCompilationPlugin : Plugin<Project> {
     private fun registerGolangEnvironmentService(target: Project): Provider<GolangEnvironmentService> {
         return target.gradle.sharedServices.registerIfAbsent(
             GolangEnvironmentService::class.jvmName,
-            GolangEnvironmentService::class.java
+            GolangEnvironmentService::class.java,
         ) {}
     }
 
     private fun registerZigEnvironmentService(target: Project): Provider<ZigEnvironmentService> {
         return target.gradle.sharedServices.registerIfAbsent(
             ZigEnvironmentService::class.jvmName,
-            ZigEnvironmentService::class.java
+            ZigEnvironmentService::class.java,
         ) {}
     }
 
     private fun registerLinterService(target: Project): Provider<GolangLinterService> {
         return target.gradle.sharedServices.registerIfAbsent(
             GolangLinterService::class.jvmName,
-            GolangLinterService::class.java
+            GolangLinterService::class.java,
         ) {}
     }
 
@@ -73,7 +73,7 @@ class GolangCrossCompilationPlugin : Plugin<Project> {
         target: Project,
         extension: GolangCrossCompilationPluginExtension,
         golangEnvironmentServiceProvider: Provider<GolangEnvironmentService>,
-        zigEnvironmentServiceProvider: Provider<ZigEnvironmentService>
+        zigEnvironmentServiceProvider: Provider<ZigEnvironmentService>,
     ) {
         target.tasks.withType<GolangTask>().configureEach { task ->
             task.usesService(golangEnvironmentServiceProvider)
@@ -90,7 +90,7 @@ class GolangCrossCompilationPlugin : Plugin<Project> {
 
     private fun configureGolangBuildTaskDefaults(
         target: Project,
-        golangExtension: GolangCrossCompilationPluginExtension
+        golangExtension: GolangCrossCompilationPluginExtension,
     ) {
         target.tasks.withType<GolangBuild>().configureEach { task ->
             task.sourceDirectory.convention(golangExtension.sourceDirectory)
@@ -101,7 +101,7 @@ class GolangCrossCompilationPlugin : Plugin<Project> {
                         .dir(task.targetOperatingSystem.map { it.name.lowercase() }).get()
                         .dir(task.targetArchitecture.map { it.name.lowercase() }).get()
                         .dir(task.targetBinaryType.map { it.name.lowercase() }).get()
-                }
+                },
             )
 
             task.baseOutputName.convention(
@@ -111,7 +111,7 @@ class GolangCrossCompilationPlugin : Plugin<Project> {
                         OperatingSystem.Linux, OperatingSystem.Darwin -> "lib$libraryName"
                         else -> throw IllegalArgumentException("Unknown operating system: $targetOperatingSystem")
                     }
-                }
+                },
             )
 
             task.outputLibraryFile.convention(
@@ -128,12 +128,14 @@ class GolangCrossCompilationPlugin : Plugin<Project> {
                             task.baseOutputName.map { "$it.$extension" }
                         }
 
-                        BinaryType.Archive -> task.libraryName.map { "$it.a" } // Yes, this should be .lib on Windows, but having everything with .a makes the cinterop configuration for Kotlin much easier.
+                        BinaryType.Archive -> task.libraryName.map {
+                            "$it.a"
+                        } // Yes, this should be .lib on Windows, but having everything with .a makes the cinterop configuration for Kotlin much easier.
                         else -> throw IllegalArgumentException("Unknown binary type: $targetBinaryType")
                     }
 
                     task.outputDirectory.zip(fileName) { outputDirectory, name -> outputDirectory.file(name) }
-                }
+                },
             )
 
             task.outputHeaderFile.convention(task.outputDirectory.file(task.libraryName.map { "$it.h" }))

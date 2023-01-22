@@ -37,14 +37,16 @@ class ChecksumsSpec : ShouldSpec({
         context("given a file that does not match the given hash") {
             should("throw an exception") {
                 val file = fixturesRoot.resolve("invalid.txt")
+                val expected = "f427b9be3bcbad6d06551760ccb02ac02861cd0e3a0f8015e46d284ca78031d8"
+                val actual = "c8f829da748dd3e094455afebd80fc92a99482ff9f92b0dd563d3157f25cba50"
 
                 val exception = shouldThrow<ChecksumMismatchException> {
-                    verifyChecksum(file, "f427b9be3bcbad6d06551760ccb02ac02861cd0e3a0f8015e46d284ca78031d8")
+                    verifyChecksum(file, expected)
                 }
 
                 // Why use a regex here? Because we want this test to pass on both Windows and non-Windows machines and we don't
                 // want to hard-code the absolute path to the file here.
-                exception.message shouldMatch """(.*)[/\\]invalid\.txt is expected to have SHA256 hash f427b9be3bcbad6d06551760ccb02ac02861cd0e3a0f8015e46d284ca78031d8, but has hash c8f829da748dd3e094455afebd80fc92a99482ff9f92b0dd563d3157f25cba50\.$""".toRegex()
+                exception.message shouldMatch """(.*)[/\\]invalid\.txt is expected to have SHA256 hash $expected, but has hash $actual\.$""".toRegex()
             }
         }
     }
