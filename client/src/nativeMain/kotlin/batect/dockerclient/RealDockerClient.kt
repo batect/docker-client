@@ -324,6 +324,11 @@ internal actual class RealDockerClient actual constructor(configuration: DockerC
         stdin: TextInput?,
         attachedNotification: ReadyNotification?,
     ) {
+        if (stdout == null && stderr == null && stdin == null) {
+            attachedNotification?.markAsReady()
+            return
+        }
+
         stdout?.prepareStream().use { stdoutStream ->
             stderr?.prepareStream().use { stderrStream ->
                 stdin?.prepareStream().use { stdinStream ->

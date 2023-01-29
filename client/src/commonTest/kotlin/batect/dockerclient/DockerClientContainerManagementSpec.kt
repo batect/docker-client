@@ -713,6 +713,22 @@ class DockerClientContainerManagementSpec : ShouldSpec({
                 }
             }
 
+            should("be able to run a container without attaching input or output streams") {
+                val spec = ContainerCreationSpec.Builder(image)
+                    .withCommand("sh", "-c", "exit 123")
+                    .build()
+
+                val container = client.createContainer(spec)
+
+                try {
+                    val exitCode = client.run(container, null, null, null)
+
+                    exitCode shouldBe 123
+                } finally {
+                    client.removeContainer(container, force = true)
+                }
+            }
+
             should("be able to use Kotlin timeouts to abort running a container while still receiving any output from before the timeout") {
                 val spec = ContainerCreationSpec.Builder(image)
                     .withCommand("sh", "-c", "echo 'Hello stdout' >/dev/stdout && echo 'Hello stderr' >/dev/stderr && sleep 5 && echo 'Stdout should never receive this' >/dev/stdout && echo 'Stderr should never receive this' >/dev/stderr")
