@@ -584,7 +584,7 @@ func (t *buildKitBuildTracer) sendVertexNotifications(
 	processedLogs map[*controlapi.VertexLog]interface{},
 ) error {
 	if !t.haveSeenVertex(v) && v.Started != nil {
-		t.allocateStepNumber(v)
+		t.allocateStepNumber(v.Digest)
 
 		if err := t.sendVertexStartedNotification(v); err != nil {
 			return err
@@ -643,7 +643,7 @@ func (t *buildKitBuildTracer) getStepNumberForDigest(d digest.Digest) int64 {
 	stepNumber, ok := t.vertexDigestsToStepNumbers[d]
 
 	if !ok {
-		panic(fmt.Sprintf("no step number found for digest '%s'", d))
+		return t.allocateStepNumber(d)
 	}
 
 	return stepNumber
@@ -697,9 +697,9 @@ func (t *buildKitBuildTracer) haveSeenVertex(v *controlapi.Vertex) bool {
 	return haveSeen
 }
 
-func (t *buildKitBuildTracer) allocateStepNumber(v *controlapi.Vertex) int64 {
+func (t *buildKitBuildTracer) allocateStepNumber(d digest.Digest) int64 {
 	stepNumber := int64(len(t.vertexDigestsToStepNumbers)) + 1
-	t.vertexDigestsToStepNumbers[v.Digest] = stepNumber
+	t.vertexDigestsToStepNumbers[d] = stepNumber
 
 	return stepNumber
 }
