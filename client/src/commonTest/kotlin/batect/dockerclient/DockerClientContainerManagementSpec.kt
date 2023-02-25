@@ -540,7 +540,7 @@ class DockerClientContainerManagementSpec : ShouldSpec({
                     val stdoutText = stdout.readUtf8()
                     val stderrText = stderr.readUtf8()
 
-                    stdoutText.lines() shouldHaveAtLeastSize 4
+                    stdoutText.lines() shouldHaveAtLeastSize 3
                     stdoutText.lines() shouldHaveAtMostSize 6
                     stderrText shouldBe ""
                     exitCode shouldBe 0

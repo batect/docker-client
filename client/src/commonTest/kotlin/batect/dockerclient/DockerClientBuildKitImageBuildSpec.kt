@@ -543,10 +543,9 @@ class DockerClientBuildKitImageBuildSpec : ShouldSpec({
             }
 
             exception.message shouldBeIn setOf(
-                // Recent versions of Docker use this error message:
+                // Different versions of Docker use different error messages.
+                "process \"/bin/sh -c echo \\\"This command has failed!\\\" && exit 1\" did not complete successfully: exit code: 1",
                 "executor failed running [/bin/sh -c echo \"This command has failed!\" && exit 1]: exit code: 1",
-
-                // Docker 19.03 uses this error message:
                 "failed to solve with frontend dockerfile.v0: failed to build LLB: executor failed running [/bin/sh -c echo \"This command has failed!\" && exit 1]: runc did not terminate sucessfully",
             )
 
@@ -598,11 +597,10 @@ class DockerClientBuildKitImageBuildSpec : ShouldSpec({
             }
 
             exception.message shouldBeIn setOf(
-                // Recent versions of Docker use these error messages:
+                // Different versions of Docker use different error messages.
+                "batect/this-image-does-not-exist:1.0: pull access denied, repository does not exist or may require authorization: server message: insufficient_scope: authorization failed",
                 "failed to solve with frontend dockerfile.v0: failed to create LLB definition: docker.io/batect/this-image-does-not-exist:1.0: not found",
                 "failed to solve with frontend dockerfile.v0: failed to create LLB definition: pull access denied, repository does not exist or may require authorization: server message: insufficient_scope: authorization failed",
-
-                // Docker 19.03 uses this error message:
                 "failed to solve with frontend dockerfile.v0: failed to build LLB: failed to load cache key: pull access denied, repository does not exist or may require authorization: server message: insufficient_scope: authorization failed",
             )
 
