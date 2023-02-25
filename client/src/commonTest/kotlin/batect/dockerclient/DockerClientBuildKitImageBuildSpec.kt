@@ -554,7 +554,7 @@ class DockerClientBuildKitImageBuildSpec : ShouldSpec({
             outputText shouldContain """
                 ^#(\d+) \[2/2] RUN echo "This command has failed!" && exit 1
                 #\1 \d+\.\d+ This command has failed!
-                #\1 ERROR: executor failed running \[/bin/sh -c echo "This command has failed!" && exit 1]: (exit code: 1|runc did not terminate sucessfully)
+                #\1 ERROR: (process "/bin/sh -c echo \\"This command has failed!\\" && exit 1" did not complete successfully: exit code: 1|executor failed running \[/bin/sh -c echo "This command has failed!" && exit 1]: (exit code: 1|runc did not terminate sucessfully))
                 ------
                  > \[2/2] RUN echo "This command has failed!" && exit 1:
                 #\1 \d+\.\d+ This command has failed!
@@ -613,6 +613,7 @@ class DockerClientBuildKitImageBuildSpec : ShouldSpec({
             }
 
             progressUpdatesReceived shouldContainAnyOf setOf(
+                BuildFailed("batect/this-image-does-not-exist:1.0: pull access denied, repository does not exist or may require authorization: server message: insufficient_scope: authorization failed"),
                 BuildFailed("failed to solve with frontend dockerfile.v0: failed to create LLB definition: docker.io/batect/this-image-does-not-exist:1.0: not found"),
                 BuildFailed("failed to solve with frontend dockerfile.v0: failed to create LLB definition: pull access denied, repository does not exist or may require authorization: server message: insufficient_scope: authorization failed"),
                 BuildFailed("failed to solve with frontend dockerfile.v0: failed to build LLB: failed to load cache key: pull access denied, repository does not exist or may require authorization: server message: insufficient_scope: authorization failed"),
