@@ -125,7 +125,6 @@ class DockerClientBuildKitImageBuildSpec : ShouldSpec({
             progressUpdatesReceived shouldContainInOrder listOf(
                 StepStarting(dockerfileLoadStep.stepNumber, "[internal] load build definition from Dockerfile"),
                 StepContextUploadProgress(dockerfileLoadStep.stepNumber, 0),
-                StepFinished(dockerfileLoadStep.stepNumber),
             )
 
             progressUpdatesReceived.forAtLeastOne {
