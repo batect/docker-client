@@ -117,7 +117,7 @@ jobs:
         if: matrix.disableDockerDaemonTests != 1
 
       - name: Build, test and package
-        uses: burrunan/gradle-cache-action@v1.16
+        uses: burrunan/gradle-cache-action@v1.19
         with:
           # client:allTests is disabled until https://github.com/gradle/gradle/issues/21547 is fixed
           arguments: client:check client:jvmJar --scan --exclude-task client:allTests
@@ -173,7 +173,7 @@ jobs:
           key: tools-${{ runner.os }}-${{ hashFiles('**/*.gradle.kts', 'buildSrc/src/**/*.kt') }}
 
       - name: Build, test and package
-        uses: burrunan/gradle-cache-action@v1.16
+        uses: burrunan/gradle-cache-action@v1.19
         with:
           arguments: samples:check
 
@@ -219,7 +219,7 @@ jobs:
           key: tools-${{ runner.os }}-${{ hashFiles('**/*.gradle.kts', 'buildSrc/src/**/*.kt') }}
 
       - name: Run linting
-        uses: burrunan/gradle-cache-action@v1.16
+        uses: burrunan/gradle-cache-action@v1.19
         with:
           arguments: golang-wrapper:check --scan
 
@@ -244,7 +244,7 @@ jobs:
           distribution: temurin
 
       - name: Run linting, tests and other checks
-        uses: burrunan/gradle-cache-action@v1.16
+        uses: burrunan/gradle-cache-action@v1.19
         with:
           arguments: :build-logic:check --scan
 
@@ -290,7 +290,7 @@ jobs:
           key: tools-${{ runner.os }}-${{ hashFiles('**/*.gradle.kts', 'buildSrc/src/**/*.kt') }}
 
       - name: Build documentation
-        uses: burrunan/gradle-cache-action@v1.16
+        uses: burrunan/gradle-cache-action@v1.19
         with:
           arguments: dokkaHtml --scan
 
@@ -349,12 +349,12 @@ jobs:
           key: tools-${{ runner.os }}-${{ hashFiles('**/*.gradle.kts', 'buildSrc/src/**/*.kt') }}
 
       - name: Check JAR contains native libraries for all operating systems
-        uses: burrunan/gradle-cache-action@v1.16
+        uses: burrunan/gradle-cache-action@v1.19
         with:
           arguments: client:checkJarContents --scan
 
       - name: Publish snapshot
-        uses: burrunan/gradle-cache-action@v1.16
+        uses: burrunan/gradle-cache-action@v1.19
         with:
           arguments: publishSnapshot --scan
         env:
@@ -365,7 +365,7 @@ jobs:
         if: github.repository == 'batect/docker-client' && github.ref == 'refs/heads/main' && github.event_name == 'push'
 
       - name: Publish release
-        uses: burrunan/gradle-cache-action@v1.16
+        uses: burrunan/gradle-cache-action@v1.19
         with:
           arguments: publishRelease --scan
         env:
