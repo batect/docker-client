@@ -10,7 +10,7 @@ spotless = "6.15.0"
 [libraries]
 commons-compress = { group = "org.apache.commons", name = "commons-compress", version = "1.22" }
 dokka-base = { group = "org.jetbrains.dokka", name = "dokka-base", version.ref = "dokka" }
-gradle-download-plugin = { group = "de.undercouch", name = "gradle-download-task", version = "5.3.0" }
+gradle-download-plugin = { group = "de.undercouch", name = "gradle-download-task", version = "5.3.1" }
 jnr-ffi = { group = "com.github.jnr", name = "jnr-ffi", version = "2.2.13" }
 jnr-posix = { group = "com.github.jnr", name = "jnr-posix", version = "3.1.16" }
 okio = { group = "com.squareup.okio", name = "okio", version = "3.3.0" }
