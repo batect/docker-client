@@ -1,7 +1,10 @@
 name: CI
 on:
-  - push
-  - pull_request
+  push:
+    branches:
+      - '**'
+      - '!renovate/**'
+  pull_request:
 
 # Cancel PR builds if the PR is updated.
 concurrency:
