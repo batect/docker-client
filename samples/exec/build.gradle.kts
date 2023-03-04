@@ -103,3 +103,7 @@ kotlin {
 application {
     mainClass.set("$rootPackage.ApplicationKt")
 }
+
+java {
+    targetCompatibility = JavaVersion.VERSION_1_8
+}
