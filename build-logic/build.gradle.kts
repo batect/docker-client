@@ -53,10 +53,6 @@ dependencies {
     testImplementation(libs.kotest.runner.junit5)
 }
 
-java {
-    targetCompatibility = JavaVersion.VERSION_11
-}
-
 tasks.withType<Test>() {
     useJUnitPlatform()
 }
