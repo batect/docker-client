@@ -201,7 +201,7 @@ func createSSHProvider(request *imageBuildRequest) (session.Attachable, error) {
 	return sshprovider.NewSSHAgentProvider(request.SSHAgents)
 }
 
-func resetUIDAndGID(path string, stat *fsutiltypes.Stat) bool {
+func resetUIDAndGID(_ string, stat *fsutiltypes.Stat) bool {
 	stat.Uid = 0
 	stat.Gid = 0
 
@@ -632,11 +632,7 @@ func (t *buildKitBuildTracer) sendVertexNotifications(
 func (t *buildKitBuildTracer) sendVertexStartedNotification(v *controlapi.Vertex) error {
 	stepNumber := t.getStepNumberForDigest(v.Digest)
 
-	if err := t.progressCallback.onStepStarting(stepNumber, v.Name); err != nil {
-		return err
-	}
-
-	return nil
+	return t.progressCallback.onStepStarting(stepNumber, v.Name)
 }
 
 func (t *buildKitBuildTracer) getStepNumberForDigest(d digest.Digest) int64 {
@@ -653,21 +649,13 @@ func (t *buildKitBuildTracer) sendVertexCompleteNotification(v *controlapi.Verte
 	stepNumber := t.getStepNumberForDigest(v.Digest)
 	t.completedVertices[v.Digest] = nil
 
-	if err := t.progressCallback.onStepFinished(stepNumber); err != nil {
-		return err
-	}
-
-	return nil
+	return t.progressCallback.onStepFinished(stepNumber)
 }
 
 func (t *buildKitBuildTracer) sendLogNotification(l *controlapi.VertexLog) error {
 	stepNumber := t.getStepNumberForDigest(l.Vertex)
 
-	if err := t.progressCallback.onStepOutput(stepNumber, string(l.Msg)); err != nil {
-		return err
-	}
-
-	return nil
+	return t.progressCallback.onStepOutput(stepNumber, string(l.Msg))
 }
 
 func (t *buildKitBuildTracer) sendStatusNotification(s *controlapi.VertexStatus) error {
