@@ -1,4 +1,4 @@
-FROM alpine:3.17.3
+FROM alpine:3.18.0
 
 RUN echo "Value of FTP_PROXY is $FTP_PROXY"
 RUN echo "Value of ftp_proxy is $ftp_proxy"
