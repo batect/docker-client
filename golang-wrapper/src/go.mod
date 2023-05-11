@@ -4,7 +4,7 @@ go 1.19
 
 require (
 	github.com/docker/cli v20.10.24+incompatible
-	github.com/docker/distribution v2.8.1+incompatible
+	github.com/docker/distribution v2.8.2+incompatible
 	github.com/docker/docker v20.10.24+incompatible
 	github.com/docker/go-connections v0.4.0
 	github.com/moby/buildkit v0.9.3
