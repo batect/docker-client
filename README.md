@@ -83,7 +83,7 @@ This library supports the following:
 | Linux            | ARM64           | :white_check_mark: | :x:                |
 | Windows          | x64             | :white_check_mark: | :white_check_mark: |
 
-Support for ARM64 Linux with Kotlin/Native will be added once kotlinx.coroutines supports it (see https://github.com/Kotlin/kotlinx.coroutines/issues/855).
+Support for ARM64 Linux with Kotlin/Native will be added once Okio supports it (see https://github.com/square/okio/issues/1242).
 
 ### Docker daemon
 
