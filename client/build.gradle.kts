@@ -75,12 +75,10 @@ kotlin {
     }
 
     linuxX64()
+    linuxArm64()
     macosX64()
     macosArm64()
     mingwX64()
-
-    // This is currently not supported by kotest:
-    //  linuxArm64()
 
     sourceSets {
         val commonMain by getting {
@@ -114,6 +112,10 @@ kotlin {
         }
 
         val linuxX64Main by getting {
+            dependsOn(linuxMain)
+        }
+
+        val linuxArm64Main by getting {
             dependsOn(linuxMain)
         }
 
@@ -167,6 +169,10 @@ kotlin {
         }
 
         val linuxX64Test by getting {
+            dependsOn(linuxTest)
+        }
+
+        val linuxArm64Test by getting {
             dependsOn(linuxTest)
         }
 

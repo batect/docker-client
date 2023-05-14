@@ -43,6 +43,7 @@ kotlin {
     }
 
     linuxX64()
+    linuxArm64()
     macosX64()
     macosArm64()
     mingwX64()
@@ -83,6 +84,10 @@ kotlin {
         }
 
         val linuxX64Main by getting {
+            dependsOn(nativeMain)
+        }
+
+        val linuxArm64Main by getting {
             dependsOn(nativeMain)
         }
 

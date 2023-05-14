@@ -76,14 +76,12 @@ Dokka documentation for the latest version of the library is available at https:
 This library supports the following:
 
 | Operating system | Architecture    | Kotlin/JVM         | Kotlin/Native      |
-| ---------------- | --------------- | ------------------ | ------------------ |
+| ---------------- | --------------- | ------------------ |--------------------|
 | macOS            | x64 (Intel)     | :white_check_mark: | :white_check_mark: |
 | macOS            | ARM64 (Silicon) | :white_check_mark: | :white_check_mark: |
 | Linux            | x64             | :white_check_mark: | :white_check_mark: |
-| Linux            | ARM64           | :white_check_mark: | :x:                |
+| Linux            | ARM64           | :white_check_mark: | :white_check_mark: |
 | Windows          | x64             | :white_check_mark: | :white_check_mark: |
-
-Support for ARM64 Linux with Kotlin/Native will be added once kotlinx.coroutines supports it (see https://github.com/Kotlin/kotlinx.coroutines/issues/855).
 
 ### Docker daemon
 
