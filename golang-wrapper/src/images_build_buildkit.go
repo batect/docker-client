@@ -20,7 +20,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/tonistiigi/fsutil"
 	"io"
 	"net"
 	"path/filepath"
@@ -46,6 +45,7 @@ import (
 	"github.com/moby/buildkit/util/progress/progressui"
 	"github.com/moby/buildkit/util/progress/progresswriter"
 	digest "github.com/opencontainers/go-digest"
+	"github.com/tonistiigi/fsutil"
 	fsutiltypes "github.com/tonistiigi/fsutil/types"
 	"golang.org/x/sync/errgroup"
 )
@@ -365,6 +365,7 @@ func (t *buildKitBuildTracer) run() error {
 
 	// We deliberately don't use the build operation's context as the context below - otherwise, error messages might not be printed after the context is cancelled.
 	_, err := progressui.DisplaySolveStatus(context.Background(), "", nil, output, t.displayCh)
+
 	return err
 }
 
