@@ -30,6 +30,7 @@ import (
 	"github.com/docker/cli/cli/command/image/build"
 	"github.com/docker/cli/cli/config/configfile"
 	"github.com/docker/docker/api/types"
+	"github.com/docker/docker/api/types/registry"
 	"github.com/docker/docker/client"
 	"github.com/docker/docker/pkg/archive"
 	"github.com/docker/docker/pkg/idtools"
@@ -114,10 +115,10 @@ func buildImageWithLegacyBuilder(
 
 func createLegacyBuilderImageBuildOptions(docker *client.Client, configFile *configfile.ConfigFile, pathToDockerfile string, request *imageBuildRequest) types.ImageBuildOptions {
 	creds, _ := configFile.GetAllCredentials() // The CLI ignores errors, so do we.
-	authConfigs := make(map[string]types.AuthConfig, len(creds))
+	authConfigs := make(map[string]registry.AuthConfig, len(creds))
 
 	for k, auth := range creds {
-		authConfigs[k] = types.AuthConfig(auth)
+		authConfigs[k] = registry.AuthConfig(auth)
 	}
 
 	opts := createImageBuildOptions(docker, configFile, pathToDockerfile, request)

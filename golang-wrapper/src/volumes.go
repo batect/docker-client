@@ -20,7 +20,6 @@ import (
 	*/
 	"C"
 
-	"github.com/docker/docker/api/types/filters"
 	"github.com/docker/docker/api/types/volume"
 )
 
@@ -29,7 +28,7 @@ func CreateVolume(clientHandle DockerClientHandle, contextHandle ContextHandle, 
 	docker := clientHandle.DockerAPIClient()
 	ctx := contextHandle.Context()
 
-	request := volume.VolumeCreateBody{
+	request := volume.CreateOptions{
 		Name: C.GoString(name),
 	}
 
@@ -59,7 +58,7 @@ func ListAllVolumes(clientHandle DockerClientHandle, contextHandle ContextHandle
 	docker := clientHandle.DockerAPIClient()
 	ctx := contextHandle.Context()
 
-	dockerResponse, err := docker.VolumeList(ctx, filters.NewArgs())
+	dockerResponse, err := docker.VolumeList(ctx, volume.ListOptions{})
 
 	if err != nil {
 		return newListAllVolumesReturn(nil, toError(err))

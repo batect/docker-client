@@ -19,6 +19,7 @@ package batect.dockerclient
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.core.spec.style.ShouldSpec
 import io.kotest.matchers.shouldBe
+import io.kotest.matchers.string.shouldStartWith
 import okio.Path.Companion.toPath
 
 class DockerClientConfigurationSpec : ShouldSpec({
@@ -87,7 +88,7 @@ class DockerClientConfigurationSpec : ShouldSpec({
                         }
                     }
 
-                    exception.message shouldBe """value 'nonsense://host/docker.sock' for DOCKER_HOST environment variable is invalid: Invalid bind address format: nonsense://host/docker.sock"""
+                    exception.message shouldBe """value 'nonsense://host/docker.sock' for DOCKER_HOST environment variable is invalid: invalid bind address format: nonsense://host/docker.sock"""
                 }
             }
 
@@ -287,7 +288,7 @@ class DockerClientConfigurationSpec : ShouldSpec({
             should("throw an appropriate exception") {
                 val exception = shouldThrow<DockerClientException> { DockerClientConfiguration.fromCLIContext(DockerCLIContext("this-context-does-not-exist")) }
 
-                exception.message shouldBe """context "this-context-does-not-exist" does not exist"""
+                exception.message shouldStartWith """context "this-context-does-not-exist": context not found"""
             }
         }
     }

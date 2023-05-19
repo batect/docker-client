@@ -23,7 +23,7 @@ import (
 
 	"github.com/docker/cli/cli/streams"
 	"github.com/docker/docker/client"
-	"github.com/docker/docker/pkg/signal"
+	"github.com/moby/sys/signal"
 )
 
 func monitorTtySize(ctx context.Context, docker *client.Client, stdoutStream *streams.Out, id string, isExec bool) {

@@ -68,6 +68,6 @@ class DockerClientNetworkManagementSpec : ShouldSpec({
             client.deleteNetwork(NetworkReference("this-network-does-not-exist"))
         }
 
-        exception.message shouldBe "No such network: this-network-does-not-exist"
+        exception.message shouldBe "Error response from daemon: network this-network-does-not-exist not found"
     }
 })

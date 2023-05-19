@@ -27,7 +27,6 @@ import (
 	"strings"
 	"unsafe"
 
-	"github.com/docker/cli/cli/command"
 	"github.com/docker/cli/cli/trust"
 	"github.com/docker/distribution/reference"
 	"github.com/docker/docker/api/types"
@@ -57,7 +56,6 @@ func PullImage(
 
 	imgRefAndAuth, err := trust.GetImageReferencesAndAuth(
 		ctx,
-		nil,
 		getAuthResolver(clientHandle),
 		distributionRef.String(),
 	)
@@ -66,7 +64,7 @@ func PullImage(
 		return newPullImageReturn(nil, toError(err))
 	}
 
-	encodedAuth, err := command.EncodeAuthToBase64(*imgRefAndAuth.AuthConfig())
+	encodedAuth, err := registrytypes.EncodeAuthConfig(*imgRefAndAuth.AuthConfig())
 
 	if err != nil {
 		return newPullImageReturn(nil, toError(err))
@@ -89,8 +87,8 @@ func PullImage(
 	return processPullResponse(ctx, docker, responseBody, distributionRef, onProgressUpdate, callbackUserData)
 }
 
-func getAuthResolver(clientHandle DockerClientHandle) func(ctx context.Context, index *registrytypes.IndexInfo) types.AuthConfig {
-	return func(ctx context.Context, index *registrytypes.IndexInfo) types.AuthConfig {
+func getAuthResolver(clientHandle DockerClientHandle) func(ctx context.Context, index *registrytypes.IndexInfo) registrytypes.AuthConfig {
+	return func(ctx context.Context, index *registrytypes.IndexInfo) registrytypes.AuthConfig {
 		configKey := index.Name
 
 		if index.Official {
@@ -100,7 +98,7 @@ func getAuthResolver(clientHandle DockerClientHandle) func(ctx context.Context, 
 		// The CLI ignores errors, so we do the same.
 		auth, _ := clientHandle.ClientConfigFile().GetAuthConfig(configKey)
 
-		return types.AuthConfig(auth)
+		return registrytypes.AuthConfig(auth)
 	}
 }
 
