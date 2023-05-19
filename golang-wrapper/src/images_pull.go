@@ -57,7 +57,6 @@ func PullImage(
 
 	imgRefAndAuth, err := trust.GetImageReferencesAndAuth(
 		ctx,
-		nil,
 		getAuthResolver(clientHandle),
 		distributionRef.String(),
 	)

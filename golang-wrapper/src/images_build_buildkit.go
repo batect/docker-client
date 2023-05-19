@@ -20,6 +20,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/tonistiigi/fsutil"
 	"io"
 	"net"
 	"path/filepath"
@@ -69,7 +70,7 @@ func buildImageWithBuildKitBuilder(
 	configFile := clientHandle.ClientConfigFile()
 	eg, ctx := errgroup.WithContext(ctx)
 	tracer := newBuildKitBuildTracer(outputStreamHandle, eg, onProgressUpdate, callbackUserData)
-	sess, err := createSession(ctx, request, tracer)
+	sess, err := createSession(ctx, request, tracer, configFile)
 
 	if err != nil {
 		return newBuildImageReturn(nil, toError(err))
@@ -121,7 +122,7 @@ type loggingAttachable interface {
 }
 
 // This function is based on trySession() from github.com/docker/cli/command/image/build_session.go
-func createSession(ctx context.Context, request *imageBuildRequest, tracer *buildKitBuildTracer) (*session.Session, error) {
+func createSession(ctx context.Context, request *imageBuildRequest, tracer *buildKitBuildTracer, configFile *configfile.ConfigFile) (*session.Session, error) {
 	sharedKey := buildkit.GetBuildSharedKey(request.ContextDirectory)
 	sess, err := session.NewSession(ctx, filepath.Base(request.ContextDirectory), sharedKey)
 
@@ -135,7 +136,7 @@ func createSession(ctx context.Context, request *imageBuildRequest, tracer *buil
 		return nil, err
 	}
 
-	authProvider, err := createAuthProvider(tracer)
+	authProvider, err := createAuthProvider(tracer, configFile)
 
 	if err != nil {
 		return nil, err
@@ -158,15 +159,13 @@ func createSession(ctx context.Context, request *imageBuildRequest, tracer *buil
 func createFileSyncProvider(request *imageBuildRequest) session.Attachable {
 	dockerfileDir := filepath.Dir(request.PathToDockerfile)
 
-	return filesync.NewFSSyncProvider([]filesync.SyncedDir{
-		{
-			Name: "context",
-			Dir:  request.ContextDirectory,
-			Map:  resetUIDAndGID,
+	return filesync.NewFSSyncProvider(filesync.StaticDirSource{
+		"context": {
+			Dir: request.ContextDirectory,
+			Map: resetUIDAndGID,
 		},
-		{
-			Name: "dockerfile",
-			Dir:  dockerfileDir,
+		"dockerfile": {
+			Dir: dockerfileDir,
 		},
 	})
 }
@@ -181,9 +180,9 @@ func createSecretsProvider(request *imageBuildRequest) (session.Attachable, erro
 	return secretsprovider.NewSecretProvider(store), nil
 }
 
-func createAuthProvider(tracer *buildKitBuildTracer) (session.Attachable, error) {
+func createAuthProvider(tracer *buildKitBuildTracer, configFile *configfile.ConfigFile) (session.Attachable, error) {
 	// At the time of writing, this Writer is just used for warning messages when loading the local config file, so we can safely ignore these messages.
-	authProvider := authprovider.NewDockerAuthProvider(io.Discard)
+	authProvider := authprovider.NewDockerAuthProvider(configFile)
 	authProviderLogger, authProviderSupportsLogging := authProvider.(loggingAttachable)
 
 	if !authProviderSupportsLogging {
@@ -201,11 +200,11 @@ func createSSHProvider(request *imageBuildRequest) (session.Attachable, error) {
 	return sshprovider.NewSSHAgentProvider(request.SSHAgents)
 }
 
-func resetUIDAndGID(_ string, stat *fsutiltypes.Stat) bool {
+func resetUIDAndGID(_ string, stat *fsutiltypes.Stat) fsutil.MapResult {
 	stat.Uid = 0
 	stat.Gid = 0
 
-	return true
+	return fsutil.MapResultKeep
 }
 
 func runSession(ctx context.Context, sess *session.Session, docker *client.Client) error {
@@ -365,7 +364,8 @@ func (t *buildKitBuildTracer) run() error {
 	output := t.outputStreamHandle.OutputStream()
 
 	// We deliberately don't use the build operation's context as the context below - otherwise, error messages might not be printed after the context is cancelled.
-	return progressui.DisplaySolveStatus(context.Background(), "", nil, output, t.displayCh)
+	_, err := progressui.DisplaySolveStatus(context.Background(), "", nil, output, t.displayCh)
+	return err
 }
 
 func (t *buildKitBuildTracer) Stop() {
