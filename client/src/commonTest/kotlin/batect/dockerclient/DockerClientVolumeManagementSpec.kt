@@ -46,6 +46,6 @@ class DockerClientVolumeManagementSpec : ShouldSpec({
             client.deleteVolume(VolumeReference("this-volume-does-not-exist"))
         }
 
-        exception.message shouldBe "No such volume: this-volume-does-not-exist"
+        exception.message shouldBe "Error response from daemon: get this-volume-does-not-exist: no such volume"
     }
 })
