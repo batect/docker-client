@@ -11,8 +11,8 @@ spotless = "6.19.0"
 commons-compress = { group = "org.apache.commons", name = "commons-compress", version = "1.23.0" }
 dokka-base = { group = "org.jetbrains.dokka", name = "dokka-base", version.ref = "dokka" }
 gradle-download-plugin = { group = "de.undercouch", name = "gradle-download-task", version = "5.4.0" }
-jnr-ffi = { group = "com.github.jnr", name = "jnr-ffi", version = "2.2.13" }
-jnr-posix = { group = "com.github.jnr", name = "jnr-posix", version = "3.1.16" }
+jnr-ffi = { group = "com.github.jnr", name = "jnr-ffi", version = "2.2.12" }
+jnr-posix = { group = "com.github.jnr", name = "jnr-posix", version = "3.1.15" }
 okio = { group = "com.squareup.okio", name = "okio", version = "3.3.0" }
 kaml = { group = "com.charleskorn.kaml", name = "kaml", version = "0.54.0" }
 kotest-assertions-core = { group = "io.kotest", name = "kotest-assertions-core", version.ref = "kotest" }
