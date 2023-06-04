@@ -37,8 +37,10 @@ tasks.register("generate") {
 }
 
 reckon {
-    scopeFromProp()
-    snapshotFromProp()
+    setDefaultInferredScope("patch")
+    snapshots()
+    setStageCalc(calcStageFromProp())
+    setScopeCalc(calcScopeFromProp())
 }
 
 nexusPublishing {
