@@ -81,7 +81,7 @@ abstract class GolangCrossCompilationTask : GolangTask() {
         val target = "${targetArchitecture.zigName}-${targetOperatingSystem.zigName}-${targetOperatingSystem.cABI}"
 
         val targetSpecificArgs = when (targetOperatingSystem) {
-            OperatingSystem.Darwin -> """--sysroot "$macOSSystemRootDirectory" "-I/usr/include" "-F/System/Library/Frameworks" "-L/usr/lib""""
+            OperatingSystem.Darwin -> """--sysroot "$macOSSystemRootDirectory" "-I/usr/include" "-F/System/Library/Frameworks" "-L/usr/lib" -lresolv.9"""
             else -> ""
         }
 

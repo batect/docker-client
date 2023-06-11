@@ -60,15 +60,17 @@ abstract class ZigEnvironmentService : BuildService<BuildServiceParameters.None>
     }
 
     private fun downloadAndExtract(version: String, task: Task, zigRoot: Path, downloadsDir: Path): CompletableFuture<Void> {
-        val rootUrl = "https://ziglang.org/download"
+        val rootUrl = "https://ziglang.org"
+        val isReleaseVersion = isReleaseVersion(version)
         val platformName = "${OperatingSystem.current.zigName}-${Architecture.current.zigName}"
         val archiveFileName = "zig-$platformName-$version.$archiveFileExtension"
         val archivePath = downloadsDir.resolve(archiveFileName)
         val checksumFileName = "$archiveFileName.checksums.json"
         val checksumPath = downloadsDir.resolve(checksumFileName)
 
-        val archiveDownload = download(task, "$rootUrl/$version/$archiveFileName", archivePath)
-        val checksumDownload = download(task, "$rootUrl/index.json", checksumPath)
+        val archiveUrl = if (isReleaseVersion) "$rootUrl/download/$archiveFileName" else "$rootUrl/builds/$archiveFileName"
+        val archiveDownload = download(task, archiveUrl, archivePath)
+        val checksumDownload = download(task, "$rootUrl/download/index.json", checksumPath)
 
         return CompletableFuture.allOf(archiveDownload, checksumDownload).thenRun {
             val archiveDownloadResult = archiveDownload.get()
@@ -79,7 +81,9 @@ abstract class ZigEnvironmentService : BuildService<BuildServiceParameters.None>
                 return@thenRun
             }
 
-            verifyArchiveChecksum(archivePath, checksumPath, version)
+            if (isReleaseVersion) {
+                verifyArchiveChecksum(archivePath, checksumPath, version)
+            }
 
             val source = when (OperatingSystem.current) {
                 OperatingSystem.Windows -> task.project.zipTree(archivePath)
@@ -89,6 +93,9 @@ abstract class ZigEnvironmentService : BuildService<BuildServiceParameters.None>
             extract(task, source, zigRoot)
         }
     }
+
+    private val releaseVersionRegex: Regex = Regex("""^\d+\.\d+\.\d+$""")
+    private fun isReleaseVersion(version: String): Boolean = version.matches(releaseVersionRegex)
 
     private fun verifyArchiveChecksum(archivePath: Path, checksumPath: Path, version: String) {
         val expectedChecksum = findExpectedChecksum(checksumPath, version)
