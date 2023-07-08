@@ -17,7 +17,7 @@
 package batect.dockerclient
 
 import batect.dockerclient.io.SinkTextOutput
-import io.kotest.assertions.json.shouldMatchJson
+import io.kotest.assertions.json.shouldEqualJson
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.common.ExperimentalKotest
 import io.kotest.core.spec.style.ShouldSpec
@@ -113,7 +113,7 @@ class DockerClientLegacyImageBuildSpec : ShouldSpec({
                 .joinToString("\n")
                 .substringBefore("Removing intermediate container")
 
-            directoryContents shouldMatchJson """
+            directoryContents shouldEqualJson """
                 [
                   {"type":"directory","name":"/files","user":"root","group":"root","size":4096,"contents":[
                     {"type":"file","name":"Dockerfile","user":"root","group":"root","size":179},
@@ -142,7 +142,7 @@ class DockerClientLegacyImageBuildSpec : ShouldSpec({
                 .joinToString("\n")
                 .substringBefore("Removing intermediate container")
 
-            directoryContents shouldMatchJson """
+            directoryContents shouldEqualJson """
                 [
                   {"type":"directory","name":"/files","user":"root","group":"root","size":4096,"contents":[
                     {"type":"file","name":"Dockerfile","user":"root","group":"root","size":179},
