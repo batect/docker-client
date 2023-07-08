@@ -23,6 +23,7 @@ import kotlinx.cinterop.cstr
 import kotlinx.cinterop.pointed
 import okio.Path
 
+@OptIn(kotlinx.cinterop.ExperimentalForeignApi::class)
 internal actual fun loadConfigurationFromCLIContext(name: String, dockerConfigurationDirectory: Path?): DockerClientConfiguration {
     LoadClientConfigurationFromCLIContext(name.cstr, dockerConfigurationDirectory?.toString()?.cstr)!!.use { ret ->
         if (ret.pointed.Error != null) {

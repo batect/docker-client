@@ -14,6 +14,8 @@
     limitations under the License.
 */
 
+@file:OptIn(kotlinx.cinterop.ExperimentalForeignApi::class)
+
 package batect.dockerclient
 
 import batect.dockerclient.native.BuildImageReturn

@@ -22,6 +22,7 @@ import batect.dockerclient.native.CreateContext
 import batect.dockerclient.native.DestroyContext
 import kotlinx.cinterop.pointed
 
+@OptIn(kotlinx.cinterop.ExperimentalForeignApi::class)
 internal actual class GolangContext : AutoCloseable {
     val handle: ContextHandle = CreateContext()
 

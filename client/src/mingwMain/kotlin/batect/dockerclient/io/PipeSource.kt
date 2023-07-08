@@ -40,6 +40,7 @@ import platform.windows.GetLastError
 import platform.windows.LANG_NEUTRAL
 import platform.windows.SUBLANG_DEFAULT
 
+@OptIn(kotlinx.cinterop.ExperimentalForeignApi::class)
 internal actual class PipeSource actual constructor(private val fd: FileDescriptor) : Source {
     actual override fun timeout(): Timeout = Timeout.NONE
 
@@ -78,6 +79,7 @@ internal actual class PipeSource actual constructor(private val fd: FileDescript
 }
 
 // From Okio (https://github.com/square/okio/blob/master/okio/src/mingwX64Main/kotlin/okio/-Windows.kt)
+@OptIn(kotlinx.cinterop.ExperimentalForeignApi::class)
 internal fun lastErrorString(lastError: DWORD): String {
     memScoped {
         val messageMaxSize = 2048

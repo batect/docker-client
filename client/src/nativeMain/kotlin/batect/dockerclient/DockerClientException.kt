@@ -15,6 +15,7 @@
 */
 
 @file:Suppress("UndocumentedPublicClass")
+@file:OptIn(kotlinx.cinterop.ExperimentalForeignApi::class)
 
 package batect.dockerclient
 

@@ -24,6 +24,7 @@ import okio.Source
 import okio.Timeout
 import platform.posix.errno
 
+@OptIn(kotlinx.cinterop.ExperimentalForeignApi::class)
 internal actual class PipeSource actual constructor(private val fd: FileDescriptor) : Source {
     actual override fun timeout(): Timeout = Timeout.NONE
 

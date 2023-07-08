@@ -41,6 +41,7 @@ public actual sealed interface TextOutput {
 }
 
 @Suppress("UndocumentedPublicClass")
+@OptIn(kotlinx.cinterop.ExperimentalForeignApi::class)
 public actual class SinkTextOutput actual constructor(public val sink: Sink) : TextOutput {
     override fun prepareStream(): PreparedOutputStream {
         return Pipe(sink)
@@ -89,6 +90,7 @@ internal fun ULong.safeToInt(): Int {
 }
 
 // These two functions are based on okio's implementations.
+@OptIn(kotlinx.cinterop.ExperimentalForeignApi::class)
 internal fun errnoToIOException(errno: Int): IOException {
     val message = strerror(errno)
 
@@ -101,6 +103,7 @@ internal fun errnoToIOException(errno: Int): IOException {
     return IOException(messageString)
 }
 
+@OptIn(kotlinx.cinterop.ExperimentalForeignApi::class)
 internal fun Buffer.writeNullTerminated(bytes: CPointer<ByteVarOf<Byte>>): Buffer = apply {
     var pos = 0
     while (true) {

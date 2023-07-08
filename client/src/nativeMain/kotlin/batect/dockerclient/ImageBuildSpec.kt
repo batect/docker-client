@@ -24,6 +24,7 @@ import kotlinx.cinterop.memScoped
 import kotlinx.cinterop.pointed
 import kotlinx.cinterop.toKString
 
+@OptIn(kotlinx.cinterop.ExperimentalForeignApi::class)
 internal actual fun validateImageTag(tag: String) {
     memScoped {
         ValidateImageTag(tag.cstr.ptr).ifFailed { error ->

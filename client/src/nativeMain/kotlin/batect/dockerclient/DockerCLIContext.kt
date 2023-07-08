@@ -23,6 +23,7 @@ import kotlinx.cinterop.pointed
 import kotlinx.cinterop.toKString
 import okio.Path
 
+@OptIn(kotlinx.cinterop.ExperimentalForeignApi::class)
 internal actual fun determineActiveCLIContext(dockerConfigurationDirectory: Path?): String {
     DetermineActiveCLIContext(dockerConfigurationDirectory?.toString()?.cstr)!!.use { ret ->
         if (ret.pointed.Error != null) {
@@ -33,6 +34,7 @@ internal actual fun determineActiveCLIContext(dockerConfigurationDirectory: Path
     }
 }
 
+@OptIn(kotlinx.cinterop.ExperimentalForeignApi::class)
 internal actual fun determineSelectedCLIContext(dockerConfigurationDirectory: Path?): String {
     DetermineSelectedCLIContext(dockerConfigurationDirectory?.toString()?.cstr)!!.use { ret ->
         if (ret.pointed.Error != null) {
