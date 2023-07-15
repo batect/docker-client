@@ -15,6 +15,7 @@
 */
 
 import batect.dockerclient.buildtools.CheckJarContents
+import batect.dockerclient.buildtools.capitalize
 import batect.dockerclient.buildtools.codegen.GenerateGolangTypes
 import batect.dockerclient.buildtools.codegen.GenerateKotlinJVMMethods
 import batect.dockerclient.buildtools.codegen.GenerateKotlinJVMTypes
@@ -238,7 +239,7 @@ kotlin {
 fun KotlinNativeCompilation.addDockerClientWrapperCinterop() {
     val generationTask = golangWrapperProject.tasks.named<GenerateGolangTypes>("generateTypes")
     val sourceTask = golangWrapperProject.tasks.named<GolangBuild>(
-        "buildArchiveLib${konanTarget.golangOSName.capitalize()}${konanTarget.architecture.name.toLowerCase().capitalize()}",
+        "buildArchiveLib${konanTarget.golangOSName.capitalize()}${konanTarget.architecture.name.lowercase().capitalize()}",
     )
 
     cinterops.register("dockerClientWrapper") {
@@ -363,7 +364,7 @@ val copyJvmLibs = tasks.register<Copy>("copyJvmLibs") {
         val task = golangWrapperProject.tasks.getByName<GolangBuild>(taskName)
 
         from(task.outputLibraryFile) {
-            into("batect/dockerclient/libs/${task.targetOperatingSystem.get().name}/${task.targetArchitecture.get().jnrName}".toLowerCase())
+            into("batect/dockerclient/libs/${task.targetOperatingSystem.get().name}/${task.targetArchitecture.get().jnrName}".lowercase())
         }
     }
 
@@ -468,9 +469,9 @@ signing {
 }
 
 detekt {
-    source = files(kotlin.sourceSets.names.map { "src/$it/kotlin" })
+    source.from(files(kotlin.sourceSets.names.map { "src/$it/kotlin" }))
     buildUponDefaultConfig = true
-    config = files(rootProject.rootDir.resolve("config/detekt.yml").absolutePath)
+    config.from(files(rootProject.rootDir.resolve("config/detekt.yml").absolutePath))
 }
 
 tasks.named<DokkaTask>("dokkaHtml") {

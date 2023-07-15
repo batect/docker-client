@@ -14,6 +14,7 @@
     limitations under the License.
 */
 
+import batect.dockerclient.buildtools.capitalize
 import batect.dockerclient.buildtools.kotlin.isSameOperatingSystemAsHost
 import org.jetbrains.kotlin.gradle.plugin.mpp.KotlinNativeTarget
 
