@@ -101,7 +101,7 @@ kotlin {
             dependsOn(nativeMain)
         }
 
-        val jvmMain by getting {
+        getByName("jvmMain") {
             dependencies {
                 implementation(libs.jnr.ffi)
                 implementation(libs.jnr.posix)
@@ -114,7 +114,7 @@ kotlin {
             dependsOn(posixMain)
         }
 
-        val linuxX64Main by getting {
+        getByName("linuxX64Main") {
             dependsOn(linuxMain)
         }
 
@@ -122,11 +122,11 @@ kotlin {
             dependsOn(posixMain)
         }
 
-        val macosX64Main by getting {
+        getByName("macosX64Main") {
             dependsOn(macosMain)
         }
 
-        val macosArm64Main by getting {
+        getByName("macosArm64Main") {
             dependsOn(macosMain)
         }
 
@@ -134,7 +134,7 @@ kotlin {
             dependsOn(nativeMain)
         }
 
-        val mingwX64Main by getting {
+        getByName("mingwX64Main") {
             dependsOn(mingwMain)
         }
 
@@ -148,7 +148,7 @@ kotlin {
             }
         }
 
-        val jvmTest by getting {
+        getByName("jvmTest") {
             dependencies {
                 implementation(libs.kotest.runner.junit5)
                 implementation(libs.ktor.client.cio)
@@ -167,7 +167,7 @@ kotlin {
             }
         }
 
-        val linuxX64Test by getting {
+        getByName("linuxX64Test") {
             dependsOn(linuxTest)
         }
 
@@ -179,7 +179,7 @@ kotlin {
             }
         }
 
-        val mingwX64Test by getting {
+        getByName("mingwX64Test") {
             dependsOn(mingwTest)
         }
 
@@ -191,11 +191,11 @@ kotlin {
             }
         }
 
-        val macosX64Test by getting {
+        getByName("macosX64Test") {
             dependsOn(macosTest)
         }
 
-        val macosArm64Test by getting {
+        getByName("macosArm64Test") {
             dependsOn(macosTest)
         }
 
@@ -207,7 +207,7 @@ kotlin {
         }
     }
 
-    targets.withType<KotlinNativeTarget>() {
+    targets.withType<KotlinNativeTarget> {
         val target = this
 
         addNativeCommonSourceSetDependencies()
