@@ -493,13 +493,13 @@ class DockerClientLegacyImageBuildSpec : ShouldSpec({
             outputText shouldMatch """
                 Step 1/2 : FROM alpine:3.14.2
                  ---> [0-9a-f]{12}
-                Step 2/2 : ADD "https://httpbin.org/drip\?duration=1&numbytes=2048&code=200&delay=0" /file.txt\n*
+                Step 2/2 : ADD "https://httpbingo.org/drip\?duration=1&numbytes=2048&code=200&delay=0" /file.txt\n*
                  ---> [0-9a-f]{12}
                 Successfully built [0-9a-f]{12}
             """.trimIndent().toRegex()
 
             progressUpdatesReceived shouldContain StepStarting(1, "FROM alpine:3.14.2")
-            progressUpdatesReceived shouldContain StepStarting(2, "ADD \"https://httpbin.org/drip?duration=1&numbytes=2048&code=200&delay=0\" /file.txt")
+            progressUpdatesReceived shouldContain StepStarting(2, "ADD \"https://httpbingo.org/drip?duration=1&numbytes=2048&code=200&delay=0\" /file.txt")
 
             progressUpdatesReceived.forAtLeastOne {
                 it.shouldBeTypeOf<StepDownloadProgressUpdate>()
