@@ -364,7 +364,7 @@ func (t *buildKitBuildTracer) run() error {
 	output := t.outputStreamHandle.OutputStream()
 
 	// We deliberately don't use the build operation's context as the context below - otherwise, error messages might not be printed after the context is cancelled.
-	_, err := progressui.DisplaySolveStatus(context.Background(), "", nil, output, t.displayCh)
+	_, err := progressui.DisplaySolveStatus(context.Background(), nil, output, t.displayCh)
 
 	return err
 }

@@ -556,7 +556,7 @@ class DockerClientBuildKitImageBuildSpec : ShouldSpec({
                 #\1 ERROR: (process "/bin/sh -c echo \\"This command has failed!\\" && exit 1" did not complete successfully: exit code: 1|executor failed running \[/bin/sh -c echo "This command has failed!" && exit 1]: (exit code: 1|runc did not terminate sucessfully))
                 ------
                  > \[2/2] RUN echo "This command has failed!" && exit 1:
-                #\1 \d+\.\d+ This command has failed!
+                \d+\.\d+ This command has failed!
                 ------$
             """.trimIndent().toRegex(RegexOption.MULTILINE)
 
