@@ -17,7 +17,7 @@
 rootProject.name = "docker-client"
 
 plugins {
-    id("com.gradle.enterprise") version("3.14")
+    id("com.gradle.enterprise") version("3.14.1")
 }
 
 includeBuild("build-logic")
