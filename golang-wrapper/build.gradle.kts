@@ -109,7 +109,7 @@ spotless {
 }
 
 golang {
-    golangVersion.set("1.20.6")
+    golangVersion.set("1.20.7")
     golangCILintVersion.set("1.52.2")
 
     // Use unreleased version of Zig to workaround https://github.com/ziglang/zig/issues/11907.
