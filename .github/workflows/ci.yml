@@ -23,7 +23,7 @@ defaults:
 jobs:
   validate-gradle-wrapper:
     name: "Validate Gradle wrapper"
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
 
     steps:
       - name: Check out code
@@ -139,7 +139,7 @@ jobs:
     needs:
       - validate-gradle-wrapper
 
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
 
     steps:
       - name: Check out code
@@ -231,7 +231,7 @@ jobs:
     needs:
       - validate-gradle-wrapper
 
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
 
     steps:
       - name: Check out code
@@ -256,7 +256,7 @@ jobs:
     needs:
       - validate-gradle-wrapper
 
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
 
     steps:
       - name: Check out code
@@ -379,7 +379,7 @@ jobs:
 
   publish-docs:
     name: "Publish documentation"
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
     if: github.repository == 'batect/docker-client' && startsWith(github.ref, 'refs/tags/') && github.event_name == 'push'
 
     needs:
