@@ -185,7 +185,7 @@ jobs:
     needs:
       - validate-gradle-wrapper
 
-    runs-on: macos-11
+    runs-on: macos-13
 
     steps:
       - name: Check out code
@@ -303,7 +303,7 @@ jobs:
 
   publish-libs:
     name: "Publish libraries"
-    runs-on: macos-11
+    runs-on: macos-13
     if: github.repository == 'batect/docker-client' && (github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/')) && github.event_name == 'push'
 
     needs:
