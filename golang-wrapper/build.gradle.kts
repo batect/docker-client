@@ -111,10 +111,7 @@ spotless {
 golang {
     golangVersion.set("1.20.7")
     golangCILintVersion.set("1.52.2")
-
-    // Use unreleased version of Zig to workaround https://github.com/ziglang/zig/issues/11907.
-    // Note that using a non-release build disables checksum validation.
-    zigVersion.set("0.11.0-dev.3384+00ff65357")
+    zigVersion.set("0.11.0")
 }
 
 val lint = tasks.named("lint") {
