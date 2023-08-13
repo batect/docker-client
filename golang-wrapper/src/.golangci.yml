@@ -6,7 +6,7 @@ linters:
     - contextcheck
     # Disabled: - cyclop
     # Deprecated: - deadcode
-    - depguard
+    # Deprecated: - depguard
     - dogsled
     - dupl
     - durationcheck
