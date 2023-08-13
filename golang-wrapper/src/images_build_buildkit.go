@@ -396,7 +396,6 @@ func (t *buildKitBuildTracer) LogJSONMessage(msg jsonmessage.JSONMessage) error 
 	return t.sendProgressUpdateNotifications(resp)
 }
 
-//nolint:forbidigo // False positive.
 func (t *buildKitBuildTracer) print(resp controlapi.StatusResponse) {
 	s := buildkitclient.SolveStatus{}
 
