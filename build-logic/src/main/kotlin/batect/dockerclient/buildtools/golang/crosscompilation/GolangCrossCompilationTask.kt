@@ -61,6 +61,11 @@ abstract class GolangCrossCompilationTask : GolangTask() {
     ): Map<String, String> {
         val rootCacheDirectory = project.buildDir.resolve("zig").resolve("cache").resolve(this.name)
 
+        val targetSpecificVariables = when (targetOperatingSystem) {
+            OperatingSystem.Darwin -> mapOf("CGO_CFLAGS" to "-I$macOSSystemRootDirectory/usr/include -Wno-nullability-completeness -Wno-expansion-to-defined")
+            else -> emptyMap()
+        }
+
         return mapOf(
             "CGO_ENABLED" to "1",
             "GOOS" to targetOperatingSystem.name.lowercase(),
@@ -69,7 +74,7 @@ abstract class GolangCrossCompilationTask : GolangTask() {
             "CXX" to zigCompilerCommandLine(zigEnvironment, "c++", targetOperatingSystem, targetArchitecture),
             "ZIG_LOCAL_CACHE_DIR" to rootCacheDirectory.resolve("local").absolutePath,
             "ZIG_GLOBAL_CACHE_DIR" to rootCacheDirectory.resolve("global").absolutePath,
-        )
+        ) + targetSpecificVariables
     }
 
     private fun zigCompilerCommandLine(
