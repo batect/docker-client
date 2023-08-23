@@ -303,8 +303,8 @@ github.com/mitchellh/go-homedir v1.1.0/go.mod h1:SfyaCUpYCn1Vlf4IUYiD9fPX4A5wJrk
 github.com/mitchellh/mapstructure v0.0.0-20150613213606-2caf8efc9366/go.mod h1:FVVH3fgwuzCH5S8UJGiWEs2h04kUh9fWfEaFds41c1Y=
 github.com/mitchellh/mapstructure v1.1.2 h1:fmNYVwqnSfB9mZU6OS2O6GsXM+wcskZDuKQzvN1EDeE=
 github.com/mitchellh/mapstructure v1.1.2/go.mod h1:FVVH3fgwuzCH5S8UJGiWEs2h04kUh9fWfEaFds41c1Y=
-github.com/moby/buildkit v0.12.1 h1:vvMG7EZYCiQZpTtXQkvyeyj7HzT1JHhDWj+/aiGIzLM=
-github.com/moby/buildkit v0.12.1/go.mod h1:adB4y0SxxX8trnrY+oEulb48ODLqPO6pKMF0ppGcCoI=
+github.com/moby/buildkit v0.12.2 h1:B7guBgY6sfk4dBlv/ORUxyYlp0UojYaYyATgtNwSCXc=
+github.com/moby/buildkit v0.12.2/go.mod h1:adB4y0SxxX8trnrY+oEulb48ODLqPO6pKMF0ppGcCoI=
 github.com/moby/locker v1.0.1 h1:fOXqR41zeveg4fFODix+1Ch4mj/gT0NE1XJbp/epuBg=
 github.com/moby/patternmatcher v0.5.0 h1:YCZgJOeULcxLw1Q+sVR636pmS7sPEn1Qo2iAN6M7DBo=
 github.com/moby/patternmatcher v0.5.0/go.mod h1:hDPoyOpDY7OrrMDLaYoY3hf52gNCR/YOUYxkhApJIxc=
