@@ -36,6 +36,7 @@ public actual sealed interface TextInput {
 }
 
 @Suppress("UndocumentedPublicClass")
+@OptIn(kotlinx.cinterop.ExperimentalForeignApi::class)
 public actual class SourceTextInput actual constructor(private val source: Source) : TextInput {
     override fun prepareStream(): PreparedInputStream {
         return Pipe(source)

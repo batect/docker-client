@@ -29,6 +29,7 @@ import okio.Sink
 import okio.Timeout
 import platform.posix.errno
 
+@OptIn(kotlinx.cinterop.ExperimentalForeignApi::class)
 internal actual class PipeSink actual constructor(private val fd: FileDescriptor, private val handle: InputStreamHandle) : Sink {
     actual override fun timeout(): Timeout = Timeout.NONE
 

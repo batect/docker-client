@@ -29,14 +29,17 @@ import kotlinx.cinterop.toKString
 import platform.posix.free
 import platform.posix.getenv
 
+@OptIn(kotlinx.cinterop.ExperimentalForeignApi::class)
 actual fun getEnvironmentVariable(name: String): String? = getenv(name)?.toKString()
 
+@OptIn(kotlinx.cinterop.ExperimentalForeignApi::class)
 actual fun getEnvironmentVariableAccordingToGolang(name: String): String? {
     GetEnvironmentVariable(name.cstr).use { value ->
         return value?.toKString()
     }
 }
 
+@OptIn(kotlinx.cinterop.ExperimentalForeignApi::class)
 actual fun unsetEnvironmentVariableForGolang(name: String) {
     UnsetEnvironmentVariable(name.cstr).ifFailed { err ->
         val message = err.pointed.Message!!.toKString()
@@ -44,6 +47,7 @@ actual fun unsetEnvironmentVariableForGolang(name: String) {
     }
 }
 
+@OptIn(kotlinx.cinterop.ExperimentalForeignApi::class)
 actual fun setEnvironmentVariableForGolang(name: String, value: String) {
     SetEnvironmentVariable(name.cstr, value.cstr).ifFailed { err ->
         val message = err.pointed.Message!!.toKString()
@@ -51,4 +55,5 @@ actual fun setEnvironmentVariableForGolang(name: String, value: String) {
     }
 }
 
+@OptIn(kotlinx.cinterop.ExperimentalForeignApi::class)
 internal inline fun <R> CPointer<ByteVar>?.use(user: (CPointer<ByteVar>?) -> R): R = use(::free, user)

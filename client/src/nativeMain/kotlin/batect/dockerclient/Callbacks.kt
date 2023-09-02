@@ -32,6 +32,7 @@ import kotlinx.cinterop.staticCFunction
 // same guarantee for functions provided by users of this library, such as progress reporting callback
 // functions.
 // This is a helper class that helps us capture exceptions and report them later on.
+@OptIn(kotlinx.cinterop.ExperimentalForeignApi::class)
 internal class CallbackState<ParameterType : CPointed>(private val callbackFunction: (CPointer<ParameterType>?) -> Unit) {
     var exceptionThrown: Throwable? = null
 
@@ -52,6 +53,7 @@ internal class CallbackState<ParameterType : CPointed>(private val callbackFunct
     }
 }
 
+@OptIn(kotlinx.cinterop.ExperimentalForeignApi::class)
 internal class ReadyNotificationCallbackState(private val readyNotification: ReadyNotification?) {
     var exceptionThrown: Throwable? = null
 

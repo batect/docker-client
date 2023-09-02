@@ -60,6 +60,7 @@ import kotlinx.coroutines.launch
 import kotlinx.datetime.Instant
 import kotlin.time.Duration
 
+@OptIn(kotlinx.cinterop.ExperimentalForeignApi::class)
 internal actual class RealDockerClient actual constructor(configuration: DockerClientConfiguration) : DockerClient, AutoCloseable {
     // This property is internally visible so that tests can get this value to establish scenarios
     // by communicating with the Golang wrapper.
