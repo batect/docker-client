@@ -1,20 +1,20 @@
 [versions]
-dokka = "1.8.20"
+dokka = "1.9.0"
 kotest = "5.6.2"
 kotlin = "1.9.0"
-kotlinx-serialization = "1.5.1"
-ktlint = "0.48.2"
-ktor = "2.3.2"
-spotless = "6.19.0"
+kotlinx-serialization = "1.6.0"
+ktlint = "0.50.0"
+ktor = "2.3.4"
+spotless = "6.21.0"
 
 [libraries]
 commons-compress = { group = "org.apache.commons", name = "commons-compress", version = "1.23.0" }
 dokka-base = { group = "org.jetbrains.dokka", name = "dokka-base", version.ref = "dokka" }
-gradle-download-plugin = { group = "de.undercouch", name = "gradle-download-task", version = "5.4.0" }
+gradle-download-plugin = { group = "de.undercouch", name = "gradle-download-task", version = "5.5.0" }
 jnr-ffi = { group = "com.github.jnr", name = "jnr-ffi", version = "2.2.14" }
 jnr-posix = { group = "com.github.jnr", name = "jnr-posix", version = "3.1.17" }
 okio = { group = "com.squareup.okio", name = "okio", version = "3.4.0" }
-kaml = { group = "com.charleskorn.kaml", name = "kaml", version = "0.54.0" }
+kaml = { group = "com.charleskorn.kaml", name = "kaml", version = "0.55.0" }
 kotest-assertions-core = { group = "io.kotest", name = "kotest-assertions-core", version.ref = "kotest" }
 kotest-assertions-json = { group = "io.kotest", name = "kotest-assertions-json", version.ref = "kotest" }
 kotest-framework-api = { group = "io.kotest", name = "kotest-framework-api", version.ref = "kotest" }
@@ -22,7 +22,7 @@ kotest-framework-engine = { group = "io.kotest", name = "kotest-framework-engine
 kotest-runner-junit5 = { group = "io.kotest", name = "kotest-runner-junit5", version.ref = "kotest" }
 kotlin-native-utils = { group = "org.jetbrains.kotlin", name = "kotlin-native-utils", version.ref = "kotlin" }
 kotlinx-atomicfu = { group = "org.jetbrains.kotlinx", name = "atomicfu", version = "0.21.0" }
-kotlinx-coroutines-core = { group = "org.jetbrains.kotlinx", name = "kotlinx-coroutines-core", version = "1.7.2" }
+kotlinx-coroutines-core = { group = "org.jetbrains.kotlinx", name = "kotlinx-coroutines-core", version = "1.7.3" }
 kotlinx-datetime = { group = "org.jetbrains.kotlinx", name = "kotlinx-datetime", version = "0.4.0" }
 kotlinx-serialization-core = { group = "org.jetbrains.kotlinx", name = "kotlinx-serialization-core", version.ref = "kotlinx-serialization" }
 kotlinx-serialization-json = { group = "org.jetbrains.kotlinx", name = "kotlinx-serialization-json", version.ref = "kotlinx-serialization" }
@@ -36,7 +36,7 @@ xz = { group = "org.tukaani", name = "xz", version = "1.9" }
 
 [plugins]
 atomicfu = { id = "org.jetbrains.kotlin.plugin.atomicfu", version.ref = "kotlin" }
-detekt = { id = "io.gitlab.arturbosch.detekt", version = "1.23.0" }
+detekt = { id = "io.gitlab.arturbosch.detekt", version = "1.23.1" }
 dokka = { id = "org.jetbrains.dokka", version.ref = "dokka" }
 kotest-multiplatform = { id = "io.kotest.multiplatform", version.ref = "kotest" }
 kotlin-jvm = { id = "org.jetbrains.kotlin.jvm", version.ref = "kotlin" }

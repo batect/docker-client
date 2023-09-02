@@ -14,21 +14,9 @@
     limitations under the License.
 */
 
-@file:Suppress("ktlint:standard:filename")
+package batect.dockerclient.buildtools
 
-package batect.dockerclient
+import java.util.Locale
 
-import batect.dockerclient.native.ValidateImageTag
-import kotlinx.cinterop.cstr
-import kotlinx.cinterop.memScoped
-import kotlinx.cinterop.pointed
-import kotlinx.cinterop.toKString
-
-@OptIn(kotlinx.cinterop.ExperimentalForeignApi::class)
-internal actual fun validateImageTag(tag: String) {
-    memScoped {
-        ValidateImageTag(tag.cstr.ptr).ifFailed { error ->
-            throw InvalidImageBuildSpecException("Image tag '$tag' is not a valid Docker image tag: ${error.pointed.Message!!.toKString()}")
-        }
-    }
-}
+// The kotlin stdlib capitalize() is deprecated.
+fun String.capitalize(): String = replaceFirstChar { if (it.isLowerCase()) it.titlecase(Locale.getDefault()) else it.toString() }

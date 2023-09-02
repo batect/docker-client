@@ -68,7 +68,7 @@ abstract class ZigEnvironmentService : BuildService<BuildServiceParameters.None>
         val checksumFileName = "$archiveFileName.checksums.json"
         val checksumPath = downloadsDir.resolve(checksumFileName)
 
-        val archiveUrl = if (isReleaseVersion) "$rootUrl/download/$archiveFileName" else "$rootUrl/builds/$archiveFileName"
+        val archiveUrl = if (isReleaseVersion) "$rootUrl/download/$version/$archiveFileName" else "$rootUrl/builds/$archiveFileName"
         val archiveDownload = download(task, archiveUrl, archivePath)
         val checksumDownload = download(task, "$rootUrl/download/index.json", checksumPath)
 

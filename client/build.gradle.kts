@@ -15,6 +15,7 @@
 */
 
 import batect.dockerclient.buildtools.CheckJarContents
+import batect.dockerclient.buildtools.capitalize
 import batect.dockerclient.buildtools.codegen.GenerateGolangTypes
 import batect.dockerclient.buildtools.codegen.GenerateKotlinJVMMethods
 import batect.dockerclient.buildtools.codegen.GenerateKotlinJVMTypes
@@ -100,7 +101,7 @@ kotlin {
             dependsOn(nativeMain)
         }
 
-        val jvmMain by getting {
+        getByName("jvmMain") {
             dependencies {
                 implementation(libs.jnr.ffi)
                 implementation(libs.jnr.posix)
@@ -113,7 +114,7 @@ kotlin {
             dependsOn(posixMain)
         }
 
-        val linuxX64Main by getting {
+        getByName("linuxX64Main") {
             dependsOn(linuxMain)
         }
 
@@ -121,11 +122,11 @@ kotlin {
             dependsOn(posixMain)
         }
 
-        val macosX64Main by getting {
+        getByName("macosX64Main") {
             dependsOn(macosMain)
         }
 
-        val macosArm64Main by getting {
+        getByName("macosArm64Main") {
             dependsOn(macosMain)
         }
 
@@ -133,7 +134,7 @@ kotlin {
             dependsOn(nativeMain)
         }
 
-        val mingwX64Main by getting {
+        getByName("mingwX64Main") {
             dependsOn(mingwMain)
         }
 
@@ -147,7 +148,7 @@ kotlin {
             }
         }
 
-        val jvmTest by getting {
+        getByName("jvmTest") {
             dependencies {
                 implementation(libs.kotest.runner.junit5)
                 implementation(libs.ktor.client.cio)
@@ -166,7 +167,7 @@ kotlin {
             }
         }
 
-        val linuxX64Test by getting {
+        getByName("linuxX64Test") {
             dependsOn(linuxTest)
         }
 
@@ -178,7 +179,7 @@ kotlin {
             }
         }
 
-        val mingwX64Test by getting {
+        getByName("mingwX64Test") {
             dependsOn(mingwTest)
         }
 
@@ -190,11 +191,11 @@ kotlin {
             }
         }
 
-        val macosX64Test by getting {
+        getByName("macosX64Test") {
             dependsOn(macosTest)
         }
 
-        val macosArm64Test by getting {
+        getByName("macosArm64Test") {
             dependsOn(macosTest)
         }
 
@@ -206,7 +207,7 @@ kotlin {
         }
     }
 
-    targets.withType<KotlinNativeTarget>() {
+    targets.withType<KotlinNativeTarget> {
         val target = this
 
         addNativeCommonSourceSetDependencies()
@@ -238,7 +239,7 @@ kotlin {
 fun KotlinNativeCompilation.addDockerClientWrapperCinterop() {
     val generationTask = golangWrapperProject.tasks.named<GenerateGolangTypes>("generateTypes")
     val sourceTask = golangWrapperProject.tasks.named<GolangBuild>(
-        "buildArchiveLib${konanTarget.golangOSName.capitalize()}${konanTarget.architecture.name.toLowerCase().capitalize()}",
+        "buildArchiveLib${konanTarget.golangOSName.capitalize()}${konanTarget.architecture.name.lowercase().capitalize()}",
     )
 
     cinterops.register("dockerClientWrapper") {
@@ -320,7 +321,6 @@ tasks.named<Test>("jvmTest") {
         }
     }
 
-    environment("GODEBUG", "cgocheck=2")
     systemProperty("kotest.assertions.collection.print.size", "-1")
 }
 
@@ -334,7 +334,6 @@ tasks.withType<KotlinNativeHostTest>().configureEach {
         }
     }
 
-    environment("GODEBUG", "cgocheck=2")
     environment("kotest_assertions_collection_print_size", "-1")
 }
 
@@ -363,7 +362,7 @@ val copyJvmLibs = tasks.register<Copy>("copyJvmLibs") {
         val task = golangWrapperProject.tasks.getByName<GolangBuild>(taskName)
 
         from(task.outputLibraryFile) {
-            into("batect/dockerclient/libs/${task.targetOperatingSystem.get().name}/${task.targetArchitecture.get().jnrName}".toLowerCase())
+            into("batect/dockerclient/libs/${task.targetOperatingSystem.get().name}/${task.targetArchitecture.get().jnrName}".lowercase())
         }
     }
 
@@ -468,9 +467,9 @@ signing {
 }
 
 detekt {
-    source = files(kotlin.sourceSets.names.map { "src/$it/kotlin" })
+    source.from(files(kotlin.sourceSets.names.map { "src/$it/kotlin" }))
     buildUponDefaultConfig = true
-    config = files(rootProject.rootDir.resolve("config/detekt.yml").absolutePath)
+    config.from(files(rootProject.rootDir.resolve("config/detekt.yml").absolutePath))
 }
 
 tasks.named<DokkaTask>("dokkaHtml") {

@@ -17,6 +17,7 @@
 import batect.dockerclient.buildtools.Architecture
 import batect.dockerclient.buildtools.BinaryType
 import batect.dockerclient.buildtools.OperatingSystem
+import batect.dockerclient.buildtools.capitalize
 import batect.dockerclient.buildtools.codegen.GenerateGolangTypes
 import batect.dockerclient.buildtools.golang.crosscompilation.GolangBuild
 import java.nio.file.Files
@@ -108,12 +109,9 @@ spotless {
 }
 
 golang {
-    golangVersion.set("1.20.5")
-    golangCILintVersion.set("1.52.2")
-
-    // Use unreleased version of Zig to workaround https://github.com/ziglang/zig/issues/11907.
-    // Note that using a non-release build disables checksum validation.
-    zigVersion.set("0.11.0-dev.3384+00ff65357")
+    golangVersion.set("1.21.0")
+    golangCILintVersion.set("1.54.2")
+    zigVersion.set("0.11.0")
 }
 
 val lint = tasks.named("lint") {

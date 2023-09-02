@@ -556,7 +556,7 @@ class DockerClientBuildKitImageBuildSpec : ShouldSpec({
                 #\1 ERROR: (process "/bin/sh -c echo \\"This command has failed!\\" && exit 1" did not complete successfully: exit code: 1|executor failed running \[/bin/sh -c echo "This command has failed!" && exit 1]: (exit code: 1|runc did not terminate sucessfully))
                 ------
                  > \[2/2] RUN echo "This command has failed!" && exit 1:
-                #\1 \d+\.\d+ This command has failed!
+                \d+\.\d+ This command has failed!
                 ------$
             """.trimIndent().toRegex(RegexOption.MULTILINE)
 
@@ -641,8 +641,8 @@ class DockerClientBuildKitImageBuildSpec : ShouldSpec({
             val outputText = output.readUtf8().trim()
 
             outputText shouldContain """^#\d \[1/2] FROM docker.io/library/alpine:3.14.2(@sha256:e1c082e3d3c45cccac829840a25941e679c25d438cc8412c2fa221cf1a824e6a)?$""".toRegex(RegexOption.MULTILINE)
-            outputText shouldContain """^#\d https://httpbin.org/drip\?duration=1&numbytes=2048&code=200&delay=0""".toRegex(RegexOption.MULTILINE)
-            outputText shouldContain """^#\d \[2/2] ADD https://httpbin.org/drip\?duration=1&numbytes=2048&code=200&delay=0 /file.txt""".toRegex(RegexOption.MULTILINE)
+            outputText shouldContain """^#\d https://httpbingo.org/drip\?duration=1&numbytes=2048&code=200&delay=0""".toRegex(RegexOption.MULTILINE)
+            outputText shouldContain """^#\d \[2/2] ADD https://httpbingo.org/drip\?duration=1&numbytes=2048&code=200&delay=0 /file.txt""".toRegex(RegexOption.MULTILINE)
 
             progressUpdatesReceived.forAtLeastOne {
                 it.shouldBeTypeOf<StepStarting>()
@@ -651,7 +651,7 @@ class DockerClientBuildKitImageBuildSpec : ShouldSpec({
 
             progressUpdatesReceived.forAtLeastOne {
                 it.shouldBeTypeOf<StepStarting>()
-                it.stepName shouldBe "https://httpbin.org/drip?duration=1&numbytes=2048&code=200&delay=0"
+                it.stepName shouldBe "https://httpbingo.org/drip?duration=1&numbytes=2048&code=200&delay=0"
             }
 
             progressUpdatesReceived shouldEndWith BuildComplete(image)
