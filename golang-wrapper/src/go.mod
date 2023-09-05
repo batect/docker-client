@@ -3,9 +3,9 @@ module github.com/batect/docker-client/golang-wrapper/src
 go 1.19
 
 require (
-	github.com/docker/cli v24.0.5+incompatible
+	github.com/docker/cli v24.0.6+incompatible
 	github.com/docker/distribution v2.8.2+incompatible
-	github.com/docker/docker v24.0.5+incompatible
+	github.com/docker/docker v24.0.6+incompatible
 	github.com/docker/go-connections v0.4.0
 	github.com/moby/buildkit v0.12.2
 	github.com/moby/sys/signal v0.7.0
@@ -46,7 +46,7 @@ require (
 	github.com/klauspost/compress v1.16.3 // indirect
 	github.com/matttproud/golang_protobuf_extensions v1.0.4 // indirect
 	github.com/miekg/pkcs11 v1.1.1 // indirect
-	github.com/moby/patternmatcher v0.5.0 // indirect
+	github.com/moby/patternmatcher v0.6.0 // indirect
 	github.com/moby/sys/sequential v0.5.0 // indirect
 	github.com/moby/sys/symlink v0.2.0 // indirect
 	github.com/morikuni/aec v1.0.0 // indirect
