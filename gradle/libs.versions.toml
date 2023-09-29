@@ -5,7 +5,7 @@ kotlin = "1.9.10"
 kotlinx-serialization = "1.6.0"
 ktlint = "0.50.0"
 ktor = "2.3.4"
-spotless = "6.21.0"
+spotless = "6.22.0"
 
 [libraries]
 commons-compress = { group = "org.apache.commons", name = "commons-compress", version = "1.24.0" }
