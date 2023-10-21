@@ -3,7 +3,7 @@ dokka = "1.9.10"
 kotest = "5.7.2"
 kotlin = "1.9.10"
 kotlinx-serialization = "1.6.0"
-ktlint = "0.50.0"
+ktlint = "0.51.0-FINAL"
 ktor = "2.3.5"
 spotless = "6.22.0"
 
